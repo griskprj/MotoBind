@@ -73,7 +73,7 @@ def login():
     if not user.check_password(password):
         return jsonify({'error': 'Неправильный пароль'}), 401
     
-    access_token = create_access_token(identity=str(user.id), additional_claims={'email': user.email})
+    access_token = create_access_token(identity=str(user.id), additional_claims={'role': user.role})
     refresh_token = create_refresh_token(identity=str(user.id))
 
     user.refresh_token = refresh_token
@@ -113,7 +113,7 @@ def refresh():
     if not user:
         return jsonify({'error': 'Невалидный refresh-токен'})
     
-    access_token = create_access_token(identity=str(user.id), additional_claims={'email': user.email})
+    access_token = create_access_token(identity=str(user.id), additional_claims={'role': user.role})
 
     new_refresh_token = create_refresh_token(identity=str(user.id))
     user.refresh_token = new_refresh_token
