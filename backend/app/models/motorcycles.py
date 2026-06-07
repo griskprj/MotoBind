@@ -18,7 +18,7 @@ class Motorcycle(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    maintenance = db.relationship('Maintenance', dynamic='lazy', cascade='all, delete-orphan')
+    maintenance = db.relationship('Maintenance', lazy='dynamic', cascade='all, delete-orphan')
 
     def to_dict(self, include_maintenance: bool = False):
         """ Serialize data to JSON """

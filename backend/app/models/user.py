@@ -12,7 +12,7 @@ class User(db.Model):
     username = db.Column(db.String(64), nullable=False)
     role = db.Column(db.String(32), default='motorcyclist') # motorcyclist, admin, motoclub
 
-    motorcycles = db.relationship('Motorcycle', backref='motorcycle_owner', dynamic='lazy', cascade='all, delete-orphan')
+    motorcycles = db.relationship('Motorcycle', backref='motorcycle_owner', lazy='dynamic', cascade='all, delete-orphan')
 
 
     def set_password(self, password):

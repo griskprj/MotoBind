@@ -20,6 +20,11 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    
+    with app.app_context():
+        from app.models.user import User
+        from app.models.maintenance import Maintenance
+        from app.models.motorcycles import Motorcycle
 
     @app.route('/api/health', methods=['GET'])
     def health():
