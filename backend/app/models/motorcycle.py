@@ -29,7 +29,7 @@ class Motorcycle(db.Model):
             'years': self.years,
             'volume': self.volume,
             'color': self.color,
-            'license_plate': self.lichense_plate,
+            'license_plate': self.license_plate,
             'vin': self.vin,
             'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if self.created_at else None,

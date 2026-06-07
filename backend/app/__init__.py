@@ -24,11 +24,13 @@ def create_app(config_class=Config):
     with app.app_context():
         from app.models.user import User
         from app.models.maintenance import Maintenance
-        from app.models.motorcycles import Motorcycle
+        from app.models.motorcycle import Motorcycle
 
     from app.api.auth import auth
+    from app.api.motorcycle import motorcycle
     
     app.register_blueprint(auth, url_prefix='/api/auth')
+    app.register_blueprint(motorcycle, url_prefix='/api/motorcycle')
 
     @app.route('/api/health', methods=['GET'])
     def health():
