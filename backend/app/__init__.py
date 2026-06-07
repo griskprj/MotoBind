@@ -26,6 +26,10 @@ def create_app(config_class=Config):
         from app.models.maintenance import Maintenance
         from app.models.motorcycles import Motorcycle
 
+    from app.api.auth import auth
+    
+    app.register_blueprint(auth, url_prefix='/api/auth')
+
     @app.route('/api/health', methods=['GET'])
     def health():
         return jsonify({'message': 'Hello, yebok!'})
