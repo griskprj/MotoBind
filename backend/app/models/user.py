@@ -11,6 +11,7 @@ class User(db.Model):
     password = db.Column(db.String(512), nullable=False)
     username = db.Column(db.String(64), nullable=False)
     role = db.Column(db.String(32), default='motorcyclist') # motorcyclist, admin, motoclub
+    refresh_token = db.Column(db.String(512))
 
     motorcycles = db.relationship('Motorcycle', backref='motorcycle_owner', lazy='dynamic', cascade='all, delete-orphan')
 
