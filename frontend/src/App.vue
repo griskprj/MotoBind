@@ -1,10 +1,47 @@
+<script>
+import { isAuthenticated } from './api/auth.js';
+import Header from './components/Header.vue';
+
+export default {
+  components: {
+    Header
+  },
+
+  data() {
+    return {
+      user: false
+    }
+  },
+
+  mounted() {
+    if (isAuthenticated()) {
+      this.user = true
+    }
+  }
+}
+</script>
+
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <div class="animated-bg"></div>
+
+  <Header v-if="this.user === true"/>
   <router-view />
 </template>
 
 <style>
+
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -2;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
 @media (max-width: 768px) {
   .table-responsive {
     overflow-x: auto;

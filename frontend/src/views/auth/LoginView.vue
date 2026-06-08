@@ -27,7 +27,7 @@ export default {
                 if (role === 'admin') {
                     this.$router.push('/admin')
                 } else {
-                    this.$router.push('/dashboard')
+                    this.$router.push('/home')
                 }
             } catch (err) {
                 this.error = err.response?.data?.error || 'Ошибка входа'
