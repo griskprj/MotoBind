@@ -1,7 +1,7 @@
 <template>
     <header>
         <div class="logo">
-            <h1>MotoBind</h1>
+            <h1 class="logo-left">Moto</h1><h1 class="logo-right">Bind</h1>
         </div>
 
         <nav class="header-nav">
@@ -86,7 +86,12 @@ header {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
 
-.logo h1 {
+.logo {
+    display: flex;
+    flex-direction: row;
+}
+
+.logo-right {
     color: var(--accent)
 }
 

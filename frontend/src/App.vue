@@ -1,10 +1,12 @@
 <script>
 import { isAuthenticated } from './api/auth.js';
 import Header from './components/Header.vue';
+import Footer from './components/Footer.vue';
 
 export default {
   components: {
-    Header
+    Header,
+    Footer
   },
 
   data() {
@@ -14,9 +16,10 @@ export default {
   },
 
   mounted() {
-    if (isAuthenticated()) {
-      this.user = true
-    }
+      const user = localStorage.getItem('user')
+      if (user) {
+        this.user = true
+      }
   }
 }
 </script>
@@ -26,8 +29,9 @@ export default {
   
   <div class="animated-bg"></div>
 
-  <Header v-if="this.user === true"/>
+  <Header v-if="user"/>
   <router-view />
+  <Footer />
 </template>
 
 <style>

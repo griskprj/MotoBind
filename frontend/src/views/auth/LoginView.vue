@@ -1,6 +1,6 @@
 <script>
 import api from '../../api/api'
-import { setTokens } from '../../api/auth';
+import { setTokens, setUser } from '../../api/auth';
 
 export default {
     data() {
@@ -22,6 +22,7 @@ export default {
                 })
                 const { access_token, refresh_token } = response.data
                 setTokens(access_token, refresh_token)
+                setUser(response.user)
                 
                 const role = response.data.user.role
                 if (role === 'admin') {
