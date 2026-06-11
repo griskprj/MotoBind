@@ -61,8 +61,8 @@
                             <p class="maintenance-meta-item">Пробег: 17000</p>
                         </div>
                         <div class="maintenance-actions">
-                            <button class="maintenance-action-edit"><i class="fa fa-pen"></i></button>
-                            <button class="maintenance-action-delete"><i class="fa fa-trash"></i></button>
+                            <button class="maintenance-action"><i class="fa fa-pen"></i></button>
+                            <button class="maintenance-action"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -79,8 +79,8 @@
                             <p class="maintenance-meta-item">Пробег: 17000</p>
                         </div>
                         <div class="maintenance-actions">
-                            <button class="maintenance-action-edit"><i class="fa fa-pen"></i></button>
-                            <button class="maintenance-action-delete"><i class="fa fa-trash"></i></button>
+                            <button class="maintenance-action"><i class="fa fa-pen"></i></button>
+                            <button class="maintenance-action"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -298,5 +298,33 @@ p {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+@media (max-width: 728px) {
+    .maintenance-card {
+        flex-direction: column;
+    }
+
+    .maintenance-header {
+        margin-bottom: 18px;
+    }
+
+    .maintenance-body {
+        flex-direction: column;
+    }
+
+    .maintenance-meta {
+        width: 100%;
+        text-align: center;
+    }
+
+    .maintenance-actions {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .maintenance-action {
+        width: 100%;
+    }
 }
 </style>
