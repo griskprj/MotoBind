@@ -1,34 +1,197 @@
+<script>
+import api from '../api/api';
+import { getUser } from '../api/auth';
+
+export default {
+    data() {
+        return {
+            user: null,
+            motorcycles: [],
+            maintenances: [],
+            loading: false,
+
+            showEditMotoModal: false,
+            showDeleteMotoModal: false,
+            showCreateMotoModal: false,
+
+            createMotoModal: {
+                id: null,
+                name: '',
+                volume: null,
+                years: null,
+                mileage: null
+            },
+
+            editMotoModal: {
+                id: null,
+                name: '',
+                volume: null,
+                years: null,
+                mileage: null
+            },
+
+            deleteMotoId: null
+        }
+    },
+
+    methods: {
+        async loadData() {
+            try {
+                this.loading = true
+                const response = await api.get('/statistic/dashboard-data')
+
+                this.user = getUser()
+                this.motorcycles = response.data.motorcycles
+                this.maintenances = response.data.maintenance
+            } catch(err) {
+                console.error(err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async saveMoto(motoId) {
+            try {
+                this.loading = true
+                const response = await api.put(`/motorcycle/${motoId}`, this.editMotoModal)
+
+                this.showEditMotoModal = false
+                this.loadData()
+            } catch(err) {
+                console.error(err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async deleteMoto() {
+            try {
+                this.loading = true
+                const response = await api.delete(`/motorcycle/${this.deleteMotoId}`)
+
+                this.showDeleteMotoModal = false
+                this.loadData()
+            } catch (err) {
+                console.error(err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async createMoto() {
+            try {
+                this.loading = true
+
+                const response = await api.post('/motorcycle/new', this.createMotoModal)
+
+                this.showCreateMotoModal = false
+                this.loadData()
+            } catch (err) {
+                console.error(err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+
+        openEditMotoModal(moto) {
+            this.showEditMotoModal = true
+
+            this.editMotoModal.id = moto.id
+            this.editMotoModal.name = moto.name
+            this.editMotoModal.volume = moto.volume
+            this.editMotoModal.years = moto.years
+            this.editMotoModal.mileage = moto.mileage
+        },
+
+        closeEditMotoModal() {
+            this.showEditMotoModal = false
+
+            this.editMotoModal.id = null
+            this.editMotoModal.name = ''
+            this.editMotoModal.volume = null
+            this.editMotoModal.years = null
+            this.editMotoModal.mileage = null
+        },
+
+        openCreateMotoModal() {
+            this.showCreateMotoModal = true
+        },
+
+        closeCreateMotoModal() {
+            this.showCreateMotoModal = false
+
+            this.createMotoModal.id = null
+            this.createMotoModal.name = ''
+            this.createMotoModal.volume = null
+            this.createMotoModal.years = null
+            this.createMotoModal.mileage = null
+        },
+
+        openDeleteMotoModal(motoId) {
+            this.deleteMotoId = motoId
+            this.showDeleteMotoModal = true
+        },
+
+        closeDeleteMotoModal() {
+            this.deleteMotoId = null
+            this.showDeleteMotoModal = false
+        }
+    },
+
+    mounted() {
+        this.loadData()
+    }
+}
+</script>
+
 <template>
     <div class="container">
         <!-- === WELCOME SECTION === -->
         <div class="welcome-section">
             <div class="welcome-wrapper">
-                <h2>Здравствуйте,</h2> <h2 class="welcome-title">name</h2>
+                <h2>Здравствуйте,</h2> <h2 class="welcome-title">{{ user?.username }}</h2>
             </div>
             <p class="welcome-subtitle">Ваш мотоцикл в отличной форме, но есть пару моментов, на которые стоит обратить внимание</p>
+        </div>
+
+        <!-- === FAST ACTIONS === -->
+        <div class="fast-actions-section">
+            <h2 class="fast-action-title">Быстрые действия</h2>
+            <div class="fast-actions-wrapper">
+                <button @click="openCreateMotoModal()">Добавить мотоцикл</button>
+                <button :disabled="motorcycles.length === 0">Добавить обслуживание</button>
+            </div>
         </div>
       
         <!-- === MOTORCYCLE SECTION === -->
         <div class="motorcycle-section">
-            <div class="moto-card">
+            <div v-if="motorcycles.length === 0" class="empty-state">
+                <i class="fa fa-motorcycle"></i>
+                <p class="empty-state-p">У вас нет мотоциклов</p>
+                <button @click="openCreateMotoModal()" class="btn add-maintenance">
+                    Добавить
+                </button>
+            </div>
+            <div v-else v-for="moto in motorcycles" class="moto-card">
                 <div class="moto-card-header">
-                    <p>Yamaha MT-09</p>
+                    <p>{{ moto.name }}</p>
                     <div class="moto-actions">
-                        <button class="moto-action"><i class="fa fa-pen"></i></button>
-                        <button class="moto-action"><i class="fa fa-trash"></i></button>
+                        <button @click="openEditMotoModal(moto)" class="moto-action"><i class="fa fa-pen"></i></button>
+                        <button @click="openDeleteMotoModal(moto.id)" class="moto-action"><i class="fa fa-trash"></i></button>
                     </div>
                 </div>
                 <div class="moto-card-body">
                     <div class="moto-card-meta">
                         <div class="meta-items">
                             <div class="meta-item">
-                                <p class="meta-text">Объем:</p> <p>790</p>
+                                <p class="meta-text">Объем:</p> <p>{{ moto.volume }}</p>
                             </div>
                             <div class="meta-item">
-                                <p class="meta-text">Год выпуска:</p> <p>2020</p>
+                                <p class="meta-text">Год выпуска:</p> <p>{{ moto.years }}</p>
                             </div>
                             <div class="meta-item">
-                                <p class="meta-text">Пробег:</p> <p>17000км</p>
+                                <p class="meta-text">Пробег:</p> <p>{{ moto.mileage ? moto.mileage : 0 }} км</p>
                             </div>
                             <div class="meta-item">
                                 <p class="meta-text">Здоровье:</p> <p>95%</p>
@@ -38,7 +201,7 @@
                         <button class="follow-btn btn">Подробнее</button>
                     </div>
                     <div class="img-wrapper">
-                        <img src="/bmw1000.webp" alt="Motorcycle" class="moto-img">
+                        <img src="/moto_default.jpg" alt="Motorcycle" class="moto-img">
                     </div>
                 </div>
             </div>
@@ -48,17 +211,24 @@
         <div class="maintenance-section">
             <h2 class="maintenance-section-title">Предстоящее обслуживание</h2>
             <div class="maintenance-cards">
-                <div class="maintenance-card">
+                <div v-if="maintenances.length === 0" class="empty-state">
+                    <i class="fa fa-wrench"></i>
+                    <p class="empty-state-p">У вас нет запланированного обслуживания</p>
+                    <button :disabled="motorcycles.length === 0" class="btn add-maintenance">
+                        Добавить
+                    </button>
+                </div>
+                <div v-else v-for="maintenance in maintenances" class="maintenance-card">
                     <div class="maintenance-header">
                         <div class="maintenance-icon">
                             <i class="fa fa-wrench"></i>
                         </div>
-                        <p class="maintenance-title">Замена масла</p>
+                        <p class="maintenance-title">{{ maintenance.title }}</p>
                     </div>
                     <div class="maintenance-body">
                         <div class="maintenance-meta">
-                            <p class="maintenance-meta-item">Дата: 11.06.2026</p>
-                            <p class="maintenance-meta-item">Пробег: 17000</p>
+                            <p v-if="maintenance.planned_date" class="maintenance-meta-item">Дата: {{ maintenance.planned_date }}</p>
+                            <p v-if="maintenance.planned_mileage" class="maintenance-meta-item">Пробег: {{ maintenance.planned_mileage}}</p>
                         </div>
                         <div class="maintenance-actions">
                             <button class="maintenance-action"><i class="fa fa-pen"></i></button>
@@ -66,23 +236,96 @@
                         </div>
                     </div>
                 </div>
-                <div class="maintenance-card">
-                    <div class="maintenance-header">
-                        <div class="maintenance-icon">
-                            <i class="fa fa-wrench"></i>
-                        </div>
-                        <p class="maintenance-title">Замена масла</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add motorcycle -->
+    <div v-if="showCreateMotoModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Добавить мотоцикл</p>
+                <button @click="closeCreateMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+    
+            <div class="modal-body">
+                <div class="modal-group">
+                    <input v-model="createMotoModal.id" type="hidden">
+                    <label>
+                        Имя
+                        <input v-model="createMotoModal.name" type="text" class="modal-input">
+                    </label>
+                    <label>
+                        Объем
+                        <input v-model="createMotoModal.volume" type="number" min="49" max="4000" class="modal-input">
+                    </label>
+                    <label>
+                        Год выпуска
+                        <input v-model="createMotoModal.years" type="number" min="1950" :max="new Date().getFullYear()" class="modal-input">
+                    </label>
+                    <label>
+                        Пробег
+                        <input v-model="createMotoModal.mileage" type="number" min="0" max="1000000" class="modal-input">
+                    </label>
+
+                    <div class="modal-actions">
+                        <button @click="createMoto()" class="save-btn">Добавить</button>
+                        <button @click="closeEditMotoModal()" class="cancel-btn">Отменить</button>
                     </div>
-                    <div class="maintenance-body">
-                        <div class="maintenance-meta">
-                            <p class="maintenance-meta-item">Дата: 11.06.2026</p>
-                            <p class="maintenance-meta-item">Пробег: 17000</p>
-                        </div>
-                        <div class="maintenance-actions">
-                            <button class="maintenance-action"><i class="fa fa-pen"></i></button>
-                            <button class="maintenance-action"><i class="fa fa-trash"></i></button>
-                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Motorcycle -->
+    <div v-if="showEditMotoModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Редактировать мотоцикл</p>
+                <button @click="closeEditMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+    
+            <div class="modal-body">
+                <div class="modal-group">
+                    <input v-model="editMotoModal.id" type="hidden">
+                    <label>
+                        Имя
+                        <input v-model="editMotoModal.name" type="text" class="modal-input">
+                    </label>
+                    <label>
+                        Объем
+                        <input v-model="editMotoModal.volume" type="number" min="49" max="4000" class="modal-input">
+                    </label>
+                    <label>
+                        Год выпуска
+                        <input v-model="editMotoModal.years" type="number" min="1950" :max="new Date().getFullYear()" class="modal-input">
+                    </label>
+                    <label>
+                        Пробег
+                        <input v-model="editMotoModal.mileage" type="number" min="0" max="1000000" class="modal-input">
+                    </label>
+
+                    <div class="modal-actions">
+                        <button @click="saveMoto(editMotoModal.id)" class="save-btn">Сохранить</button>
+                        <button @click="closeEditMotoModal()" class="cancel-btn">Отменить</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete moto modal -->
+    <div v-if="showDeleteMotoModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Удалить мотоцикл</p>
+                <button @click="closeDeleteMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <p class="modal-text">Вы уверены, что хотите удалить мотоцикл? Все связанные данные безвозвратно будут удалены, отменить это действие невозможно.</p>
+                <div class="modal-actions">
+                    <button @click="deleteMoto()" class="accept-btn">Удалить</button>
+                    <button @click="closeDeleteMotoModal()" class="cancel-btn">Отменить</button>
                 </div>
             </div>
         </div>
@@ -116,6 +359,39 @@ p {
 }
 
 
+/* Fast actions section */
+.fast-actions-section {
+    background-color: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 25px;
+
+    padding: 28px;
+    margin-bottom: 32px;
+}
+
+.fast-action-title {
+    margin-bottom: 24px;
+}
+
+.fast-actions-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    gap: 12px;
+}
+
+.fast-actions-wrapper button {
+    width: 100%;
+    min-width: 220px;
+}
+
+@media (max-width: 728px) {
+    .fast-actions-wrapper {
+        flex-direction: column;
+    }
+}
+
+
 /* Motorcycle Section */
 .motorcycle-section {
     background-color: var(--bg-primary);
@@ -124,6 +400,15 @@ p {
 
     margin-bottom: 32px;
     padding: 28px;
+}
+
+.moto-card {
+    padding: 15px;
+    background-color: var(--bg-secondary);
+    margin-bottom: 24px;
+    border-radius: 18px;
+
+    border: 2px solid var(--accent-light);
 }
 
 .moto-card-header {
@@ -211,6 +496,14 @@ p {
 
 
 @media (max-width: 728px) {
+    .motorcycle-section {
+        padding: 12px;
+    }
+
+    .moto-card {
+        padding: 8px;
+    }
+
     .moto-card-body {
         flex-direction: column-reverse;
     }
@@ -244,6 +537,7 @@ p {
 }
 
 .maintenance-cards {
+    margin-top: 24px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -301,6 +595,10 @@ p {
 }
 
 @media (max-width: 728px) {
+    .maintenance-section {
+        padding: 12px;
+    }
+
     .maintenance-card {
         flex-direction: column;
     }
@@ -326,5 +624,93 @@ p {
     .maintenance-action {
         width: 100%;
     }
+}
+
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px;
+    background-color: var(--bg-secondary);
+    border-radius: 24px;
+    border: 2px dashed var(--border-color);
+
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 32px;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+
+.empty-state-p {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-secondary);
+
+    margin-bottom: 12px;
+}
+
+
+/* Modals */
+.modal-wrapper {
+position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+  backdrop-filter: blur(8px);
+}
+
+.modal-container {
+    margin: 0 auto;
+    padding: 18px;
+    background-color: var(--bg-primary);
+    border-radius: 25px;
+    border: 2px solid var(--border-color);
+
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 24px;
+
+    margin-bottom: 18px;
+}
+
+.modal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-group input {
+    margin-top: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-top: 12px;
+}
+
+.cancel-btn {
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color)
 }
 </style>

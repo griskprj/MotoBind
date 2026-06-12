@@ -11,6 +11,7 @@ class Motorcycle(db.Model):
     name = db.Column(db.String(64), nullable=False)
     years = db.Column(db.Integer)
     volume = db.Column(db.Integer)
+    mileage = db.Column(db.Integer, default=0)
     color = db.Column(db.String(16), default='#FFFFFF')
     license_plate = db.Column(db.String(10))
     vin = db.Column(db.String(64))
@@ -18,9 +19,10 @@ class Motorcycle(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    maintenance = db.relationship('Maintenance', lazy='dynamic', cascade='all, delete-orphan')
+    maintenances = db.relationship('Maintenance', lazy='dynamic', cascade='all, delete-orphan')
+    planned_maintenances = db.relationship('PlannedMaintenance', lazy='dynamic', cascade='all, delete-orphan')
 
-    def to_dict(self, include_maintenance: bool = False):
+    def to_dict(self, include_maintenance: bool = False, include_planned_maintenance: bool = False):
         """ Serialize data to JSON """
         data = {
             'id': self.id,
@@ -28,6 +30,7 @@ class Motorcycle(db.Model):
             'name': self.name,
             'years': self.years,
             'volume': self.volume,
+            'mileage': self.mileage,
             'color': self.color,
             'license_plate': self.license_plate,
             'vin': self.vin,
@@ -37,6 +40,9 @@ class Motorcycle(db.Model):
         }
 
         if include_maintenance:
-            data['maintenance'] = [m.to_dict() for m in self.maintenance]
+            data['maintenances'] = [m.to_dict() for m in self.maintenance]
+
+        if include_planned_maintenance:
+            data['planned_maintenances'] = [m.to_dict() for m in self.planned_maintenances]
         
         return data

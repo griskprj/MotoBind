@@ -19,7 +19,12 @@ export function setTokens(accessToken, refreshToken) {
 }
 
 export function setUser(user) {
-  localStorage.setItem(USER_KEY, user)
+  localStorage.setItem(USER_KEY, JSON.stringify(user))
+}
+
+export function getUser() {
+  const user = localStorage.getItem(USER_KEY)
+  return user ? JSON.parse(user) : null
 }
 
 export function removeTokens() {

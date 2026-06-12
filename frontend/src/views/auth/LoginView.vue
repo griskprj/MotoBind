@@ -22,7 +22,7 @@ export default {
                 })
                 const { access_token, refresh_token } = response.data
                 setTokens(access_token, refresh_token)
-                setUser(response.user)
+                setUser(response.data.user)
                 
                 const role = response.data.user.role
                 if (role === 'admin') {
