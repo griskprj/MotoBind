@@ -94,14 +94,6 @@ def plan_maintenance():
     if mileage and mileage < motorcycle.mileage:
         return jsonify({'error': 'Указан пробег меньше пробега мотоцикла'})
 
-    # validate date: date schedule type
-    if schedule_type == 'date' and not date:
-        return jsonify({'error':'Укажите дату обслуживания'})
-
-    date_now = datetime.now()
-    if date and date_now < date:
-        return jsonify({'error': 'Дата не может быть в прошлом'})
-
     # create maintenance obj
     try:
         maintenance = PlannedMaintenance(
@@ -110,7 +102,6 @@ def plan_maintenance():
             title=title,
             description=description,
             planned_mileage=mileage,
-            planned_date=datetime.strptime(date, "%Y-%m-%d") if date else None
         )
 
         db.session.add(maintenance)

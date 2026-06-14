@@ -48,7 +48,6 @@ export default {
                 description: '',
                 scheduleType: '',
                 mileage: null,
-                date: null
             }
         }
     },
@@ -210,13 +209,12 @@ export default {
         closePlanMaintenanceModal() {
             this.showPlanMaintenanceModal = false
 
-            planMaintenanceModal = {
+            this.planMaintenanceModal = {
                 motorcycleId: null,
                 title: '',
                 description: '',
                 scheduleType: '',
                 mileage: null,
-                date: null
             }
         }
     },
@@ -277,7 +275,7 @@ export default {
                                 <p class="meta-text">Пробег:</p> <p>{{ moto.mileage ? moto.mileage : 0 }} км</p>
                             </div>
                             <div class="meta-item">
-                                <p class="meta-text">Здоровье:</p> <p>95%</p>
+                                <p class="meta-text">Здоровье:</p> <p>{{ moto.health }}%</p>
                             </div>
                         </div>
       
@@ -478,20 +476,8 @@ export default {
                     <input v-model="planMaintenanceModal.description" type="text">
                 </label>
                 <label>
-                    Тип расписания
-                    <select v-model="planMaintenanceModal.scheduleType">
-                        <option value="">Выберите тип расписания</option>
-                        <option value="mileage">Пробег</option>
-                        <option value="date">Дата</option>
-                    </select>
-                </label>
-                <label v-if="planMaintenanceModal.scheduleType === 'mileage'">
                     <i class="fa fa-tachometer"></i> Пробег
                     <input v-model="planMaintenanceModal.mileage" type="number" max="1000000" min="0">
-                </label>
-                <label v-if="planMaintenanceModal.scheduleType === 'date'">
-                    <i class="fa fa-calendar"></i> Дата
-                    <input v-model="planMaintenanceModal.date" type="date" :max="new Date().toISOString().split('T')[0]">
                 </label>
 
                 <div class="modal-actions">

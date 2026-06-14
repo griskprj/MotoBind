@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
+from app.utils.check_maintenance_status import check_status
 
 
 statistic = Blueprint('statistic', __name__)
@@ -20,8 +21,13 @@ def get_data():
     planned_maintenances = []
 
     for moto in motorcycle:
-        planned_maintenances.append([record for record in moto['planned_maintenances']])
-        print(planned_maintenances)
+        records = [check_status(record['id'], moto['id']) for record in moto['planned_maintenances']]
+
+        planned_maintenances.append(records)
+
+        overdue_maintenance = [m for m in records if m['status'] == 'overdue']
+        health = 100 - (len(overdue_maintenance) * 0.1)
+        moto['health'] = health
 
     return jsonify({
         'user': user.to_dict(),
