@@ -20,9 +20,8 @@ def get_data():
     planned_maintenances = []
 
     for moto in motorcycle:
-        maintenances = [record.to_dict() for record in moto['planned_maintenances']]
-        if len(maintenances) > 0:
-            planned_maintenances.append(maintenances)
+        planned_maintenances.append([record for record in moto['planned_maintenances']])
+        print(planned_maintenances)
 
     return jsonify({
         'user': user.to_dict(),

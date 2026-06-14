@@ -37,6 +37,11 @@ const router = createRouter({
       name: 'home',
       component: () => import('../views/Dashboard.vue'),
       meta: { requiresAuth: true, title: 'MotoBind - Главная' }
+    },
+    {
+      path: '/garage',
+      name: 'garage',
+      meta: { requiresAuth: true, title: 'MotoBind - Гараж' }
     }
   ]
 })

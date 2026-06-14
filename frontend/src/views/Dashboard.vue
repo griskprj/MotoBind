@@ -14,6 +14,7 @@ export default {
             showDeleteMotoModal: false,
             showCreateMotoModal: false,
             showAddMaintenanceModal: false,
+            showPlanMaintenanceModal: false,
 
             createMotoModal: {
                 id: null,
@@ -39,6 +40,15 @@ export default {
                 description: '',
                 mileage: null,
                 date: null
+            },
+
+            planMaintenanceModal: {
+                motorcycleId: null,
+                title: '',
+                description: '',
+                scheduleType: '',
+                mileage: null,
+                date: null
             }
         }
     },
@@ -51,7 +61,7 @@ export default {
 
                 this.user = getUser()
                 this.motorcycles = response.data.motorcycles
-                this.maintenances = response.data.maintenance
+                this.maintenances = response.data.maintenance.flat(Infinity)
             } catch(err) {
                 console.error(err)
             } finally {
@@ -117,6 +127,21 @@ export default {
             }
         },
 
+        async planMaintenance() {
+            try {
+                this.loading = true
+
+                const response = await api.post('/maintenance/plan', this.planMaintenanceModal)
+
+                this.showPlanMaintenanceModal = false
+                this.loadData()
+            } catch(err) {
+                console.error('Failed plan maintenance', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
 
         openEditMotoModal(moto) {
             this.showEditMotoModal = true
@@ -176,6 +201,23 @@ export default {
                 mileage: null,
                 date: null
             }
+        },
+
+        openPlanMaintenanceModal() {
+            this.showPlanMaintenanceModal = true
+        },
+
+        closePlanMaintenanceModal() {
+            this.showPlanMaintenanceModal = false
+
+            planMaintenanceModal = {
+                motorcycleId: null,
+                title: '',
+                description: '',
+                scheduleType: '',
+                mileage: null,
+                date: null
+            }
         }
     },
 
@@ -192,7 +234,7 @@ export default {
             <div class="welcome-wrapper">
                 <h2>Здравствуйте,</h2> <h2 class="welcome-title">{{ user?.username }}</h2>
             </div>
-            <p class="welcome-subtitle">Ваш мотоцикл в отличной форме, но есть пару моментов, на которые стоит обратить внимание</p>
+            <p class="welcome-subtitle">Ваш мотоцикл в отличной форме <span v-if="maintenances.length > 0"> , но есть пару моментов, на которые стоит обратить внимание</span></p>
         </div>
 
         <!-- === FAST ACTIONS === -->
@@ -201,7 +243,7 @@ export default {
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()">Добавить мотоцикл</button>
                 <button @click="openAddMaintenanceModal()" :disabled="motorcycles.length === 0">Добавить обслуживание</button>
-                <button :disabled="motorcycles.length === 0">Запланировать обслуживание</button>
+                <button @click="openPlanMaintenanceModal()" :disabled="motorcycles.length === 0">Запланировать обслуживание</button>
             </div>
         </div>
       
@@ -407,6 +449,54 @@ export default {
                 <div class="modal-actions">
                     <button @click="addMaintenance()">Добавить</button>
                     <button @click="closeAddMaintenanceModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan maintenance -->
+    <div v-if="showPlanMaintenanceModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Добавить обслуживание</p>
+                <button @click="closePlanMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <label>
+                    <i class="fa fa-motorcycle"></i> Мотоцикл
+                    <select v-model="planMaintenanceModal.motorcycleId">
+                        <option value="">Выберите мотоцикл</option>
+                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                    </select>
+                </label>
+                <label>
+                    <i class="fa fa-font"></i> Название
+                    <input v-model="planMaintenanceModal.title" type="text">
+                </label>
+                <label>
+                    <i class="fa fa-align-justify"></i> Описание
+                    <input v-model="planMaintenanceModal.description" type="text">
+                </label>
+                <label>
+                    Тип расписания
+                    <select v-model="planMaintenanceModal.scheduleType">
+                        <option value="">Выберите тип расписания</option>
+                        <option value="mileage">Пробег</option>
+                        <option value="date">Дата</option>
+                    </select>
+                </label>
+                <label v-if="planMaintenanceModal.scheduleType === 'mileage'">
+                    <i class="fa fa-tachometer"></i> Пробег
+                    <input v-model="planMaintenanceModal.mileage" type="number" max="1000000" min="0">
+                </label>
+                <label v-if="planMaintenanceModal.scheduleType === 'date'">
+                    <i class="fa fa-calendar"></i> Дата
+                    <input v-model="planMaintenanceModal.date" type="date" :max="new Date().toISOString().split('T')[0]">
+                </label>
+
+                <div class="modal-actions">
+                    <button @click="planMaintenance()">Добавить</button>
+                    <button @click="closePlanMaintenanceModal()" class="cancel-btn">Отменить</button>
                 </div>
             </div>
         </div>
