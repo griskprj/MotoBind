@@ -13,6 +13,7 @@ export default {
             showEditMotoModal: false,
             showDeleteMotoModal: false,
             showCreateMotoModal: false,
+            showAddMaintenanceModal: false,
 
             createMotoModal: {
                 id: null,
@@ -30,7 +31,15 @@ export default {
                 mileage: null
             },
 
-            deleteMotoId: null
+            deleteMotoId: null,
+
+            addMaintenanceModal: {
+                motorcycleId: null,
+                title: '',
+                description: '',
+                mileage: null,
+                date: null
+            }
         }
     },
 
@@ -93,6 +102,21 @@ export default {
             }
         },
 
+        async addMaintenance() {
+            try {
+                this.loading = true
+
+                const response = await api.post('/maintenance/create-new', this.addMaintenanceModal)
+
+                this.showAddMaintenanceModal = false
+                this.loadData()
+            } catch (err) {
+                console.error('Failed add maintenence:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
 
         openEditMotoModal(moto) {
             this.showEditMotoModal = true
@@ -136,6 +160,22 @@ export default {
         closeDeleteMotoModal() {
             this.deleteMotoId = null
             this.showDeleteMotoModal = false
+        },
+
+        openAddMaintenanceModal() {
+            this.showAddMaintenanceModal = true
+        },
+
+        closeAddMaintenanceModal() {
+            this.showAddMaintenanceModal = false
+
+            this.addMaintenanceModal = {
+                motorcycleId: null,
+                title: '',
+                description: '',
+                mileage: null,
+                date: null
+            }
         }
     },
 
@@ -160,7 +200,8 @@ export default {
             <h2 class="fast-action-title">Быстрые действия</h2>
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()">Добавить мотоцикл</button>
-                <button :disabled="motorcycles.length === 0">Добавить обслуживание</button>
+                <button @click="openAddMaintenanceModal()" :disabled="motorcycles.length === 0">Добавить обслуживание</button>
+                <button :disabled="motorcycles.length === 0">Запланировать обслуживание</button>
             </div>
         </div>
       
@@ -326,6 +367,46 @@ export default {
                 <div class="modal-actions">
                     <button @click="deleteMoto()" class="accept-btn">Удалить</button>
                     <button @click="closeDeleteMotoModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add maintenance -->
+    <div v-if="showAddMaintenanceModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Добавить обслуживание</p>
+                <button @click="closeAddMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <label>
+                    <i class="fa fa-motorcycle"></i> Мотоцикл
+                    <select v-model="addMaintenanceModal.motorcycleId">
+                        <option value="">Выберите мотоцикл</option>
+                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                    </select>
+                </label>
+                <label>
+                    <i class="fa fa-font"></i> Название
+                    <input v-model="addMaintenanceModal.title" type="text">
+                </label>
+                <label>
+                    <i class="fa fa-align-justify"></i> Описание
+                    <input v-model="addMaintenanceModal.description" type="text">
+                </label>
+                <label>
+                    <i class="fa fa-tachometer"></i> Пробег
+                    <input v-model="addMaintenanceModal.mileage" type="number" max="1000000" min="0">
+                </label>
+                <label>
+                    <i class="fa fa-calendar"></i> Дата
+                    <input v-model="addMaintenanceModal.date" type="date" :max="new Date().toISOString().split('T')[0]">
+                </label>
+
+                <div class="modal-actions">
+                    <button @click="addMaintenance()">Добавить</button>
+                    <button @click="closeAddMaintenanceModal()" class="cancel-btn">Отменить</button>
                 </div>
             </div>
         </div>
@@ -652,65 +733,5 @@ p {
     color: var(--text-secondary);
 
     margin-bottom: 12px;
-}
-
-
-/* Modals */
-.modal-wrapper {
-position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-
-  backdrop-filter: blur(8px);
-}
-
-.modal-container {
-    margin: 0 auto;
-    padding: 18px;
-    background-color: var(--bg-primary);
-    border-radius: 25px;
-    border: 2px solid var(--border-color);
-
-    max-width: 400px;
-}
-
-.modal-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    align-items: center;
-    gap: 24px;
-
-    margin-bottom: 18px;
-}
-
-.modal-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.modal-group input {
-    margin-top: 4px;
-}
-
-.modal-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    margin-top: 12px;
-}
-
-.cancel-btn {
-    background-color: var(--bg-secondary);
-    border: 2px solid var(--border-color)
 }
 </style>
