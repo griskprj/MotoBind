@@ -15,6 +15,9 @@ export default {
             showCreateMotoModal: false,
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
+            showMarkPlanMaintenanceModal: false,
+            showEditPlanMaintenanceModal: false,
+            showDeletePlanMaintenanceModal: false,
 
             createMotoModal: {
                 id: null,
@@ -46,8 +49,25 @@ export default {
                 motorcycleId: null,
                 title: '',
                 description: '',
-                scheduleType: '',
                 mileage: null,
+            },
+
+            editPlanMaintenanceModal: {
+                maintenanceId: null,
+                motorcycleId: null,
+                title: '',
+                description: '',
+                mileage: null,
+            },
+
+            deleteMaintenanceId: null,
+
+            markPlanMaintenanceModal: {
+                maintenanceId: null,
+                mileage: null,
+                date: null,
+                isRepeat: false,
+                interval: null
             }
         }
     },
@@ -140,6 +160,52 @@ export default {
                 this.loading = false
             }
         },
+        
+
+        async editPlanMaintenance() {
+            try {
+                this.loading = true
+
+                const response = await api.put(`/maintenance/plan`, this.editPlanMaintenanceModal)
+
+                this.showEditPlanMaintenanceModal = false
+                this.loadData()
+            } catch(err) {
+                console.error('Failed plan maintenance', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async deletePlanMaintenance() {
+            try {
+                this.loading = true
+
+                const response = await api.delete(`/maintenance/plan/${this.deleteMaintenanceId}`)
+                
+                this.showDeleteMaintenanceModal = false
+                this.loadData()
+            } catch(err) {
+                console.error('Failed delete plan maintenance', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async markPlanMaintenance(maintenanceId) {
+            try {
+                this.loading = true
+
+                const response = await api.post('/maintenance/plan/mark', this.markPlanMaintenanceModal)
+
+                this.showMarkPlanMaintenanceModal = false
+                this.loadData()
+            } catch (err) {
+                console.error('Failed mark plan maintenance', err)
+            } finally {
+                this.loading = false
+            }
+        },
 
 
         openEditMotoModal(moto) {
@@ -213,8 +279,58 @@ export default {
                 motorcycleId: null,
                 title: '',
                 description: '',
-                scheduleType: '',
                 mileage: null,
+            }
+        },
+
+        openEditPlanMaintenanceModal(maintenance) {
+            this.showEditPlanMaintenanceModal = true
+
+            this.editPlanMaintenanceModal = {
+                maintenanceId: maintenance.id,
+                motorcycleId: maintenance.moto_id,
+                title: maintenance.title,
+                description: maintenance.description,
+                mileage: maintenance.planned_mileage,
+            }
+        },
+
+        closeEditPlanMaintenanceModal() {
+            this.showEditPlanMaintenanceModal = false
+
+            this.editPlanMaintenanceModal = {
+                maintenanceId: null,
+                motorcycleId: null,
+                title: '',
+                description: '',
+                mileage: null,
+            }
+        },
+
+        openDeletePlanMaintenanceModal(maintenanceId) {
+            this.showDeletePlanMaintenanceModal = true
+            this.deleteMaintenanceId = maintenanceId
+        },
+
+        closeDeleteMaintenanceModal() {
+            this.showDeletePlanMaintenanceModal = false
+
+            this.maintenanceId = null
+        },
+
+        openMarkPlanMaintenanceModal(maintenanceId) {
+            this.showMarkPlanMaintenanceModal = true
+            this.markPlanMaintenanceModal.maintenanceId = maintenanceId
+        },
+
+        closeMarkPlanMaintenanceModal() {
+            this.showMarkPlanMaintenanceModal = false
+            this.markPlanMaintenanceModal = {
+                maintenanceId: null,
+                mileage: null,
+                date: null,
+                isRepeat: false,
+                interval: null
             }
         }
     },
@@ -237,16 +353,17 @@ export default {
 
         <!-- === FAST ACTIONS === -->
         <div class="fast-actions-section">
-            <h2 class="fast-action-title">Быстрые действия</h2>
+            <h2 class="section-title">Быстрые действия</h2>
             <div class="fast-actions-wrapper">
-                <button @click="openCreateMotoModal()">Добавить мотоцикл</button>
-                <button @click="openAddMaintenanceModal()" :disabled="motorcycles.length === 0">Добавить обслуживание</button>
-                <button @click="openPlanMaintenanceModal()" :disabled="motorcycles.length === 0">Запланировать обслуживание</button>
+                <button @click="openCreateMotoModal()"><i class="fa fa-motorcycle"></i> Добавить мотоцикл</button>
+                <button @click="openAddMaintenanceModal()" :disabled="motorcycles.length === 0"><i class="fa fa-wrench"></i> Добавить обслуживание</button>
+                <button @click="openPlanMaintenanceModal()" :disabled="motorcycles.length === 0"><i class="fa fa-calendar"></i> Планировать обслуживание</button>
             </div>
         </div>
       
         <!-- === MOTORCYCLE SECTION === -->
         <div class="motorcycle-section">
+            <h2 class="section-title"><i class="fa fa-motorcycle"></i> Мои мотоциклы</h2>
             <div v-if="motorcycles.length === 0" class="empty-state">
                 <i class="fa fa-motorcycle"></i>
                 <p class="empty-state-p">У вас нет мотоциклов</p>
@@ -290,12 +407,12 @@ export default {
         
         <!-- === PENDING MAINTENANCE SECTION === -->
         <div class="maintenance-section">
-            <h2 class="maintenance-section-title">Предстоящее обслуживание</h2>
+            <h2 class="maintenance-section-title"><i class="fa fa-wrench"></i> Предстоящее обслуживание</h2>
             <div class="maintenance-cards">
                 <div v-if="maintenances.length === 0" class="empty-state">
                     <i class="fa fa-wrench"></i>
                     <p class="empty-state-p">У вас нет запланированного обслуживания</p>
-                    <button :disabled="motorcycles.length === 0" class="btn add-maintenance">
+                    <button @click="openPlanMaintenanceModal()" :disabled="motorcycles.length === 0" class="btn add-maintenance">
                         Добавить
                     </button>
                 </div>
@@ -312,8 +429,11 @@ export default {
                             <p v-if="maintenance.planned_mileage" class="maintenance-meta-item">Пробег: {{ maintenance.planned_mileage}}</p>
                         </div>
                         <div class="maintenance-actions">
-                            <button class="maintenance-action"><i class="fa fa-pen"></i></button>
-                            <button class="maintenance-action"><i class="fa fa-trash"></i></button>
+                            <div class="actions-wrapper">
+                                <button @click="openEditPlanMaintenanceModal(maintenance)" class="maintenance-action"><i class="fa fa-pen"></i></button>
+                                <button @click="openDeletePlanMaintenanceModal(maintenance.id)" class="maintenance-action"><i class="fa fa-trash"></i></button>
+                            </div>
+                            <button @click="openMarkPlanMaintenanceModal(maintenance.id)" class="accept-btn"><i class="fa fa-check"></i></button>
                         </div>
                     </div>
                 </div>
@@ -405,7 +525,7 @@ export default {
             <div class="modal-group">
                 <p class="modal-text">Вы уверены, что хотите удалить мотоцикл? Все связанные данные безвозвратно будут удалены, отменить это действие невозможно.</p>
                 <div class="modal-actions">
-                    <button @click="deleteMoto()" class="accept-btn">Удалить</button>
+                    <button @click="deleteMoto()" class="btn-danger">Удалить</button>
                     <button @click="closeDeleteMotoModal()" class="cancel-btn">Отменить</button>
                 </div>
             </div>
@@ -487,6 +607,91 @@ export default {
             </div>
         </div>
     </div>
+
+    <!-- Edit plan maintenance -->
+    <div v-if="showEditPlanMaintenanceModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Редактировать запланированное обслуживание</p>
+                <button @click="closeEditPlanMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <label>
+                    <i class="fa fa-motorcycle"></i> Мотоцикл
+                    <select v-model="editPlanMaintenanceModal.motorcycleId">
+                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                    </select>
+                </label>
+                <label>
+                    <i class="fa fa-font"></i> Название
+                    <input v-model="editPlanMaintenanceModal.title" type="text">
+                </label>
+                <label>
+                    <i class="fa fa-align-justify"></i> Описание
+                    <input v-model="editPlanMaintenanceModal.description" type="text">
+                </label>
+                <label>
+                    <i class="fa fa-tachometer"></i> Пробег
+                    <input v-model="editPlanMaintenanceModal.mileage" type="number" max="1000000" min="0">
+                </label>
+
+                <div class="modal-actions">
+                    <button @click="editPlanMaintenance()">Добавить</button>
+                    <button @click="closeEditPlanMaintenanceModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete maintenance -->
+    <div v-if="showDeletePlanMaintenanceModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Удалить обслуживание</p>
+                <button @click="closeDeleteMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <p class="modal-text">Вы уверены, что хотите удалить запланированное обслуживание? Отменить это действие невозможно.</p>
+                <div class="modal-actions">
+                    <button @click="deletePlanMaintenance()" class="btn-danger">Удалить</button>
+                    <button @click="closeDeleteMaintenanceModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark maintenance -->
+    <div v-if="showMarkPlanMaintenanceModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Отметить обслуживание</p>
+                <button @click="closeMarkPlanMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <label>
+                    Пробег выполнения
+                    <input v-model="markPlanMaintenanceModal.mileage" type="number" max="1000000">
+                </label>
+                <label>
+                    Дата
+                    <input v-model="markPlanMaintenanceModal.date" type="date" :max="new Date().toISOString().split('T')">
+                </label>
+                <label class="checkbox-group">
+                    Запланировать следующее обслуживание?
+                    <input v-model="markPlanMaintenanceModal.isRepeat" type="checkbox">
+                </label>
+                <label v-if="markPlanMaintenanceModal.isRepeat">
+                    Интервал
+                    <input v-model="markPlanMaintenanceModal.interval" type="number" max="100000">
+                </label>
+
+                <div class="modal-actions">
+                    <button @click="markPlanMaintenance()">Сохранить</button>
+                    <button @click="closeMarkPlanMaintenanceModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -526,7 +731,7 @@ p {
     margin-bottom: 32px;
 }
 
-.fast-action-title {
+.section-title {
     margin-bottom: 24px;
 }
 
@@ -534,7 +739,7 @@ p {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    gap: 12px;
+    gap: 8px;
 }
 
 .fast-actions-wrapper button {
@@ -653,10 +858,6 @@ p {
 
 
 @media (max-width: 728px) {
-    .motorcycle-section {
-        padding: 12px;
-    }
-
     .moto-card {
         padding: 8px;
     }
@@ -751,11 +952,13 @@ p {
     gap: 8px;
 }
 
-@media (max-width: 728px) {
-    .maintenance-section {
-        padding: 12px;
-    }
+.actions-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
 
+@media (max-width: 728px) {
     .maintenance-card {
         flex-direction: column;
     }
@@ -774,7 +977,7 @@ p {
     }
 
     .maintenance-actions {
-        flex-direction: row;
+        flex-direction: column;
         width: 100%;
     }
 

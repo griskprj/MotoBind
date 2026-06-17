@@ -111,3 +111,119 @@ def plan_maintenance():
     except Exception as e:
         current_app.logger.error(f'Failed add maintenance: {str(e)}')
         return jsonify({'error': 'Ошибка сервера'}), 500
+
+
+@maintenance.route('/plan', methods=['PUT'])
+@jwt_required()
+def edit_plan_maintenance():
+    """ Edit plan maintenance """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Нет данных'}), 400
+
+    maintenance_id = data.get('maintenanceId')
+    motorcycle_id = data.get('motorcycleId')
+    title = data.get('title')
+    description = data.get('description')
+    mileage = data.get('mileage')
+
+    if not maintenance_id:
+        return jsonify({'error': 'Нет id обслуживания'}), 400
+
+    maintenance = PlannedMaintenance.query.get(maintenance_id)
+    if not maintenance:
+        return jsoinfy({'error': 'Обслуживание не найдено'}), 404
+    
+    if motorcycle_id:
+        maintenance.moto_id = motorcycle_id
+    if title:
+        maintenance.title = title
+    if description:
+        maintenance.description = description
+    if mileage:
+        maintenance.planned_mileage = mileage
+
+    db.session.commit()
+
+    return jsonify(maintenance.to_dict())
+
+
+@maintenance.route('/plan/<int:maintenance_id>', methods=['DELETE'])
+@jwt_required()
+def delete_plan_maintenance(maintenance_id):
+    """ Delete plan maintenance record """
+    maintenance = PlannedMaintenance.query.get(maintenance_id)
+    current_user_id = int(get_jwt_identity())
+
+    if maintenance.author_id != current_user_id:
+        return jsonify({'error': 'Вы можете удалять только свои записи'}), 403
+    
+    db.session.delete(maintenance)
+    db.session.commit()
+
+    return jsonify({'message': 'Запись удалена'}), 200
+
+
+@maintenance.route('/plan/mark', methods=['POST'])
+@jwt_required()
+def mark_maintenance():
+    """ Mark maintenance and create new if is repeat """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Нет данных'}), 400
+    
+    maintenance_id = data.get('maintenanceId')
+    mileage = data.get('mileage')
+    date = data.get('date')
+    is_repeat = data.get('isRepeat')
+    interval = data.get('interval')
+    current_user_id = int(get_jwt_identity())
+
+    if not maintenance_id or not mileage:
+        return jsonify({'error': 'Заполните обязательные поля'}), 400
+    
+    now = datetime.now()
+    date_obj = datetime.strptime(date, '%Y-%m-%d')
+    if date_obj > now:
+        return jsonify({'error': 'Дата не может быть в будущем'}), 400
+    
+    if is_repeat and not interval:
+        return jsonify({'error': 'Укажите интервал обслуживания'}), 400
+    
+    maintenance = PlannedMaintenance.query.get(maintenance_id)
+    if not maintenance:
+        return jsonify({'error': 'Обслуживание не найдено'}), 404
+    
+    moto = Motorcycle.query.get(maintenance.moto_id)
+
+    new_maintenance = Maintenance(
+        moto_id=moto.id,
+        author_id=current_user_id,
+        title=maintenance.title,
+        description=maintenance.description,
+        mileage=mileage,
+        date=date_obj
+    )
+    if mileage > moto.mileage:
+        moto.mileage = mileage
+
+    db.session.add(new_maintenance)
+
+    if is_repeat:
+        planned_mileage = moto.mileage + interval
+        planned_maintenance = PlannedMaintenance(
+            author_id=current_user_id,
+            moto_id=moto.id,
+            title=maintenance.title,
+            description=maintenance.description,
+            planned_mileage=planned_mileage,
+        )
+        db.session.add(planned_maintenance)
+    
+    db.session.delete(maintenance)
+    db.session.commit()
+
+    return jsonify({
+        'maintenance_record': new_maintenance.to_dict(),
+        'planned_maintenance': planned_maintenance.to_dict()
+    }), 201
