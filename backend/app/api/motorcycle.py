@@ -114,6 +114,28 @@ def update_moto(moto_id):
     })
 
 
+@motorcycle.route('/<int:moto_id>', methods=['PATCH'])
+@jwt_required()
+def update_moto_mileage(moto_id):
+    """ Update moto mileage """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Нет данных'}), 400
+    
+    motorcycle = Motorcycle.query.get(moto_id)
+    if not motorcycle:
+        return jsonify({'error': 'Мотоцикл не найден'}), 404
+    
+    new_mileage = data.get('newMileage')
+    if not new_mileage:
+        return jsonify({'error': 'Укажите новый пробег'}), 400
+    
+    motorcycle.mileage = new_mileage
+    db.session.commit()
+
+    return jsonify({'message': 'Пробег обновлен'}), 200
+
+
 @motorcycle.route('/<int:moto_id>', methods=['DELETE'])
 @jwt_required()
 def delete_moto(moto_id):

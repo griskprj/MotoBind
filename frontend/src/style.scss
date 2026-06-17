@@ -250,6 +250,10 @@ position: fixed;
     margin-bottom: 18px;
 }
 
+.modal-title {
+  font-weight: 600;
+}
+
 .modal-group {
     display: flex;
     flex-direction: column;
@@ -282,5 +286,6 @@ position: fixed;
 }
 
 .cancel-btn:hover {
-  border-color: var(--accent-hover);
+  background-color: var(--danger-hover);
+  border-color: var(--danger-hover);
 }

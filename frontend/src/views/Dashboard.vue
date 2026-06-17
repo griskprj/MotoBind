@@ -13,6 +13,7 @@ export default {
             showEditMotoModal: false,
             showDeleteMotoModal: false,
             showCreateMotoModal: false,
+            showUpdateMileageModal: false,
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
@@ -68,6 +69,11 @@ export default {
                 date: null,
                 isRepeat: false,
                 interval: null
+            },
+
+            updateMileageModal: {
+                newMileage: null,
+                motoId: null
             }
         }
     },
@@ -126,6 +132,21 @@ export default {
                 this.loadData()
             } catch (err) {
                 console.error(err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async updateMileage() {
+            try {
+                this.loading = true
+
+                const response = await api.patch(`motorcycle/${this.updateMileageModal.motoId}`, this.updateMileageModal)
+
+                this.showUpdateMileageModal = false
+                this.loadData()
+            } catch(err) {
+                console.error('Failed update mileage', err)
             } finally {
                 this.loading = false
             }
@@ -242,6 +263,18 @@ export default {
             this.createMotoModal.mileage = null
         },
 
+        openUpdateMileageModal() {
+            this.showUpdateMileageModal = true
+        },
+
+        closeUpdateMileageModal() {
+            this.showUpdateMileageModal = false
+            this.updateMileageModal = {
+                newMileage: null,
+                motoId: null
+            }
+        },
+
         openDeleteMotoModal(motoId) {
             this.deleteMotoId = motoId
             this.showDeleteMotoModal = true
@@ -356,6 +389,7 @@ export default {
             <h2 class="section-title">Быстрые действия</h2>
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()"><i class="fa fa-motorcycle"></i> Добавить мотоцикл</button>
+                <button @click="openUpdateMileageModal()"><i class="fa fa-tachometer"></i> Обновить пробег</button>
                 <button @click="openAddMaintenanceModal()" :disabled="motorcycles.length === 0"><i class="fa fa-wrench"></i> Добавить обслуживание</button>
                 <button @click="openPlanMaintenanceModal()" :disabled="motorcycles.length === 0"><i class="fa fa-calendar"></i> Планировать обслуживание</button>
             </div>
@@ -471,7 +505,7 @@ export default {
 
                     <div class="modal-actions">
                         <button @click="createMoto()" class="save-btn">Добавить</button>
-                        <button @click="closeEditMotoModal()" class="cancel-btn">Отменить</button>
+                        <button @click="closeCreateMotoModal()" class="cancel-btn">Отменить</button>
                     </div>
                 </div>
             </div>
@@ -515,6 +549,33 @@ export default {
         </div>
     </div>
 
+    <div v-if="showUpdateMileageModal" class="modal-wrapper">
+        <div class="modal-container">
+            <div class="modal-header">
+                <p class="modal-title">Обновить пробег</p>
+                <button @click="closeUpdateMileageModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
+            </div>
+            <div class="modal-group">
+                <label>
+                    <i class="fa fa-motorcycle"></i> Мотоцикл
+                    <select v-model="updateMileageModal.motoId">
+                        <option value="">Выберите мотоцикл</option>
+                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                    </select>
+                </label>
+                <label>
+                    <i class="fa fa-tachometer"></i> Новый пробег
+                    <input v-model="updateMileageModal.newMileage" type="number">
+                </label>
+
+                <div class="modal-actions">
+                    <button @click="updateMileage()">Сохранить</button>
+                    <button @click="closeUpdateMileageModal()" class="cancel-btn">Отменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete moto modal -->
     <div v-if="showDeleteMotoModal" class="modal-wrapper">
         <div class="modal-container">
@@ -526,7 +587,7 @@ export default {
                 <p class="modal-text">Вы уверены, что хотите удалить мотоцикл? Все связанные данные безвозвратно будут удалены, отменить это действие невозможно.</p>
                 <div class="modal-actions">
                     <button @click="deleteMoto()" class="btn-danger">Удалить</button>
-                    <button @click="closeDeleteMotoModal()" class="cancel-btn">Отменить</button>
+                    <button @click="closeDeleteMotoModal()" class="accept-btn">Отменить</button>
                 </div>
             </div>
         </div>
