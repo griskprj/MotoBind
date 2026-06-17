@@ -14,9 +14,9 @@
         <!-- Навигация (адаптивная) -->
         <nav class="header-nav" :class="{ 'nav-open': isMenuOpen }">
             <router-link
-                to="/"
+                to="/home"
                 class="nav-link"
-                :class="{ active: $route.path === '/'}"
+                :class="{ active: $route.path === '/home'}"
                 @click="closeMenu"
             >
                 <i class="fa fa-home"></i>
