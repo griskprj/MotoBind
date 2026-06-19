@@ -1,8 +1,15 @@
 <script>
 import api from '../api/api';
 import { getUser } from '../api/auth';
+import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
+import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
 
 export default {
+    components: {
+        AddMotoModal,
+        EditMotoModal
+    },
+
     data() {
         return {
             user: null,
@@ -20,23 +27,9 @@ export default {
             showEditPlanMaintenanceModal: false,
             showDeletePlanMaintenanceModal: false,
 
-            createMotoModal: {
-                id: null,
-                name: '',
-                volume: null,
-                years: null,
-                mileage: null
-            },
-
-            editMotoModal: {
-                id: null,
-                name: '',
-                volume: null,
-                years: null,
-                mileage: null
-            },
-
+            // Motorcycle vars
             deleteMotoId: null,
+            selectedMoto: null,
 
             addMaintenanceModal: {
                 motorcycleId: null,
@@ -94,19 +87,86 @@ export default {
             }
         },
 
-        async saveMoto(motoId) {
+
+
+        // ===== MOTORCYCLES =====
+
+        // --> Async functions
+        async handleMotoCreated(formData) {
             try {
                 this.loading = true
-                const response = await api.put(`/motorcycle/${motoId}`, this.editMotoModal)
 
-                this.showEditMotoModal = false
-                this.loadData()
+                const { data } = await api.post('/motorcycle/new', formData)
+
+                this.motorcycles.push(data)
+                this.showCreateMotoModal = false
+
+                alert('Мотоцикл добавлен!')
             } catch(err) {
-                console.error(err)
+                console.error('Failed create moto:', err)
             } finally {
                 this.loading = false
             }
         },
+
+        async handleMotoEdited(formData) {
+            try {
+                this.loading = true
+
+                const { data } = await api.put(`/motorcycle/${formData.motoId}`, formData)
+
+                this.motorcycles.push(data)
+                this.showEditMotoModal = false
+                
+                alert('Изменения сохранены!')
+            } catch(err) {
+                console.error('Failed edit moto:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async handleMotoUpdated(formData) {
+            try {
+                this.loading = true
+                const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
+
+                const index = this.motorcycles.findIndex(m => m.id === formData.id)
+                
+                if (index !== -1) {
+                    this.motorcycles[index] = data
+                }
+
+                this.showEditMotoModal = false
+                alert('Мотоцикл обновлен!')
+            } catch(err) {
+                console.error('Failed update moto:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+
+        // ---> Modals function
+        
+        // create moto
+        openCreateMotoModal() {
+            this.showCreateMotoModal = true
+        },
+
+        // edit moto
+        openEditMotoModal(moto) {
+            this.selectedMoto = moto
+            console.log(this.selectedMoto)
+            this.showEditMotoModal = true
+        },
+        closeEditMotoModal() {
+            this.showEditMotoModal = false
+            this.selectedMoto = null
+        },
+        // ===== --- =====
+
+        
 
         async deleteMoto() {
             try {
@@ -114,21 +174,6 @@ export default {
                 const response = await api.delete(`/motorcycle/${this.deleteMotoId}`)
 
                 this.showDeleteMotoModal = false
-                this.loadData()
-            } catch (err) {
-                console.error(err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async createMoto() {
-            try {
-                this.loading = true
-
-                const response = await api.post('/motorcycle/new', this.createMotoModal)
-
-                this.showCreateMotoModal = false
                 this.loadData()
             } catch (err) {
                 console.error(err)
@@ -229,39 +274,11 @@ export default {
         },
 
 
-        openEditMotoModal(moto) {
-            this.showEditMotoModal = true
+        
 
-            this.editMotoModal.id = moto.id
-            this.editMotoModal.name = moto.name
-            this.editMotoModal.volume = moto.volume
-            this.editMotoModal.years = moto.years
-            this.editMotoModal.mileage = moto.mileage
-        },
+        
 
-        closeEditMotoModal() {
-            this.showEditMotoModal = false
-
-            this.editMotoModal.id = null
-            this.editMotoModal.name = ''
-            this.editMotoModal.volume = null
-            this.editMotoModal.years = null
-            this.editMotoModal.mileage = null
-        },
-
-        openCreateMotoModal() {
-            this.showCreateMotoModal = true
-        },
-
-        closeCreateMotoModal() {
-            this.showCreateMotoModal = false
-
-            this.createMotoModal.id = null
-            this.createMotoModal.name = ''
-            this.createMotoModal.volume = null
-            this.createMotoModal.years = null
-            this.createMotoModal.mileage = null
-        },
+        
 
         openUpdateMileageModal() {
             this.showUpdateMileageModal = true
@@ -476,78 +493,19 @@ export default {
     </div>
 
     <!-- Add motorcycle -->
-    <div v-if="showCreateMotoModal" class="modal-wrapper">
-        <div class="modal-container">
-            <div class="modal-header">
-                <p class="modal-title">Добавить мотоцикл</p>
-                <button @click="closeCreateMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
-            </div>
-    
-            <div class="modal-body">
-                <div class="modal-group">
-                    <input v-model="createMotoModal.id" type="hidden">
-                    <label>
-                        Имя
-                        <input v-model="createMotoModal.name" type="text" class="modal-input">
-                    </label>
-                    <label>
-                        Объем
-                        <input v-model="createMotoModal.volume" type="number" min="49" max="4000" class="modal-input">
-                    </label>
-                    <label>
-                        Год выпуска
-                        <input v-model="createMotoModal.years" type="number" min="1950" :max="new Date().getFullYear()" class="modal-input">
-                    </label>
-                    <label>
-                        Пробег
-                        <input v-model="createMotoModal.mileage" type="number" min="0" max="1000000" class="modal-input">
-                    </label>
-
-                    <div class="modal-actions">
-                        <button @click="createMoto()" class="save-btn">Добавить</button>
-                        <button @click="closeCreateMotoModal()" class="cancel-btn">Отменить</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <AddMotoModal 
+        :is-open="showCreateMotoModal"
+        @submit="handleMotoCreated"
+        @close="showCreateMotoModal = false"
+    />
 
     <!-- Edit Motorcycle -->
-    <div v-if="showEditMotoModal" class="modal-wrapper">
-        <div class="modal-container">
-            <div class="modal-header">
-                <p class="modal-title">Редактировать мотоцикл</p>
-                <button @click="closeEditMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
-            </div>
-    
-            <div class="modal-body">
-                <div class="modal-group">
-                    <input v-model="editMotoModal.id" type="hidden">
-                    <label>
-                        Имя
-                        <input v-model="editMotoModal.name" type="text" class="modal-input">
-                    </label>
-                    <label>
-                        Объем
-                        <input v-model="editMotoModal.volume" type="number" min="49" max="4000" class="modal-input">
-                    </label>
-                    <label>
-                        Год выпуска
-                        <input v-model="editMotoModal.years" type="number" min="1950" :max="new Date().getFullYear()" class="modal-input">
-                    </label>
-                    <label>
-                        Пробег
-                        <input v-model="editMotoModal.mileage" type="number" min="0" max="1000000" class="modal-input">
-                    </label>
-
-                    <div class="modal-actions">
-                        <button @click="saveMoto(editMotoModal.id)" class="save-btn">Сохранить</button>
-                        <button @click="closeEditMotoModal()" class="cancel-btn">Отменить</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <EditMotoModal
+        :is-open="showEditMotoModal"
+        :motorcycle="selectedMoto"
+        @submit="handleMotoUpdated"
+        @close="showEditMotoModal = false"
+    />
 
     <div v-if="showUpdateMileageModal" class="modal-wrapper">
         <div class="modal-container">
@@ -808,7 +766,7 @@ p {
     min-width: 220px;
 }
 
-@media (max-width: 728px) {
+@media (max-width: 1240px) {
     .fast-actions-wrapper {
         flex-direction: column;
     }

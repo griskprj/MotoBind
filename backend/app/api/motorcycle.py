@@ -82,7 +82,7 @@ def update_moto(moto_id):
     if not data:
         return jsonify({'error': 'Нет данных'}), 400
     
-    motorcycle = Motorcycle.query.get(data.get('id'))
+    motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         return jsonify({'error': 'Мотоцикл не найден'}), 404
 
@@ -92,8 +92,6 @@ def update_moto(moto_id):
         volume = data.get('volume')
         mileage = data.get('mileage')
         years = data.get('years')
-        print(datetime.year)
-        print(years)
         if 'name' in data:
             motorcycle.name = name
         if 'years' in data and datetime.now().year > years:
@@ -108,10 +106,7 @@ def update_moto(moto_id):
         current_app.logger.error(f'Failed update moto: {str(e)}')
         return jsonify({'error': 'Ошибка сервера'}), 500
 
-    return jsonify({
-        'message': 'Мотоцикл успешно обновлен',
-        'moto': motorcycle.to_dict()
-    })
+    return jsonify(motorcycle.to_dict())
 
 
 @motorcycle.route('/<int:moto_id>', methods=['PATCH'])
