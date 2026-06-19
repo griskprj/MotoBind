@@ -2,12 +2,14 @@
 import api from '../api/api';
 import { getUser } from '../api/auth';
 import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
+import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
 
 export default {
     components: {
         AddMotoModal,
-        EditMotoModal
+        EditMotoModal,
+        DeleteMotoModal
     },
 
     data() {
@@ -30,6 +32,7 @@ export default {
             // Motorcycle vars
             deleteMotoId: null,
             selectedMoto: null,
+            // === --- ===
 
             addMaintenanceModal: {
                 motorcycleId: null,
@@ -146,6 +149,26 @@ export default {
             }
         },
 
+        async handleMotoDeleted(motoId) {
+            try {
+                this.loading = true
+                await api.delete(`/motorcycle/${motoId}`)
+
+                const index = this.motorcycles.findIndex(m => m.id === motoId)
+                
+                if (index !== -1) {
+                    this.motorcycles.splice(index, 1)
+                }
+
+                this.showDeleteMotoModal = false
+                alert('Мотоцикл удален!')
+            } catch(err) {
+                console.error('Failed delete moto:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
 
         // ---> Modals function
         
@@ -163,6 +186,12 @@ export default {
         closeEditMotoModal() {
             this.showEditMotoModal = false
             this.selectedMoto = null
+        },
+
+        // delete moto
+        openDeleteMotoModal(motoId) {
+            this.deleteMotoId = motoId
+            this.showDeleteMotoModal = true
         },
         // ===== --- =====
 
@@ -292,15 +321,7 @@ export default {
             }
         },
 
-        openDeleteMotoModal(motoId) {
-            this.deleteMotoId = motoId
-            this.showDeleteMotoModal = true
-        },
-
-        closeDeleteMotoModal() {
-            this.deleteMotoId = null
-            this.showDeleteMotoModal = false
-        },
+        
 
         openAddMaintenanceModal() {
             this.showAddMaintenanceModal = true
@@ -535,21 +556,12 @@ export default {
     </div>
 
     <!-- Delete moto modal -->
-    <div v-if="showDeleteMotoModal" class="modal-wrapper">
-        <div class="modal-container">
-            <div class="modal-header">
-                <p class="modal-title">Удалить мотоцикл</p>
-                <button @click="closeDeleteMotoModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
-            </div>
-            <div class="modal-group">
-                <p class="modal-text">Вы уверены, что хотите удалить мотоцикл? Все связанные данные безвозвратно будут удалены, отменить это действие невозможно.</p>
-                <div class="modal-actions">
-                    <button @click="deleteMoto()" class="btn-danger">Удалить</button>
-                    <button @click="closeDeleteMotoModal()" class="accept-btn">Отменить</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <DeleteMotoModal
+        :is-open="showDeleteMotoModal"
+        :motoId="deleteMotoId"
+        @submit="handleMotoDeleted"
+        @close="showDeleteMotoModal = false"
+    />
 
     <!-- Add maintenance -->
     <div v-if="showAddMaintenanceModal" class="modal-wrapper">
