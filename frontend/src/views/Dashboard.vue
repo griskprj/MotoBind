@@ -4,32 +4,45 @@ import { getUser } from '../api/auth';
 import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
+import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
 
 export default {
     components: {
         AddMotoModal,
         EditMotoModal,
-        DeleteMotoModal
+        DeleteMotoModal,
+        UpdateMileageModal
     },
 
     data() {
         return {
             user: null,
-            motorcycles: [],
             maintenances: [],
             loading: false,
 
-            showEditMotoModal: false,
-            showDeleteMotoModal: false,
-            showCreateMotoModal: false,
+            
+
+            // === Shows states modals ===
             showUpdateMileageModal: false,
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
             showEditPlanMaintenanceModal: false,
             showDeletePlanMaintenanceModal: false,
+            // === --- ===
 
-            // Motorcycle vars
+
+
+            // === Motorcycle vars ===
+            // moto list
+            motorcycles: [],
+
+            // modals vars
+            showEditMotoModal: false,
+            showDeleteMotoModal: false,
+            showCreateMotoModal: false,
+
+            // other vars
             deleteMotoId: null,
             selectedMoto: null,
             // === --- ===
@@ -66,11 +79,6 @@ export default {
                 isRepeat: false,
                 interval: null
             },
-
-            updateMileageModal: {
-                newMileage: null,
-                motoId: null
-            }
         }
     },
 
@@ -96,9 +104,8 @@ export default {
 
         // --> Async functions
         async handleMotoCreated(formData) {
+            // create moto
             try {
-                this.loading = true
-
                 const { data } = await api.post('/motorcycle/new', formData)
 
                 this.motorcycles.push(data)
@@ -112,24 +119,8 @@ export default {
             }
         },
 
-        async handleMotoEdited(formData) {
-            try {
-                this.loading = true
-
-                const { data } = await api.put(`/motorcycle/${formData.motoId}`, formData)
-
-                this.motorcycles.push(data)
-                this.showEditMotoModal = false
-                
-                alert('Изменения сохранены!')
-            } catch(err) {
-                console.error('Failed edit moto:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
         async handleMotoUpdated(formData) {
+            // update moto
             try {
                 this.loading = true
                 const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
@@ -150,6 +141,7 @@ export default {
         },
 
         async handleMotoDeleted(motoId) {
+            // delete moto
             try {
                 this.loading = true
                 await api.delete(`/motorcycle/${motoId}`)
@@ -164,6 +156,28 @@ export default {
                 alert('Мотоцикл удален!')
             } catch(err) {
                 console.error('Failed delete moto:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async handleMotoMileageUpdated(formData) {
+            // update moto mileage
+            try {
+                this.loading = true
+
+                const { data } = await api.patch(`motorcycle/${formData.id}`, formData)
+
+                const index = this.motorcycles.findIndex(m => m.id === formData.id)
+                
+                if (index !== -1) {
+                    this.motorcycles[index] = data
+                }
+
+                this.showUpdateMileageModal = false
+                alert('Пробег мотоцикла обновлен!')
+            } catch(err) {
+                console.error('Failed update moto mileage', err)
             } finally {
                 this.loading = false
             }
@@ -193,6 +207,11 @@ export default {
             this.deleteMotoId = motoId
             this.showDeleteMotoModal = true
         },
+
+        // update moto mileage
+        openUpdateMileageModal() {
+            this.showUpdateMileageModal = true
+        },
         // ===== --- =====
 
         
@@ -206,21 +225,6 @@ export default {
                 this.loadData()
             } catch (err) {
                 console.error(err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async updateMileage() {
-            try {
-                this.loading = true
-
-                const response = await api.patch(`motorcycle/${this.updateMileageModal.motoId}`, this.updateMileageModal)
-
-                this.showUpdateMileageModal = false
-                this.loadData()
-            } catch(err) {
-                console.error('Failed update mileage', err)
             } finally {
                 this.loading = false
             }
@@ -300,17 +304,6 @@ export default {
             } finally {
                 this.loading = false
             }
-        },
-
-
-        
-
-        
-
-        
-
-        openUpdateMileageModal() {
-            this.showUpdateMileageModal = true
         },
 
         closeUpdateMileageModal() {
@@ -455,16 +448,13 @@ export default {
                     <div class="moto-card-meta">
                         <div class="meta-items">
                             <div class="meta-item">
-                                <p class="meta-text">Объем:</p> <p>{{ moto.volume }}</p>
+                                <p class="meta-text">Объем:</p> <p>{{ moto.volume }} см3</p>
                             </div>
                             <div class="meta-item">
-                                <p class="meta-text">Год выпуска:</p> <p>{{ moto.years }}</p>
+                                <p class="meta-text">Год выпуска:</p> <p>{{ moto.years }} г.</p>
                             </div>
                             <div class="meta-item">
                                 <p class="meta-text">Пробег:</p> <p>{{ moto.mileage ? moto.mileage : 0 }} км</p>
-                            </div>
-                            <div class="meta-item">
-                                <p class="meta-text">Здоровье:</p> <p>{{ moto.health }}%</p>
                             </div>
                         </div>
       
@@ -528,32 +518,13 @@ export default {
         @close="showEditMotoModal = false"
     />
 
-    <div v-if="showUpdateMileageModal" class="modal-wrapper">
-        <div class="modal-container">
-            <div class="modal-header">
-                <p class="modal-title">Обновить пробег</p>
-                <button @click="closeUpdateMileageModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
-            </div>
-            <div class="modal-group">
-                <label>
-                    <i class="fa fa-motorcycle"></i> Мотоцикл
-                    <select v-model="updateMileageModal.motoId">
-                        <option value="">Выберите мотоцикл</option>
-                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
-                    </select>
-                </label>
-                <label>
-                    <i class="fa fa-tachometer"></i> Новый пробег
-                    <input v-model="updateMileageModal.newMileage" type="number">
-                </label>
-
-                <div class="modal-actions">
-                    <button @click="updateMileage()">Сохранить</button>
-                    <button @click="closeUpdateMileageModal()" class="cancel-btn">Отменить</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Update moto mileage -->
+    <UpdateMileageModal
+        :is-open="showUpdateMileageModal"
+        :motorcycles="motorcycles"
+        @submit="handleMotoMileageUpdated"
+        @close="showUpdateMileageModal = false"
+    />
 
     <!-- Delete moto modal -->
     <DeleteMotoModal
@@ -802,6 +773,12 @@ p {
     border-radius: 18px;
 
     border: 2px solid var(--accent-light);
+
+    transition: all 0.3s;
+}
+
+.moto-card:hover {
+    transform: translateY(-5px);
 }
 
 .moto-card-header {

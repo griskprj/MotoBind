@@ -9,7 +9,9 @@
             </div>
 
             <div class="modal-body">
-                <slot />
+                <div class="modal-group">
+                    <slot />
+                </div>
             </div>
         </div>
     </div>

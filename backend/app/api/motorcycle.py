@@ -128,7 +128,7 @@ def update_moto_mileage(moto_id):
     motorcycle.mileage = new_mileage
     db.session.commit()
 
-    return jsonify({'message': 'Пробег обновлен'}), 200
+    return jsonify(motorcycle.to_dict()), 200
 
 
 @motorcycle.route('/<int:moto_id>', methods=['DELETE'])
