@@ -19,7 +19,7 @@ def create_new_maintenance():
         return jsonify({'error': 'Нет данных'}), 400
 
     user = User.query.get(get_jwt_identity())
-    moto_id = data.get('motorcycleId')
+    moto_id = data.get('id')
     title = data.get('title')
     description = data.get('description')
     mileage = data.get('mileage')

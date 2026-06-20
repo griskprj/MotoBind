@@ -5,17 +5,16 @@
         @close="$emit('close')"
     >
         <label>
-            <i class="fa fa-motorcycle"></i> Мотоцикл
+            <i class="fa fa-motorcycle"></i> Мотоцикл *
             <select v-model="form.id">
-                <option value="">Выберите мотоцикл</option>
                 <option v-for="moto in motorcycles" :value="moto.id">
                     {{ moto.name }}
                 </option>
             </select>
         </label>
         <label>
-            <i class="fa fa-tachometer"></i> Новый пробег
-            <input v-model="form.newMileage" type="number">
+            <i class="fa fa-tachometer"></i> Новый пробег *
+            <input v-model="form.newMileage" type="number" max="1000000" min="0" required>
         </label>
 
         <div class="modal-actions">
@@ -66,7 +65,7 @@ export default {
                 return
             }
 
-            if (!this.form.newMileage || this.form.newMileage <= 0) {
+            if (!this.form.newMileage || 1000000 < this.form.newMileage <= 0) {
                 alert('Укажите корректный пробег')
                 return
             }

@@ -1,6 +1,7 @@
 <script>
 import api from '../api/api';
 import { getUser } from '../api/auth';
+import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue';
 import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
@@ -11,20 +12,20 @@ export default {
         AddMotoModal,
         EditMotoModal,
         DeleteMotoModal,
-        UpdateMileageModal
+        UpdateMileageModal,
+
+        AddMaintenanceModal
     },
 
     data() {
         return {
             user: null,
-            maintenances: [],
             loading: false,
 
             
 
             // === Shows states modals ===
-            showUpdateMileageModal: false,
-            showAddMaintenanceModal: false,
+            
             showPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
             showEditPlanMaintenanceModal: false,
@@ -41,19 +42,24 @@ export default {
             showEditMotoModal: false,
             showDeleteMotoModal: false,
             showCreateMotoModal: false,
+            showUpdateMileageModal: false,
 
             // other vars
             deleteMotoId: null,
             selectedMoto: null,
             // === --- ===
 
-            addMaintenanceModal: {
-                motorcycleId: null,
-                title: '',
-                description: '',
-                mileage: null,
-                date: null
-            },
+
+
+            // === History maintenances vars ===
+            // maintenances list
+            maintenances: [],
+
+            // modals vars
+            showAddMaintenanceModal: false,
+
+            // other vars
+            // === --- ===
 
             planMaintenanceModal: {
                 motorcycleId: null,
@@ -106,6 +112,8 @@ export default {
         async handleMotoCreated(formData) {
             // create moto
             try {
+                this.loading = true
+
                 const { data } = await api.post('/motorcycle/new', formData)
 
                 this.motorcycles.push(data)
@@ -140,27 +148,6 @@ export default {
             }
         },
 
-        async handleMotoDeleted(motoId) {
-            // delete moto
-            try {
-                this.loading = true
-                await api.delete(`/motorcycle/${motoId}`)
-
-                const index = this.motorcycles.findIndex(m => m.id === motoId)
-                
-                if (index !== -1) {
-                    this.motorcycles.splice(index, 1)
-                }
-
-                this.showDeleteMotoModal = false
-                alert('Мотоцикл удален!')
-            } catch(err) {
-                console.error('Failed delete moto:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
         async handleMotoMileageUpdated(formData) {
             // update moto mileage
             try {
@@ -178,6 +165,27 @@ export default {
                 alert('Пробег мотоцикла обновлен!')
             } catch(err) {
                 console.error('Failed update moto mileage', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async handleMotoDeleted(motoId) {
+            // delete moto
+            try {
+                this.loading = true
+                await api.delete(`/motorcycle/${motoId}`)
+
+                const index = this.motorcycles.findIndex(m => m.id === motoId)
+                
+                if (index !== -1) {
+                    this.motorcycles.splice(index, 1)
+                }
+
+                this.showDeleteMotoModal = false
+                alert('Мотоцикл удален!')
+            } catch(err) {
+                console.error('Failed delete moto:', err)
             } finally {
                 this.loading = false
             }
@@ -202,42 +210,30 @@ export default {
             this.selectedMoto = null
         },
 
+        // update moto mileage
+        openUpdateMileageModal() {
+            this.showUpdateMileageModal = true
+        },
+
         // delete moto
         openDeleteMotoModal(motoId) {
             this.deleteMotoId = motoId
             this.showDeleteMotoModal = true
         },
-
-        // update moto mileage
-        openUpdateMileageModal() {
-            this.showUpdateMileageModal = true
-        },
         // ===== --- =====
 
-        
 
-        async deleteMoto() {
-            try {
-                this.loading = true
-                const response = await api.delete(`/motorcycle/${this.deleteMotoId}`)
 
-                this.showDeleteMotoModal = false
-                this.loadData()
-            } catch (err) {
-                console.error(err)
-            } finally {
-                this.loading = false
-            }
-        },
+        // === HISTORY MAINTENANCES ===
 
-        async addMaintenance() {
+        // ---> Async functions
+        async handleMaintenanceCreated(formData) {
             try {
                 this.loading = true
 
-                const response = await api.post('/maintenance/create-new', this.addMaintenanceModal)
+                const { data } = await api.post('/maintenance/create-new', formData)
 
                 this.showAddMaintenanceModal = false
-                this.loadData()
             } catch (err) {
                 console.error('Failed add maintenence:', err)
             } finally {
@@ -535,44 +531,12 @@ export default {
     />
 
     <!-- Add maintenance -->
-    <div v-if="showAddMaintenanceModal" class="modal-wrapper">
-        <div class="modal-container">
-            <div class="modal-header">
-                <p class="modal-title">Добавить обслуживание</p>
-                <button @click="closeAddMaintenanceModal()" class="close-btn btn"><i class="fa fa-close"></i></button>
-            </div>
-            <div class="modal-group">
-                <label>
-                    <i class="fa fa-motorcycle"></i> Мотоцикл
-                    <select v-model="addMaintenanceModal.motorcycleId">
-                        <option value="">Выберите мотоцикл</option>
-                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
-                    </select>
-                </label>
-                <label>
-                    <i class="fa fa-font"></i> Название
-                    <input v-model="addMaintenanceModal.title" type="text">
-                </label>
-                <label>
-                    <i class="fa fa-align-justify"></i> Описание
-                    <input v-model="addMaintenanceModal.description" type="text">
-                </label>
-                <label>
-                    <i class="fa fa-tachometer"></i> Пробег
-                    <input v-model="addMaintenanceModal.mileage" type="number" max="1000000" min="0">
-                </label>
-                <label>
-                    <i class="fa fa-calendar"></i> Дата
-                    <input v-model="addMaintenanceModal.date" type="date" :max="new Date().toISOString().split('T')[0]">
-                </label>
-
-                <div class="modal-actions">
-                    <button @click="addMaintenance()">Добавить</button>
-                    <button @click="closeAddMaintenanceModal()" class="cancel-btn">Отменить</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <AddMaintenanceModal
+        :is-open="showAddMaintenanceModal"
+        :motorcycles="motorcycles"
+        @submit="handleMaintenanceCreated"
+        @close="showAddMaintenanceModal = false"
+    />
 
     <!-- Plan maintenance -->
     <div v-if="showPlanMaintenanceModal" class="modal-wrapper">

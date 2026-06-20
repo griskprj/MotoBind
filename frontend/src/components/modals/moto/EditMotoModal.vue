@@ -6,8 +6,8 @@
     >
         <input v-model="form.id" type="hidden">
         <label>
-            Имя
-            <input v-model="form.name" type="text" class="modal-input">
+            Название *
+            <input v-model="form.name" type="text" class="modal-input" required>
         </label>
         <label>
             Объем

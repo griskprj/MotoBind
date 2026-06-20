@@ -8,8 +8,8 @@
             <div class="modal-group">
                 <input v-model="form.id" type="hidden">
                 <label>
-                    Имя
-                    <input v-model="form.name" type="text" class="modal-input">
+                    Название *
+                    <input v-model="form.name" type="text" class="modal-input" required>
                 </label>
                 <label>
                     Объем
@@ -74,6 +74,21 @@ export default {
         },
 
         submit() {
+            if (!this.form.name) {
+                alert('Введите название мотоцикла')
+                return
+            }
+
+            if (!this.form.mileage || this.form.mileage <= 0) {
+                alert('Введите корректный пробег')
+                return
+            }
+
+            if (this.form.years > this.currentYear) {
+                alert('Год выпуска не может быть в будущем')
+                return
+            }
+
             this.$emit('submit', this.form)
             this.resetForm()
         }
