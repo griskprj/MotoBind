@@ -148,7 +148,7 @@ header {
 .logo {
     display: flex;
     flex-direction: row;
-    z-index: 1001;
+    z-index: 1000;
 }
 
 .logo-right {
@@ -235,7 +235,7 @@ header {
 }
 
 /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ ===== */
-@media (max-width: 768px) {
+@media (max-width: 770px) {
     header {
         justify-content: space-between;
     }

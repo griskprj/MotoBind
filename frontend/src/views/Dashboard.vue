@@ -11,6 +11,7 @@ import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMai
 import EditPlanMaintenanceModal from '../components/modals/maintenance/EditPlanMaintenanceModal.vue';
 import DeletePlanMaintenanceModal from '../components/modals/maintenance/DeletePlanMaintenanceModal.vue';
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
+import MotoCard from '../components/moto/MotoCard.vue';
 
 
 export default {
@@ -24,7 +25,9 @@ export default {
         AddPlanMaintenanceModal,
         EditPlanMaintenanceModal,
         DeletePlanMaintenanceModal,
-        MarkPlanMaintenanceModal
+        MarkPlanMaintenanceModal,
+
+        MotoCard
     },
 
     data() {
@@ -372,7 +375,7 @@ export default {
 <template>
     <div class="container">
         <!-- === WELCOME SECTION === -->
-        <div class="welcome-section">
+        <div class="section">
             <div class="welcome-wrapper">
                 <h2>Здравствуйте,</h2> <h2 class="welcome-title">{{ user?.username }}</h2>
             </div>
@@ -380,7 +383,7 @@ export default {
         </div>
 
         <!-- === FAST ACTIONS === -->
-        <div class="fast-actions-section">
+        <div class="section">
             <h2 class="section-title">Быстрые действия</h2>
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()"><i class="fa fa-motorcycle"></i> Добавить мотоцикл</button>
@@ -391,8 +394,9 @@ export default {
         </div>
       
         <!-- === MOTORCYCLE SECTION === -->
-        <div class="motorcycle-section">
+        <div class="section">
             <h2 class="section-title"><i class="fa fa-motorcycle"></i> Мои мотоциклы</h2>
+            
             <div v-if="motorcycles.length === 0" class="empty-state">
                 <i class="fa fa-motorcycle"></i>
                 <p class="empty-state-p">У вас нет мотоциклов</p>
@@ -400,39 +404,19 @@ export default {
                     Добавить
                 </button>
             </div>
-            <div v-else v-for="moto in motorcycles" class="moto-card">
-                <div class="moto-card-header">
-                    <p>{{ moto.name }}</p>
-                    <div class="moto-actions">
-                        <button @click="openEditMotoModal(moto)" class="moto-action"><i class="fa fa-pen"></i></button>
-                        <button @click="openDeleteMotoModal(moto.id)" class="moto-action"><i class="fa fa-trash"></i></button>
-                    </div>
-                </div>
-                <div class="moto-card-body">
-                    <div class="moto-card-meta">
-                        <div class="meta-items">
-                            <div class="meta-item">
-                                <p class="meta-text">Объем:</p> <p>{{ moto.volume }} см3</p>
-                            </div>
-                            <div class="meta-item">
-                                <p class="meta-text">Год выпуска:</p> <p>{{ moto.years }} г.</p>
-                            </div>
-                            <div class="meta-item">
-                                <p class="meta-text">Пробег:</p> <p>{{ moto.mileage ? moto.mileage : 0 }} км</p>
-                            </div>
-                        </div>
-      
-                        <button class="follow-btn btn">Подробнее</button>
-                    </div>
-                    <div class="img-wrapper">
-                        <img src="/moto_default.jpg" alt="Motorcycle" class="moto-img">
-                    </div>
-                </div>
-            </div>
+            
+            <MotoCard
+                v-for="moto in motorcycles"
+                v-else
+                :key="moto.id"
+                :moto="moto"
+                @editMoto="openEditMotoModal"
+                @deleteMoto="openDeleteMotoModal"
+            />
         </div>
         
         <!-- === PENDING MAINTENANCE SECTION === -->
-        <div class="maintenance-section">
+        <div class="section">
             <h2 class="maintenance-section-title"><i class="fa fa-wrench"></i> Предстоящее обслуживание</h2>
             <div class="maintenance-cards">
                 <div v-if="maintenances.length === 0" class="empty-state">
@@ -611,130 +595,11 @@ p {
     padding: 28px;
 }
 
-.moto-card {
-    padding: 15px;
-    background-color: var(--bg-secondary);
-    margin-bottom: 24px;
-    border-radius: 18px;
-
-    border: 2px solid var(--accent-light);
-
-    transition: all 0.3s;
-}
-
-.moto-card:hover {
-    transform: translateY(-5px);
-}
-
-.moto-card-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: 24px;
-}
-
-.moto-card-header p {
-    font-size: 24px;
-    color: var(--accent);
-    font-weight: 600;
-}
-
-.moto-actions {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-}
-
-.moto-actions button {
-    max-height: 32px;
-    max-width: 32px;
-}
-
-.moto-card-body {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    gap: 24px;
-
-    overflow: hidden;
-}
-
-.img-wrapper {
-    flex: 0 0 40%;
-    max-height: 284px;
-}
-.moto-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-  border-radius: 25px;
-  object-position: center center;
-  filter: brightness(0.5);
-}
-
-.moto-card-meta {
-    flex: 1;
-    padding: 20px;
-
-    background-color: var(--bg-secondary);
-    border-radius: 25px;
-}
-
-.meta-items {
-    margin-bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.meta-item {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-
-    padding: 8px 14px 8px 14px;
-
-    background-color: var(--bg-primary);
-
-    border-radius: 50px;
-}
-
-.meta-text {
-    color: var(--accent);
-    font-weight: 500;
-}
-
-.follow-btn {
-    width: 100%;
-}
-
-
-
 @media (max-width: 728px) {
-    .moto-card {
-        padding: 8px;
-    }
-
-    .moto-card-body {
-        flex-direction: column-reverse;
-    }
-
-    .moto-card-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .moto-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .moto-action {
-        min-width: 100%;    
+    .motorcycle-section {
+        padding: 16px;
     }
 }
-
 
 
 /* Pending Maintenance Section */
