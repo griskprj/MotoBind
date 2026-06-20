@@ -32,9 +32,9 @@ export default {
   </div>
   <div class="animated-bg"></div>
 
-  <Header v-if="user"/>
+  <Header v-if="$route.meta.showHeader"/>
   <router-view />
-  <Footer />
+  <Footer v-if="$route.meta.showFooter" />
 </template>
 
 <style>

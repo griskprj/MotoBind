@@ -67,7 +67,7 @@ def plan_maintenance():
         return jsonify({'error': 'Нет данных'}), 400
 
     user = User.query.get(get_jwt_identity())
-    moto_id = data.get('motorcycleId')
+    moto_id = data.get('id')
     title = data.get('title')
     description = data.get('description')
     schedule_type = data.get('scheduleType')
@@ -92,7 +92,7 @@ def plan_maintenance():
         return jsonify({'error': 'Пробег не указан'})
     
     if mileage and mileage < motorcycle.mileage:
-        return jsonify({'error': 'Указан пробег меньше пробега мотоцикла'})
+        return jsonify({'error': 'Указан пробег меньше пробега мотоцикла'}), 400
 
     # create maintenance obj
     try:
@@ -172,7 +172,7 @@ def mark_maintenance():
     if not data:
         return jsonify({'error': 'Нет данных'}), 400
     
-    maintenance_id = data.get('maintenanceId')
+    maintenance_id = data.get('id')
     mileage = data.get('mileage')
     date = data.get('date')
     is_repeat = data.get('isRepeat')
@@ -208,7 +208,8 @@ def mark_maintenance():
         moto.mileage = mileage
 
     db.session.add(new_maintenance)
-
+    
+    planned_maintenance = None
     if is_repeat:
         planned_mileage = moto.mileage + interval
         planned_maintenance = PlannedMaintenance(
@@ -223,7 +224,7 @@ def mark_maintenance():
     db.session.delete(maintenance)
     db.session.commit()
 
-    return jsonify({
-        'maintenance_record': new_maintenance.to_dict(),
-        'planned_maintenance': planned_maintenance.to_dict()
-    }), 201
+    return jsonify({ 
+        'maintenance': planned_maintenance.to_dict()  if planned_maintenance else None,
+        'message': 'Обслуживание отмечено'}
+    ), 201
