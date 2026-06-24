@@ -12,6 +12,7 @@ import EditPlanMaintenanceModal from '../components/modals/maintenance/EditPlanM
 import DeletePlanMaintenanceModal from '../components/modals/maintenance/DeletePlanMaintenanceModal.vue';
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
 import MotoCard from '../components/moto/MotoCard.vue';
+import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
 
 
 export default {
@@ -27,7 +28,8 @@ export default {
         DeletePlanMaintenanceModal,
         MarkPlanMaintenanceModal,
 
-        MotoCard
+        MotoCard,
+        MaintenanceCard
     },
 
     data() {
@@ -384,7 +386,7 @@ export default {
 
         <!-- === FAST ACTIONS === -->
         <div class="section">
-            <h2 class="section-title">Быстрые действия</h2>
+            <h2 class="section-title-wrapper"><i class="fa fa-rocket"></i> Быстрые действия</h2>
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()"><i class="fa fa-motorcycle"></i> Добавить мотоцикл</button>
                 <button @click="openUpdateMileageModal()"><i class="fa fa-tachometer"></i> Обновить пробег</button>
@@ -395,7 +397,7 @@ export default {
       
         <!-- === MOTORCYCLE SECTION === -->
         <div class="section">
-            <h2 class="section-title"><i class="fa fa-motorcycle"></i> Мои мотоциклы</h2>
+            <h2 class="section-title-wrapper"><i class="fa fa-motorcycle"></i> Мои мотоциклы</h2>
             
             <div v-if="motorcycles.length === 0" class="empty-state">
                 <i class="fa fa-motorcycle"></i>
@@ -417,7 +419,7 @@ export default {
         
         <!-- === PENDING MAINTENANCE SECTION === -->
         <div class="section">
-            <h2 class="maintenance-section-title"><i class="fa fa-wrench"></i> Предстоящее обслуживание</h2>
+            <h2 class="section-title-wrapper"><i class="fa fa-wrench"></i> Предстоящее обслуживание</h2>
             <div class="maintenance-cards">
                 <div v-if="maintenances.length === 0" class="empty-state">
                     <i class="fa fa-wrench"></i>
@@ -426,27 +428,14 @@ export default {
                         Добавить
                     </button>
                 </div>
-                <div v-else v-for="maintenance in maintenances" class="maintenance-card">
-                    <div class="maintenance-header">
-                        <div class="maintenance-icon">
-                            <i class="fa fa-wrench"></i>
-                        </div>
-                        <p class="maintenance-title">{{ maintenance.title }}</p>
-                    </div>
-                    <div class="maintenance-body">
-                        <div class="maintenance-meta">
-                            <p v-if="maintenance.planned_date" class="maintenance-meta-item">Дата: {{ maintenance.planned_date }}</p>
-                            <p v-if="maintenance.planned_mileage" class="maintenance-meta-item">Пробег: {{ maintenance.planned_mileage}}</p>
-                        </div>
-                        <div class="maintenance-actions">
-                            <div class="actions-wrapper">
-                                <button @click="openEditPlanMaintenanceModal(maintenance)" class="maintenance-action"><i class="fa fa-pen"></i></button>
-                                <button @click="openDeletePlanMaintenanceModal(maintenance.id)" class="maintenance-action"><i class="fa fa-trash"></i></button>
-                            </div>
-                            <button @click="openMarkPlanMaintenanceModal(maintenance.id)" class="accept-btn"><i class="fa fa-check"></i></button>
-                        </div>
-                    </div>
-                </div>
+                <MaintenanceCard
+                    v-else
+                    v-for="maintenance in maintenances"
+                    :maintenance="maintenance"
+                    @edit="openEditPlanMaintenanceModal"
+                    @delete="openDeletePlanMaintenanceModal"
+                    @mark="openMarkPlanMaintenanceModal"
+                />
             </div>
         </div>
     </div>
@@ -612,97 +601,7 @@ p {
     padding: 28px;
 }
 
-.maintenance-cards {
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
-.maintenance-card {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 18px;
-    background-color: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 25px;
-}
-
-.maintenance-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-}
-
-.maintenance-icon i {
-    text-align: center;
-    border-radius: 8px;
-    padding: 12px;
-    background-color: var(--accent);
-    margin-right: 12px;
-}
-
-.maintenance-title {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text-primary)
-}
-
-.maintenance-body {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    gap: 32px;
-}
-
-.maintenance-meta {
-    background-color: var(--bg-primary);
-    padding: 12px;
-    border-radius: 8px;
-}
-
-.maintenance-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.actions-wrapper {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-}
-
-@media (max-width: 728px) {
-    .maintenance-card {
-        flex-direction: column;
-    }
-
-    .maintenance-header {
-        margin-bottom: 18px;
-    }
-
-    .maintenance-body {
-        flex-direction: column;
-    }
-
-    .maintenance-meta {
-        width: 100%;
-        text-align: center;
-    }
-
-    .maintenance-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .maintenance-action {
-        width: 100%;
-    }
-}
 
 
 /* Empty State */

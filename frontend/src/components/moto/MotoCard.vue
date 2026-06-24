@@ -58,7 +58,8 @@ p {
 }
 
 .moto-card:hover {
-    transform: translateY(-5px);
+    transform: translateX(2px);
+    border-left: 4px solid var(--accent);
 }
 
 .moto-card-header {

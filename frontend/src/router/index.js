@@ -53,6 +53,17 @@ const router = createRouter({
         showHeader: true
        }
     },
+    {
+      path: '/garage',
+      name: 'garage',
+      component: () => import('../views/Garage.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Главная',
+        showFooter: true,
+        showHeader: true
+       }
+    },
   ]
 })
 

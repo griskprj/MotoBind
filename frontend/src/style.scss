@@ -247,6 +247,18 @@ label {
 
 
 /* Sections */
+.section-sep {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;  
+}
+
+.section-sep hr {
+  width: 60%;
+  border-color: var(--border-color);
+}
+
 .section {
     background-color: var(--bg-primary);
     border: 2px solid var(--border-color);
@@ -256,9 +268,54 @@ label {
     margin-bottom: 32px;
 }
 
+.section-wrapper {
+  margin-bottom: 32px;
+}
+
 .section-title {
     margin-bottom: 24px;
 }
+
+.section-title-wrapper i {
+  font-size: 32px;
+  color: var(--accent);
+}
+
+.section-title-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 720px) {
+    .section-title-wrapper {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+
+
+/* Filters */
+.filters {
+  display: flex;
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.filter {
+  width: 100%;
+  max-width: 256px;
+}
+
+@media (max-width: 720px) {
+    .filters {
+      justify-content: center;
+    }
+}
+
 
 
 /* Modals */
