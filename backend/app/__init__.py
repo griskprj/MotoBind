@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 from config import Config
-from app.extensions import cors, db, migrate, jwt
+from app.extensions import cors, db, migrate, jwt, swagger
+from app.exceptions import register_error_handlers
+
 
 
 def create_app(config_class=Config):
@@ -20,6 +22,8 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    swagger.init_app(app)
+    register_error_handlers(app)
     
     with app.app_context():
         from app.models.user import User

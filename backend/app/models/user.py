@@ -29,7 +29,6 @@ class User(db.Model):
         data = {
             'id': self.id,
             'email': self.email,
-            'password': self.password,
             'username': self.username,
             'role': self.role
         }
