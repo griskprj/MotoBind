@@ -28,7 +28,6 @@ class Maintenance(db.Model):
             'description': self.description,
             'mileage': self.mileage,
             'date': self.date,
-            'photo_url': self.photo_url,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }
@@ -58,7 +57,6 @@ class PlannedMaintenance(db.Model):
             'description': self.description,
             'planned_mileage': self.planned_mileage,
             'status': self.status,
-            'photo_url': self.photo_url,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }

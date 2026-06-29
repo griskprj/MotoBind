@@ -5,6 +5,7 @@ from app.extensions import db
 from app.models.user import User
 from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.models.motorcycle import Motorcycle
+from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
 
 
 maintenance = Blueprint('maintenance', __name__)
@@ -13,10 +14,116 @@ maintenance = Blueprint('maintenance', __name__)
 @maintenance.route('/create-new', methods=['POST'])
 @jwt_required()
 def create_new_maintenance():
-    """ Create new maintenance record """
+    """
+    Создание записи обслуживания
+    ---
+    tags:
+      - Maintenance
+    summary: Добавление обслуживания
+    description: Создает запись обслуживания
+    security:
+      - Bearer: []
+
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+            type: object
+            required:
+                - moto_id
+                - title
+            properties:
+                moto_id:
+                    type: number
+                    example: 123
+                    description: ID мотоцикла
+                title:
+                    type: string
+                    example: Замена масла
+                    description: Название обслуживания
+                description:
+                    type: string
+                    example: Замена масла и масляного фильтра
+                    description: Описание (опционально)
+                mileage:
+                    type: number
+                    example: 12790
+                    description: Пробег на момент обслуживания
+                date:
+                    type: string
+                    format: date
+                    example: "2026-06-29"
+                    description: Дата выполнения (опционально, по умолчанию сегодня)
+    resoponses:
+        201:
+            decsription: Обслуживание создано
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        example: 42
+                    title:
+                        type: string
+                        example: "Замена масла"
+                    description:
+                        type: string
+                        example: "Замена масла и фильтра"
+                    mileage:
+                        type: integer
+                        example: 15000
+                    date:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    created_at:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    moto_id:
+                        type: integer
+                        example: 1
+                    author_id:
+                        type: integer
+                        example: 5
+        400:
+            description: Ошибка валидации
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Введите название обслуживания"
+        401:
+            description: Не авторизован
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Отсутствует JWT-токен"
+        403:
+            description: Доступ запрещен
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Вы можете добавлять обслуживание только для своего мотоцикла"
+        404:
+            description: Мотоцикл не найден
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Мотоцикл не найден"
+    """
+
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'Нет данных'}), 400
+        raise ValidationError("Нет данных в запросе")
 
     user = User.query.get(get_jwt_identity())
     moto_id = data.get('id')
@@ -25,20 +132,19 @@ def create_new_maintenance():
     mileage = data.get('mileage')
     date = data.get('date')
 
-    # validate required fileds
-    if not title or not moto_id:
-        return jsonify({'error': 'Заполните обязательные поля'}), 400
+    if not title:
+        raise ValidationError("Введите название обслуживания")
+    if not moto_id:
+        raise ValidationError("Отсутсвует ID мотоцикла")
 
-    # validate motorcycle
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
-        return jsonify({'error': 'Мотоцикл не найден'}), 404
+        raise NotFoundError("Мотоцикл не найден")
 
     moto_ids = [m.to_dict()['id'] for m in user.motorcycles]
     if moto_id not in moto_ids:
-        return jsonify({'error': 'Вы можете добавлять обслуживание только для своего мотоцикла'}), 403
+        raise ForbiddenError("Вы можете добавлять обслуживание только для своего мотоцикла")
     
-    # create maintenance obj
     try:
         maintenance = Maintenance(
             author_id=user.id,
@@ -55,46 +161,141 @@ def create_new_maintenance():
         return jsonify(maintenance.to_dict()), 201
     except Exception as e:
         current_app.logger.error(f'Failed add maintenance: {str(e)}')
-        return jsonify({'error': 'Ошибка сервера'}), 500
+        raise BusinessLogicError("Внутренняя ошибка сервера")
 
 
 @maintenance.route('/plan', methods=['POST'])
 @jwt_required()
 def plan_maintenance():
-    """ Plan maintenance record """
+    """
+    Планирование обслуживания
+    ---
+    tags:
+      - Maintenance
+    summary: Планирование обслуживания
+    description: Создает запись запланированного обслуживания
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+            type: object
+            required:
+                - moto_id
+                - title
+            properties:
+                moto_id:
+                    type: number
+                    example: 123
+                    description: ID мотоцикла
+                title:
+                    type: string
+                    example: Замена масла
+                    description: Название обслуживания
+                description:
+                    type: string
+                    example: Замена масла и масляного фильтра
+                    description: Описание (опционально)
+                mileage:
+                    type: number
+                    example: 12790
+                    description: Запланированный пробег обслуживания
+    resoponses:
+        201:
+            decsription: Обслуживание создано
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        example: 42
+                    title:
+                        type: string
+                        example: "Замена масла"
+                    description:
+                        type: string
+                        example: "Замена масла и фильтра"
+                    planned_mileage:
+                        type: integer
+                        example: 15000
+                    status:
+                        type: string
+                        example: "planned"
+                    created_at:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    updated_at:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    moto_id:
+                        type: integer
+                        example: 1
+                    author_id:
+                        type: integer
+                        example: 5
+        400:
+            description: Ошибка валидации
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Введите название обслуживания"
+        401:
+            description: Не авторизован
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Отсутствует JWT-токен"
+        403:
+            description: Доступ запрещен
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Вы можете планировать обслуживание только для своего мотоцикла"
+        404:
+            description: Мотоцикл не найден
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Мотоцикл не найден"
+    """
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'Нет данных'}), 400
-
-    user = User.query.get(get_jwt_identity())
+        raise ValidationError("Нет данных в запросе")
+    
     moto_id = data.get('id')
     title = data.get('title')
     description = data.get('description')
-    schedule_type = data.get('scheduleType')
     mileage = data.get('mileage')
-    date = data.get('date')
 
-    # validate motorcycle
+    user = User.query.get(get_jwt_identity())
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
-        return jsonify({'error': 'Мотоцикл не найден'}), 404
+        raise NotFoundError("Мотоцикл не найден")
     
     moto_ids = [m.to_dict()['id'] for m in user.motorcycles]
     if moto_id not in moto_ids:
-        return jsonify({'error': 'Вы можете планировать обслуживание только для своего мотоцикла'}), 403
+        raise ForbiddenError("Вы можете планировать обслуживание только для своего мотоцикла")
 
-    # validate required fileds
-    if not title or not moto_id:
-        return jsonify({'error': 'Заполните обязательные поля'}), 400
-    
-    # validate mileage: mileage schedule type
-    if schedule_type == 'mileage' and not mileage:
-        return jsonify({'error': 'Пробег не указан'})
+    if not title:
+        raise ValidationError("Введите заголовок")
+    if not moto_id:
+        raise ValidationError("Не указан ID мотоцикла")
     
     if mileage and mileage < motorcycle.mileage:
-        return jsonify({'error': 'Указан пробег меньше пробега мотоцикла'}), 400
+        raise ValidationError("Указан пробег меньше пробега мотоцикла")
 
-    # create maintenance obj
     try:
         maintenance = PlannedMaintenance(
             author_id=user.id,
@@ -110,16 +311,117 @@ def plan_maintenance():
         return jsonify(maintenance.to_dict()), 201
     except Exception as e:
         current_app.logger.error(f'Failed add maintenance: {str(e)}')
-        return jsonify({'error': 'Ошибка сервера'}), 500
+        raise BusinessLogicError("Внутренняя ошибка сервера")
 
 
 @maintenance.route('/plan', methods=['PUT'])
 @jwt_required()
 def edit_plan_maintenance():
-    """ Edit plan maintenance """
+    """
+    Редактирование планового обслуживания
+    ---
+    tags:
+      - Maintenance
+    summary: Изменить плановое обслуживание
+    description: Редактирует запланированное обслуживание
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+            type: object
+            required:
+                - maintenanceId
+            properties:
+                maintenanceId:
+                    type: number
+                    example: 123
+                    description: ID обслуживания
+                title:
+                    type: string
+                    example: Замена масла
+                    description: Название обслуживания
+                description:
+                    type: string
+                    example: Замена масла и масляного фильтра
+                    description: Описание (опционально)
+                mileage:
+                    type: number
+                    example: 12790
+                    description: Запланированный пробег обслуживания
+    resoponses:
+        201:
+            decsription: Обновленное плановое обслуживание
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        example: 42
+                    title:
+                        type: string
+                        example: "Замена масла"
+                    description:
+                        type: string
+                        example: "Замена масла и фильтра"
+                    planned_mileage:
+                        type: integer
+                        example: 15000
+                    status:
+                        type: string
+                        example: "planned"
+                    created_at:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    updated_at:
+                        type: string
+                        format: date-time
+                        example: "2026-06-29T10:30:00Z"
+                    moto_id:
+                        type: integer
+                        example: 1
+                    author_id:
+                        type: integer
+                        example: 5
+        400:
+            description: Ошибка валидации
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Введите название обслуживания"
+        401:
+            description: Не авторизован
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Отсутствует JWT-токен"
+        403:
+            description: Доступ запрещен
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Вы можете редактировать только свое обслуживание"
+        404:
+            description: Обслуживание не найдено
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Обслуживание не найдено"
+        """
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'Нет данных'}), 400
+        raise ValidationError("Нет данных в запросе")
 
     maintenance_id = data.get('maintenanceId')
     motorcycle_id = data.get('motorcycleId')
@@ -128,11 +430,14 @@ def edit_plan_maintenance():
     mileage = data.get('mileage')
 
     if not maintenance_id:
-        return jsonify({'error': 'Нет id обслуживания'}), 400
+        raise ValidationError("Не указан ID обслуживания")
 
     maintenance = PlannedMaintenance.query.get(maintenance_id)
     if not maintenance:
-        return jsoinfy({'error': 'Обслуживание не найдено'}), 404
+        raise NotFoundError("Обслуживание не найдено")
+    
+    if maintenance.id != int(get_jwt_identity()):
+        raise ForbiddenError("Вы можете редактировать только свое обслуживание")
     
     if motorcycle_id:
         maintenance.moto_id = motorcycle_id
@@ -151,12 +456,56 @@ def edit_plan_maintenance():
 @maintenance.route('/plan/<int:maintenance_id>', methods=['DELETE'])
 @jwt_required()
 def delete_plan_maintenance(maintenance_id):
-    """ Delete plan maintenance record """
+    """
+    Удаление планового обслуживания
+    ---
+    tags:
+      - Maintenance
+    summary: Удалить плановое обслуживание
+    description: Удаление планового обслуживания
+    security:
+      - Bearer: []
+    parameters:
+      - name: maintenance_id
+        in: path
+        required: true
+        schema:
+            type: integer
+        description: ID записи обслуживания
+    responses:
+        200:
+            description: Запись удалена
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Запись удалена"
+        403:
+            description: Доступ запрещен
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Вы можете удалять только свои записи"
+        404:
+            description: Запись не найдена
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Запись не найдена"
+    """
     maintenance = PlannedMaintenance.query.get(maintenance_id)
     current_user_id = int(get_jwt_identity())
 
+    if not maintenance:
+        raise NotFoundError("Запись не найдена")
+
     if maintenance.author_id != current_user_id:
-        return jsonify({'error': 'Вы можете удалять только свои записи'}), 403
+        raise ForbiddenError("Вы можете удалять только свои записи")
     
     db.session.delete(maintenance)
     db.session.commit()
@@ -167,10 +516,92 @@ def delete_plan_maintenance(maintenance_id):
 @maintenance.route('/plan/mark', methods=['POST'])
 @jwt_required()
 def mark_maintenance():
-    """ Mark maintenance and create new if is repeat """
+    """
+    Отметка о выполнении планового обслуживания
+    ---
+    tags:
+        - Maintenance
+    summary: Отметить обслуживание как выполненное
+    description: |
+        Переносит запись из плановых в выполненные.
+        Если isRepeat=true — создает новое плановое обслуживание.
+    security:
+        - Bearer: []
+    parameters:
+          - name: body
+            in: body
+            required: true
+            schema:
+                type: object
+                required:
+                  - id
+                  - mileage
+                  - date
+                properties:
+                    id:
+                        type: integer
+                        example: 15
+                        description: ID планового обслуживания
+                    mileage:
+                        type: integer
+                        example: 18500
+                        description: Фактический пробег на момент выполнения
+                    date:
+                        type: string
+                        format: date
+                        example: "2026-06-29"
+                        description: Дата выполнения
+                    isRepeat:
+                        type: boolean
+                        example: true
+                        description: Повторять обслуживание
+                    interval:
+                        type: integer
+                        example: 5000
+                        description: Интервал повторения в км (если isRepeat=true)
+    responses:
+        201:
+            description: Обслуживание отмечено
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Обслуживание отмечено"
+                    maintenance:
+                        type: object
+                        description: Новое плановое обслуживание (если isRepeat=true)
+                        properties:
+                            id:
+                                type: integer
+                                example: 20
+                            title:
+                                type: string
+                                example: "Замена ремня ГРМ"
+                            planned_mileage:
+                                type: integer
+                                example: 23500
+        400:
+            description: Ошибка валидации
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Дата не может быть в будущем"
+        404:
+            description: Обслуживание не найдено
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        example: "Обслуживание не найдено"
+    """
+
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'Нет данных'}), 400
+        raise ValidationError("Нет данных в запросе")
     
     maintenance_id = data.get('id')
     mileage = data.get('mileage')
@@ -179,20 +610,22 @@ def mark_maintenance():
     interval = data.get('interval')
     current_user_id = int(get_jwt_identity())
 
-    if not maintenance_id or not mileage:
-        return jsonify({'error': 'Заполните обязательные поля'}), 400
+    if not maintenance_id:
+        raise ValidationError("Не указан ID обслуживания")
+    if not mileage:
+        raise ValidationError("Введите пробег выполнения")
     
     now = datetime.now()
     date_obj = datetime.strptime(date, '%Y-%m-%d')
     if date_obj > now:
-        return jsonify({'error': 'Дата не может быть в будущем'}), 400
+        raise ValidationError("")
     
     if is_repeat and not interval:
-        return jsonify({'error': 'Укажите интервал обслуживания'}), 400
+        raise ValidationError("")
     
     maintenance = PlannedMaintenance.query.get(maintenance_id)
     if not maintenance:
-        return jsonify({'error': 'Обслуживание не найдено'}), 404
+        raise NotFoundError("Обслуживание не найдено")
     
     moto = Motorcycle.query.get(maintenance.moto_id)
 
