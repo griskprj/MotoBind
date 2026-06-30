@@ -439,18 +439,21 @@ def edit_plan_maintenance():
     if maintenance.id != int(get_jwt_identity()):
         raise ForbiddenError("Вы можете редактировать только свое обслуживание")
     
-    if motorcycle_id:
-        maintenance.moto_id = motorcycle_id
-    if title:
-        maintenance.title = title
-    if description:
-        maintenance.description = description
-    if mileage:
-        maintenance.planned_mileage = mileage
-
-    db.session.commit()
-
-    return jsonify(maintenance.to_dict())
+    try:
+        if motorcycle_id:
+            maintenance.moto_id = motorcycle_id
+        if title:
+            maintenance.title = title
+        if description:
+            maintenance.description = description
+        if mileage:
+            maintenance.planned_mileage = mileage
+        db.session.commit()
+    
+        return jsonify(maintenance.to_dict())
+    except Exception as e:
+        current_app.logger.error(f'Failed update plan maintenance: {str(e)}')
+        raise BusinessLogicError("Ошибка редактирования планового обслуживания")
 
 
 @maintenance.route('/plan/<int:maintenance_id>', methods=['DELETE'])
@@ -507,8 +510,12 @@ def delete_plan_maintenance(maintenance_id):
     if maintenance.author_id != current_user_id:
         raise ForbiddenError("Вы можете удалять только свои записи")
     
-    db.session.delete(maintenance)
-    db.session.commit()
+    try:
+        db.session.delete(maintenance)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(f'Failed delete plan maintenance')
+        raise BusinessLogicError("Ошибка удаления планового обслуживания")
 
     return jsonify({'message': 'Запись удалена'}), 200
 
@@ -618,46 +625,57 @@ def mark_maintenance():
     now = datetime.now()
     date_obj = datetime.strptime(date, '%Y-%m-%d')
     if date_obj > now:
-        raise ValidationError("")
+        raise ValidationError("Дата не может быть в будущем")
     
     if is_repeat and not interval:
-        raise ValidationError("")
+        raise ValidationError("Не указан интервал повторения")
     
-    maintenance = PlannedMaintenance.query.get(maintenance_id)
-    if not maintenance:
-        raise NotFoundError("Обслуживание не найдено")
-    
-    moto = Motorcycle.query.get(maintenance.moto_id)
+    try:
+        db.session.begin()
 
-    new_maintenance = Maintenance(
-        moto_id=moto.id,
-        author_id=current_user_id,
-        title=maintenance.title,
-        description=maintenance.description,
-        mileage=mileage,
-        date=date_obj
-    )
-    if mileage > moto.mileage:
-        moto.mileage = mileage
-
-    db.session.add(new_maintenance)
+        maintenance = PlannedMaintenance.query.get(maintenance_id)
+        if not maintenance:
+            raise NotFoundError("Обслуживание не найдено")
     
-    planned_maintenance = None
-    if is_repeat:
-        planned_mileage = moto.mileage + interval
-        planned_maintenance = PlannedMaintenance(
-            author_id=current_user_id,
+        moto = Motorcycle.query.get(maintenance.moto_id)
+        if not moto:
+            raise NotFoundError("Мотоцикл не найден")
+
+        new_maintenance = Maintenance(
             moto_id=moto.id,
+            author_id=current_user_id,
             title=maintenance.title,
             description=maintenance.description,
-            planned_mileage=planned_mileage,
+            mileage=mileage,
+            date=date_obj
         )
-        db.session.add(planned_maintenance)
-    
-    db.session.delete(maintenance)
-    db.session.commit()
+        db.session.add(new_maintenance)
 
-    return jsonify({ 
-        'maintenance': planned_maintenance.to_dict()  if planned_maintenance else None,
-        'message': 'Обслуживание отмечено'}
-    ), 201
+        if mileage > moto.mileage:
+            moto.mileage = mileage
+        
+        planned_maintenance = None
+        if is_repeat:
+            planned_mileage = moto.mileage + interval
+            planned_maintenance = PlannedMaintenance(
+                author_id=current_user_id,
+                moto_id=moto.id,
+                title=maintenance.title,
+                description=maintenance.description,
+                planned_mileage=planned_mileage,
+            )
+            db.session.add(planned_maintenance)
+        
+        db.session.delete(maintenance)
+
+        db.session.commit()
+
+        return jsonify({ 
+            'maintenance': planned_maintenance.to_dict()  if planned_maintenance else None,
+            'message': 'Обслуживание отмечено'}
+        ), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed mark maintenance: {str(e)}')
+        raise BusinessLogicError("Внутренняя ошибка сервера")

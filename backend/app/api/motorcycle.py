@@ -68,11 +68,12 @@ def get_user_moto():
             raise NotFoundError('Пользователь не найден')
         
         motorcycles = [m.to_dict() for m in user.motorcycles]
+        return jsonify(motorcycles), 200
+
     except Exception as e:
         current_app.logger.error(f'Get motorcycle failed: {str(e)}')
         raise BusinessLogicError('Ошибка при получении данных о мотоциклах пользователя')
 
-    return jsonify(motorcycles), 200
 
 
 @motorcycle.route('/new', methods=['POST'])
@@ -175,20 +176,24 @@ def create_moto():
     if mileage > 1_000_000:
         raise ValidationError('Введите корректный пробег')
 
-    motorcycle = Motorcycle(
-        owner_id=get_jwt_identity(),
-        name=name,
-        years=years,
-        volume=volume,
-        mileage=mileage,
-        color=color,
-        license_plate=license_plate,
-        vin=vin
-    )
-    db.session.add(motorcycle)
-    db.session.commit()
+    try:
+        motorcycle = Motorcycle(
+            owner_id=get_jwt_identity(),
+            name=name,
+            years=years,
+            volume=volume,
+            mileage=mileage,
+            color=color,
+            license_plate=license_plate,
+            vin=vin
+        )
+        db.session.add(motorcycle)
+        db.session.commit()
 
-    return jsonify(motorcycle.to_dict()), 201
+        return jsonify(motorcycle.to_dict()), 201
+    except Exception as e:
+        current_app.logger.error(f'Failed create moto: {str(e)}')
+        raise BusinessLogicError("Ошибка создания мотоцикла")
 
 
 @motorcycle.route('/<int:moto_id>', methods=['PUT'])
@@ -279,11 +284,12 @@ def update_moto(moto_id):
             motorcycle.mileage = mileage
         
         db.session.commit()
+        return jsonify(motorcycle.to_dict())
+
     except Exception as e:
         current_app.logger.error(f'Failed update moto: {str(e)}')
         raise InternalServerError('Ошибка сервера')
 
-    return jsonify(motorcycle.to_dict())
 
 
 @motorcycle.route('/<int:moto_id>', methods=['PATCH'])
@@ -356,13 +362,14 @@ def update_moto_mileage(moto_id):
     try:
         motorcycle.mileage = int(new_mileage)
         db.session.commit()
+        return jsonify(motorcycle.to_dict()), 200
+
     except ValueError:
         raise ValidationError('Неверный формат пробега')
     except Exception as e:
         current_app.logger.error(f'Failed update moto mileage: {str(e)}')
         raise BusinessLogicError('Ошибка сервера')
 
-    return jsonify(motorcycle.to_dict()), 200
 
 
 @motorcycle.route('/<int:moto_id>', methods=['DELETE'])
@@ -404,8 +411,7 @@ def delete_moto(moto_id):
     try:
         db.session.delete(motorcycle)
         db.session.commit()
+        return jsonify({'message': 'Мотоцикл удален'}), 200
     except Exception as e:
         current_app.logger.error(f'Failed delete moto {str(e)}')
         raise BusinessLogicError('Ошибка сервера')
-
-    return jsonify({'message': 'Мотоцикл удален'}), 200
