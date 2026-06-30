@@ -13,7 +13,29 @@ statistic = Blueprint('statistic', __name__)
 @statistic.route('/dashboard-data')
 @jwt_required()
 def get_data():
-    """ Get data for dashobard (user, motorcycle, pending maintenance) """
+    """
+    Получить данные для отображения на дашборде пользователя, включая информацию о мотоциклах и их плановом обслуживании.
+    ---
+    tags:
+      - Statistic
+    responses:
+      200:
+        description: Данные успешно получены
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  description: Информация о пользователе
+                motorcycles:
+                  type: array
+                  description: Список мотоциклов пользователя с информацией о плановом обслуживании
+                maintenance:
+                  type: array
+                  description: Список статусов планового обслуживания для каждого мотоцикла
+    """
     current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
 
