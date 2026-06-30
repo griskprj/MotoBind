@@ -386,7 +386,7 @@ export default {
 
         <!-- === FAST ACTIONS === -->
         <div class="section">
-            <h2 class="section-title-wrapper"><i class="fa fa-rocket"></i> Быстрые действия</h2>
+            <h2 class="section-title-wrapper"><i class="fa fa-bolt"></i> Быстрые действия</h2>
             <div class="fast-actions-wrapper">
                 <button @click="openCreateMotoModal()"><i class="fa fa-motorcycle"></i> Добавить мотоцикл</button>
                 <button @click="openUpdateMileageModal()"><i class="fa fa-tachometer"></i> Обновить пробег</button>

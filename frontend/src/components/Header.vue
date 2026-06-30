@@ -51,6 +51,15 @@
             </router-link>
             
             <!-- Кнопка выхода в мобильном меню -->
+            <div class="profile-mobile">
+                <router-link
+                    to="/profile"
+                    class="nav-link"
+                    :calss="{ active: $route.path === '/profile' }"
+                >
+                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
+                </router-link>
+            </div>
             <button class="btn-logout-mobile" @click="logout">
                 <i class="fa fa-sign-out"></i>
                 <span>Выйти</span>
@@ -58,10 +67,21 @@
         </nav>
 
         <div class="header-actions">
-            <button class="btn btn-logout" @click="logout">
-                <i class="fa fa-sign-out"></i>
-                <span>Выйти</span>
-            </button>
+            <div class="profile">
+                <router-link
+                    to="/profile"
+                    class="nav-link"
+                    :calss="{ active: $route.path === '/profile' }"
+                >
+                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
+                </router-link>
+            </div>
+            <div class="logout-wrapper">
+                <button class="btn btn-logout" @click="logout">
+                    <i class="fa fa-sign-out"></i>
+                    <span>Выйти</span>
+                </button>
+            </div>
         </div>
 
         <!-- Оверлей для закрытия меню -->
@@ -219,7 +239,24 @@ header {
 }
 
 .header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
     z-index: 1001;
+}
+
+.profile-img {
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--accent);
+
+    max-width: 40px;
+    max-height: 40px;
+}
+
+.profile-mobile {
+    display: none;
 }
 
 .btn-logout {
@@ -279,6 +316,10 @@ header {
         padding: 12px;
         width: 100%;
         text-align: center;
+    }
+
+    .profile-mobile {
+        display: block;
     }
 
     /* Мобильная кнопка выхода */
