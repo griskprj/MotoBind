@@ -57,13 +57,19 @@ export default {
         }
     },
 
+    computed: {
+        today() {
+            return new Date().toISOString().split('T')[0]
+        }
+    },
+
     watch: {
         isOpen(newVal) {
             if (newVal && this.id) {
                 this.form = {
                     id: this.id,
                     mileage: null,
-                    date: null,
+                    date: this.today,
                     isRepeat: false,
                     interval: null
                 }
@@ -81,7 +87,7 @@ export default {
             this.form = {
                 id: null,
                 mileage: null,
-                date: null,
+                date: this.today,
                 isRepeat: false,
                 interval: null
             }

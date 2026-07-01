@@ -268,7 +268,6 @@ def update_moto(moto_id):
     if not motorcycle:
         raise NotFoundError('Мотоцикл не найден')
 
-    now = datetime
     try:
         name = data.get('name')
         volume = data.get('volume')

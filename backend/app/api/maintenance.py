@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
 from app.extensions import db
 from app.models.user import User
@@ -125,7 +126,13 @@ def create_new_maintenance():
     if not data:
         raise ValidationError("Нет данных в запросе")
 
-    user = User.query.get(get_jwt_identity())
+    user = User.query.options(
+        selectinload(User.motorcycles)
+    ).get(get_jwt_identity())
+
+    if not user:
+        raise NotFoundError("Пользователь не найден")
+
     moto_id = data.get('id')
     title = data.get('title')
     description = data.get('description')
@@ -141,7 +148,7 @@ def create_new_maintenance():
     if not motorcycle:
         raise NotFoundError("Мотоцикл не найден")
 
-    moto_ids = [m.to_dict()['id'] for m in user.motorcycles]
+    moto_ids = {m.id for m in user.motorcycles}
     if moto_id not in moto_ids:
         raise ForbiddenError("Вы можете добавлять обслуживание только для своего мотоцикла")
     
@@ -279,12 +286,18 @@ def plan_maintenance():
     description = data.get('description')
     mileage = data.get('mileage')
 
-    user = User.query.get(get_jwt_identity())
+    user = User.query.options(
+        selectinload(User.motorcycles)
+    ).get(get_jwt_identity())
+
+    if not user:
+        raise NotFoundError("Пользователь не найден")
+
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         raise NotFoundError("Мотоцикл не найден")
     
-    moto_ids = [m.to_dict()['id'] for m in user.motorcycles]
+    moto_ids = {m.id for m in user.motorcycles}
     if moto_id not in moto_ids:
         raise ForbiddenError("Вы можете планировать обслуживание только для своего мотоцикла")
 
@@ -436,7 +449,7 @@ def edit_plan_maintenance():
     if not maintenance:
         raise NotFoundError("Обслуживание не найдено")
     
-    if maintenance.id != int(get_jwt_identity()):
+    if maintenance.author_id != int(get_jwt_identity()):
         raise ForbiddenError("Вы можете редактировать только свое обслуживание")
     
     try:
@@ -507,7 +520,7 @@ def delete_plan_maintenance(maintenance_id):
     if not maintenance:
         raise NotFoundError("Запись не найдена")
 
-    if maintenance.author_id != current_user_id:
+    if maintenance.author_id != current_user_id and user.role != 'admin':
         raise ForbiddenError("Вы можете удалять только свои записи")
     
     try:
@@ -622,9 +635,15 @@ def mark_maintenance():
     if not mileage:
         raise ValidationError("Введите пробег выполнения")
     
-    now = datetime.now()
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
-    if date_obj > now:
+    if not date:
+        date_obj = datetime.now()
+    else:
+        try:
+            date_obj = datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            raise ValidationError("Неверный формат даты. Используйте ГГГ-ММ-ДД")
+
+    if date_obj > datetime.now():
         raise ValidationError("Дата не может быть в будущем")
     
     if is_repeat and not interval:

@@ -19,8 +19,8 @@ class Motorcycle(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    maintenances = db.relationship('Maintenance', lazy='dynamic', cascade='all, delete-orphan')
-    planned_maintenances = db.relationship('PlannedMaintenance', lazy='dynamic', cascade='all, delete-orphan')
+    maintenances = db.relationship('Maintenance', lazy='select', cascade='all, delete-orphan')
+    planned_maintenances = db.relationship('PlannedMaintenance', lazy='select', cascade='all, delete-orphan')
 
     def to_dict(self, include_maintenance: bool = False, include_planned_maintenance: bool = False):
         """ Serialize data to JSON """
