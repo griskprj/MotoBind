@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
+from app.models.maintenance_node import MaintenanceNode
 from app.utils.files import allowed_file, save_moto_photo
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
 
@@ -17,7 +18,7 @@ def get_user_moto():
     """
     Получение данных о мотоциклах пользователя.
     ---
-    tags
+    tags:
       - Motorcycle
     summary: Получение данных о мотоциклах пользователя
     description: Получение данных о мотоциклах пользователя по его идентификатору.
@@ -85,7 +86,7 @@ def create_moto():
     tags:
         - Motorcycle
     summary: Создание нового мотоцикла
-    description: Создание нового мотоцикла для пользователя с указанием необходимых данных.
+    description: Создание нового мотоцикла для пользователя с указанием необходимых данных. Автоматически создает узлы обслуживания
     security:
         - Bearer: []
     parameters:
@@ -177,6 +178,8 @@ def create_moto():
         raise ValidationError('Введите корректный пробег')
 
     try:
+        db.session.begin()
+
         motorcycle = Motorcycle(
             owner_id=get_jwt_identity(),
             name=name,
@@ -188,10 +191,48 @@ def create_moto():
             vin=vin
         )
         db.session.add(motorcycle)
-        db.session.commit()
+        db.session.flush()
 
+        nodes = [
+            {
+                'title': 'Двигатель',
+                'category': 'engine'
+            },
+            {
+                'title': 'Привод',
+                'category': 'drive'
+            },
+            {
+                'title': 'Рулевое управление',
+                'category': 'steering'
+            },
+            {
+                'title': 'Подвеска',
+                'category': 'suspension'
+            },
+            {
+                'title': 'Электроника',
+                'category': 'electronics'
+            },
+            {
+                'title': 'Колеса/Шины',
+                'category': 'wheel'
+            }
+        ]
+
+        for node_data in nodes:
+            node = MaintenanceNode(
+                moto_id=motorcycle.id,
+                title=node_data['title'],
+                category=node_data['category']
+            )
+            db.session.add(node)
+
+        db.session.commit()
         return jsonify(motorcycle.to_dict()), 201
+
     except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f'Failed create moto: {str(e)}')
         raise BusinessLogicError("Ошибка создания мотоцикла")
 

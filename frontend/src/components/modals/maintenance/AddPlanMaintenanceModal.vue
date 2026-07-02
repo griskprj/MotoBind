@@ -12,6 +12,18 @@
             </select>
         </label>
         <label>
+            <i class="fa fa-wrench"></i>
+            <select v-model="form.category">
+                <option value="">Выберите категорию обслуживания</option>
+                <option value="engine">Двигатель</option>
+                <option value="drive">Привод</option>
+                <option value="steering">Рулевое управление</option>
+                <option value="suspension">Подвеска</option>
+                <option value="electronics">Электроника</option>
+                <option value="wheel">Колеса/Шины</option>
+            </select>
+        </label>
+        <label>
             <i class="fa fa-font"></i> Название
             <input v-model="form.title" type="text">
         </label>
@@ -53,6 +65,7 @@ export default {
             form: {
                 id: null,
                 title: '',
+                category: '',
                 description: '',
                 mileage: null,
             },
@@ -92,6 +105,7 @@ export default {
             this.form = {
                 id: null,
                 title: '',
+                category: '',
                 description: '',
                 mileage: null,
             }

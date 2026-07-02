@@ -5,6 +5,8 @@ import MaintenanceNodeCard from '../components/maintenance/MaintenanceNodeCard.v
 import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
 import MotoCard from '../components/moto/MotoCard.vue';
 
+import api from '../api/api.js'
+
 export default {
     components: { 
         MotoCard,
@@ -15,6 +17,58 @@ export default {
 
         MaintenanceNodeCard
     },
+
+    data() {
+        return {
+            maintenances_count: 0,
+            plan_maintenances_count: 0,
+            all_cost: 0,
+            motorcycles: [],
+            selectedMoto:null,
+
+            motoData: null,
+            nodes: [],
+            plannedMaintenances: [],
+
+            loading: false
+        }
+    },
+
+    methods: {
+        async loadData() {
+            try {
+                const response = await api.get('/statistic/garage')
+
+                this.maintenances_count = response.data.maintenances_count
+                this.plan_maintenances_count = response.data.plan_maintenances_count
+                this.motorcycles = response.data.motorcycles
+                this.all_cost = response.data.cost
+            } catch (err) {
+                console.error(err)
+            }
+        },
+
+        async getMotoData() {
+            try {
+                this.loading = true
+
+                const response = await api.get(`/statistic/garage/${this.selectedMoto}`)
+
+                this.motoData = response.data.motorcycle
+                console.log(this.motoData)
+                this.nodes = response.data.nodes
+                this.plannedMaintenances = response.data.planned_maintenances
+            } catch (err) {
+                console.error(err)
+            } finally {
+                this.loading = false
+            }
+        }
+    },
+
+    mounted() {
+        this.loadData()
+    }
 }
 </script>
 
@@ -28,15 +82,15 @@ export default {
             <div class="statistics-cards">
                 <div class="stat-card">
                     <p class="stat-card-title">Кол-во выполненных обслуживаний</p>
-                    <p class="stat-card-value">12</p>
+                    <p class="stat-card-value">{{ maintenances_count }}</p>
                 </div>
                 <div class="stat-card">
                     <p class="stat-card-title">Кол-во плановых обслуживаний</p>
-                    <p class="stat-card-value">12</p>
+                    <p class="stat-card-value">{{ plan_maintenances_count }}</p>
                 </div>
                 <div class="stat-card">
                     <p class="stat-card-title">Сумма затрат на обслуживание</p>
-                    <p class="stat-card-value">12 $</p>
+                    <p class="stat-card-value">{{ all_cost }} ₽</p>
                 </div>
             </div>
         </div>
@@ -48,14 +102,16 @@ export default {
             </div>
             
             <div class="actions-wrapper">
-                <select class="select-action">
+                <select v-model="selectedMoto" class="select-action">
                     <option value="">Выберите мотоцикл</option>
+                    <option v-for="m in motorcycles" :key="m.id" :value="m.id">{{ m.name }}</option>
                 </select>
-                <button class="select-action">Анализ</button>
+                <button @click="getMotoData()" :disabled="selectedMoto === null || selectedMoto === ''" class="select-action">Анализ</button>
             </div>
         </div>
         
         <!-- === MAINTENANCE SECTION === -->
+        <div v-if="motoData" class="moto-section">
             <div class="section-wrapper">
                 <div class="section-title-wrapper">
                     <i class="fa fa-bolt"></i> <h2>Быстрые действия</h2>
@@ -75,10 +131,7 @@ export default {
                     <i class="fa fa-motorcycle"></i> <h2>Ваш мотоцикл</h2>
                 </div>
                 <MotoCard
-                    :moto="{
-                        'id': 1,
-                        'name': 'moto'
-                    }"
+                    :moto="motoData"
                 />
             </div>
 
@@ -88,10 +141,8 @@ export default {
                 </div>
                 <div class="pending-maintenances">
                     <MaintenanceCard
-                        :maintenance="{
-                            'id': 1,
-                            'title': 'title'
-                        }"
+                        v-for="maintenance in plannedMaintenances"
+                        :maintenance="maintenance"
                     />
                 </div>
             </div>
@@ -174,8 +225,14 @@ export default {
                     <i class="fa fa-gear"></i> <h2>Узлы обслуживания</h2>
                 </div>
 
-                <MaintenanceNodeCard />
+                <div class="node-cards">
+                    <MaintenanceNodeCard
+                        v-for="node in nodes"
+                        :node="node"
+                    />
+                </div>
             </div>
+        </div>
     </div>
 </template>
 
@@ -320,5 +377,13 @@ p {
     .statistics-cards {
         flex-direction: column;
     }
+}
+
+
+/* === Node maintenance === */
+.node-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 21px;
 }
 </style>

@@ -39,6 +39,10 @@ def create_new_maintenance():
                     type: number
                     example: 123
                     description: ID мотоцикла
+                category:
+                    type: string
+                    example: "engine"
+                    description: Категория обслуживания
                 title:
                     type: string
                     example: Замена масла
@@ -51,6 +55,10 @@ def create_new_maintenance():
                     type: number
                     example: 12790
                     description: Пробег на момент обслуживания
+                cost:
+                    type: number
+                    example: 1000
+                    description: Стоимость обслуживания
                 date:
                     type: string
                     format: date
@@ -65,6 +73,9 @@ def create_new_maintenance():
                     id:
                         type: integer
                         example: 42
+                    category:
+                        type: string
+                        example: "engine"
                     title:
                         type: string
                         example: "Замена масла"
@@ -134,15 +145,21 @@ def create_new_maintenance():
         raise NotFoundError("Пользователь не найден")
 
     moto_id = data.get('id')
+    category = data.get('category')
     title = data.get('title')
     description = data.get('description')
     mileage = data.get('mileage')
+    cost = data.get('cost')
     date = data.get('date')
 
     if not title:
         raise ValidationError("Введите название обслуживания")
     if not moto_id:
         raise ValidationError("Отсутсвует ID мотоцикла")
+    if not category:
+        raise ValidationError("Укажите категорию обслуживания")
+    if cost and cost < 0:
+        raise ValidationError("Стоимость обслуживания не может быть отрицательной")
 
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
@@ -156,9 +173,11 @@ def create_new_maintenance():
         maintenance = Maintenance(
             author_id=user.id,
             moto_id=moto_id,
+            category=category,
             title=title,
             description=description,
             mileage=mileage,
+            cost=cost,
             date=datetime.strptime(date, "%Y-%m-%d") if date else None
         )
 
@@ -192,6 +211,7 @@ def plan_maintenance():
             required:
                 - moto_id
                 - title
+                - category
             properties:
                 moto_id:
                     type: number
@@ -201,6 +221,10 @@ def plan_maintenance():
                     type: string
                     example: Замена масла
                     description: Название обслуживания
+                category:
+                    type: string
+                    example: Двигатель
+                    description: Категория обслуживания
                 description:
                     type: string
                     example: Замена масла и масляного фильтра
@@ -224,6 +248,9 @@ def plan_maintenance():
                     description:
                         type: string
                         example: "Замена масла и фильтра"
+                    category:
+                        type: string
+                        example: "Двигатель"
                     planned_mileage:
                         type: integer
                         example: 15000
@@ -284,6 +311,7 @@ def plan_maintenance():
     moto_id = data.get('id')
     title = data.get('title')
     description = data.get('description')
+    category = data.get('category')
     mileage = data.get('mileage')
 
     user = User.query.options(
@@ -305,6 +333,8 @@ def plan_maintenance():
         raise ValidationError("Введите заголовок")
     if not moto_id:
         raise ValidationError("Не указан ID мотоцикла")
+    if not category:
+        raise ValidationError("Укажите категорию обслуживания")
     
     if mileage and mileage < motorcycle.mileage:
         raise ValidationError("Указан пробег меньше пробега мотоцикла")
@@ -315,6 +345,7 @@ def plan_maintenance():
             moto_id=moto_id,
             title=title,
             description=description,
+            category=category,
             planned_mileage=mileage,
         )
 
@@ -438,6 +469,7 @@ def edit_plan_maintenance():
 
     maintenance_id = data.get('maintenanceId')
     motorcycle_id = data.get('motorcycleId')
+    category = data.get('category')
     title = data.get('title')
     description = data.get('description')
     mileage = data.get('mileage')
@@ -461,6 +493,8 @@ def edit_plan_maintenance():
             maintenance.description = description
         if mileage:
             maintenance.planned_mileage = mileage
+        if category:
+            maintenance.category = category
         db.session.commit()
     
         return jsonify(maintenance.to_dict())
@@ -625,6 +659,7 @@ def mark_maintenance():
     
     maintenance_id = data.get('id')
     mileage = data.get('mileage')
+    cost = data.get('cost')
     date = data.get('date')
     is_repeat = data.get('isRepeat')
     interval = data.get('interval')
@@ -634,6 +669,8 @@ def mark_maintenance():
         raise ValidationError("Не указан ID обслуживания")
     if not mileage:
         raise ValidationError("Введите пробег выполнения")
+    if cost and cost < 0:
+        raise ValidationError("Стоимость обслуживания не может быть отрицательной")
     
     if not date:
         date_obj = datetime.now()
@@ -664,6 +701,8 @@ def mark_maintenance():
             moto_id=moto.id,
             author_id=current_user_id,
             title=maintenance.title,
+            category=maintenance.category,
+            cost=cost,
             description=maintenance.description,
             mileage=mileage,
             date=date_obj
@@ -679,6 +718,7 @@ def mark_maintenance():
             planned_maintenance = PlannedMaintenance(
                 author_id=current_user_id,
                 moto_id=moto.id,
+                category=maintenance.category,
                 title=maintenance.title,
                 description=maintenance.description,
                 planned_mileage=planned_mileage,

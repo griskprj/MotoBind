@@ -19,6 +19,7 @@ class Motorcycle(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
+    maintenance_nodes = db.relationship('MaintenanceNode', lazy='select', cascade='all, delete-orphan')
     maintenances = db.relationship('Maintenance', lazy='select', cascade='all, delete-orphan')
     planned_maintenances = db.relationship('PlannedMaintenance', lazy='select', cascade='all, delete-orphan')
 

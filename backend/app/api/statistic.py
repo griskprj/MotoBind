@@ -6,8 +6,10 @@ from datetime import datetime, timezone
 from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
+from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.utils.check_maintenance_status import check_status
-from app.exceptions import NotFoundError
+from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
+from app.utils.maintenance_nodes import gen_maintenance_nodes
 
 statistic = Blueprint('statistic', __name__)
 
@@ -100,3 +102,167 @@ def get_data():
         'motorcycles': motorcycle_data,
         'maintenance': all_planned_maintenances
     }), 200
+
+
+@statistic.route('/garage', methods=['GET'])
+@jwt_required()
+def get_garage_stat():
+  """
+  Получить данные для гаража
+  ---
+  tags:
+    - Statistic
+  summary: Данные гаража
+  description: Возвращает информацию о кол-ве выполненных и запланированных обслуживаниях, id и название мотоциклов пользователя и общую сумму затрат на обслуживание.
+  security:
+    - Bearer: []
+  responses:
+    200:
+      description: Данные успешно получены
+      schema:
+        type: object
+        properties:
+          motorcycles:
+            type: array
+            items:
+              type: object
+              properties:
+                id: {type: integer}
+                name: {type: string}
+          plan_maintenances_count:
+            type: integer
+            description: Кол-во плановых обслуживаний
+          maintenances_count:
+            type: integer
+            description: Кол-во выполненных обслуживаний
+    401:
+      description: Не авторизован
+    404:
+      description: Объект не найден
+  """
+
+  try:
+    user = User.query.options(
+      selectinload(User.motorcycles).selectinload(Motorcycle.planned_maintenances),
+      selectinload(User.motorcycles).selectinload(Motorcycle.maintenances)
+    ).get(get_jwt_identity())
+    
+    if not user:
+      raise NotFoundError("Пользователь не найден")
+
+    motorcycle = Motorcycle.query.filter_by(owner_id=user.id).all()
+    if not motorcycle:
+      raise NotFoundError("Мотоцикл не найден")
+
+    planned_maintenances = []
+    maintenances = []
+    moto_data = []
+    cost = 0
+    for m in motorcycle:
+      moto_data.append({'id': m.id, 'name': m.name})
+      planned_maintenances.extend(m.planned_maintenances)
+      maintenances.extend(m.maintenances)
+
+      for maintenance in m.maintenances:
+          cost += maintenance.cost
+
+    return jsonify({
+      'motorcycles': moto_data,
+      'cost': cost,
+      'plan_maintenances_count': len(planned_maintenances),
+      'maintenances_count': len(maintenances)
+    }), 200
+  except Exception as e:
+    current_app.logger.error(f'Failed load garage data: {str(e)}')
+    raise BusinessLogicError("Ошибка загрузки данных для гаража")
+
+  
+@statistic.route('/garage/<int:moto_id>', methods=['GET'])
+@jwt_required()
+def get_moto_garage(moto_id):
+  """
+  Получить данные о мотоцикле для гаража
+  ---
+  tags:
+    - Motorcycle
+  summary: Данные мотоцикла для гаража
+  description: Возвращает информацию о мотоцикле, узлах обслуживания и всех типах обслуживания
+  security:
+    - Bearer: []
+  parameters:
+    - in: path
+      name: moto_id
+      required: true
+      type: integer
+      description: Идентификатор мотоцикла
+  responses:
+    200:
+      description: Данные успешно получены
+      schema:
+        type: object
+        properties:
+          motorcycle:
+            type: object
+            properties:
+              id: {type: integer}
+              model: {type: string}
+              mileage: {type: integer}
+              health: {type: number}
+          maintenance_nodes:
+            type: array
+            items:
+              node:
+                type: object
+                properties:
+                  title: {type: string}
+                  health: {type: integer}
+                  maintenance_count: {type: integer}
+                  planned_maintenances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: integer}
+                        title: {type: string}
+                        planned_mileage: {type: integer}
+                        status: {type: string, enum: ['overdue', 'soon', 'ok', 'no_mileage']}
+          moneyData:
+            type: object
+            properties:
+              month: {type: string}
+              value: {type: integer}
+          maintenance_count_data:
+            type: object
+            properties:
+              month: {type: string}
+              value: {type: integer}
+  """
+
+  moto = Motorcycle.query.options(
+    selectinload(Motorcycle.planned_maintenances)
+  ).get(moto_id)
+  user = User.query.get(get_jwt_identity())
+
+  if not moto:
+    raise NotFoundError("Пользователь не найден")
+
+  if not user:
+    raise NotFoundError("Мотоцикл не найден")
+  
+  if int(moto.owner_id) != int(user.id):
+    raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
+
+  nodes = None
+  try:
+    nodes = gen_maintenance_nodes(moto_id, user.id)
+
+    return jsonify({
+      'nodes': nodes,
+      'motorcycle': moto.to_dict(),
+      'planned_maintenances': [m.to_dict() for m in moto.planned_maintenances]
+    }), 200
+  except Exception as e:
+    current_app.logger.error(f'Failed load garage moto data: {str(e)}')
+    raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
+
+  

@@ -12,6 +12,18 @@
             </select>
         </label>
         <label>
+            <i class="fa fa-wrench"></i>
+            <select v-model="form.category">
+                <option value="">Выберите категорию обслуживания</option>
+                <option value="engine">Двигатель</option>
+                <option value="drive">Привод</option>
+                <option value="steering">Рулевое управление</option>
+                <option value="suspension">Подвеска</option>
+                <option value="electronics">Электроника</option>
+                <option value="wheel">Колеса/Шины</option>
+            </select>
+        </label>
+        <label>
             <i class="fa fa-font"></i> Название *
             <input v-model="form.title" type="text" required>
         </label>
@@ -22,6 +34,10 @@
         <label>
             <i class="fa fa-tachometer"></i> Пробег *
             <input v-model="form.mileage" type="number" max="1000000" min="0" required>
+        </label>
+        <label>
+            <i class="fa fa-ruble"></i>
+            <input v-model="form.cost" type="number">
         </label>
         <label>
             <i class="fa fa-calendar"></i> Дата
@@ -58,6 +74,8 @@ export default {
                 id: null,
                 title: '',
                 description: '',
+                category: '',
+                cost: null,
                 mileage: null,
                 date: null
             },
@@ -94,6 +112,8 @@ export default {
                 id: null,
                 title: '',
                 description: '',
+                category: '',
+                cost: null,
                 mileage: null,
                 date: null
             }

@@ -12,6 +12,10 @@
             Дата
             <input v-model="form.date" type="date" :max="new Date().toISOString().split('T')">
         </label>
+        <label>
+            <i class="fa fa-ruble"></i>
+            <input v-model="form.cost" type="number">
+        </label>
         <label class="checkbox-group">
             Запланировать следующее обслуживание?
             <input v-model="form.isRepeat" type="checkbox">
@@ -51,6 +55,7 @@ export default {
                 id: null,
                 mileage: null,
                 date: null,
+                cost: null,
                 isRepeat: false,
                 interval: null
             }
@@ -70,6 +75,7 @@ export default {
                     id: this.id,
                     mileage: null,
                     date: this.today,
+                    cost: null,
                     isRepeat: false,
                     interval: null
                 }
@@ -88,6 +94,7 @@ export default {
                 id: null,
                 mileage: null,
                 date: this.today,
+                cost: null,
                 isRepeat: false,
                 interval: null
             }
