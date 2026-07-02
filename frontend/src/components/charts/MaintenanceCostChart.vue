@@ -23,28 +23,9 @@ export default {
     },
 
     props: {
-        maintenanceData: {
+        chartData: {
             type: Array,
             default: () => []
-        }
-    },
-
-    data() {
-        return {
-            chartData: [
-                { month: 'Янв', cost: 1200, count: 2 },
-                { month: 'Фев', cost: 800, count: 1 },
-                { month: 'Мар', cost: 2400, count: 3 },
-                { month: 'Апр', cost: 600, count: 1 },
-                { month: 'Май', cost: 1800, count: 2 },
-                { month: 'Июн', cost: 1500, count: 2 },
-                { month: 'Июл', cost: 3000, count: 4 },
-                { month: 'Авг', cost: 900, count: 1 },
-                { month: 'Сен', cost: 2100, count: 3 },
-                { month: 'Окт', cost: 700, count: 1 },
-                { month: 'Ноя', cost: 1600, count: 2 },
-                { month: 'Дек', cost: 2500, count: 3 }
-            ]
         }
     },
 
@@ -68,40 +49,32 @@ export default {
                     },
                     background: 'transparent'
                 },
-                title: {
-                    text: 'Стоимость обслуживаний',
-                    align: 'center',
-                    margin: 10,
-                    offsetX: 0,
-                    offsetY: 0,
-                    floating: false,
-                    style: {
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        fontFamily: 'inherit',
-                        color: '#333'
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                markers: {
+                    size: 5,
+                    colors: ['#7C3AED'],
+                    strokeColors: '#fff',
+                    strokeWidth: 2,
+                    hover: {
+                        size: 7
                     }
                 },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 8,
-                        columnWidth: '60%',
-                        distribured: false
-                    }
-                },
-                colors: ['#7C3AED', '#2D2A3E'],
+                colors: ['#7C3AED'],
                 dataLabels: {
                     enabled: false
                 },
                 grid: {
-                    borderColor: '#2D2D3A',
+                    borderColor: '#e0e0e0',
                     row: {
-                        colors: ['#64748B', 'transparent'],
-                        opasity: 0.5
+                        colors: ['transparent'],
+                        opacity: 0.5
                     }
                 },
                 xaxis: {
-                    categories: this.chartData.map(item => item.month),
+                    categories: this.chartData.map(item => item.month || item.date),
                     title: {
                         text: 'Месяц',
                         style: {
@@ -127,64 +100,30 @@ export default {
                         formatter: function(value) {
                             return value + ' ₽'
                         }
-                    },
-                    custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                        const month = w.globals.labels[dataPointIndex]
-                        const cost = series[0][dataPointIndex]
-                        return `
-                            <div style="padding: 10px;">
-                                <strong>${month}</strong><br/>
-                                Затраты: ${cost} ₽<br/>
-                            </div>
-                        `
                     }
                 },
                 legend: {
                     position: 'top',
-                    horizontalAlign: 'center',
-                    labels: {
-                        colors: '#333'
-                    }
+                    horizontalAlign: 'center'
                 },
                 responsive: [{
                     breakpoint: 480,
                     options: {
                         chart: {
                             height: 300
-                        },
-                        plotOptions: {
-                            bar: {
-                                columnWidth: '80%'
-                            }
                         }
                     }
                 }]
             }
         },
+        
         chartSeries() {
             return [
                 {
                     name: 'Затраты на обслуживание',
-                    data: this.chartData.map(item => item.cost)
-                },
-            ]
-        }
-    },
-
-    mounted() {
-        if (this.maintenanceData && this.maintenanceData.length > 0) {
-            this.chartData = this.maintenanceData
-        }
-    },
-
-    watch: {
-        maintenanceData: {
-            handler(newData) {
-                if (newData && newData.length > 0) {
-                    this.chartData = newData
+                    data: this.chartData.map(item => item.value || item.cost || 0)
                 }
-            },
-            deep: true
+            ]
         }
     }
 }

@@ -30,6 +30,11 @@ export default {
             nodes: [],
             plannedMaintenances: [],
 
+            total_cost: 0,
+            max_cost: 0,
+            average_cost: 0,
+            chart_data: [],
+
             loading: false
         }
     },
@@ -58,6 +63,11 @@ export default {
                 console.log(this.motoData)
                 this.nodes = response.data.nodes
                 this.plannedMaintenances = response.data.planned_maintenances
+
+                this.total_cost = response.data.total_cost
+                this.max_cost = response.data.max_cost
+                this.average_cost = response.data.average_cost
+                this.chart_data = response.data.chart_data
             } catch (err) {
                 console.error(err)
             } finally {
@@ -162,7 +172,7 @@ export default {
                                     Затраты на обслуживание:
                                 </p>
                                 <p class="stat-card-value">
-                                    12
+                                    {{ total_cost }}
                                 </p>
                             </div>
     
@@ -171,7 +181,7 @@ export default {
                                     Самое дорогое:
                                 </p>
                                 <p class="stat-card-value">
-                                    12
+                                    {{ max_cost }}
                                 </p>
                             </div>
     
@@ -180,13 +190,15 @@ export default {
                                     Средняя стоимость:
                                 </p>
                                 <p class="stat-card-value">
-                                    12
+                                    {{ average_cost }}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <MaintenanceCostChart/>
+                    <MaintenanceCostChart
+                        :chartData="chart_data"
+                    />
                 </div>
 
                 <hr class="chart-sep">

@@ -10,6 +10,7 @@ from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.utils.check_maintenance_status import check_status
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 from app.utils.maintenance_nodes import gen_maintenance_nodes
+from app.utils.calculate_maintenance_money import calculate_maintenance_money
 
 statistic = Blueprint('statistic', __name__)
 
@@ -239,30 +240,35 @@ def get_moto_garage(moto_id):
   """
 
   moto = Motorcycle.query.options(
-    selectinload(Motorcycle.planned_maintenances)
+      selectinload(Motorcycle.planned_maintenances)
   ).get(moto_id)
   user = User.query.get(get_jwt_identity())
 
   if not moto:
-    raise NotFoundError("Пользователь не найден")
+      raise NotFoundError("Мотоцикл не найден")  
 
   if not user:
-    raise NotFoundError("Мотоцикл не найден")
-  
+      raise NotFoundError("Пользователь не найден")
+
   if int(moto.owner_id) != int(user.id):
-    raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
+      raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-  nodes = None
   try:
-    nodes = gen_maintenance_nodes(moto_id, user.id)
-
-    return jsonify({
-      'nodes': nodes,
-      'motorcycle': moto.to_dict(),
-      'planned_maintenances': [m.to_dict() for m in moto.planned_maintenances]
-    }), 200
+      nodes = gen_maintenance_nodes(moto_id, user.id)
+      cost_data = calculate_maintenance_money(moto_id, user.id)
+      
+      return jsonify({
+          'nodes': nodes,
+          'motorcycle': moto.to_dict(),
+          'planned_maintenances': [m.to_dict() for m in moto.planned_maintenances],
+          'total_cost': cost_data['total_cost'],
+          'max_cost': cost_data['max_cost'],
+          'average_cost': cost_data['average_cost'],
+          'month_cost': cost_data['month_cost'],
+          'chart_data': cost_data['chart_data']
+      }), 200
   except Exception as e:
-    current_app.logger.error(f'Failed load garage moto data: {str(e)}')
-    raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
+      current_app.logger.error(f'Failed load garage moto data: {str(e)}')
+      raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
 
   
