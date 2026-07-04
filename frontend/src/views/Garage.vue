@@ -373,7 +373,7 @@ export default {
         <!-- Статистика -->
         <div class="section statistics-section">
         <div class="section-title-wrapper">
-            <i class="fa fa-wrench"></i>
+            <i class="fa fa-gear"></i>
             <h2>Управляйте обслуживанием своего мотоцикла</h2>
         </div>
         <div class="statistics-cards">
