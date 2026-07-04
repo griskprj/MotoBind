@@ -20,7 +20,7 @@ def check_status(maintenance, moto):
 
     if diff <= 0:
         return 'overdue'
-    if 0 < diff <= 200:
+    if 0 < diff <= 5000:
         return 'soon'
     else:
         return 'ok'

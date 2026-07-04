@@ -11,6 +11,7 @@ from app.utils.check_maintenance_status import check_status
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 from app.utils.maintenance_nodes import gen_maintenance_nodes
 from app.utils.calculate_maintenance_money import calculate_maintenance_money
+from app.utils.calculate_freq_maintenance import calculate_maintenance_freq
 
 statistic = Blueprint('statistic', __name__)
 
@@ -256,6 +257,7 @@ def get_moto_garage(moto_id):
   try:
       nodes = gen_maintenance_nodes(moto_id, user.id)
       cost_data = calculate_maintenance_money(moto_id, user.id)
+      freq_data = calculate_maintenance_freq(moto_id, user.id)
       
       return jsonify({
           'nodes': nodes,
@@ -265,7 +267,11 @@ def get_moto_garage(moto_id):
           'max_cost': cost_data['max_cost'],
           'average_cost': cost_data['average_cost'],
           'month_cost': cost_data['month_cost'],
-          'chart_data': cost_data['chart_data']
+          'money_chart_data': cost_data['chart_data'],
+
+          'total_maintenances': freq_data['total_maintenances'],
+          'month_maintenances': freq_data['month_maintenances'],
+          'freq_chart_data': freq_data['chart_data']
       }), 200
   except Exception as e:
       current_app.logger.error(f'Failed load garage moto data: {str(e)}')

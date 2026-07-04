@@ -5,7 +5,7 @@
             :options="chartOptions"
             :series="chartSeries"
             height="350"
-            type="line"
+            type="bar"
         />
         <div v-else class="no-data">
             <p>Нет данных для отображения</p>
@@ -17,34 +17,15 @@
 import VueApexCharts from 'vue3-apexcharts'
 
 export default {
-    name: 'MaintenanceCostChart',
+    name: 'MaintenanceCountChart',
     components: {
         apexchart: VueApexCharts
     },
 
     props: {
-        maintenanceData: {
+        chartData: {
             type: Array,
             default: () => []
-        }
-    },
-
-    data() {
-        return {
-            chartData: [
-                { month: 'Янв', count: 2 },
-                { month: 'Фев', count: 1 },
-                { month: 'Мар', count: 3 },
-                { month: 'Апр', count: 1 },
-                { month: 'Май', count: 2 },
-                { month: 'Июн', count: 2 },
-                { month: 'Июл', count: 4 },
-                { month: 'Авг', count: 1 },
-                { month: 'Сен', count: 3 },
-                { month: 'Окт', count: 1 },
-                { month: 'Ноя', count: 2 },
-                { month: 'Дек', count: 3 }
-            ]
         }
     },
 
@@ -52,7 +33,7 @@ export default {
         chartOptions() {
             return {
                 chart: {
-                    type: 'line',
+                    type: 'bar',
                     height: 350,
                     toolbar: {
                         show: true,
@@ -69,7 +50,7 @@ export default {
                     background: 'transparent',
                 },
                 title: {
-                    text: 'Кол-во обслуживаний',
+                    text: 'Количество обслуживаний по месяцам',
                     align: 'center',
                     margin: 10,
                     offsetX: 0,
@@ -165,28 +146,11 @@ export default {
             return [
                 {
                     name: 'Количество обслуживаний',
-                    data: this.chartData.map(item => item.count)
+                    data: this.chartData.map(item => item.value)
                 }
             ]
         }
     },
-
-    mounted() {
-        if (this.maintenanceData && this.maintenanceData.length > 0) {
-            this.chartData = this.maintenanceData
-        }
-    },
-
-    watch: {
-        maintenanceData: {
-            handler(newData) {
-                if (newData && newData.length > 0) {
-                    this.chartData = newData
-                }
-            },
-            deep: true
-        }
-    }
 }
 </script>
 

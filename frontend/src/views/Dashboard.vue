@@ -431,6 +431,8 @@ export default {
                 <MaintenanceCard
                     v-else
                     v-for="maintenance in maintenances"
+                    style="margin-bottom: 8px;"
+                    :key="maintenance.id"
                     :maintenance="maintenance"
                     @edit="openEditPlanMaintenanceModal"
                     @delete="openDeletePlanMaintenanceModal"

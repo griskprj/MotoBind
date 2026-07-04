@@ -49,6 +49,18 @@ export default {
                     },
                     background: 'transparent'
                 },
+                title: {
+                    text: 'Затраты на обслуживания по месяцам',
+                    align: 'center',
+                    margin: 10,
+                    style: {
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        fontFamily: 'inherit',
+                        color: '#333'
+                    }
+                },
+
                 stroke: {
                     curve: 'smooth',
                     width: 3

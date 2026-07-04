@@ -65,8 +65,8 @@ export default {
                 return
             }
 
-            if (!this.form.newMileage || 1000000 < this.form.newMileage <= 0) {
-                alert('Укажите корректный пробег')
+            if (!this.form.newMileage || this.form.newMileage < 0 || this.form.newMileage > 1000000) {
+                alert(`Укажите корректный пробег: ${this.form.newMileage}`)
                 return
             }
 

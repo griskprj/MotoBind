@@ -4,14 +4,22 @@
         title="Редактировать обслуживание"
         @close="$emit('close')"
     >
+        <input v-model="form.maintenanceId" type="hidden">
         <label>
-            <input v-model="form.maintenanceId" type="hidden">
-
             <i class="fa fa-motorcycle"></i> Мотоцикл
             <select v-model="form.motorcycleId">
                 <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
             </select>
         </label>
+        <select v-model="form.category">
+            <option value="">Выберите категорию обслуживания</option>
+            <option value="engine">Двигатель</option>
+            <option value="drive">Привод</option>
+            <option value="steering">Рулевое управление</option>
+            <option value="suspension">Подвеска</option>
+            <option value="electronics">Электроника</option>
+            <option value="wheel">Колеса/Шины</option>
+        </select>
         <label>
             <i class="fa fa-font"></i> Название
             <input v-model="form.title" type="text">
@@ -58,6 +66,7 @@ export default {
             form: {
                 motorcycleId: null,
                 maintenanceId: null,
+                category: '',
                 title: '',
                 description: '',
                 mileage: null
@@ -71,6 +80,7 @@ export default {
                 this.form = {
                 maintenanceId: this.maintenance.id,
                 motorcycleId: this.maintenance.moto_id,
+                category: this.maintenance.category || 'general',
                 title: this.maintenance.title || '',
                 description: this.maintenance.description || '',
                 mileage: this.maintenance.planned_mileage || null
@@ -84,6 +94,7 @@ export default {
                     this.form = {
                         maintenanceId: newVal.id,
                         motorcycleId: newVal.moto_id,
+                        category: newVal.category,
                         title: newVal.title,
                         description: newVal.description,
                         mileage: newVal.planned_mileage
@@ -104,6 +115,7 @@ export default {
             this.form = {
                 motorcycleId: null,
                 maintenanceId: null,
+                category: '',
                 title: '',
                 description: '',
                 mileage: null
