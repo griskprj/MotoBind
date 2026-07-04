@@ -1,4 +1,14 @@
-# 🏍️ MotoBind — Управление обслуживанием мотоциклов
+<div align="center">
+<img src="frontend/public/MotoBindLogo.png" alt="MotoBind Logo" width="120" height="120">
+  <h1>MotoBind</h1>
+  <p><strong>Умное управление обслуживанием мотоциклов</strong></p>
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python">
+    <img src="https://img.shields.io/badge/Flask-2.3.2-green.svg" alt="Flask">
+    <img src="https://img.shields.io/badge/Vue-3.3.4-brightgreen.svg" alt="Vue">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  </p>
+</div>
 
 Веб-приложение для учёта **мотоциклов, планирования и отслеживания обслуживания, анализа затрат и состояния узлов.**
 
