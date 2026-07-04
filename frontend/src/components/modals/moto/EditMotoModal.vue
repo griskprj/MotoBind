@@ -14,12 +14,24 @@
             <input v-model="form.volume" type="number" min="49" max="4000" class="modal-input">
         </label>
         <label>
+            Пробег
+            <input v-model="form.mileage" type="number" min="0" max="1000000" class="modal-input">
+        </label>
+        <label>
             Год выпуска
             <input v-model="form.years" type="number" min="1950" :max="currentYear" class="modal-input">
         </label>
         <label>
-            Пробег
-            <input v-model="form.mileage" type="number" min="0" max="1000000" class="modal-input">
+            Гос. номер
+            <input v-model="form.licensePlate" type="text" min="8" max="9" class="modal-input">
+        </label>
+        <label>
+            VIN
+            <input v-model="form.vin" type="text" min="17" max="17" class="modal-input">
+        </label>
+        <label>
+            Цвет
+            <input v-model="form.color" type="color">
         </label>
 
         <div class="modal-actions">
@@ -50,7 +62,10 @@ export default {
                 name: '',
                 volume: null,
                 years: null,
-                mileage: null
+                mileage: null,
+                licensePlate: null,
+                vin: null,
+                color: null,
             },
             currentYear: new Date().getFullYear()
         }
@@ -64,7 +79,10 @@ export default {
                     name: this.motorcycle.name || '',
                     volume: this.motorcycle.volume || null,
                     years: this.motorcycle.years || null,
-                    mileage: this.motorcycle.mileage || null
+                    mileage: this.motorcycle.mileage || null,
+                    licensePlate: this.motorcycle.license_plate || '',
+                    vin: this.motorcycle.vin || '',
+                    color: this.motorcycle.color || null
                 }
             }
         },
@@ -77,7 +95,10 @@ export default {
                         name: newVal.name || '',
                         volume: newVal.volume || null,
                         years: newVal.years || null,
-                        mileage: newVal.mileage || null
+                        mileage: newVal.mileage || null,
+                        licensePlate: newVal.license_plate || '',
+                        vin: newVal.vin || '',
+                        color: newVal.color || null
                     }
                 }
             },
@@ -92,7 +113,10 @@ export default {
                 name: '',
                 volume: null,
                 years: null,
-                mileage: null
+                mileage: null,
+                licensePlate: null,
+                vin: null,
+                color: null,
             }
         },
 

@@ -1,5 +1,6 @@
 <template>
-    <div class="moto-card">
+    
+    <div class="moto-card" :style="cardStyle">
         <div class="moto-card-header">
             <p>{{ moto.name }}</p>
             <div class="moto-actions">
@@ -14,14 +15,18 @@
                         <p class="meta-text">Объем:</p> <p>{{ moto.volume }} см3</p>
                     </div>
                     <div class="meta-item">
-                        <p class="meta-text">Год выпуска:</p> <p>{{ moto.years }} г.</p>
+                        <p class="meta-text">Год выпуска:</p> <p>{{ moto.years ? moto.years : '--не указан--' }} г.</p>
                     </div>
                     <div class="meta-item">
                         <p class="meta-text">Пробег:</p> <p>{{ moto.mileage ? moto.mileage : 0 }} км</p>
                     </div>
+                    <div class="meta-item">
+                        <p class="meta-text">Гос. номер</p> <p>{{ moto.license_plate ? moto.license_plate : '--не указан--' }}</p>
+                    </div>
+                    <div class="meta-item">
+                        <p class="meta-text">Цвет:</p> <div v-if="moto.color" class="moto-color" :style="{ background: moto.color }"></div> <p v-else>'--не указан--'</p>
+                    </div>
                 </div>
-
-                <button class="follow-btn btn">Подробнее</button>
             </div>
             <div class="img-wrapper">
                 <img src="/moto_default.jpg" alt="Motorcycle" class="moto-img">
@@ -38,6 +43,16 @@ export default {
             required: true
         }
     },
+
+    computed: {
+        cardStyle() {
+            if (this.moto.color) {
+                return {
+                    '--moto-color': this.moto.color || 'var(--accent)'
+                }
+            }
+        }
+    }
 }
 </script>
 
@@ -48,7 +63,6 @@ p {
 
 .moto-card {
     padding: 15px;
-    background-color: var(--bg-secondary);
     margin-bottom: 24px;
     border-radius: 18px;
 
@@ -59,7 +73,7 @@ p {
 
 .moto-card:hover {
     transform: translateX(2px);
-    border-left: 4px solid var(--accent);
+    border-left: 4px solid var(--moto-color);
 }
 
 .moto-card-header {
@@ -117,9 +131,9 @@ p {
 }
 
 .meta-items {
-    margin-bottom: 24px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 8px;
 }
 
@@ -127,6 +141,7 @@ p {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     
     padding: 8px 14px 8px 14px;
 
@@ -140,10 +155,11 @@ p {
     font-weight: 500;
 }
 
-.follow-btn {
-    width: 100%;
+.moto-color {
+    width: 48px;
+    height: 16px;
+    border-radius: 16px;
 }
-
 
 
 @media (max-width: 728px) {

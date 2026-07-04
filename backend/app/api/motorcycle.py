@@ -168,7 +168,7 @@ def create_moto():
     if color and color[0] != '#' and len(color.split('#')[1]) < 3:
         raise ValidationError('Цвет должен быть формата HEX (#FFFFFF)')
 
-    if license_plate and license_plate and len(license_plate) > 9:
+    if license_plate and len(license_plate) > 9:
         raise ValidationError('Неверный формат ГОС номера')
 
     if vin and len(vin) != 17:
@@ -273,6 +273,15 @@ def update_moto(moto_id):
                     mileage:
                         type: integer
                         description: Пробег мотоцикла
+                    color:
+                        type: string
+                        description: Цвет мотоцикла (формат HEX, например, #FFFFFF)
+                    license_plate:
+                        type: string
+                        description: Государственный номер мотоцикла
+                    vin:
+                        type: string
+                        description: VIN мотоцикла
     responses:
         200:
             description: Данные мотоцикла успешно обновлены
@@ -294,6 +303,16 @@ def update_moto(moto_id):
                     mileage:
                         type: integer
                         description: Пробег мотоцикла
+                    color:
+                        type: string
+                        description: Цвет мотоцикла
+                    license_plate:
+                        type: string
+                        description: Государственный номер мотоцикла
+                    vin:
+                        type: string
+                        description: VIN мотоцикла
+                    
         400:
             description: Ошибка валидации данных
         404:
@@ -314,6 +333,9 @@ def update_moto(moto_id):
         volume = data.get('volume')
         mileage = data.get('mileage')
         years = data.get('years')
+        color = data.get('color')
+        license_plate = data.get('licensePlate')
+        vin = data.get('vin')
         if 'name' in data:
             motorcycle.name = name
         if 'years' in data and datetime.now().year > years:
@@ -322,13 +344,19 @@ def update_moto(moto_id):
             motorcycle.volume = volume
         if 'mileage' in data and mileage < 1_000_000:
             motorcycle.mileage = mileage
+        if color and color[0] == '#' and len(color.split('#')[1]) >= 3:
+            motorcycle.color = color
+        if vin and len(vin) == 17:
+            motorcycle.vin = vin
+        if license_plate and 8 <= len(license_plate) <= 9:
+            motorcycle.license_plate = license_plate
         
         db.session.commit()
         return jsonify(motorcycle.to_dict())
 
     except Exception as e:
         current_app.logger.error(f'Failed update moto: {str(e)}')
-        raise InternalServerError('Ошибка сервера')
+        raise BusinessLogicError('Ошибка сервера')
 
 
 

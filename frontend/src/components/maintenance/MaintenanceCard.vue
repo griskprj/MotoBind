@@ -20,6 +20,7 @@ export default {
         </div>
         <div class="maintenance-body">
             <div class="maintenance-meta">
+                <p>{{ maintenance.moto_name }}</p>
                 <p v-if="maintenance.planned_mileage" class="maintenance-meta-item">Пробег: {{ maintenance.planned_mileage}}</p>
             </div>
             <div class="maintenance-actions">

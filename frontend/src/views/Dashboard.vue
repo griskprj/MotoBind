@@ -381,7 +381,7 @@ export default {
             <div class="welcome-wrapper">
                 <h2>Здравствуйте,</h2> <h2 class="welcome-title">{{ user?.username }}</h2>
             </div>
-            <p class="welcome-subtitle">Ваш мотоцикл в отличной форме <span v-if="maintenances.length > 0"> , но есть пару моментов, на которые стоит обратить внимание</span></p>
+            <p class="welcome-subtitle"><span v-if="motorcycles.length === 1">Ваш мотоцикл</span> <span v-if="motorcycles.length > 1">Ваши мотоциклы</span> в отличной форме <span v-if="maintenances.length > 0"> , но есть пару моментов, на которые стоит обратить внимание</span></p>
         </div>
 
         <!-- === FAST ACTIONS === -->

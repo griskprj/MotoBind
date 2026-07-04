@@ -82,6 +82,7 @@ def get_data():
         status = check_status(plan, motorcycle)
         planned_records.append({
           'id': plan.id,
+          'moto_name': motorcycle.name,
           'title': plan.title,
           'planned_mileage': plan.planned_mileage,
           'status': status
