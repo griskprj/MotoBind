@@ -19,81 +19,81 @@ import api from '../api/api.js'
 
 export default {
     components: {
-				// === CARDS ===
+        // === CARDS ===
         MotoCard,
         MaintenanceCard,
         MaintenanceNodeCard,
 
-				// === CHARTS ===
+        // === CHARTS ===
         MaintenanceCostChart,
         MaintenanceCountChart,
 
-				// === MODALS ===
-				// maintenance modal
+        // === MODALS ===
+        // maintenance modal
         AddMaintenanceModal,
         AddPlanMaintenanceModal,
         EditPlanMaintenanceModal,
         DeletePlanMaintenanceModal,
         MarkPlanMaintenanceModal,
 
-				// motorcycle modals
+        // motorcycle modals
         EditMotoModal,
         DeleteMotoModal,
-				UpdateMileageModal,
+        UpdateMileageModal,
     },
 
     data() {
         return {
-						// === STATISTICS VARS ===
-						// maintenance
+            // === STATISTICS VARS ===  
+            // maintenance
             maintenances_count: 0,
             plan_maintenances_count: 0,
-						total_maintenances: 0,
+            total_maintenances: 0,
             month_maintenances: 0,
 			
-						// money
+            // money
             all_cost: 0,
-						total_cost: 0,
+            total_cost: 0,
             max_cost: 0,
             average_cost: 0,
 
-						// === MOTORCYCLE ===
+            // === MOTORCYCLE ===
             motorcycles: [],
-						selectedMoto:null,
+            selectedMoto:null,
             motoData: null,
 
-						// === MAINTENANCES ===
-						nodes: [],
+            // === MAINTENANCES ===
+            nodes: [],
             plannedMaintenances: [],
-						selectedMaintenance: null,
+            selectedMaintenance: null,
             selectedDeleteMaintenanceId: null,
             markPlanMaintenanceId: null,
 
-						// === CHARTS ===
-						money_chart_data: [],
+            // === CHARTS ===
+            money_chart_data: [],
             freq_chart_data: [],
 
             loading: false,
 
-						// === MODALS ===
-						// motorcycles
+            // === MODALS ===
+            // motorcycles
             showUpdateMileageModal: false,
-						showEditMotoModal: false,
+            showEditMotoModal: false,
             showDeleteMotoModal: false,
 
-						// maintenances
+            // maintenances
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
             showEditPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
             showDeletePlanMaintenanceModal: false,
-
-            
         }
     },
 
     methods: {
+        // === ASYNC FUNC ===
         async loadData() {
+            // load garage base data
             try {
                 const response = await api.get('/statistic/garage')
 
@@ -107,6 +107,7 @@ export default {
         },
 
         async getMotoData() {
+            // load more garage data
             try {
                 this.loading = true
 
@@ -131,7 +132,9 @@ export default {
             }
         },
 
+        // --- motorcycles ---
         async updateMotoMileage(formData) {
+            // update motot mileage
             try {
                 this.loading = true
 
@@ -160,6 +163,7 @@ export default {
         },
 
         async updateMoto(formData) {
+            // update moto
             try {
                 this.loading = true
 
@@ -181,6 +185,7 @@ export default {
         },
 
         async deleteMoto() {
+            // delete moto
             try {
                 this.loading = true
 
@@ -195,7 +200,9 @@ export default {
             }
         },
 
+        // --- maintenances ---
         async addMaintenance(formData) {
+            // add maintenance
             try {
                 this.loading = true
                 
@@ -212,6 +219,7 @@ export default {
         },
 
         async addPlanMaintenance(formData) {
+            // plan maintenance
             try {
                 this.loading = true
 
@@ -227,6 +235,7 @@ export default {
         },
 
         async editPlanMaintenance(formData) {
+            // edit plan maintenance
             try {
                 this.loading = true
 
@@ -247,6 +256,7 @@ export default {
         },
 
         async deletePlanMaintenance(maintenenceId) {
+            // delete plan maintenance
             try {
                 this.loading = true
 
@@ -269,6 +279,7 @@ export default {
         },
 
         async markPlanMaintenance(formData) {
+            // mark plan maintenance
             try {
                 this.loading = true
 
@@ -284,18 +295,32 @@ export default {
             }
         },
 
+        // --- other ---
         removeMotoData() {
+            // remove moto data
             this.motoData = null
         },
 
 
         // === MODALS FUNC ===
 
+        // --- motorcycles ---
         // update mileage
         openUpdateMileageModal() {
             this.showUpdateMileageModal = true
         },
 
+        // edit motorcycle
+        openEditMotoModal() {
+            this.showEditMotoModal = true
+        },
+
+        // delete motorcycle
+        openDeleteMotoModal() {
+            this.showDeleteMotoModal = true
+        },
+
+        // --- maintenances ---
         // add maintenance
         openAddMaintenanceModal() {
             this.showAddMaintenanceModal = true
@@ -335,16 +360,6 @@ export default {
             this.markPlanMaintenanceId = null
             this.showMarkPlanMaintenanceModal = false
         },
-
-        // edit motorcycle
-        openEditMotoModal() {
-            this.showEditMotoModal = true
-        },
-
-        // delete motorcycle
-        openDeleteMotoModal() {
-            this.showDeleteMotoModal = true
-        }
     },
 
     mounted() {
@@ -535,6 +550,19 @@ export default {
         @close="showUpdateMileageModal=false"
         @submit="updateMotoMileage"
     />
+    <EditMotoModal
+        :isOpen="showEditMotoModal"
+        :motorcycle="motoData"
+        @submit="updateMoto"
+        @close="showEditMotoModal=false"
+    />
+    <DeleteMotoModal
+        :isOpen="showDeleteMotoModal"
+        :motoId="selectedMoto"
+        @submit="deleteMoto"
+        @close="showDeleteMotoModal=false"
+    />
+
     <AddMaintenanceModal
         :isOpen="showAddMaintenanceModal"
         :motorcycles="motorcycles"
@@ -566,19 +594,6 @@ export default {
         @submit="markPlanMaintenance"
         @close="closeMarkPlanMaintenance"
     />
-
-    <EditMotoModal
-        :isOpen="showEditMotoModal"
-        :motorcycle="motoData"
-        @submit="updateMoto"
-        @close="showEditMotoModal=false"
-    />
-    <DeleteMotoModal
-        :isOpen="showDeleteMotoModal"
-        :motoId="selectedMoto"
-        @submit="deleteMoto"
-        @close="showDeleteMotoModal=false"
-    />
 </template>
 
 
@@ -587,7 +602,6 @@ p {
   margin-bottom: 0;
 }
 
-/* Общие отступы для секций */
 .section {
   background-color: var(--bg-primary);
   border: 2px solid var(--border-color);
