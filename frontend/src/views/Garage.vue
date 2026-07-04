@@ -18,62 +18,77 @@ import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import api from '../api/api.js'
 
 export default {
-    components: { 
+    components: {
+				// === CARDS ===
         MotoCard,
         MaintenanceCard,
         MaintenanceNodeCard,
 
+				// === CHARTS ===
         MaintenanceCostChart,
         MaintenanceCountChart,
 
-        UpdateMileageModal,
+				// === MODALS ===
+				// maintenance modal
         AddMaintenanceModal,
         AddPlanMaintenanceModal,
         EditPlanMaintenanceModal,
         DeletePlanMaintenanceModal,
         MarkPlanMaintenanceModal,
 
+				// motorcycle modals
         EditMotoModal,
-        DeleteMotoModal
+        DeleteMotoModal,
+				UpdateMileageModal,
     },
 
     data() {
         return {
+						// === STATISTICS VARS ===
+						// maintenance
             maintenances_count: 0,
             plan_maintenances_count: 0,
+						total_maintenances: 0,
+            month_maintenances: 0,
+			
+						// money
             all_cost: 0,
-            motorcycles: [],
-            selectedMoto:null,
-
-            motoData: null,
-            nodes: [],
-            plannedMaintenances: [],
-
-            total_cost: 0,
+						total_cost: 0,
             max_cost: 0,
             average_cost: 0,
-            money_chart_data: [],
 
-            total_maintenances: 0,
-            month_maintenances: 0,
-            freq_chart_data: [],
+						// === MOTORCYCLE ===
+            motorcycles: [],
+						selectedMoto:null,
+            motoData: null,
 
-            selectedMaintenance: null,
+						// === MAINTENANCES ===
+						nodes: [],
+            plannedMaintenances: [],
+						selectedMaintenance: null,
             selectedDeleteMaintenanceId: null,
             markPlanMaintenanceId: null,
 
+						// === CHARTS ===
+						money_chart_data: [],
+            freq_chart_data: [],
+
             loading: false,
 
+						// === MODALS ===
+						// motorcycles
             showUpdateMileageModal: false,
+						showEditMotoModal: false,
+            showDeleteMotoModal: false,
+
+						// maintenances
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
-
             showEditPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
             showDeletePlanMaintenanceModal: false,
 
-            showEditMotoModal: false,
-            showDeleteMotoModal: false,
+            
         }
     },
 
