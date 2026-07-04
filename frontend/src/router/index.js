@@ -59,11 +59,22 @@ const router = createRouter({
       component: () => import('../views/Garage.vue'),
       meta: {
         requiresAuth: true,
-        title: 'MotoBind - Главная',
+        title: 'MotoBind - Гараж',
         showFooter: true,
         showHeader: true
        }
     },
+    {
+      path: '/repair',
+      name: 'repair',
+      component: () => import('../views/Repair.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Ремонт',
+        showFooter: true,
+        showHeader: true
+      }
+    }
   ]
 })
 

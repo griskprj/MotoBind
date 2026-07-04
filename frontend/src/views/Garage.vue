@@ -372,175 +372,175 @@ export default {
     <div class="container">
         <!-- Статистика -->
         <div class="section statistics-section">
-        <div class="section-title-wrapper">
-            <i class="fa fa-gear"></i>
-            <h2>Управляйте обслуживанием своего мотоцикла</h2>
-        </div>
-        <div class="statistics-cards">
-            <div class="stat-card">
-            <p class="stat-card-title">Выполнено обслуживаний</p>
-            <p class="stat-card-value">{{ maintenances_count }}</p>
+            <div class="section-title-wrapper">
+                <i class="fa fa-gear"></i>
+                <h2>Управляйте обслуживанием своего мотоцикла</h2>
             </div>
-            <div class="stat-card">
-            <p class="stat-card-title">Запланировано</p>
-            <p class="stat-card-value">{{ plan_maintenances_count }}</p>
+            <div class="statistics-cards">
+                <div class="stat-card">
+                    <p class="stat-card-title">Выполнено обслуживаний</p>
+                    <p class="stat-card-value">{{ maintenances_count }}</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-card-title">Запланировано</p>
+                    <p class="stat-card-value">{{ plan_maintenances_count }}</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-card-title">Общие затраты</p>
+                    <p class="stat-card-value">{{ all_cost }} ₽</p>
+                </div>
             </div>
-            <div class="stat-card">
-            <p class="stat-card-title">Общие затраты</p>
-            <p class="stat-card-value">{{ all_cost }} ₽</p>
-            </div>
-        </div>
         </div>
 
         <!-- Выбор мотоцикла -->
         <div class="section select-moto-section">
-        <div class="section-title-wrapper">
-            <i class="fa fa-motorcycle"></i>
-            <h2>Выберите мотоцикл для анализа</h2>
-        </div>
-        <div class="actions-wrapper">
-            <select v-model="selectedMoto" class="select-action">
-            <option value="">Выберите мотоцикл</option>
-            <option v-for="m in motorcycles" :key="m.id" :value="m.id">{{ m.name }}</option>
-            </select>
-            <button
-                @click="getMotoData()"
-                :disabled="selectedMoto === null || selectedMoto === ''"
-                class="select-action"
-                :style="{ display: motoData ? 'none' : '' }"
-            >
-                Анализ
-            </button>
-            <button
-                @click="removeMotoData()"
-                :disabled="motoData === null || motoData === ''"
-                class="select-action"
-                :style="{ display: !motoData ? 'none' : '' }"
+            <div class="section-title-wrapper">
+                <i class="fa fa-motorcycle"></i>
+                <h2>Выберите мотоцикл для анализа</h2>
+            </div>
+            <div class="actions-wrapper">
+                <select v-model="selectedMoto" class="select-action">
+                <option value="">Выберите мотоцикл</option>
+                <option v-for="m in motorcycles" :key="m.id" :value="m.id">{{ m.name }}</option>
+                </select>
+                <button
+                    @click="getMotoData()"
+                    :disabled="selectedMoto === null || selectedMoto === ''"
+                    class="select-action"
+                    :style="{ display: motoData ? 'none' : '' }"
                 >
-                Закрыть
-            </button>
-        </div>
+                    Анализ
+                </button>
+                <button
+                    @click="removeMotoData()"
+                    :disabled="motoData === null || motoData === ''"
+                    class="select-action"
+                    :style="{ display: !motoData ? 'none' : '' }"
+                    >
+                    Закрыть
+                </button>
+            </div>
         </div>
 
         <!-- Детальная информация по мотоциклу -->
         <div v-if="motoData" class="moto-section">
-        <!-- Быстрые действия -->
-        <div class="section-wrapper actions-wrapper-block">
-            <div class="section-title-wrapper small">
-            <i class="fa fa-bolt"></i>
-                <h3>Быстрые действия</h3>
-            </div>
-            <div class="fast-actions-wrapper">
-                <button @click="openUpdateMileageModal()"><i class="fa fa-tachometer"></i> Обновить пробег</button>
-                <button @click="openAddMaintenanceModal()"><i class="fa fa-wrench"></i> Добавить обслуживание</button>
-                <button @click="openPlanMaintenanceModal()"><i class="fa fa-calendar"></i> Планировать обслуживание</button>
-            </div>
-        </div>
-
-        <!-- Карточка мотоцикла -->
-        <div class="section-wrapper moto-card-wrapper">
-            <div class="section-title-wrapper small">
-                <i class="fa fa-motorcycle"></i>
-                <h3>Ваш мотоцикл</h3>
-            </div>
-            <MotoCard
-                :moto="motoData"
-                @editMoto="openEditMotoModal"
-                @deleteMoto="openDeleteMotoModal"
-            />
-        </div>
-
-        <!-- Предстоящее обслуживание -->
-        <div class="section-wrapper planned-wrapper">
-            <div class="section-title-wrapper small">
-            <i class="fa fa-wrench"></i>
-            <h3>Предстоящее обслуживание</h3>
-            </div>
-            <div v-if="plannedMaintenances.length === 0" class="empty-state small">
-            <i class="fa fa-calendar-check-o"></i>
-            <p>Нет запланированных обслуживаний</p>
-            </div>
-            <div v-else class="pending-maintenances">
-            <MaintenanceCard
-                v-for="maintenance in plannedMaintenances"
-                :key="maintenance.id"
-                :maintenance="maintenance"
-                style="margin-bottom: 8px;"
-                @edit="openEditPlanMaintenanceModal"
-                @delete="openDeletePlanMaintenanceModal"
-                @mark="openMarkPlanMaintenance"
-            />
-            </div>
-        </div>
-
-        <!-- Статистика обслуживаний -->
-        <div class="section-wrapper stats-wrapper">
-            <div class="section-title-wrapper small">
-            <i class="fa fa-line-chart"></i>
-            <h3>Статистика обслуживаний</h3>
-            </div>
-
-            <!-- Стоимость -->
-            <div class="chart-block">
-            <div class="stat-card horizontal">
-                <h4>Стоимость обслуживаний</h4>
-                <div class="stat-card-items">
-                <div class="stat-card-item">
-                    <p class="stat-card-title">Затраты</p>
-                    <p class="stat-card-value">{{ total_cost }} ₽</p>
+            <!-- Быстрые действия -->
+            <div class="section-wrapper actions-wrapper-block">
+                <div class="section-title-wrapper small">
+                <i class="fa fa-bolt"></i>
+                    <h3>Быстрые действия</h3>
                 </div>
-                <div class="stat-card-item">
-                    <p class="stat-card-title">Самое дорогое</p>
-                    <p class="stat-card-value">{{ max_cost }} ₽</p>
-                </div>
-                <div class="stat-card-item">
-                    <p class="stat-card-title">Средняя стоимость</p>
-                    <p class="stat-card-value">{{ average_cost }} ₽</p>
-                </div>
+                <div class="fast-actions-wrapper">
+                    <button @click="openUpdateMileageModal()"><i class="fa fa-tachometer"></i> Обновить пробег</button>
+                    <button @click="openAddMaintenanceModal()"><i class="fa fa-wrench"></i> Добавить обслуживание</button>
+                    <button @click="openPlanMaintenanceModal()"><i class="fa fa-calendar"></i> Планировать обслуживание</button>
                 </div>
             </div>
-            <MaintenanceCostChart :chartData="money_chart_data" />
+
+            <!-- Карточка мотоцикла -->
+            <div class="section-wrapper moto-card-wrapper">
+                <div class="section-title-wrapper small">
+                    <i class="fa fa-motorcycle"></i>
+                    <h3>Ваш мотоцикл</h3>
+                </div>
+                <MotoCard
+                    :moto="motoData"
+                    @editMoto="openEditMotoModal"
+                    @deleteMoto="openDeleteMotoModal"
+                />
             </div>
 
-            <hr class="chart-sep" />
+            <!-- Предстоящее обслуживание -->
+            <div class="section-wrapper planned-wrapper">
+                <div class="section-title-wrapper small">
+                <i class="fa fa-wrench"></i>
+                <h3>Предстоящее обслуживание</h3>
+                </div>
+                <div v-if="plannedMaintenances.length === 0" class="empty-state small">
+                <i class="fa fa-calendar-check-o"></i>
+                <p>Нет запланированных обслуживаний</p>
+                </div>
+                <div v-else class="pending-maintenances">
+                <MaintenanceCard
+                    v-for="maintenance in plannedMaintenances"
+                    :key="maintenance.id"
+                    :maintenance="maintenance"
+                    style="margin-bottom: 8px;"
+                    @edit="openEditPlanMaintenanceModal"
+                    @delete="openDeletePlanMaintenanceModal"
+                    @mark="openMarkPlanMaintenance"
+                />
+                </div>
+            </div>
 
-            <!-- Частота -->
-            <div class="chart-block">
-            <div class="stat-card horizontal">
-                <h4>Частота обслуживаний</h4>
-                <div class="stat-card-items">
-                <div class="stat-card-item">
-                    <p class="stat-card-title">Всего</p>
-                    <p class="stat-card-value">{{ total_maintenances }}</p>
+            <!-- Статистика обслуживаний -->
+            <div class="section-wrapper stats-wrapper">
+                <div class="section-title-wrapper small">
+                <i class="fa fa-line-chart"></i>
+                <h3>Статистика обслуживаний</h3>
                 </div>
-                <div class="stat-card-item">
-                    <p class="stat-card-title">За этот месяц</p>
-                    <p class="stat-card-value">{{ month_maintenances }}</p>
-                </div>
-                </div>
-            </div>
-            <MaintenanceCountChart :chartData="freq_chart_data" />
-            </div>
-        </div>
 
-        <!-- Узлы обслуживания -->
-        <div class="section-wrapper nodes-wrapper">
-            <div class="section-title-wrapper small">
-            <i class="fa fa-gear"></i>
-            <h3>Узлы обслуживания</h3>
+                <!-- Стоимость -->
+                <div class="chart-block">
+                <div class="stat-card horizontal">
+                    <h4>Стоимость обслуживаний</h4>
+                    <div class="stat-card-items">
+                    <div class="stat-card-item">
+                        <p class="stat-card-title">Затраты</p>
+                        <p class="stat-card-value">{{ total_cost }} ₽</p>
+                    </div>
+                    <div class="stat-card-item">
+                        <p class="stat-card-title">Самое дорогое</p>
+                        <p class="stat-card-value">{{ max_cost }} ₽</p>
+                    </div>
+                    <div class="stat-card-item">
+                        <p class="stat-card-title">Средняя стоимость</p>
+                        <p class="stat-card-value">{{ average_cost }} ₽</p>
+                    </div>
+                    </div>
+                </div>
+                <MaintenanceCostChart :chartData="money_chart_data" />
+                </div>
+
+                <hr class="chart-sep" />
+
+                <!-- Частота -->
+                <div class="chart-block">
+                <div class="stat-card horizontal">
+                    <h4>Частота обслуживаний</h4>
+                    <div class="stat-card-items">
+                    <div class="stat-card-item">
+                        <p class="stat-card-title">Всего</p>
+                        <p class="stat-card-value">{{ total_maintenances }}</p>
+                    </div>
+                    <div class="stat-card-item">
+                        <p class="stat-card-title">За этот месяц</p>
+                        <p class="stat-card-value">{{ month_maintenances }}</p>
+                    </div>
+                    </div>
+                </div>
+                <MaintenanceCountChart :chartData="freq_chart_data" />
+                </div>
             </div>
-            <div v-if="nodes.length === 0" class="empty-state small">
-            <i class="fa fa-cogs"></i>
-            <p>Нет данных по узлам</p>
+
+            <!-- Узлы обслуживания -->
+            <div class="section-wrapper nodes-wrapper">
+                <div class="section-title-wrapper small">
+                <i class="fa fa-gear"></i>
+                <h3>Узлы обслуживания</h3>
+                </div>
+                <div v-if="nodes.length === 0" class="empty-state small">
+                <i class="fa fa-cogs"></i>
+                <p>Нет данных по узлам</p>
+                </div>
+                <div v-else class="node-cards">
+                <MaintenanceNodeCard
+                    v-for="node in nodes"
+                    :key="node.id"
+                    :node="node"
+                />
+                </div>
             </div>
-            <div v-else class="node-cards">
-            <MaintenanceNodeCard
-                v-for="node in nodes"
-                :key="node.id"
-                :node="node"
-            />
-            </div>
-        </div>
         </div>
     </div>
     <!-- Модальные окна -->

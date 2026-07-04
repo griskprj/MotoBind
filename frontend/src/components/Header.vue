@@ -32,9 +32,9 @@
                 <span>Гараж</span>
             </router-link>
             <router-link
-                to="/manuals"
+                to="/repair"
                 class="nav-link"
-                :class="{ active: $route.path === '/manuals'}"
+                :class="{ active: $route.path === '/repair'}"
                 @click="closeMenu"
             >
                 <i class="fa fa-wrench"></i>

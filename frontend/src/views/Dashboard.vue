@@ -602,34 +602,4 @@ p {
     margin-bottom: 32px;
     padding: 28px;
 }
-
-
-
-
-/* Empty State */
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 48px;
-    background-color: var(--bg-secondary);
-    border-radius: 24px;
-    border: 2px dashed var(--border-color);
-
-    text-align: center;
-}
-
-.empty-state i {
-    font-size: 32px;
-    color: var(--accent);
-    margin-bottom: 12px;
-}
-
-.empty-state-p {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--text-secondary);
-
-    margin-bottom: 12px;
-}
 </style>
