@@ -102,6 +102,7 @@
 
                 <div class="manual-actions">
                     <button class="accept-btn">Завершить</button>
+                    <button>Сбросить</button>
                 </div>
             </div>
 
@@ -113,6 +114,9 @@
         </div>
     </div>
 </template>
+
+<script>
+</script>
 
 <style scoped>
 /* Статистика */
@@ -256,7 +260,10 @@
 .manual-actions {
     margin-top: 24px;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 12px;
 }
 
 .manual-actions button {
