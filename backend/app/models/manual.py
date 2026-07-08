@@ -9,11 +9,9 @@ class Manual(db.Model):
     title = db.Column(db.String(64), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(32), nullable=False)
-    type = db.Column(db.String(32), nullable=False)
     difficult = db.Column(db.String(32), default='easy')
     instruments = db.Column(db.Text)
     parts = db.Column(db.Text)
-
     motorcycle = db.Column(db.String(64), nullable=False)
 
     steps = db.relationship('ManualStep', lazy='select', cascade='all, delete-orphan')

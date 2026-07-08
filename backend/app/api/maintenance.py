@@ -46,19 +46,19 @@ def create_new_maintenance():
                 title:
                     type: string
                     example: Замена масла
-                    description: Название обслуживания
+                    description: "Название обслуживания"
                 description:
                     type: string
-                    example: Замена масла и масляного фильтра
+                    example: "Замена масла и масляного фильтра"
                     description: Описание (опционально)
                 mileage:
                     type: number
                     example: 12790
-                    description: Пробег на момент обслуживания
+                    description: "Пробег на момент обслуживания"
                 cost:
                     type: number
                     example: 1000
-                    description: Стоимость обслуживания
+                    description: "Стоимость обслуживания"
                 date:
                     type: string
                     format: date
@@ -521,7 +521,7 @@ def delete_plan_maintenance(maintenance_id):
         required: true
         schema:
             type: integer
-        description: ID записи обслуживания
+            description: ID записи обслуживания
     responses:
         200:
             description: Запись удалена

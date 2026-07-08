@@ -277,5 +277,3 @@ def get_moto_garage(moto_id):
   except Exception as e:
       current_app.logger.error(f'Failed load garage moto data: {str(e)}')
       raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
-
-  
