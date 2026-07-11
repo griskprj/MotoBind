@@ -1,12 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import selectinload
-from datetime import datetime, timezone
 
-from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
-from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.utils.check_maintenance_status import check_status
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 from app.utils.maintenance_nodes import gen_maintenance_nodes
@@ -187,7 +184,7 @@ def get_moto_garage(moto_id):
   Получить данные о мотоцикле для гаража
   ---
   tags:
-    - Motorcycle
+    - Statistic
   summary: Данные мотоцикла для гаража
   description: Возвращает информацию о мотоцикле, узлах обслуживания и всех типах обслуживания
   security:
@@ -277,3 +274,72 @@ def get_moto_garage(moto_id):
   except Exception as e:
       current_app.logger.error(f'Failed load garage moto data: {str(e)}')
       raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
+
+@statistic.route('/repair', methods=['GET'])
+@jwt_required()
+def get_stat_repair():
+  """
+  Получение статистики для страницы ремонта
+  ---
+  tags:
+    - Statistic
+  summary: Получение статистики для страницы ремонта
+  description: Возврщает информацию о кол-ве просроченных, скорых и запланированных обсл.
+  security:
+    - Bearer: []
+  responses:
+    200:
+      description: Данные успешно получены
+      schema:
+        type: object
+        properties:
+          overdue:
+            type: integer
+          soon:
+            type: integer
+          planned:
+            type: integer
+    404:
+      description: Пользователь не найден
+  """
+
+  user = User.query.options(
+    selectinload(User.motorcycles)
+    .selectinload(Motorcycle.planned_maintenances)
+  ).get(get_jwt_identity())
+
+  if not user:
+    raise NotFoundError("Пользователь не найден")
+  
+  overdue = 0
+  soon = 0
+  planned = 0
+  motorcycles = []
+  maintenances = []
+  try:
+    for moto in user.motorcycles:
+      for plan in moto.planned_maintenances:
+        status = check_status(plan, moto)
+        
+        match status:
+          case 'ok':
+            planned += 1
+          case 'overdue':
+            overdue += 1
+          case 'soon':
+            soon += 1
+        
+        maintenances.append(plan.to_dict())
+      
+      motorcycles.append(moto.to_dict())
+  except Exception as e:
+    current_app.logger.error(f'Failed load repair data: {str(e)}')
+    raise BusinessLogicError("Ошибка сервера")
+    
+  return jsonify({
+    'overdue': overdue,
+    'soon': soon,
+    'planned': planned,
+    'motorcycles': motorcycles,
+    'maintenances': maintenances
+  }), 200

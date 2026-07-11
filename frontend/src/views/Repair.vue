@@ -35,24 +35,24 @@
                     <option value="">Выберите мотоцикл</option>
                     <option v-for="m in motorcycles" :key="m.id" :value="m.id">{{ m.name }}</option>
                 </select>
-                <select v-if="selectedMaintenance" v-model="selectedMoto" class="select-action">
+                <select v-if="selectedMoto" v-model="selectedMaintenance" class="select-action">
                     <option value="">Выберите обслуживание</option>
-                    <option v-for="m in maintenances" :key="m.id" :value="m.id">{{ m.title }}</option>
+                    <option v-for="m in maintenances" :key="m.id" :value="m.id">{{ m.title + ' | ' + m.planned_mileage + 'км' }}</option>
                 </select>
 
                 <button
+                    v-if="!dataLoad"
                     @click="getRepairData"
-                    :disabled="selectedMoto === null && selectedMaintenance === null"
+                    :disabled="!selectedMoto || !selectedMaintenance"
                     class="select-action"
-                    :style="{ display: repairData ? 'none' : '' }"
                 >
                     Ремонт
                 </button>
+
                 <button
+                    v-else
                     @click="removeRepairData"
-                    :disabled="repairData === null"
                     class="select-action"
-                    :style="{ display: !repairData ? 'none' : '' }"
                 >
                     Закрыть
                 </button>
@@ -60,13 +60,14 @@
         </div>
 
         <!-- Информация по ремонту -->
-        <div class="section">
+        <div v-if="dataLoad" class="section">
             <div class="section-title-wrapper">
                 <i class="fa fa-file"></i>
                 <h2>Инструкция по ремонту</h2>
             </div>
 
-            <div v-if="repairData" class="empty-state">
+            <!-- Если нет мануала - показываем заглушку -->
+            <div v-if="manual === null && dataLoad" class="empty-state">
                 <div class="empty-container">
                     <div class="empty-container-item">
                         <p>К сожалению, в нашей базе пока что нет инструкции к вашей проблеме. Мы обязательно скоро ее добавим <br> (Вы можете помочь нам в этом, нажав на кнопку "Помощь").</p>
@@ -80,45 +81,121 @@
                 </div>
             </div>
 
-            <div class="manual">
-                <h3 class="manual-title">Замена масла</h3>
+            <!-- Если есть мануал - показываем его -->
+            <div v-else-if="manual" class="manual">
+                <h3 class="manual-title">{{ manual.title }}</h3>
                 <div class="steps">
-                    <div class="manual-step">
+                    <div v-for="(step, index) in manual.steps" :key="step.id" class="manual-step">
                         <div class="step-wrapper">
-                            <div class="step-number">1</div>
+                            <div class="step-number">{{ index + 1 }}</div>
                             <div class="step-body">
-                                <p>
-                                    Подготовьте инструмент
-                                </p>
+                                <p>{{ step.text }}</p>
                             </div>
                         </div>
                         <div class="step-img-wrapper">
-                            <img src="../assets/img/instrument.jpg" alt="" class="step-img">
                         </div>
                     </div>
                 </div>
 
-                <hr>
-
                 <div class="manual-actions">
-                    <button class="accept-btn">Завершить</button>
-                    <button>Сбросить</button>
+                    <button @click="showMarkMaintenanceModal=true" class="accept-btn">Завершить</button>
                 </div>
-            </div>
 
-            <div class="record-master">
-                <p>Вы можете записаться к проверенному мастеру из нашего списка.</p>
-                <p>Он поможет Вам в ремонте самым качественным образом</p>
-                <button class="accept-btn">Записаться</button>
+                <div class="record-master">
+                    <p>Вы можете записаться к проверенному мастеру из нашего списка.</p>
+                    <p>Он поможет Вам в ремонте самым качественным образом</p>
+                    <button class="accept-btn">Записаться</button>
+                </div>
             </div>
         </div>
     </div>
+    <MarkPlanMaintenanceModal
+        :is-open="showMarkMaintenanceModal"
+        :id="selectedMaintenance"
+        @close="showMarkMaintenanceModal=false"
+        @submit="markMaintenance"
+    />
 </template>
 
 <script>
+import api from '../api/api'
+import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
+export default {
+    components: { MarkPlanMaintenanceModal },
+    data() {
+        return {
+            overdue_maintenances_count: 0,
+            pending_maintenances_count: 0,
+            planned_maintenances_count: 0,
+
+            motorcycles: [],
+            maintenances: [],
+            repairData: null,
+            manual: null,
+
+            selectedMoto: null,
+            selectedMaintenance: null,
+            dataLoad: false,
+
+            showMarkMaintenanceModal: false
+        }
+    },
+
+    methods: {
+        async loadData() {
+            try {
+                const response = await api.get('/statistic/repair')
+
+                this.motorcycles = response.data.motorcycles
+                this.maintenances = response.data.maintenances
+                this.overdue_maintenances_count = response.data.overdue
+                this.pending_maintenances_count = response.data.soon
+                this.planned_maintenances_count = response.data.planned
+            } catch (err) {
+                console.error('Failed load repair data: ', err)
+            }
+        },
+
+        async getRepairData() {
+            try {
+                const response = await api.get(`/manual/?maintenance_id=${this.selectedMaintenance}&moto_id=${this.selectedMoto}`)
+
+                this.manual = response.data
+                this.dataLoad = true
+            } catch (err) {
+                console.error('Failed get manual: ', err)
+            }
+        },
+
+        async markMaintenance(formData) {
+            try {
+                const response = await api.post('/maintenance/plan/mark', formData)
+                this.showMarkMaintenanceModal = false
+                this.$router.push('/')
+            } catch (err) {
+                console.log('Failed mark maintenance: ', err)
+            }
+        },
+
+
+        removeRepairData() {
+            this.selectedMaintenance = null
+            this.selectedMoto = null
+            this.manual = null
+            this.dataLoad = false
+        },
+    },
+
+    mounted() {
+        this.loadData()
+    }
+}
 </script>
 
 <style scoped>
+.empty-container-item {
+    margin-bottom: 24px;
+}
 /* Статистика */
 .statistics-cards {
   display: flex;
@@ -184,6 +261,12 @@
 }
 .stat-card-item .stat-card-value {
   font-size: 20px;
+}
+
+@media (max-width: 800px) {
+    .statistics-cards {
+        flex-direction: column;
+    }
 }
 
 /* Выбор мотоцикла и обслуживания */
@@ -264,6 +347,8 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
+
+    margin-bottom: 32px;
 }
 
 .manual-actions button {

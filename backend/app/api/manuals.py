@@ -83,6 +83,7 @@ def get_maintenance_manual():
 
     maintenance_id = request.args.get('maintenance_id', type=int)
     moto_id = request.args.get('moto_id', type=int)
+    print(maintenance_id, moto_id)
 
     if not maintenance_id:
         raise BusinessLogicError("Не указан ID обслуживания")
@@ -126,7 +127,7 @@ def get_maintenance_manual():
     if not manuals_found:
         manuals_found = Manual.query.filter(
             Manual.motorcycle.ilike(f'%{motorcycle_name}%'),
-            or_(*conditions)  # OR между условиями
+            or_(*conditions)
         ).all()
     
     if not manuals_found:
