@@ -19,6 +19,9 @@
             <option value="suspension">Подвеска</option>
             <option value="electronics">Электроника</option>
             <option value="wheel">Колеса/Шины</option>
+            <option value="brakes">Тормозная система</option>
+            <option value="fuel">Топливная система</option>
+            <option value="cooling">Система охлаждения</option>
         </select>
         <label>
             <i class="fa fa-font"></i> Название

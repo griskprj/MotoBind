@@ -217,7 +217,19 @@ def create_moto():
             {
                 'title': 'Колеса/Шины',
                 'category': 'wheel'
-            }
+            },
+            {
+                'title': 'Тормозна система',
+                'category': 'brakes'
+            },
+            {
+                'title': 'Топливная система',
+                'category': 'fuel'
+            },
+            {
+                'title': 'Система охлаждения',
+                'category': 'cooling'
+            },
         ]
 
         for node_data in nodes:
