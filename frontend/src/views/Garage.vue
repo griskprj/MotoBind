@@ -50,7 +50,7 @@ export default {
             plan_maintenances_count: 0,
             total_maintenances: 0,
             month_maintenances: 0,
-			
+            
             // money
             all_cost: 0,
             total_cost: 0,
@@ -87,6 +87,27 @@ export default {
             showEditPlanMaintenanceModal: false,
             showMarkPlanMaintenanceModal: false,
             showDeletePlanMaintenanceModal: false,
+
+            // === NODES TABS ===
+            activeNodeIndex: 0,
+            showNodeMaintenances: true,
+        }
+    },
+
+    computed: {
+        activeNode() {
+            return this.nodes[this.activeNodeIndex] || null;
+        },
+        healthColor() {
+            if (!this.activeNode) return 'var(--health-green, #4CAF50)';
+            const health = this.activeNode.health;
+            if (health >= 80) return 'var(--health-green, #4CAF50)';
+            if (health >= 50) return 'var(--health-yellow, #FFC107)';
+            return 'var(--health-red, #F44336)';
+        },
+        filteredNodes() {
+            // Если есть активный узел, показываем только его
+            return this.activeNode ? [this.activeNode] : [];
         }
     },
 
@@ -125,6 +146,10 @@ export default {
                 this.total_maintenances = response.data.total_maintenances
                 this.month_maintenances = response.data.month_maintenances
                 this.freq_chart_data = response.data.freq_chart_data
+
+                // Сбрасываем индекс при загрузке новых данных
+                this.activeNodeIndex = 0
+                this.showNodeMaintenances = true
             } catch (err) {
                 console.error(err)
             } finally {
@@ -134,7 +159,7 @@ export default {
 
         // --- motorcycles ---
         async updateMotoMileage(formData) {
-            // update motot mileage
+            // update moto mileage
             try {
                 this.loading = true
 
@@ -272,7 +297,7 @@ export default {
                 this.loadData()
                 alert("Обслуживание успешно удалено!")
             } catch (err) {
-                consoler.error(`Failed delete plan maintenance: ${err}`)
+                console.error(`Failed delete plan maintenance: ${err}`)
             } finally {
                 this.loading = false
             }
@@ -299,8 +324,33 @@ export default {
         removeMotoData() {
             // remove moto data
             this.motoData = null
+            this.nodes = []
+            this.activeNodeIndex = 0
         },
 
+        // === NODE TABS METHODS ===
+        selectNode(index) {
+            this.activeNodeIndex = index
+            this.showNodeMaintenances = true
+        },
+
+        prevNode() {
+            if (this.activeNodeIndex > 0) {
+                this.activeNodeIndex--
+                this.showNodeMaintenances = true
+            }
+        },
+
+        nextNode() {
+            if (this.activeNodeIndex < this.nodes.length - 1) {
+                this.activeNodeIndex++
+                this.showNodeMaintenances = true
+            }
+        },
+
+        toggleNodeMaintenances() {
+            this.showNodeMaintenances = !this.showNodeMaintenances
+        },
 
         // === MODALS FUNC ===
 
@@ -523,22 +573,128 @@ export default {
                 </div>
             </div>
 
-            <!-- Узлы обслуживания -->
+            <!-- Узлы обслуживания с вкладками -->
             <div class="section-wrapper nodes-wrapper">
                 <div class="section-title-wrapper small">
-                <i class="fa fa-gear"></i>
-                <h3>Узлы обслуживания</h3>
+                    <i class="fa fa-gear"></i>
+                    <h3>Узлы обслуживания</h3>
+                    <span class="nodes-count">{{ nodes.length }}</span>
                 </div>
-                <div v-if="nodes.length === 0" class="empty-state small">
-                <i class="fa fa-cogs"></i>
-                <p>Нет данных по узлам</p>
+
+                <!-- Вкладки узлов -->
+                <div v-if="nodes.length > 0" class="node-tabs-wrapper">
+                    <div class="node-tabs">
+                        <button 
+                            class="node-tab-prev"
+                            @click="prevNode"
+                            :disabled="activeNodeIndex === 0"
+                        >
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="node-tabs-container">
+                            <div class="node-tabs-scroll" ref="tabsScroll">
+                                <button
+                                    v-for="(node, index) in nodes"
+                                    :key="node.id || index"
+                                    class="node-tab"
+                                    :class="{ 'active': activeNodeIndex === index }"
+                                    @click="selectNode(index)"
+                                >
+                                    <span class="node-tab-name">{{ node.title }}</span>
+                                    <span class="node-tab-badge">{{ node.maintenances_count }}</span>
+                                    <span 
+                                        class="node-tab-health"
+                                        :style="{ 
+                                            background: node.health >= 80 ? 'var(--health-green, #4CAF50)' : 
+                                                       node.health >= 50 ? 'var(--health-yellow, #FFC107)' : 
+                                                       'var(--health-red, #F44336)'
+                                        }"
+                                    >
+                                        {{ node.health }}%
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button 
+                            class="node-tab-next"
+                            @click="nextNode"
+                            :disabled="activeNodeIndex === nodes.length - 1"
+                        >
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Индикатор -->
+                    <div class="node-indicator">
+                        <span class="node-indicator-text">
+                            {{ activeNodeIndex + 1 }} / {{ nodes.length }}
+                        </span>
+                    </div>
                 </div>
-                <div v-else class="node-cards">
-                <MaintenanceNodeCard
-                    v-for="node in nodes"
-                    :key="node.id"
-                    :node="node"
-                />
+
+                <!-- Карточка активного узла -->
+                <div v-if="activeNode" class="active-node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title-wrapper">
+                            <h4 class="node-card-title">{{ activeNode.title }}</h4>
+                            <span class="node-card-count">{{ activeNode.maintenances_count }}</span>
+                        </div>
+                        <button 
+                            class="node-card-toggle"
+                            @click="toggleNodeMaintenances"
+                        >
+                            <i class="fa" :class="showNodeMaintenances ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            <span>{{ showNodeMaintenances ? 'Скрыть' : 'Показать' }}</span>
+                        </button>
+                    </div>
+
+                    <div class="node-card-body">
+                        <!-- Здоровье узла -->
+                        <div class="node-health">
+                            <div class="node-health-header">
+                                <span class="node-health-label">Здоровье узла</span>
+                                <span class="node-health-value" :style="{ color: healthColor }">
+                                    {{ activeNode.health }}%
+                                </span>
+                            </div>
+                            <div class="node-health-bar">
+                                <div 
+                                    class="node-health-progress"
+                                    :style="{ 
+                                        width: activeNode.health + '%', 
+                                        background: healthColor 
+                                    }"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <!-- Список обслуживаний -->
+                        <div v-if="showNodeMaintenances" class="node-maintenances">
+                            <div v-if="!activeNode.planned_maintenances || activeNode.planned_maintenances.length === 0" 
+                                 class="empty-state small"
+                            >
+                                <i class="fa fa-wrench"></i>
+                                <p>Нет запланированного обслуживания для этого узла</p>
+                            </div>
+                            
+                            <MaintenanceCard
+                                v-for="(maintenance, index) in activeNode.planned_maintenances"
+                                :key="maintenance.id || index"
+                                :maintenance="maintenance"
+                                class="maintenance-card-item"
+                                @edit="openEditPlanMaintenanceModal"
+                                @delete="openDeletePlanMaintenanceModal"
+                                @mark="openMarkPlanMaintenance"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else-if="nodes.length === 0" class="empty-state small">
+                    <i class="fa fa-cogs"></i>
+                    <p>Нет данных по узлам обслуживания</p>
                 </div>
             </div>
         </div>
@@ -628,6 +784,17 @@ p {
 .section-title-wrapper.small h3 {
   font-size: 1.3rem;
   margin-bottom: 0;
+}
+
+.nodes-count {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 2px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    margin-left: 8px;
 }
 
 /* Статистика */
@@ -794,53 +961,406 @@ p {
   background: var(--border-color);
 }
 
-/* Узлы */
-.node-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* ===== NODE TABS ===== */
+.node-tabs-wrapper {
+    margin-top: 16px;
 }
 
-/* Адаптивность */
-@media (max-width: 1024px) {
-  .statistics-cards {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .chart-block {
-    flex-direction: column;
-  }
-  .stat-card-items {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .stat-card-item {
-    min-width: unset;
-  }
+.node-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
-@media (max-width: 720px) {
-  .section {
-    padding: 18px;
-  }
-  .section-title-wrapper {
-    flex-direction: column;
-    gap: 12px;
+.node-tabs-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.node-tabs-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.node-tabs-scroll::-webkit-scrollbar {
+    height: 3px;
+}
+
+.node-tabs-scroll::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 10px;
+}
+
+.node-tabs-scroll::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+}
+
+.node-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.node-tab:hover {
+    background: var(--bg-card);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.node-tab.active {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.node-tab-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.node-tab-badge {
+    background: var(--bg-secondary);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.node-tab.active .node-tab-badge {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.node-tab-health {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 10px;
+    color: white;
+    min-width: 36px;
     text-align: center;
-  }
-  .fast-actions-wrapper {
+}
+
+.node-tab-prev,
+.node-tab-next {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.node-tab-prev:hover:not(:disabled),
+.node-tab-next:hover:not(:disabled) {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+
+.node-tab-prev:disabled,
+.node-tab-next:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.node-indicator {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.node-indicator-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 2px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+/* ===== ACTIVE NODE CARD ===== */
+.active-node-card {
+    background: var(--bg-primary);
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.active-node-card:hover {
+    border-color: var(--accent);
+}
+
+.node-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.node-card-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.node-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0;
+}
+
+.node-card-count {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 2px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+.node-card-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.node-card-toggle:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.node-card-body {
+    display: flex;
     flex-direction: column;
-  }
-  .fast-actions-wrapper button {
-    min-width: unset;
+    gap: 16px;
+}
+
+/* Health */
+.node-health {
+    padding: 12px 0;
+}
+
+.node-health-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.node-health-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.node-health-value {
+    font-size: 18px;
+    font-weight: 700;
+    transition: color 0.3s ease;
+}
+
+.node-health-bar {
     width: 100%;
-  }
-  .select-action {
-    width: 100%;
-    max-width: 300px;
-  }
-  .section-wrapper {
-    padding: 18px;
-  }
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.node-health-progress {
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+    border-radius: 12px;
+}
+
+/* Maintenances list */
+.node-maintenances {
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.maintenance-card-item {
+    border-radius: 14px;
+    transition: all 0.2s ease;
+}
+
+.maintenance-card-item:hover {
+    transform: translateX(4px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .node-tab-name {
+        max-width: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 20px;
+    }
+
+    .section-title-wrapper {
+        flex-wrap: wrap;
+    }
+
+    .statistics-cards {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chart-block {
+        flex-direction: column;
+    }
+
+    .stat-card-items {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stat-card-item {
+        min-width: unset;
+    }
+
+    .fast-actions-wrapper {
+        flex-direction: column;
+    }
+
+    .fast-actions-wrapper button {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .node-tabs {
+        gap: 4px;
+    }
+
+    .node-tab {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .node-tab-name {
+        max-width: 60px;
+    }
+
+    .node-tab-health {
+        font-size: 0.55rem;
+        min-width: 28px;
+        padding: 1px 4px;
+    }
+
+    .node-tab-prev,
+    .node-tab-next {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .active-node-card {
+        padding: 16px;
+    }
+
+    .node-card-title {
+        font-size: 16px;
+    }
+
+    .node-card-toggle span {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .section {
+        padding: 14px;
+    }
+
+    .section-wrapper {
+        padding: 16px;
+    }
+
+    .node-tab {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+        gap: 4px;
+    }
+
+    .node-tab-name {
+        max-width: 40px;
+    }
+
+    .node-tab-badge {
+        font-size: 0.6rem;
+        padding: 0px 6px;
+    }
+
+    .node-tab-health {
+        font-size: 0.5rem;
+        min-width: 22px;
+        padding: 0px 4px;
+    }
+
+    .active-node-card {
+        padding: 12px;
+    }
+
+    .node-card-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .node-card-title {
+        font-size: 14px;
+    }
+
+    .node-health-value {
+        font-size: 16px;
+    }
 }
 </style>
