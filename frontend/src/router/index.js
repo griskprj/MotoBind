@@ -74,6 +74,17 @@ const router = createRouter({
         showFooter: true,
         showHeader: true
       }
+    },
+    {
+      path: '/manual-creator',
+      name: 'manual creator',
+      component: () => import('../views/ManualCreator.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Конструктор мануалов',
+        showFooter: true,
+        showHeader: true
+      }
     }
   ]
 })
