@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from datetime import datetime, timezone
 from sqlalchemy import or_
 
 from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
-from app.models.maintenance import Maintenance, PlannedMaintenance
+from app.models.maintenance import PlannedMaintenance
 from app.models.manual import Manual, ManualStep
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError, ValidationError
+from app.decorators import admin_required
 
 
 manual = Blueprint('maunal', __name__)
@@ -171,6 +171,7 @@ def get_maintenance_manual():
 
 @manual.route('/new-manual', methods=['POST'])
 @jwt_required()
+@admin_required
 def create_new_manual():
     """
     Создание нового мануала

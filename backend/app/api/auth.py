@@ -130,6 +130,9 @@ def register():
 
     if User.query.filter_by(username=username).first():
         raise ConflictError("Имя пользователя занято")
+    
+    if 'motorcyclist' not in role or 'motoclub' not in role:
+        raise ValidationError("Выбрана несуществующая роль")
 
     try:
         user = User(
