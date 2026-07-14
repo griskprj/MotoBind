@@ -214,15 +214,6 @@ export default {
                 text: '',
                 errors: {}
             });
-            this.$nextTick(() => {
-                const stepCards = document.querySelectorAll('.step-card');
-                if (stepCards.length) {
-                    stepCards[stepCards.length - 1].scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }
-            });
         },
         removeStep(index) {
             if (this.form.steps.length <= 1) {

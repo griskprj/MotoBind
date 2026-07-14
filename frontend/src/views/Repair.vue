@@ -37,7 +37,7 @@
                 </select>
                 <select v-if="selectedMoto" v-model="selectedMaintenance" class="select-action">
                     <option value="">Выберите обслуживание</option>
-                    <option v-for="m in maintenances" :key="m.id" :value="m.id">{{ m.title + ' | ' + m.planned_mileage + 'км' }}</option>
+                    <option v-for="m in filteredMaintenances" :key="m.id" :value="m.id">{{ m.title + ' | ' + m.planned_mileage + 'км' }}</option>
                 </select>
 
                 <button
@@ -67,11 +67,11 @@
             </div>
 
             <!-- Если нет мануала - показываем заглушку -->
-            <div v-if="manual === null && dataLoad" class="empty-state">
+            <div v-if="manual.length === 0 && dataLoad" class="empty-state">
                 <div class="empty-container">
                     <div class="empty-container-item">
                         <p>К сожалению, в нашей базе пока что нет инструкции к вашей проблеме. Мы обязательно скоро ее добавим <br> (Вы можете помочь нам в этом, нажав на кнопку "Помощь").</p>
-                        <button>Помощь</button>
+                        <button @click="this.$router.push('/manual-creator')">Помощь</button>
                     </div>
                     
                     <div class="empty-container-itme">
@@ -138,6 +138,20 @@ export default {
             dataLoad: false,
 
             showMarkMaintenanceModal: false
+        }
+    },
+
+    computed: {
+        filteredMaintenances() {
+            if (!this.selectedMoto) return []
+
+            return this.maintenances.filter(m => m.moto_id === this.selectedMoto)
+        }
+    },
+
+    watch: {
+        selectedMoto() {
+            this.selectedMaintenance = ''
         }
     },
 

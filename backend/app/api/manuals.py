@@ -138,10 +138,7 @@ def get_maintenance_manual():
         ).all()
 
     if not manuals_found:
-        raise NotFoundError(
-            f"Мануал для обслуживания '{maintenance.title}' "
-            f"и мотоцикла '{motorcycle.name}' не найден"
-        )
+        return jsonify([]), 200
 
     manual = max(manuals_found, key=lambda m: sum(
         1 for word in search_words if word.lower() in m.title.lower()
