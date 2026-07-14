@@ -85,6 +85,28 @@ const router = createRouter({
         showFooter: true,
         showHeader: true
       }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Админ-панель',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
+      path: '/manual-moderate',
+      name: 'manual-moderate',
+      component: () => import('../views/ManualModerate.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Админ-панель',
+        showFooter: true,
+        showHeader: true
+      }
     }
   ]
 })

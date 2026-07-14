@@ -38,6 +38,8 @@ body {
   --success: #10B981;
   --success-hover: #10cb8d;
   --warning: #F59E0B;
+  --warning-hover: #db8e08;
+
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
@@ -139,6 +141,13 @@ button,
   background-color: var(--success);
   &:hover {
     background-color: var(--success-hover);
+  }
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  &:hover {
+    background: var(--warning-hover);
   }
 }
 
