@@ -1,21 +1,68 @@
-from dotenv import load_dotenv
 import os
+from typing import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, validator, field_validator
 
-load_dotenv()
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+class Settings(BaseSettings):
+    """ Базовые настройки приложения с валидацией через pydantic"""
 
-class Config:
-    """ Base configuration """
+    # общие
+    SECRET_KEY: str = Field(..., min_length=32, description="Секретный ключ Flask")
+    DEBUG: bool = False
+    ENV: str = "development" # development, production, testing
+
+    # база данных
+    DATABASE_URL: str = Field(..., description="URL подключение к БД")
+    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+
+    # JWT
+    JWT_SECRET_KEY: str = Field(..., min_length=32, description="Секрет для JWT")
+    JWT_ACCESS_TOKEN_EXPIRES: int = 900 # 15 мин
+    JWT_REFRESH_TOKEN_EXPIRES: int = 2592000 # 30 дн
+
+    # загрузка файлов
+    UPLOAD_FOLDER: str = "uploads"
+    MAX_CONTENT_LENGTH: int = 50 * 1024 * 1024 # 50 MB
+
+    # CORS
+    CORS_ORIGINS: str = "*"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+
+    @field_validator("DATABASE_URL")
+    def validate_database_url(cls, v):
+        if not v.startswith(("postgresql://", "sqlite://", "mysql://")):
+            raise ValueError("DATABASE_URL должен начинаться с postgresql://, sqlite:// или mysql://")
+        return v
     
-    SECRET_KEY = os.environ.get('SECRET_KEY')
+    @field_validator("SECRET_KEY", "JWT_SECRET_KEY")
+    def validate_secret_keys(cls, v):
+        if len(v) < 32:
+            raise ValueError("Длина секретного ключа должна быть не меньше 32 символов")
+        return v
+    
+    def get_cors_origins(self):
+        """ Возвращает список разрешенных CORS-источников """
+        if self.CORS_ORIGINS == "*":
+            return ["*"]
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+    
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+def get_settings() -> Settings:
+    """ Возвращает экземпляр настроек с учетом переменной ENV """
+    env = os.getenv("ENV", "development")
+    settings = Settings()
 
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-    JWT_ACCESS_TOKEN_EXPIRES = 900
-    JWT_REFRESH_TOKEN_EXPIRES = 2592000
+    if env == "testing":
+        if not os.getenv("DATABASE_URL"):
+            settings.DATABASE_URL = "sqlite:///test.db"
+        settings.DEBUG = False
+    return settings
 
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(basedir), 'uploads')
-    MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+settings = get_settings()
