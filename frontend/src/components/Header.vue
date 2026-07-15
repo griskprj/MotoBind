@@ -49,13 +49,22 @@
                 <i class="fa fa-bell"></i>
                 <span>События</span>
             </router-link>
-            
-            <!-- Кнопка выхода в мобильном меню -->
-            <div class="profile-mobile">
+
+            <!-- Кнопки в мобильном меню -->
+            <div class="profile-mobile">.
+                <router-link
+                    v-if="isAdmin"
+                    to="/admin"
+                    class="nav-link admin-link-desktop"
+                    :class="{ active: $route.path === '/admin'}"
+                >
+                    <i class="fa fa-shield"></i>
+                    <span>Админ-панель</span>
+                </router-link>
                 <router-link
                     to="/profile"
                     class="nav-link"
-                    :calss="{ active: $route.path === '/profile' }"
+                    :class="{ active: $route.path === '/profile' }"
                 >
                     <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
                 </router-link>
@@ -71,11 +80,21 @@
                 <router-link
                     to="/profile"
                     class="nav-link"
-                    :calss="{ active: $route.path === '/profile' }"
+                    :class="{ active: $route.path === '/profile' }"
                 >
                     <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
                 </router-link>
             </div>
+            <!-- Кнопка админ-панели в десктопе (только для админов) -->
+            <router-link
+                v-if="isAdmin"
+                to="/admin"
+                class="nav-link admin-link-desktop"
+                :class="{ active: $route.path === '/admin'}"
+            >
+                <i class="fa fa-shield"></i>
+                <span>Админ-панель</span>
+            </router-link>
             <div class="logout-wrapper">
                 <button class="btn btn-logout" @click="logout">
                     <i class="fa fa-sign-out"></i>
@@ -97,14 +116,32 @@ import router from '../router';
 export default {
     data() {
         return {
-            isMenuOpen: false
+            isMenuOpen: false,
+            isAdmin: false
         }
     },
 
+    mounted() {
+        this.checkAdminStatus();
+    },
+
     methods: {
+        checkAdminStatus() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    this.isAdmin = payload.role === 'admin';
+                } else {
+                    this.isAdmin = false;
+                }
+            } catch {
+                this.isAdmin = false;
+            }
+        },
+
         toggleMenu() {
             this.isMenuOpen = !this.isMenuOpen;
-            // Блокируем скролл body при открытом меню
             if (this.isMenuOpen) {
                 document.body.style.overflow = 'hidden';
             } else {
@@ -130,14 +167,14 @@ export default {
         }
     },
 
-    // Следим за изменением маршрута, чтобы закрыть меню
     watch: {
         '$route'() {
             this.closeMenu();
+            // Обновляем статус админа при смене маршрута
+            this.checkAdminStatus();
         }
     },
 
-    // Очищаем overflow при размонтировании
     beforeUnmount() {
         document.body.style.overflow = '';
     }
@@ -238,6 +275,49 @@ header {
     text-decoration: none;
 }
 
+/* Стиль для ссылки на админ-панель */
+.admin-link {
+    color: var(--warning);
+    border-left: 2px solid var(--border-color);
+    padding-left: 16px;
+}
+
+.admin-link:hover {
+    color: var(--warning);
+}
+
+.admin-link.active {
+    color: var(--warning);
+}
+
+.admin-link-desktop {
+    font-size: 16px;
+    color: var(--warning);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.admin-link-desktop:hover {
+    transform: translateY(-2px);
+    color: var(--warning);
+    text-decoration: none;
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--warning);
+}
+
+.admin-link-desktop.active {
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.15);
+    border-color: var(--warning);
+}
+
+.admin-link-desktop i {
+    margin-right: 6px;
+}
+
 .header-actions {
     display: flex;
     flex-direction: row;
@@ -272,6 +352,12 @@ header {
 }
 
 /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ ===== */
+@media (max-width: 1024px) {
+    .admin-link-desktop {
+        display: none;
+    }
+}
+
 @media (max-width: 770px) {
     header {
         justify-content: space-between;
@@ -282,7 +368,7 @@ header {
         display: flex;
     }
 
-    /* Скрываем десктопную кнопку выхода */
+    /* Скрываем десктопные элементы */
     .header-actions {
         display: none;
     }
@@ -316,6 +402,14 @@ header {
         padding: 12px;
         width: 100%;
         text-align: center;
+    }
+
+    .admin-link {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid var(--border-color);
+        padding-top: 16px;
+        margin-top: 0;
     }
 
     .profile-mobile {

@@ -13,6 +13,10 @@ function getUserRole() {
   }
 }
 
+function isAdmin() {
+  return getUserRole() === 'admin'
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -92,33 +96,34 @@ const router = createRouter({
       component: () => import('../views/AdminPanel.vue'),
       meta: {
         requiresAuth: true,
+        requiresAdmin: true,
         title: 'MotoBind - Админ-панель',
         showFooter: true,
         showHeader: true
       }
     },
-    {
-      path: '/manual-moderate',
-      name: 'manual-moderate',
-      component: () => import('../views/ManualModerate.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'MotoBind - Админ-панель',
-        showFooter: true,
-        showHeader: true
-      }
-    }
   ]
 })
 
 router.beforeEach((to, from, next) => {
   const authenticated = isAuthenticated()
+  const admin = isAdmin()
 
   if (to.meta.requiresAuth && !authenticated) {
     next('/login')
-  } else {
-    next()
+    return
   }
+
+  if (to.meta.requiresAdmin && !admin) {
+    if (authenticated) {
+      next('/home')
+    } else {
+      next('/login')
+    }
+    return
+  }
+
+  next()
 })
 
 export default router

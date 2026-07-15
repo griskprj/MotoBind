@@ -203,7 +203,10 @@ export default {
             },
             errors: {},
             isSubmitting: false,
-            stepIdCounter: 0
+            stepIdCounter: 0,
+
+            isAdmin: false,
+            isLoading: false
         };
     },
     methods: {
@@ -258,6 +261,27 @@ export default {
 
             return isValid;
         },
+        checkAdminAccess() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    this.isAdmin = payload.role === 'admin';
+                    
+                    // Если не админ - перенаправляем
+                    if (!this.isAdmin) {
+                        this.$router.push('/home');
+                        this.showNotification('Доступ запрещен', 'error');
+                    }
+                } else {
+                    this.$router.push('/login');
+                }
+            } catch {
+                this.$router.push('/login');
+            }
+        },
+
+
         async submitManual() {
             if (!this.validateForm()) {
                 const firstError = document.querySelector('.error');
@@ -329,13 +353,12 @@ export default {
     },
     mounted() {
         this.addStep();
+        this.checkAdminAccess();
     }
 };
 </script>
 
 <style scoped>
-/* Контейнер использует глобальный стиль .container */
-/* Настройки секции */
 .section {
     background-color: var(--bg-primary);
     border: 2px solid var(--border-color);
