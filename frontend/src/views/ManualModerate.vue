@@ -164,108 +164,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно просмотра мануала -->
-    <div v-if="showManualModal" class="modal-wrapper" @click.self="closeManualModal">
-        <div class="modal-container modal-large">
-            <div class="modal-header">
-                <div class="modal-header-info">
-                    <i class="fa fa-file-text"></i>
-                    <h3 class="modal-title">{{ selectedManual?.title }}</h3>
-                </div>
-                <button class="modal-close" @click="closeManualModal">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <div class="manual-detail-meta">
-                    <span class="detail-item">
-                        <i class="fa fa-motorcycle"></i>
-                        {{ selectedManual?.moto_name }}
-                    </span>
-                    <span class="detail-item">
-                        <i class="fa fa-user"></i>
-                        {{ selectedManual?.author }}
-                    </span>
-                    <span class="detail-item">
-                        <i class="fa fa-clock-o"></i>
-                        {{ formatDate(selectedManual?.created_at) }}
-                    </span>
-                    <span class="detail-item status-badge" :class="'status-' + selectedManual?.status">
-                        {{ getStatusLabel(selectedManual?.status) }}
-                    </span>
-                </div>
-
-                <div class="manual-detail-description">
-                    <h4>Описание</h4>
-                    <p>{{ selectedManual?.description || 'Описание отсутствует' }}</p>
-                </div>
-
-                <div class="manual-detail-steps">
-                    <h4>Шаги выполнения ({{ selectedManual?.steps?.length || 0 }})</h4>
-                    <div class="steps-list">
-                        <div 
-                            v-for="(step, index) in selectedManual?.steps" 
-                            :key="step.id" 
-                            class="step-item"
-                        >
-                            <div class="step-number">{{ index + 1 }}</div>
-                            <div class="step-content">
-                                <p class="step-text">{{ step.text }}</p>
-                                <div v-if="step.image" class="step-image-wrapper">
-                                    <img :src="step.image" :alt="'Шаг ' + (index + 1)" class="step-image" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button v-if="selectedManual?.status === 'pending'" class="btn-approve" @click="approveManualFromModal">
-                        <i class="fa fa-check"></i> Одобрить
-                    </button>
-                    <button v-if="selectedManual?.status === 'pending'" class="btn-reject" @click="openRejectModalFromModal">
-                        <i class="fa fa-times"></i> Отклонить
-                    </button>
-                    <button v-if="selectedManual?.status === 'rejected'" class="btn-undo" @click="reconsiderManualFromModal">
-                        <i class="fa fa-undo"></i> Пересмотреть
-                    </button>
-                    <button class="btn-secondary" @click="closeManualModal">
-                        Закрыть
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно отклонения -->
-    <div v-if="showRejectModal" class="modal-wrapper" @click.self="closeRejectModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <i class="fa fa-times-circle" style="color: var(--danger);"></i>
-                <h3 class="modal-title">Отклонить мануал</h3>
-            </div>
-
-            <div class="modal-body">
-                <p class="modal-text">Укажите причину отклонения мануала:</p>
-                <textarea 
-                    v-model="rejectReason" 
-                    class="modal-textarea" 
-                    placeholder="Опишите причину отклонения..."
-                    rows="4"
-                ></textarea>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn-danger" @click="confirmReject">
-                    <i class="fa fa-times"></i> Отклонить
-                </button>
-                <button class="btn-secondary" @click="closeRejectModal">
-                    Отмена
-                </button>
-            </div>
-        </div>
-    </div>
+    
 </template>
 
 <script>
@@ -872,195 +771,7 @@ export default {
     box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
 }
 
-/* ===== Модальное окно просмотра ===== */
-.modal-large {
-    max-width: 700px;
-}
 
-.modal-header-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.modal-header-info i {
-    font-size: 24px;
-    color: var(--accent);
-}
-
-.modal-close {
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: all 0.3s;
-}
-
-.modal-close:hover {
-    border-color: var(--danger);
-    color: var(--danger);
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.modal-body {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.modal-body::-webkit-scrollbar {
-    width: 4px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-    border-radius: 10px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 10px;
-}
-
-.manual-detail-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.detail-item i {
-    color: var(--text-muted);
-}
-
-.manual-detail-description {
-    margin-bottom: 20px;
-}
-
-.manual-detail-description h4 {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.manual-detail-description p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 0;
-}
-
-.manual-detail-steps h4 {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.step-item {
-    display: flex;
-    gap: 14px;
-    padding: 14px 16px;
-    background: var(--bg-primary);
-    border-radius: 14px;
-    border: 1px solid var(--border-color);
-}
-
-.step-number {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--accent-light);
-    border: 2px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--accent);
-    flex-shrink: 0;
-}
-
-.step-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.step-text {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-    margin-bottom: 0;
-    line-height: 1.4;
-}
-
-.step-image-wrapper {
-    margin-top: 10px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-}
-
-.step-image {
-    width: 100%;
-    height: auto;
-    max-height: 250px;
-    object-fit: cover;
-    display: block;
-}
-
-/* Модальное окно отклонения */
-.modal-text {
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-}
-
-.modal-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 14px;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    font-family: inherit;
-    resize: vertical;
-    transition: all 0.3s;
-}
-
-.modal-textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-.modal-textarea::placeholder {
-    color: var(--text-muted);
-}
 
 /* ===== Адаптивность ===== */
 
@@ -1151,26 +862,6 @@ export default {
     .manual-card-actions .btn-action {
         flex: 1;
         justify-content: center;
-    }
-
-    .modal-large {
-        max-width: 95%;
-        margin: 12px;
-        padding: 16px;
-    }
-
-    .modal-body {
-        max-height: 60vh;
-    }
-
-    .step-item {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 12px;
-    }
-
-    .step-number {
-        align-self: flex-start;
     }
 }
 
@@ -1277,16 +968,6 @@ export default {
     .detail-item {
         font-size: 0.75rem;
     }
-
-    .step-text {
-        font-size: 0.8rem;
-    }
-
-    .step-number {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
 }
 
 /* Очень маленькие экраны */
@@ -1300,14 +981,6 @@ export default {
     }
 
     .manual-card-actions .btn-action {
-        width: 100%;
-    }
-
-    .modal-actions {
-        flex-direction: column;
-    }
-
-    .modal-actions button {
         width: 100%;
     }
 }

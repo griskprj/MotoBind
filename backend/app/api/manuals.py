@@ -83,7 +83,6 @@ def get_maintenance_manual():
 
     maintenance_id = request.args.get('maintenance_id', type=int)
     moto_id = request.args.get('moto_id', type=int)
-    print(maintenance_id, moto_id)
 
     if not maintenance_id:
         raise BusinessLogicError("Не указан ID обслуживания")
@@ -141,7 +140,7 @@ def get_maintenance_manual():
         return jsonify([]), 200
 
     manual = max(manuals_found, key=lambda m: sum(
-        1 for word in search_words if word.lower() in m.title.lower()
+        1 for word in search_words if word.lower() in m.title.lower() and m.status == 'approved'
     ))
 
     result = {
@@ -168,7 +167,6 @@ def get_maintenance_manual():
 
 @manual.route('/new-manual', methods=['POST'])
 @jwt_required()
-@admin_required
 def create_new_manual():
     """
     Создание нового мануала
@@ -295,6 +293,7 @@ def create_new_manual():
     db.session.begin()
 
     manual = Manual(
+        author_id=get_jwt_identity(),
         title=data['title'],
         description=data.get('description'),
         category=data['category'],

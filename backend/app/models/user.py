@@ -1,4 +1,5 @@
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timezone
 from app.extensions import db
 
 
@@ -12,6 +13,8 @@ class User(db.Model):
     username = db.Column(db.String(64), nullable=False)
     role = db.Column(db.String(32), default='motorcyclist') # motorcyclist, admin, motoclub
     refresh_token = db.Column(db.String(512))
+    status = db.Column(db.String, default='active')
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     motorcycles = db.relationship('Motorcycle', backref='motorcycle_owner', lazy=True, cascade='all, delete-orphan')
 
@@ -30,7 +33,8 @@ class User(db.Model):
             'id': self.id,
             'email': self.email,
             'username': self.username,
-            'role': self.role
+            'role': self.role,
+            'status': self.status
         }
         if include_moto:
             data['motorcycles'] = [m.to_dict() for m in self.motorcycles]

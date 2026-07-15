@@ -72,6 +72,9 @@ def register():
                             role:
                                 type: string
                                 example: motorcyclist
+                            status:
+                                type: string
+                                example: active
                             refresh_token:
                                 type: string
                                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -131,14 +134,16 @@ def register():
     if User.query.filter_by(username=username).first():
         raise ConflictError("Имя пользователя занято")
     
-    if 'motorcyclist' not in role or 'motoclub' not in role:
+    if  role != 'motorcyclist' and role != 'motoclub':
+        print(role)
         raise ValidationError("Выбрана несуществующая роль")
 
     try:
         user = User(
             email=email,
             username=username,
-            role=role
+            role=role,
+            status='active'
         )
         user.set_password(password)
         db.session.add(user)
@@ -210,6 +215,9 @@ def login():
                             role:
                                 type: string
                                 example: motorcyclist
+                            status:
+                                type: string
+                                example: active
                             refresh_token:
                                 type: string
                                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

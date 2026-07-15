@@ -35,12 +35,14 @@ def create_app(config_class=Config):
     from app.api.statistic import statistic
     from app.api.maintenance import maintenance
     from app.api.manuals import manual
+    from app.api.admin import admin
 
     app.register_blueprint(auth, url_prefix='/api/auth')
     app.register_blueprint(motorcycle, url_prefix='/api/motorcycle')
     app.register_blueprint(statistic, url_prefix='/api/statistic')
     app.register_blueprint(maintenance, url_prefix='/api/maintenance')
     app.register_blueprint(manual, url_prefix='/api/manual')
+    app.register_blueprint(admin, url_prefix='/api/admin')
 
     @app.route('/api/health', methods=['GET'])
     def health():
