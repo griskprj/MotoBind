@@ -7,6 +7,7 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance_node import MaintenanceNode
 from app.utils.files import allowed_file, save_moto_photo
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.schemas.motorcycle import MotorcycleCreateSchema, MotorcycleUpdateSchema, MotorcycleResponseSchema, MileageUpdateSchema
 
 
 motorcycle = Blueprint('motorcycle', __name__)
@@ -68,7 +69,7 @@ def get_user_moto():
         if not user:
             raise NotFoundError('Пользователь не найден')
         
-        motorcycles = [m.to_dict() for m in user.motorcycles]
+        motorcycles = [MotorcycleResponseSchema.dump(m) for m in user.motorcycles]
         return jsonify(motorcycles), 200
 
     except Exception as e:
