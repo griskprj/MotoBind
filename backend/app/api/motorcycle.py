@@ -154,29 +154,21 @@ def create_moto():
             description: Ошибка сервера
     """
     data = request.get_json()
+    if not data:
+        raise NotFoundError("Нет данных")
 
-    name = data.get('name')
-    years = data.get('years')
-    volume = data.get('volume')
-    mileage = data.get('mileage')
-    color = data.get('color')
-    license_plate = data.get('license_plate')
-    vin = data.get('vin')
+    schema = MotorcycleCreateSchema()
+    errors = schema.validate(data)
+    if errors:
+        raise ValidationError("Ошибка валидации", errors=errors)
 
-    if not name:
-        raise ValidationError('Укажите название мотоцикла')
-    
-    if color and color[0] != '#' and len(color.split('#')[1]) < 3:
-        raise ValidationError('Цвет должен быть формата HEX (#FFFFFF)')
-
-    if license_plate and len(license_plate) > 9:
-        raise ValidationError('Неверный формат ГОС номера')
-
-    if vin and len(vin) != 17:
-        raise ValidationError('VIN должен содержать 17 символов')
-
-    if mileage > 1_000_000:
-        raise ValidationError('Введите корректный пробег')
+    name = data['name']
+    years = data['years']
+    volume = data['volume']
+    mileage = data['mileage']
+    color = data['color']
+    license_plate = data['license_plate']
+    vin = data['vin']
 
     try:
         db.session.begin()
@@ -242,7 +234,7 @@ def create_moto():
             db.session.add(node)
 
         db.session.commit()
-        return jsonify(motorcycle.to_dict()), 201
+        return jsonify(MotorcycleResponseSchema.dump(motorcycle)), 201
 
     except Exception as e:
         db.session.rollback()
@@ -337,18 +329,24 @@ def update_moto(moto_id):
     if not data:
         raise ValidationError('Нет данных для обновления')
     
+    schema = MotorcycleUpdateSchema()
+    errors = schema.validate(data)
+    if errors:
+        raise ValidationError("Ошибка валидации", errors=errors)
+    
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         raise NotFoundError('Мотоцикл не найден')
 
     try:
-        name = data.get('name')
-        volume = data.get('volume')
-        mileage = data.get('mileage')
-        years = data.get('years')
-        color = data.get('color')
-        license_plate = data.get('licensePlate')
-        vin = data.get('vin')
+        name = data['name']
+        volume = data['volume']
+        mileage = data['mileage']
+        years = data['years']
+        color = data['color']
+        license_plate = data['licensePlate']
+        vin = data['vin']
+
         if 'name' in data:
             motorcycle.name = name
         if 'years' in data and datetime.now().year > years:
@@ -365,7 +363,7 @@ def update_moto(moto_id):
             motorcycle.license_plate = license_plate
         
         db.session.commit()
-        return jsonify(motorcycle.to_dict())
+        return jsonify(MotorcycleResponseSchema.dump(motorcycle))
 
     except Exception as e:
         current_app.logger.error(f'Failed update moto: {str(e)}')
@@ -432,18 +430,21 @@ def update_moto_mileage(moto_id):
     if not data:
         raise ValidationError('Нет данных для обновления')
     
+    schema = MileageUpdateSchema()
+    errors = schema.validate(data)
+    if errors:
+        raise ValidationError("Ошибка валидации", errors=errors)
+    
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         raise NotFoundError('Мотоцикл не найден')
 
-    new_mileage = data.get('newMileage')
-    if not new_mileage:
-        raise ValidationError('Укажите новый пробег')
+    new_mileage = data['newMileage']
 
     try:
         motorcycle.mileage = int(new_mileage)
         db.session.commit()
-        return jsonify(motorcycle.to_dict()), 200
+        return jsonify(MotorcycleResponseSchema.dump(motorcycle)), 200
 
     except ValueError:
         raise ValidationError('Неверный формат пробега')
