@@ -7,7 +7,6 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance_node import MaintenanceNode
 from app.utils.files import allowed_file, save_moto_photo
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
-from app.schemas.motorcycle import MotorcycleCreateSchema, MotorcycleUpdateSchema, MotorcycleResponseSchema, MileageUpdateSchema
 
 
 motorcycle = Blueprint('motorcycle', __name__)
@@ -69,7 +68,7 @@ def get_user_moto():
         if not user:
             raise NotFoundError('Пользователь не найден')
         
-        motorcycles = [MotorcycleResponseSchema.dump(m) for m in user.motorcycles]
+        motorcycles = [m.to_dict() for m in user.motorcycles]
         return jsonify(motorcycles), 200
 
     except Exception as e:
@@ -154,21 +153,29 @@ def create_moto():
             description: Ошибка сервера
     """
     data = request.get_json()
-    if not data:
-        raise NotFoundError("Нет данных")
 
-    schema = MotorcycleCreateSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
+    name = data.get('name')
+    years = data.get('years')
+    volume = data.get('volume')
+    mileage = data.get('mileage')
+    color = data.get('color')
+    license_plate = data.get('license_plate')
+    vin = data.get('vin')
 
-    name = data['name']
-    years = data['years']
-    volume = data['volume']
-    mileage = data['mileage']
-    color = data['color']
-    license_plate = data['license_plate']
-    vin = data['vin']
+    if not name:
+        raise ValidationError('Укажите название мотоцикла')
+    
+    if color and color[0] != '#' and len(color.split('#')[1]) < 3:
+        raise ValidationError('Цвет должен быть формата HEX (#FFFFFF)')
+
+    if license_plate and len(license_plate) > 9:
+        raise ValidationError('Неверный формат ГОС номера')
+
+    if vin and len(vin) != 17:
+        raise ValidationError('VIN должен содержать 17 символов')
+
+    if mileage > 1_000_000:
+        raise ValidationError('Введите корректный пробег')
 
     try:
         db.session.begin()
@@ -234,7 +241,7 @@ def create_moto():
             db.session.add(node)
 
         db.session.commit()
-        return jsonify(MotorcycleResponseSchema.dump(motorcycle)), 201
+        return jsonify(motorcycle.to_dict()), 201
 
     except Exception as e:
         db.session.rollback()
@@ -329,24 +336,18 @@ def update_moto(moto_id):
     if not data:
         raise ValidationError('Нет данных для обновления')
     
-    schema = MotorcycleUpdateSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
-    
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         raise NotFoundError('Мотоцикл не найден')
 
     try:
-        name = data['name']
-        volume = data['volume']
-        mileage = data['mileage']
-        years = data['years']
-        color = data['color']
-        license_plate = data['licensePlate']
-        vin = data['vin']
-
+        name = data.get('name')
+        volume = data.get('volume')
+        mileage = data.get('mileage')
+        years = data.get('years')
+        color = data.get('color')
+        license_plate = data.get('licensePlate')
+        vin = data.get('vin')
         if 'name' in data:
             motorcycle.name = name
         if 'years' in data and datetime.now().year > years:
@@ -363,7 +364,7 @@ def update_moto(moto_id):
             motorcycle.license_plate = license_plate
         
         db.session.commit()
-        return jsonify(MotorcycleResponseSchema.dump(motorcycle))
+        return jsonify(motorcycle.to_dict())
 
     except Exception as e:
         current_app.logger.error(f'Failed update moto: {str(e)}')
@@ -430,21 +431,18 @@ def update_moto_mileage(moto_id):
     if not data:
         raise ValidationError('Нет данных для обновления')
     
-    schema = MileageUpdateSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
-    
     motorcycle = Motorcycle.query.get(moto_id)
     if not motorcycle:
         raise NotFoundError('Мотоцикл не найден')
 
-    new_mileage = data['newMileage']
+    new_mileage = data.get('newMileage')
+    if not new_mileage:
+        raise ValidationError('Укажите новый пробег')
 
     try:
         motorcycle.mileage = int(new_mileage)
         db.session.commit()
-        return jsonify(MotorcycleResponseSchema.dump(motorcycle)), 200
+        return jsonify(motorcycle.to_dict()), 200
 
     except ValueError:
         raise ValidationError('Неверный формат пробега')

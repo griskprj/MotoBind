@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from app.extensions import db
-from app.models.motorcycle import Motorcycle
 
 
 class Maintenance(db.Model):

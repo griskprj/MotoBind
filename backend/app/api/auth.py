@@ -6,7 +6,6 @@ from flask_jwt_extended import (
 from app.models.user import User
 from app.extensions import db
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
-from app.schemas.user import UserLoginSchema, UserRegisterSchema, UserResponseSchema, RefreshTokenSchema
 
 
 auth = Blueprint('auth', __name__)
@@ -111,20 +110,33 @@ def register():
     if not data:
         raise ValidationError("Нет данных в запросе")
 
-    schema = UserRegisterSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
+    email = data.get('email')
+    password = data.get('password')
+    username = data.get('username')
+    role = data.get('role')
+
+    if not email:
+        raise ValidationError("Введите почту", errors={"email": "Поле email обязательно"})
+    if not password:
+        raise ValidationError("Введите пароль", errors={"password": "Поле пароля обязательно"})
+    if not username:
+        raise ValidationError("Введите имя пользователя", errors={"username": "Поле имя пользователя обязательно"})
+    if not role:
+        raise ValidationError("Выберите роль", errors={"role": "Выбор роли обязателен"})
     
-    email = data['email']
-    password = data['password']
-    username = data['username']
-    role = data['role']
+    
+    if len(password) < 6:
+        raise ValidationError("Длина пароля не менее 6 символов")
 
     if User.query.filter_by(email=email).first():
         raise ConflictError("Пользователь с таким email уже существует")
+
     if User.query.filter_by(username=username).first():
         raise ConflictError("Имя пользователя занято")
+    
+    if  role != 'motorcyclist' and role != 'motoclub':
+        print(role)
+        raise ValidationError("Выбрана несуществующая роль")
 
     try:
         user = User(
@@ -137,10 +149,9 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        response_schema = UserResponseSchema()
         return jsonify({
             'message': 'Регистрация успешна',
-            'user': response_schema.dump(user)
+            'user': user.to_dict()
         }), 201
     except Exception as e:
         current_app.logger.error(f'Registration failed: {str(e)}')
@@ -254,13 +265,13 @@ def login():
     if not data:
         raise ValidationError("Нет даных в запросе")
     
-    schema = UserLoginSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
-    
-    email = data['email']
-    password = data['password']
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email:
+        raise ValidationError("Введите почту", errors={"email": "Поле email обязательно"})
+    if not password:
+        raise ValidationError("Введите пароль", errors={"password": "Поле пароля обязательно"})
 
     user = User.query.filter_by(email=email).first()
     if not user:
@@ -278,7 +289,7 @@ def login():
         'message': 'Вы вошли в аккаунт',
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'user': UserResponseSchema.dump(user)
+        'user': user.to_dict()
     }), 200
 
 
@@ -340,7 +351,7 @@ def get_current_user():
     if not user:
         raise NotFoundError("Пользователь не найден")
 
-    return jsonify(UserResponseSchema.dump(user)), 200
+    return jsonify(user.to_dict()), 200
 
 
 @auth.route('/refresh', methods=['POST'])
@@ -398,17 +409,16 @@ def refresh():
     if not data:
         raise ValidationError("Нет данных в запросе")
     
-    schema = RefreshTokenSchema()
-    errors = schema.validate(data)
-    if errors:
-        raise ValidationError("Ошибка валидации", errors=errors)
+    refresh_token = data.get('refresh_token')
+    if not refresh_token:
+        raise ValidationError("Refresh-токен обязателен", errors={"refresh_token": "Поле обязательно"})
     
-    refresh_token = data['refresh_token']    
     user = User.query.filter_by(refresh_token=refresh_token).first()
     if not user:
         raise UnauthorizedError("Невалидный refresh-токен")
     
     access_token = create_access_token(identity=str(user.id), additional_claims={'role': user.role})
+
     new_refresh_token = create_refresh_token(identity=str(user.id))
     user.refresh_token = new_refresh_token
     db.session.commit()
@@ -454,6 +464,7 @@ def logout():
     user = User.query.get(user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
+
     user.refresh_token = None
     db.session.commit()
     

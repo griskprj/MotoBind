@@ -41,7 +41,7 @@ class Motorcycle(db.Model):
         }
 
         if include_maintenance:
-            data['maintenances'] = [m.to_dict() for m in self.maintenance]
+            data['maintenances'] = [m.to_dict() for m in self.maintenances]
 
         if include_planned_maintenance:
             data['planned_maintenances'] = [m.to_dict() for m in self.planned_maintenances]
