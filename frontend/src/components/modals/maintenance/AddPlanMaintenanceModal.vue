@@ -36,7 +36,7 @@
         </label>
         <label>
             <i class="fa fa-tachometer"></i> Пробег
-            <input v-model="form.mileage" type="number" max="1000000" min="0">
+            <input v-model="form.planned_mileage" type="number" max="1000000" min="0">
         </label>
 
         <div class="modal-actions">
@@ -70,7 +70,7 @@ export default {
                 title: '',
                 category: '',
                 description: '',
-                mileage: null,
+                planned_mileage: null,
             },
         }
     },
@@ -95,7 +95,7 @@ export default {
                 return
             }
             
-            if (!this.form.mileage || this.form.mileage <= 0) {
+            if (!this.form.planned_mileage || this.form.planned_mileage <= 0) {
                 alert('Введите корректный пробег')
                 return
             }
@@ -110,7 +110,7 @@ export default {
                 title: '',
                 category: '',
                 description: '',
-                mileage: null,
+                planned_mileage: null,
             }
         }
     }

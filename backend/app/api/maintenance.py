@@ -7,6 +7,8 @@ from app.models.user import User
 from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.models.motorcycle import Motorcycle
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.schemas.maintenance import CreateMaintenanceSchema, CreatePlannedMaintenanceSchema, UpdatePlannedMaintenanceShema, MarkPlannedMaintenanceSchema
+from app.services.maintenance_service import MaintenanceService
 
 
 maintenance = Blueprint('maintenance', __name__)
@@ -133,9 +135,7 @@ def create_new_maintenance():
                         example: "Мотоцикл не найден"
     """
 
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = CreateMaintenanceSchema(**request.get_json())
 
     user = User.query.options(
         selectinload(User.motorcycles)
@@ -144,51 +144,18 @@ def create_new_maintenance():
     if not user:
         raise NotFoundError("Пользователь не найден")
 
-    moto_id = data.get('id')
-    category = data.get('category')
-    title = data.get('title')
-    description = data.get('description')
-    mileage = data.get('mileage')
-    cost = data.get('cost')
-    date = data.get('date')
+    maintenance = MaintenanceService.create_maintenance(
+        author_id=int(get_jwt_identity()),
+        moto_id=data.id,
+        category=data.category,
+        title=data.title,
+        description=data.description,
+        mileage=data.mileage,
+        cost=data.cost,
+        date=data.date,
+    )
 
-    if not title:
-        raise ValidationError("Введите название обслуживания")
-    if not moto_id:
-        raise ValidationError("Отсутсвует ID мотоцикла")
-    if not category:
-        raise ValidationError("Укажите категорию обслуживания")
-    if cost and cost < 0:
-        raise ValidationError("Стоимость обслуживания не может быть отрицательной")
-
-    motorcycle = Motorcycle.query.get(moto_id)
-    if not motorcycle:
-        raise NotFoundError("Мотоцикл не найден")
-
-    moto_ids = {m.id for m in user.motorcycles}
-    if moto_id not in moto_ids:
-        raise ForbiddenError("Вы можете добавлять обслуживание только для своего мотоцикла")
-    
-    try:
-        maintenance = Maintenance(
-            author_id=user.id,
-            moto_id=moto_id,
-            category=category,
-            title=title,
-            description=description,
-            mileage=mileage,
-            cost=cost,
-            date=datetime.strptime(date, "%Y-%m-%d") if date else None
-        )
-
-        db.session.add(maintenance)
-        db.session.commit()
-        
-        return jsonify(maintenance.to_dict()), 201
-    except Exception as e:
-        current_app.logger.error(f'Failed add maintenance: {str(e)}')
-        raise BusinessLogicError("Внутренняя ошибка сервера")
-
+    return jsonify(maintenance.to_dict()), 201
 
 @maintenance.route('/plan', methods=['POST'])
 @jwt_required()
@@ -304,58 +271,18 @@ def plan_maintenance():
                         type: string
                         example: "Мотоцикл не найден"
     """
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = CreatePlannedMaintenanceSchema(**request.get_json())
     
-    moto_id = data.get('id')
-    title = data.get('title')
-    description = data.get('description')
-    category = data.get('category')
-    mileage = data.get('mileage')
+    plan_maintenance = MaintenanceService.create_planned_maintenance(
+        author_id=int(get_jwt_identity()),
+        moto_id=data.id,
+        title=data.title,
+        description=data.description,
+        category=data.category,
+        planned_mileage=data.planned_mileage,
+    )
 
-    user = User.query.options(
-        selectinload(User.motorcycles)
-    ).get(get_jwt_identity())
-
-    if not user:
-        raise NotFoundError("Пользователь не найден")
-
-    motorcycle = Motorcycle.query.get(moto_id)
-    if not motorcycle:
-        raise NotFoundError("Мотоцикл не найден")
-    
-    moto_ids = {m.id for m in user.motorcycles}
-    if moto_id not in moto_ids:
-        raise ForbiddenError("Вы можете планировать обслуживание только для своего мотоцикла")
-
-    if not title:
-        raise ValidationError("Введите заголовок")
-    if not moto_id:
-        raise ValidationError("Не указан ID мотоцикла")
-    if not category:
-        raise ValidationError("Укажите категорию обслуживания")
-    
-    if mileage and mileage < motorcycle.mileage:
-        raise ValidationError("Указан пробег меньше пробега мотоцикла")
-
-    try:
-        maintenance = PlannedMaintenance(
-            author_id=user.id,
-            moto_id=moto_id,
-            title=title,
-            description=description,
-            category=category,
-            planned_mileage=mileage,
-        )
-
-        db.session.add(maintenance)
-        db.session.commit()
-        
-        return jsonify(maintenance.to_dict()), 201
-    except Exception as e:
-        current_app.logger.error(f'Failed add maintenance: {str(e)}')
-        raise BusinessLogicError("Внутренняя ошибка сервера")
+    return jsonify(plan_maintenance.to_dict()), 201
 
 
 @maintenance.route('/plan', methods=['PUT'])
@@ -463,44 +390,22 @@ def edit_plan_maintenance():
                         type: string
                         example: "Обслуживание не найдено"
         """
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = UpdatePlannedMaintenanceShema(**request.get_json())
 
-    maintenance_id = data.get('maintenanceId')
-    motorcycle_id = data.get('motorcycleId')
-    category = data.get('category')
-    title = data.get('title')
-    description = data.get('description')
-    mileage = data.get('mileage')
+    updates = data.get_updates()
+    if not updates:
+        raise ValidationError("Нет данных для обновления")
 
-    if not maintenance_id:
-        raise ValidationError("Не указан ID обслуживания")
+    user_id = int(get_jwt_identity())
+    print(user_id)
 
-    maintenance = PlannedMaintenance.query.get(maintenance_id)
-    if not maintenance:
-        raise NotFoundError("Обслуживание не найдено")
-    
-    if maintenance.author_id != int(get_jwt_identity()):
-        raise ForbiddenError("Вы можете редактировать только свое обслуживание")
-    
-    try:
-        if motorcycle_id:
-            maintenance.moto_id = motorcycle_id
-        if title:
-            maintenance.title = title
-        if description:
-            maintenance.description = description
-        if mileage:
-            maintenance.planned_mileage = mileage
-        if category:
-            maintenance.category = category
-        db.session.commit()
-    
-        return jsonify(maintenance.to_dict())
-    except Exception as e:
-        current_app.logger.error(f'Failed update plan maintenance: {str(e)}')
-        raise BusinessLogicError("Ошибка редактирования планового обслуживания")
+    plan_maintenance = MaintenanceService.update_planned_maintenance(
+        maintenance_id=data.maintenance_id,
+        user_id=user_id,
+        **updates
+    )
+
+    return jsonify(plan_maintenance.to_dict())
 
 
 @maintenance.route('/plan/<int:maintenance_id>', methods=['DELETE'])
@@ -548,21 +453,9 @@ def delete_plan_maintenance(maintenance_id):
                         type: string
                         example: "Запись не найдена"
     """
-    maintenance = PlannedMaintenance.query.get(maintenance_id)
-    current_user_id = int(get_jwt_identity())
+    user_id = int(get_jwt_identity())
 
-    if not maintenance:
-        raise NotFoundError("Запись не найдена")
-
-    if maintenance.author_id != current_user_id and user.role != 'admin':
-        raise ForbiddenError("Вы можете удалять только свои записи")
-    
-    try:
-        db.session.delete(maintenance)
-        db.session.commit()
-    except Exception as e:
-        current_app.logger.error(f'Failed delete plan maintenance')
-        raise BusinessLogicError("Ошибка удаления планового обслуживания")
+    MaintenanceService.delete_plan_maintenance(maintenance_id, user_id)
 
     return jsonify({'message': 'Запись удалена'}), 200
 
@@ -600,6 +493,10 @@ def mark_maintenance():
                         type: integer
                         example: 18500
                         description: Фактический пробег на момент выполнения
+                    cost:
+                        type: integer
+                        example: 5000
+                        description: Стоимость выполнения обслуживания
                     date:
                         type: string
                         format: date
@@ -653,88 +550,21 @@ def mark_maintenance():
                         example: "Обслуживание не найдено"
     """
 
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = MarkPlannedMaintenanceSchema(**request.get_json())
     
-    maintenance_id = data.get('id')
-    mileage = data.get('mileage')
-    cost = data.get('cost')
-    date = data.get('date')
-    is_repeat = data.get('isRepeat')
-    interval = data.get('interval')
     current_user_id = int(get_jwt_identity())
 
-    if not maintenance_id:
-        raise ValidationError("Не указан ID обслуживания")
-    if not mileage:
-        raise ValidationError("Введите пробег выполнения")
-    if cost and cost < 0:
-        raise ValidationError("Стоимость обслуживания не может быть отрицательной")
-    
-    if not date:
-        date_obj = datetime.now()
-    else:
-        try:
-            date_obj = datetime.strptime(date, '%Y-%m-%d')
-        except ValueError:
-            raise ValidationError("Неверный формат даты. Используйте ГГГ-ММ-ДД")
+    result = MaintenanceService.mark_planned_as_done(
+        planned_id=data.planned_id,
+        author_id=current_user_id,
+        mileage=data.mileage,
+        date=data.date,
+        cost=data.cost,
+        repeat=data.is_repeat,
+        interval=data.interval
+    )
 
-    if date_obj > datetime.now():
-        raise ValidationError("Дата не может быть в будущем")
-    
-    if is_repeat and not interval:
-        raise ValidationError("Не указан интервал повторения")
-    
-    try:
-        db.session.begin()
-
-        maintenance = PlannedMaintenance.query.get(maintenance_id)
-        if not maintenance:
-            raise NotFoundError("Обслуживание не найдено")
-    
-        moto = Motorcycle.query.get(maintenance.moto_id)
-        if not moto:
-            raise NotFoundError("Мотоцикл не найден")
-
-        new_maintenance = Maintenance(
-            moto_id=moto.id,
-            author_id=current_user_id,
-            title=maintenance.title,
-            category=maintenance.category,
-            cost=cost,
-            description=maintenance.description,
-            mileage=mileage,
-            date=date_obj
-        )
-        db.session.add(new_maintenance)
-
-        if mileage > moto.mileage:
-            moto.mileage = mileage
-        
-        planned_maintenance = None
-        if is_repeat:
-            planned_mileage = moto.mileage + interval
-            planned_maintenance = PlannedMaintenance(
-                author_id=current_user_id,
-                moto_id=moto.id,
-                category=maintenance.category,
-                title=maintenance.title,
-                description=maintenance.description,
-                planned_mileage=planned_mileage,
-            )
-            db.session.add(planned_maintenance)
-        
-        db.session.delete(maintenance)
-
-        db.session.commit()
-
-        return jsonify({ 
-            'maintenance': planned_maintenance.to_dict()  if planned_maintenance else None,
-            'message': 'Обслуживание отмечено'}
-        ), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'Failed mark maintenance: {str(e)}')
-        raise BusinessLogicError("Внутренняя ошибка сервера")
+    return jsonify({
+        'message': 'Обслуживание отмечено как выполненное',
+        'new_maintenance': result['new_planned']
+    }), 201

@@ -42,14 +42,16 @@ class MaintenanceService:
         db.session.add(maintenance)
         db.session.commit()
 
+        return maintenance
+
     @staticmethod
     def create_planned_maintenance(
         author_id: int,
         moto_id: int,
         category: str,
         title: str,
+        planned_mileage: int,
         description: Optional[str] = None,
-        planned_mileage: Optional[int] = None,
     ) -> PlannedMaintenance:
         """ Создает запись планового обслуживания """
         moto = Motorcycle.query.get(moto_id)
@@ -62,6 +64,7 @@ class MaintenanceService:
         if planned_mileage and planned_mileage < moto.mileage:
             raise ValidationError("Указан пробег меньше пробега мотоцикла")
         
+        print(planned_mileage)
         planned = PlannedMaintenance(
             author_id=author_id,
             moto_id=moto_id,
@@ -132,3 +135,61 @@ class MaintenanceService:
             'maintenance': maintenance,
             'new_planned': new_planned
         }
+    
+    @staticmethod
+    def update_planned_maintenance(maintenance_id: int, user_id: int, **kwargs) -> PlannedMaintenance:
+        """ Обновляет данные запланированного обслуживания """
+        print(user_id)
+        plan_maintenance = MaintenanceService.get_planned_maintenance_by_id(user_id, maintenance_id)
+        
+        if 'moto_id' in kwargs and kwargs['moto_id'] is not None:
+            moto = Motorcycle.query.get(kwargs['moto_id'])
+            if not moto:
+                raise NotFoundError("Мотоцикл не найден")
+            if moto.owner_id != user_id:
+                raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
+
+        if 'planned_mileage' in kwargs and kwargs['planned_mileage'] is not None:
+            current_moto_id = kwargs.get('moto_id', plan_maintenance.moto_id)
+            moto = Motorcycle.query.get(current_moto_id)
+            if moto and kwargs['planned_mileage'] < moto.mileage:
+                raise ValidationError("Указан пробег меньше пробега мотоцикла")
+
+        for key, value in kwargs.items():
+            if hasattr(plan_maintenance, key) and value is not None:
+                setattr(plan_maintenance, key, value)
+
+        db.session.commit()
+        return plan_maintenance
+    
+    @staticmethod
+    def delete_plan_maintenance(maintenance_id: int, user_id: int) -> None:
+        """ Удаляет плановое обслуживание """
+        plan_maintenance = MaintenanceService.get_maintenance_by_id(user_id, maintenance_id)
+        db.session.delete(plan_maintenance)
+        db.session.commit()
+
+    @staticmethod
+    def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
+        """ Получить обслуживание по ID """
+        print(user_id)
+        maintenance = Maintenance.query.get(maintenance_id)
+        if not maintenance:
+            raise NotFoundError("Обслуживание не найдено")
+        
+        if int(maintenance.author_id) != int(user_id):
+            raise ForbiddenError("Вы не являетесь автором этого обслуживания")
+        
+        return maintenance
+        
+    @staticmethod
+    def get_planned_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
+        """ Получить обслуживание по ID """
+        planned_maintenance = PlannedMaintenance.query.get(maintenance_id)
+        if not planned_maintenance:
+            raise NotFoundError("Обслуживание не найдено")
+        
+        if planned_maintenance.author_id != user_id:
+            raise ForbiddenError("Вы не являетесь автором этого обслуживания")
+        
+        return planned_maintenance

@@ -39,9 +39,7 @@ def calculate_maintenance_money(moto_id, user_id):
             }
 
         total_cost = sum(m.cost for m in maintenances if m.cost)
-
-        max_cost = max(m.cost for m in maintenances if m.cost)
-
+        max_cost = max([m.cost for m in maintenances if m.cost != None])
         average_cost = total_cost / len(maintenances) if maintenances else 0
 
         now = datetime.now()
