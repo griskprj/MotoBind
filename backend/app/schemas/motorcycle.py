@@ -1,0 +1,26 @@
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional
+from datetime import datetime
+import re
+
+
+class CreateMotorcycleSchema(BaseModel):
+    name: str = Field(..., min_length=1, max_length=128)
+    years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
+    volume: Optional[int] = Field(None, ge=49, le=4000)
+    mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    color: Optional[str] = None
+    license_plate: Optional[str] = None
+    vin: Optional[str] = None
+
+    @field_validator('color')
+    def validate_color(cls, v):
+        if v and not re.match(r'^#[0-9a-fA-F]{6}$', v):
+            raise ValueError('Цвет должен быть в формате HEX (#FFFFFF)')
+        return v
+
+    @field_validator('vin')
+    def validate_vin(cls, v):
+        if v and len(v) != 17:
+            raise ValueError('VIN должен содержать 17 символов')
+        return v

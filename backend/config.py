@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = Field(..., min_length=32, description="Секрет для JWT")
     JWT_ACCESS_TOKEN_EXPIRES: int = 900 # 15 мин
     JWT_REFRESH_TOKEN_EXPIRES: int = 2592000 # 30 дн
+    JWT_REFRESH_TOKEN_COOKIE_NAME: str = 'refresh_token'
+    JWT_COOKIE_SECURE: bool = False
+    JWT_COOKIE_CSRF_PROTECT: bool = True
+    JWT_TOKEN_LOCATION: list = ['headers', 'cookies']
 
     # загрузка файлов
     UPLOAD_FOLDER: str = "uploads"

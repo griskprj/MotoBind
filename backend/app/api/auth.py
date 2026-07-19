@@ -3,9 +3,12 @@ from flask_jwt_extended import (
     create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity
 )
+from pydantic import ValidationError as PydanticValidationError
 from app.models.user import User
 from app.extensions import db
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.schemas.auth import RegisterSchema, LoginSchema, RefreshSchema
+from app.services.user_service import UserService
 
 
 auth = Blueprint('auth', __name__)
@@ -106,57 +109,19 @@ def register():
                         example: "Пользователь с таким email уже зарегистрирован"
     """
 
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = RegisterSchema(**request.get_json())
 
-    email = data.get('email')
-    password = data.get('password')
-    username = data.get('username')
-    role = data.get('role')
+    user = UserService.create_user(
+        email=data.email,
+        password=data.password,
+        username=data.username,
+        role=data.role
+    )
 
-    if not email:
-        raise ValidationError("Введите почту", errors={"email": "Поле email обязательно"})
-    if not password:
-        raise ValidationError("Введите пароль", errors={"password": "Поле пароля обязательно"})
-    if not username:
-        raise ValidationError("Введите имя пользователя", errors={"username": "Поле имя пользователя обязательно"})
-    if not role:
-        raise ValidationError("Выберите роль", errors={"role": "Выбор роли обязателен"})
-    
-    
-    if len(password) < 6:
-        raise ValidationError("Длина пароля не менее 6 символов")
-
-    if User.query.filter_by(email=email).first():
-        raise ConflictError("Пользователь с таким email уже существует")
-
-    if User.query.filter_by(username=username).first():
-        raise ConflictError("Имя пользователя занято")
-    
-    if  role != 'motorcyclist' and role != 'motoclub':
-        print(role)
-        raise ValidationError("Выбрана несуществующая роль")
-
-    try:
-        user = User(
-            email=email,
-            username=username,
-            role=role,
-            status='active'
-        )
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Регистрация успешна',
-            'user': user.to_dict()
-        }), 201
-    except Exception as e:
-        current_app.logger.error(f'Registration failed: {str(e)}')
-        raise BusinessLogicError("Ошибка при создании пользователя")
-
+    return jsonify({
+        'message': 'Регистрация успешна',
+        'user': user.to_dict()
+    }), 201
 
 @auth.route('/login', methods=['POST'])
 def login():
@@ -261,23 +226,12 @@ def login():
                         example: "Пользователь не найден"
     """
 
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет даных в запросе")
-    
-    email = data.get('email')
-    password = data.get('password')
+    data = LoginSchema(**request.get_json())
 
-    if not email:
-        raise ValidationError("Введите почту", errors={"email": "Поле email обязательно"})
-    if not password:
-        raise ValidationError("Введите пароль", errors={"password": "Поле пароля обязательно"})
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        raise NotFoundError("Пользователь с такой почтой не найден")
-    if not user.check_password(password):
-        raise ForbiddenError("Неверный пароль")
+    user = UserService.authenticate_user(
+        email=data.email,
+        password=data.password
+    )
     
     access_token = create_access_token(identity=str(user.id), additional_claims={'role': user.role})
     refresh_token = create_refresh_token(identity=str(user.id))
