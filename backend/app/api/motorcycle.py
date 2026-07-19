@@ -7,6 +7,8 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance_node import MaintenanceNode
 from app.utils.files import allowed_file, save_moto_photo
 from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.schemas.motorcycle import CreateMotorcycleSchema, UpdateMotorcycleSchema
+from app.services.motorcycle_service import MotorcycleService
 
 
 motorcycle = Blueprint('motorcycle', __name__)
@@ -63,17 +65,12 @@ def get_user_moto():
     """
     current_user_id = int(get_jwt_identity())
 
-    try:
-        user = User.query.get(current_user_id)
-        if not user:
-            raise NotFoundError('Пользователь не найден')
-        
-        motorcycles = [m.to_dict() for m in user.motorcycles]
-        return jsonify(motorcycles), 200
-
-    except Exception as e:
-        current_app.logger.error(f'Get motorcycle failed: {str(e)}')
-        raise BusinessLogicError('Ошибка при получении данных о мотоциклах пользователя')
+    user = User.query.get(current_user_id)
+    if not user:
+                raise NotFoundError('Пользователь не найден')
+    
+    motorcycles = MotorcycleService.get_motorcycle_by_id(current_user_id)
+    return jsonify([m.to_dict() for m in motorcycles]), 200
 
 
 
@@ -152,101 +149,20 @@ def create_moto():
         500:
             description: Ошибка сервера
     """
-    data = request.get_json()
+    data = CreateMotorcycleSchema(**request.get_json())
 
-    name = data.get('name')
-    years = data.get('years')
-    volume = data.get('volume')
-    mileage = data.get('mileage')
-    color = data.get('color')
-    license_plate = data.get('license_plate')
-    vin = data.get('vin')
+    moto = MotorcycleService.create_motorcycle(
+        owner_id=int(get_jwt_identity()),
+        name=data.name,
+        years=data.years,
+        volume=data.volume,
+        mileage=data.mileage,
+        color=data.color,
+        license_plate=data.license_plate,
+        vin=data.vin
+    )
 
-    if not name:
-        raise ValidationError('Укажите название мотоцикла')
-    
-    if color and color[0] != '#' and len(color.split('#')[1]) < 3:
-        raise ValidationError('Цвет должен быть формата HEX (#FFFFFF)')
-
-    if license_plate and len(license_plate) > 9:
-        raise ValidationError('Неверный формат ГОС номера')
-
-    if vin and len(vin) != 17:
-        raise ValidationError('VIN должен содержать 17 символов')
-
-    if mileage > 1_000_000:
-        raise ValidationError('Введите корректный пробег')
-
-    try:
-        db.session.begin()
-
-        motorcycle = Motorcycle(
-            owner_id=get_jwt_identity(),
-            name=name,
-            years=years,
-            volume=volume,
-            mileage=mileage,
-            color=color,
-            license_plate=license_plate,
-            vin=vin
-        )
-        db.session.add(motorcycle)
-        db.session.flush()
-
-        nodes = [
-            {
-                'title': 'Двигатель',
-                'category': 'engine'
-            },
-            {
-                'title': 'Привод',
-                'category': 'drive'
-            },
-            {
-                'title': 'Рулевое управление',
-                'category': 'steering'
-            },
-            {
-                'title': 'Подвеска',
-                'category': 'suspension'
-            },
-            {
-                'title': 'Электроника',
-                'category': 'electronics'
-            },
-            {
-                'title': 'Колеса/Шины',
-                'category': 'wheel'
-            },
-            {
-                'title': 'Тормозна система',
-                'category': 'brakes'
-            },
-            {
-                'title': 'Топливная система',
-                'category': 'fuel'
-            },
-            {
-                'title': 'Система охлаждения',
-                'category': 'cooling'
-            },
-        ]
-
-        for node_data in nodes:
-            node = MaintenanceNode(
-                moto_id=motorcycle.id,
-                title=node_data['title'],
-                category=node_data['category']
-            )
-            db.session.add(node)
-
-        db.session.commit()
-        return jsonify(motorcycle.to_dict()), 201
-
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'Failed create moto: {str(e)}')
-        raise BusinessLogicError("Ошибка создания мотоцикла")
+    return jsonify(moto.to_dict()), 201
 
 
 @motorcycle.route('/<int:moto_id>', methods=['PUT'])
@@ -332,45 +248,22 @@ def update_moto(moto_id):
         500:
             description: Ошибка сервера
     """
-    data = request.get_json()
-    if not data:
-        raise ValidationError('Нет данных для обновления')
+    data = UpdateMotorcycleSchema(**request.get_json())
+    user_id = int(get_jwt_identity())
     
-    motorcycle = Motorcycle.query.get(moto_id)
-    if not motorcycle:
-        raise NotFoundError('Мотоцикл не найден')
+    motorcycle = MotorcycleService.update_motorcycle(
+        moto_id=moto_id,
+        user_id=user_id,
+        name=data.name,
+        years=data.years,
+        volume=data.volume,
+        mileage=data.mileage,
+        color=data.color,
+        license_plate=data.license_plate,
+        vin=data.vin
+    )
 
-    try:
-        name = data.get('name')
-        volume = data.get('volume')
-        mileage = data.get('mileage')
-        years = data.get('years')
-        color = data.get('color')
-        license_plate = data.get('licensePlate')
-        vin = data.get('vin')
-        if 'name' in data:
-            motorcycle.name = name
-        if 'years' in data and datetime.now().year > years:
-            motorcycle.years = years
-        if 'volume' in data and 49 <= volume <= 4000:
-            motorcycle.volume = volume
-        if 'mileage' in data and mileage < 1_000_000:
-            motorcycle.mileage = mileage
-        if color and color[0] == '#' and len(color.split('#')[1]) >= 3:
-            motorcycle.color = color
-        if vin and len(vin) == 17:
-            motorcycle.vin = vin
-        if license_plate and 8 <= len(license_plate) <= 9:
-            motorcycle.license_plate = license_plate
-        
-        db.session.commit()
-        return jsonify(motorcycle.to_dict())
-
-    except Exception as e:
-        current_app.logger.error(f'Failed update moto: {str(e)}')
-        raise BusinessLogicError('Ошибка сервера')
-
-
+    return jsonify(motorcycle.to_dict()), 200
 
 @motorcycle.route('/<int:moto_id>', methods=['PATCH'])
 @jwt_required()
@@ -431,25 +324,22 @@ def update_moto_mileage(moto_id):
     if not data:
         raise ValidationError('Нет данных для обновления')
     
-    motorcycle = Motorcycle.query.get(moto_id)
-    if not motorcycle:
-        raise NotFoundError('Мотоцикл не найден')
-
     new_mileage = data.get('newMileage')
-    if not new_mileage:
+    if new_mileage is None:
         raise ValidationError('Укажите новый пробег')
-
-    try:
-        motorcycle.mileage = int(new_mileage)
-        db.session.commit()
-        return jsonify(motorcycle.to_dict()), 200
-
-    except ValueError:
-        raise ValidationError('Неверный формат пробега')
-    except Exception as e:
-        current_app.logger.error(f'Failed update moto mileage: {str(e)}')
-        raise BusinessLogicError('Ошибка сервера')
-
+    
+    if not isinstance(new_mileage, int) or new_mileage < 0:
+        raise ValidationError('Пробег должен быть положительным числом')
+    
+    user_id = int(get_jwt_identity())
+    
+    moto = MotorcycleService.update_motorcycle(
+        moto_id=moto_id,
+        user_id=user_id,
+        mileage=new_mileage
+    )
+    
+    return jsonify(moto.to_dict()), 200
 
 
 @motorcycle.route('/<int:moto_id>', methods=['DELETE'])
@@ -484,14 +374,8 @@ def delete_moto(moto_id):
         500:
             description: Ошибка сервера
     """
-    motorcycle = Motorcycle.query.get(moto_id)
-    if not motorcycle:
-        raise NotFoundError('Мотоцикл не найден')
-    
-    try:
-        db.session.delete(motorcycle)
-        db.session.commit()
-        return jsonify({'message': 'Мотоцикл удален'}), 200
-    except Exception as e:
-        current_app.logger.error(f'Failed delete moto {str(e)}')
-        raise BusinessLogicError('Ошибка сервера')
+    user_id = int(get_jwt_identity())
+
+    MotorcycleService.delete_motorcycle(moto_id, user_id)
+
+    return jsonify({'message': 'Мотоцикл удален'}), 200

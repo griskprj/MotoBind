@@ -301,10 +301,7 @@ def get_current_user():
                         example: "Пользователь не найден"
     """
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not user:
-        raise NotFoundError("Пользователь не найден")
-
+    user = UserService.get_user_by_id(user_id)
     return jsonify(user.to_dict()), 200
 
 
@@ -359,11 +356,9 @@ def refresh():
                         example: "Невалидный refresh-токен"
     """
 
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных в запросе")
+    data = RefreshSchema(**request.get_json())
     
-    refresh_token = data.get('refresh_token')
+    refresh_token = data.refresh_token
     if not refresh_token:
         raise ValidationError("Refresh-токен обязателен", errors={"refresh_token": "Поле обязательно"})
     
@@ -418,8 +413,6 @@ def logout():
     user = User.query.get(user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
+    UserService.clear_refresh_token(user)
 
-    user.refresh_token = None
-    db.session.commit()
-    
     return jsonify({'message': 'Успешно вышли из системы'}), 200
