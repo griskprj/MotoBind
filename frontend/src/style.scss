@@ -23,6 +23,7 @@ body {
   --bg-primary: #0A0A0F;
   --bg-secondary: #111118;
   --bg-card: #1A1A24;
+  --bg-card-hover: #202036;
   
   --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
@@ -32,6 +33,7 @@ body {
   --accent: #8B5CF6;
   --accent-hover: #7C3AED;
   --accent-light: #2D2A3E;
+  --accent-trans: rgba(138, 92, 246, 0.2);
   
   --danger: #EF4444;
   --danger-hover: #DC2626;
@@ -39,6 +41,7 @@ body {
   --success-hover: #10cb8d;
   --warning: #F59E0B;
   --warning-hover: #db8e08;
+  --warning-trans: rgba(245, 159, 11, 0.1);
 
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
@@ -50,6 +53,10 @@ body {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+section {
+  margin-bottom: 24px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -161,6 +168,25 @@ button,
   }
 }
 
+.dropdown-btn {
+  width: 24px;
+  height: 24px;
+  background-color: var(--bg-secondary);
+  padding: 0;
+  &:hover {
+    background-color: var(--bg-secondary);
+  } 
+}
+
+.outline-btn {
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
 @media (max-width: 640px) {
   button, .btn {
     padding: 0.75rem 1rem;
@@ -212,13 +238,6 @@ label {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
-}
-
-.container {
-  max-width: 80%;
-  margin: 0 auto;
-
-  animation: slideInUp 0.5s ease-out forwards;  
 }
 
 @keyframes slideInUp {

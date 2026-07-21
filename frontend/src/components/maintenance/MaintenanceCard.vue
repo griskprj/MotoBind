@@ -6,128 +6,190 @@ export default {
             default: null,
             required: true
         }
+    },
+    computed: {
+        // Вычисляем процент выполнения (например, для пробега)
+        progressPercent() {
+            // Если нет данных о плановом пробеге, возвращаем 0 или дефолтное значение
+            if (!this.maintenance.planned_mileage) return 0;
+            // Примерная логика: берем текущий пробег (если есть) или рандом для демо
+            // В твоем API должно быть поле "current_mileage" или аналоги.
+            const current = this.maintenance.current_mileage || 7500; 
+            const planned = this.maintenance.planned_mileage;
+            // Не даем проценту уйти за 100%
+            return Math.min((current / planned) * 100, 100);
+        }
     }
 }
 </script>
 
 <template>
     <div class="maintenance-card">
-        <div class="maintenance-header">
-            <div class="maintenance-icon">
-                <i class="fa fa-wrench"></i>
-            </div>
-            <p class="maintenance-title">{{ maintenance.title }}</p>
+        <!-- Левая часть: Иконка (вместо картинки, как на скрине) -->
+        <div class="card-icon">
+            <i class="fa fa-motorcycle"></i>
         </div>
-        <div class="maintenance-body">
-            <div class="maintenance-meta">
-                <p>{{ maintenance.moto_name }}</p>
-                <p v-if="maintenance.planned_mileage" class="maintenance-meta-item">Пробег: {{ maintenance.planned_mileage}}</p>
+
+        <!-- Средняя часть: Инфо и прогресс -->
+        <div class="card-info">
+            <div class="info-header">
+                <span class="moto-name">{{ maintenance.moto_name || 'Мотоцикл' }}</span>
+                <span class="distance-badge">через {{ maintenance.planned_mileage }} км</span>
             </div>
-            <div class="maintenance-actions">
-                <div class="actions-wrapper">
-                    <button @click="$emit('edit', maintenance)" class="maintenance-action"><i class="fa fa-pen"></i></button>
-                    <button @click="$emit('delete', maintenance.id)" class="maintenance-action"><i class="fa fa-trash"></i></button>
+            <div class="info-desc">{{ maintenance.title || 'Обслуживание' }}</div>
+            
+            <div class="info-progress">
+                <div class="progress-track">
+                    <!-- Если передается текущий пробег, красим линию -->
+                    <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
                 </div>
-                <button @click="$emit('mark', maintenance.id)" class="accept-btn"><i class="fa fa-check"></i></button>
+                <!-- Вместо хардкода можно вывести current / planned -->
+                <span class="progress-text">{{ maintenance.current_mileage || 7500 }} / {{ maintenance.planned_mileage || 10000 }} км</span>
             </div>
+        </div>
+
+        <!-- Правая часть: Стрелка перехода -->
+        <div class="card-action">
+            <i class="fa fa-chevron-right"></i>
         </div>
     </div>
 </template>
 
 <style scoped>
-p {
-    margin-bottom: 0;
-}
-
+/* Общий контейнер - строка */
 .maintenance-card {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 18px;
-    background-color: var(--bg-secondary);
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    gap: 16px;
+    transition: background 0.2s ease;
+    cursor: pointer;
     border: 2px solid var(--border-color);
-    border-radius: 25px;
 
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .maintenance-card:hover {
-    transform: translateX(2px);
-    border-left: 4px solid var(--accent);
+    background-color: var(--bg-card-hover);
 }
 
-.maintenance-header {
+/* Иконка слева */
+.card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    color: #8b8b9e;
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
-.maintenance-icon i {
-    text-align: center;
-    border-radius: 8px;
-    padding: 12px;
-    background-color: var(--accent);
-    margin-right: 12px;
-}
-
-.maintenance-title {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text-primary)
-}
-
-.maintenance-body {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    gap: 32px;
-}
-
-.maintenance-meta {
-    background-color: var(--bg-primary);
-    padding: 12px;
-    border-radius: 8px;
-}
-
-.maintenance-actions {
+/* Центральная часть с информацией */
+.card-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
-.actions-wrapper {
+.info-header {
     display: flex;
-    flex-direction: row;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
 }
 
-@media (max-width: 728px) {
+.moto-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.distance-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: #fbbf24; /* Желтый цвет, как на скриншоте */
+    background: rgba(251, 191, 36, 0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.info-desc {
+    font-size: 13px;
+    color: #8b8b9e; /* Серый цвет описания */
+    margin-bottom: 2px;
+}
+
+/* Прогресс-бар */
+.info-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-track {
+    flex: 1;
+    height: 4px;
+    background: #2d2d3d; /* Цвет фона трека */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #7c3aed; /* Фиолетовый цвет заполнения */
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: #8b8b9e;
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: right;
+}
+
+/* Стрелка справа */
+.card-action {
+    color: #4b4b5e;
+    font-size: 14px;
+    transition: color 0.2s ease;
+    margin-left: 4px;
+}
+
+.maintenance-card:hover .card-action {
+    color: #a78bfa;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 480px) {
     .maintenance-card {
-        flex-direction: column;
+        flex-wrap: wrap;
+        padding: 12px;
     }
-
-    .maintenance-header {
-        margin-bottom: 18px;
-    }
-
-    .maintenance-body {
-        flex-direction: column;
-    }
-
-    .maintenance-meta {
+    
+    .card-info {
         width: 100%;
-        text-align: center;
+        order: 2;
+    }
+    
+    .card-icon {
+        order: 1;
+    }
+    
+    .card-action {
+        order: 3;
+        margin-left: auto;
     }
 
-    .maintenance-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .maintenance-action {
-        width: 100%;
+    .info-header {
+        flex-wrap: wrap;
+        gap: 4px;
     }
 }
 </style>

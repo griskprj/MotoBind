@@ -1,11 +1,10 @@
 <script>
-import { isAuthenticated } from './api/auth.js';
-import Header from './components/Header.vue';
+import Sidebar from './components/Sidebar.vue';
 import Footer from './components/Footer.vue';
 
 export default {
   components: {
-    Header,
+    Sidebar,
     Footer
   },
 
@@ -32,13 +31,16 @@ export default {
   </div>
   <div class="animated-bg"></div>
 
-  <Header v-if="$route.meta.showHeader"/>
-  <router-view />
+  <Sidebar v-if="$route.meta.showHeader">
+    <router-view />
+  </Sidebar>
+  <router-view v-else />
+  
   <Footer v-if="$route.meta.showFooter" />
 </template>
 
-<style>
 
+<style>
 .animated-bg {
     position: fixed;
     top: 0;
