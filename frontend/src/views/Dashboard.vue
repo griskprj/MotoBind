@@ -126,59 +126,24 @@
                 <h3>Мероприятия</h3>
 
                 <div class="cards-wrapper">
-                    <div class="event-card">
-                        <div class="event-icon-wrapper blue-bg">
-                            <i class="fa fa-flag-checkered"></i>
+                    <div class="event-card"
+                        v-for="event in events"
+                        :key="event.id"
+                    >
+                        <div class="event-icon-wrapper" :class="getEventIconClass(event.status)">
+                            <i class="fa" :class="getEventIcon(event.status)"></i>
                         </div>
                         
                         <div class="event-info">
-                            <p class="event-title">Открытие MotoBind</p>
-                            <p class="event-desc">Мотофестиваль и презентация сезона</p>
+                            <p class="event-title">{{ event.title }}</p>
+                            <p class="event-desc">{{ truncateDescription(event.description) }}</p>
                         </div>
 
                         <div class="event-meta">
-                            <span class="event-date">26.08.2026</span>
-                            <span class="event-status future">Скоро</span>
-                        </div>
-
-                        <div class="card-action">
-                            <i class="fa fa-chevron-right"></i>
-                        </div>
-                    </div>
-
-                    <div class="event-card">
-                        <div class="event-icon-wrapper green-bg">
-                            <i class="fa fa-road"></i>
-                        </div>
-                        
-                        <div class="event-info">
-                            <p class="event-title">Мотопробег "Золотое кольцо"</p>
-                            <p class="event-desc">Сбор в 09:00 у парка Горького</p>
-                        </div>
-
-                        <div class="event-meta">
-                            <span class="event-date">15.09.2026</span>
-                            <span class="event-status future">Скоро</span>
-                        </div>
-
-                        <div class="card-action">
-                            <i class="fa fa-chevron-right"></i>
-                        </div>
-                    </div>
-
-                    <div class="event-card past-event">
-                        <div class="event-icon-wrapper purple-bg">
-                            <i class="fa fa-users"></i>
-                        </div>
-                        
-                        <div class="event-info">
-                            <p class="event-title">Открытая тренировка</p>
-                            <p class="event-desc">Трек "Маяк", 15 участников</p>
-                        </div>
-
-                        <div class="event-meta">
-                            <span class="event-date">15.07.2026</span>
-                            <span class="event-status past">Прошло</span>
+                            <span class="event-date">{{ formatEventDate(event.date) }}</span>
+                            <span class="event-status" :class="getStatusClass(event.status)">
+                                {{ getStatusLabel(event.status) }}
+                            </span>
                         </div>
 
                         <div class="card-action">
@@ -213,9 +178,10 @@ export default {
             user: null,
             loading: false,
 
-            // === Motorcycle vars ===
+            // === Arrays ===
             motorcycles: [],
             maintenances: [],
+            events: [],
 
             // === Statistic vars ===
             motorcycleCount: 0,
@@ -275,6 +241,11 @@ export default {
                 const chartsResponse = await api.get('/statistic/dashboard-charts')
                 this.costChartData = chartsResponse.data.cost_chart || []
                 this.countChartData = chartsResponse.data.count_chart || []
+
+                const eventsResponse = await api.get('/event/')
+                this.events = eventsResponse.data.filter(
+                    e => e.status === 'planned' || e.status === 'active'
+                ).slice(0, 3) // Ограничиваем тремя первыми
                 
             } catch(err) {
                 console.error('Failed to load dashboard data:', err)
@@ -286,6 +257,113 @@ export default {
         getMotorcycleName(motoId) {
             const moto = this.motorcycles.find(m => m.id === motoId)
             return moto ? moto.model || moto.name || `Мотоцикл #${motoId}` : `Мотоцикл #${motoId}`
+        },
+
+        // === Event formatting methods ===
+        formatEventDate(dateString) {
+            if (!dateString) return 'Дата не указана'
+            
+            const date = new Date(dateString)
+            const now = new Date()
+            
+            // Проверяем, что дата валидна
+            if (isNaN(date.getTime())) return 'Неверная дата'
+            
+            // Форматируем дату: "15 января 2024"
+            const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 
+                           'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+            
+            const day = date.getDate()
+            const month = months[date.getMonth()]
+            const year = date.getFullYear()
+            
+            // Проверяем, сколько дней осталось
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const eventDate = new Date(date)
+            eventDate.setHours(0, 0, 0, 0)
+            
+            const diffTime = eventDate.getTime() - today.getTime()
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+            
+            // Если мероприятие уже прошло
+            if (diffDays < 0) {
+                return `${day} ${month} ${year}`
+            }
+            
+            // Если сегодня
+            if (diffDays === 0) {
+                return `Сегодня, ${day} ${month}`
+            }
+            
+            // Если завтра
+            if (diffDays === 1) {
+                return `Завтра, ${day} ${month}`
+            }
+            
+            // Если в ближайшие 3 дня
+            if (diffDays <= 3) {
+                return `Через ${diffDays} дня, ${day} ${month}`
+            }
+            
+            // Если в ближайшую неделю
+            if (diffDays <= 7) {
+                const weekDays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 
+                                 'Четверг', 'Пятница', 'Суббота']
+                const weekDay = weekDays[date.getDay()]
+                return `${weekDay}, ${day} ${month}`
+            }
+            
+            // Иначе обычная дата
+            return `${day} ${month} ${year}`
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                'planned': 'Запланировано',
+                'active': 'Активно',
+                'moderate': 'На модерации',
+                'decline': 'Отклонено'
+            }
+            return labels[status] || status
+        },
+
+        getStatusClass(status) {
+            const classes = {
+                'planned': 'status-planned',
+                'active': 'status-active',
+                'moderate': 'status-moderate',
+                'decline': 'status-decline'
+            }
+            return classes[status] || ''
+        },
+
+        getEventIcon(status) {
+            const icons = {
+                'planned': 'fa-calendar-plus',
+                'active': 'fa-calendar-check',
+                'moderate': 'fa-clock',
+                'decline': 'fa-calendar-times'
+            }
+            return icons[status] || 'fa-calendar'
+        },
+
+        getEventIconClass(status) {
+            const classes = {
+                'planned': 'blue-bg',
+                'active': 'green-bg',
+                'moderate': 'yellow-bg',
+                'decline': 'red-bg'
+            }
+            return classes[status] || 'blue-bg'
+        },
+
+        truncateDescription(description) {
+            if (!description) return ''
+            if (description.length > 60) {
+                return description.substring(0, 60) + '...'
+            }
+            return description
         },
 
         async logout() {
@@ -641,14 +719,6 @@ export default {
     background-color: #202036;
 }
 
-/* Если мероприятие прошло - делаем чуть тусклее */
-.event-card.past-event {
-    opacity: 0.6;
-}
-.event-card.past-event:hover {
-    opacity: 1;
-}
-
 /* Квадрат с иконкой */
 .event-icon-wrapper {
     width: 40px;
@@ -666,6 +736,7 @@ export default {
 .blue-bg { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
 .green-bg { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
 .yellow-bg { background: rgba(234, 179, 8, 0.2); color: #fde047; }
+.red-bg { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
 /* Текстовая часть */
 .event-info {
@@ -699,6 +770,7 @@ export default {
 .event-date {
     font-size: 12px;
     color: #8b8b9e;
+    white-space: nowrap;
 }
 
 .event-status {
@@ -710,14 +782,25 @@ export default {
     letter-spacing: 0.5px;
 }
 
-.event-status.future {
+/* Статусы */
+.status-planned {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+}
+
+.status-active {
     background: rgba(34, 197, 94, 0.15);
     color: #4ade80;
 }
 
-.event-status.past {
-    background: rgba(107, 114, 128, 0.2);
-    color: #9ca3af;
+.status-moderate {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fde047;
+}
+
+.status-decline {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
 }
 
 /* Стрелка перехода */
@@ -748,7 +831,7 @@ export default {
         align-items: center;
         gap: 12px;
         width: 100%;
-        padding-left: 56px; /* Отступ под иконку, чтобы выровнять */
+        padding-left: 56px;
         margin-top: 4px;
     }
 }

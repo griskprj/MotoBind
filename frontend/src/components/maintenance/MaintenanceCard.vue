@@ -66,7 +66,6 @@ export default {
     gap: 16px;
     transition: background 0.2s ease;
     cursor: pointer;
-    border: 2px solid var(--border-color);
 
     transition: all 0.3s ease;
 }
