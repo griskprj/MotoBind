@@ -8,3 +8,4 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance import Maintenance, PlannedMaintenance
 
 from app.models.manual import Manual, ManualStep
+from app.models.event import Event

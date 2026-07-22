@@ -36,16 +36,7 @@ export default {
                     type: 'bar',
                     height: 350,
                     toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: true,
-                            zoom: true,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: true
-                        }
+                        show: false,
                     },
                     background: 'transparent',
                 },

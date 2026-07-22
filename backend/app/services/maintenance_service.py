@@ -139,7 +139,6 @@ class MaintenanceService:
     @staticmethod
     def update_planned_maintenance(maintenance_id: int, user_id: int, **kwargs) -> PlannedMaintenance:
         """ Обновляет данные запланированного обслуживания """
-        print(user_id)
         plan_maintenance = MaintenanceService.get_planned_maintenance_by_id(user_id, maintenance_id)
         
         if 'moto_id' in kwargs and kwargs['moto_id'] is not None:
@@ -172,7 +171,6 @@ class MaintenanceService:
     @staticmethod
     def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
         """ Получить обслуживание по ID """
-        print(user_id)
         maintenance = Maintenance.query.get(maintenance_id)
         if not maintenance:
             raise NotFoundError("Обслуживание не найдено")
@@ -184,7 +182,7 @@ class MaintenanceService:
         
     @staticmethod
     def get_planned_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
-        """ Получить обслуживание по ID """
+        """ Получить плановое обслуживание по ID """
         planned_maintenance = PlannedMaintenance.query.get(maintenance_id)
         if not planned_maintenance:
             raise NotFoundError("Обслуживание не найдено")

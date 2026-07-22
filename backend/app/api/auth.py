@@ -6,7 +6,7 @@ from flask_jwt_extended import (
 from pydantic import ValidationError as PydanticValidationError
 from app.models.user import User
 from app.extensions import db
-from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.exceptions import ValidationError, NotFoundError, UnauthorizedError
 from app.schemas.auth import RegisterSchema, LoginSchema, RefreshSchema
 from app.services.user_service import UserService
 

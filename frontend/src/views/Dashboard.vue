@@ -1,402 +1,3 @@
-<script>
-import api from '../api/api';
-import { getUser } from '../api/auth';
-import { removeTokens } from '../api/auth';
-
-import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
-import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
-import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
-import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
-
-import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue';
-import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMaintenanceModal.vue';
-import EditPlanMaintenanceModal from '../components/modals/maintenance/EditPlanMaintenanceModal.vue';
-import DeletePlanMaintenanceModal from '../components/modals/maintenance/DeletePlanMaintenanceModal.vue';
-import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
-import MotoCard from '../components/moto/MotoCard.vue';
-import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
-
-import MaintenanceCostChart from '../components/charts/MaintenanceCostChart.vue'
-import MaintenanceCountChart from '../components/charts/MaintenanceCountChart.vue'
-
-
-export default {
-    components: {
-        AddMotoModal,
-        EditMotoModal,
-        DeleteMotoModal,
-        UpdateMileageModal,
-
-        AddMaintenanceModal,
-        AddPlanMaintenanceModal,
-        EditPlanMaintenanceModal,
-        DeletePlanMaintenanceModal,
-        MarkPlanMaintenanceModal,
-
-        MotoCard,
-        MaintenanceCard,
-
-        MaintenanceCostChart,
-        MaintenanceCountChart,
-    },
-
-    data() {
-        return {
-            user: null,
-            loading: false,
-
-            // === Motorcycle vars ===
-            // moto list
-            motorcycles: [],
-
-            // modals vars
-            showEditMotoModal: false,
-            showDeleteMotoModal: false,
-            showCreateMotoModal: false,
-            showUpdateMileageModal: false,
-
-            // other vars
-            deleteMotoId: null,
-            selectedMoto: null,
-            // === --- ===
-
-
-
-            // === History maintenances vars ===
-            // maintenances list
-            maintenances: [],
-
-            // modals vars
-            showAddMaintenanceModal: false,
-            showAddPlanMaintenanceModal: false,
-            showEditPlanMaintenanceModal: false,
-            showDeletePlanMaintenanceModal: false,
-            showMarkPlanMaintenanceModal: false,
-
-
-            // other vars
-            selectedPlanMaintenance: null,
-            deletePlanMaintenanceId: null,
-            markPlanMaintenanceId: null,
-            // === --- ===
-
-            // === Other vars ===
-            // bool
-            welcomeDropdownActive: false,
-        }
-    },
-
-    methods: {
-        async loadData() {
-            try {
-                this.loading = true
-                const response = await api.get('/statistic/dashboard-data')
-
-                this.user = getUser()
-                this.motorcycles = response.data.motorcycles
-                this.maintenances = response.data.maintenance.flat(Infinity)
-            } catch(err) {
-                console.error(err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-
-
-        // ===== MOTORCYCLES =====
-
-        // --> Async functions
-        async handleMotoCreated(formData) {
-            // create moto
-            try {
-                this.loading = true
-                this.loadData()
-
-                const { data } = await api.post('/motorcycle/new', formData)
-
-                this.motorcycles.push(data)
-                this.showCreateMotoModal = false
-
-                alert('Мотоцикл добавлен!')
-            } catch(err) {
-                console.error('Failed create moto:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handleMotoUpdated(formData) {
-            // update moto
-            try {
-                this.loading = true
-                const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
-
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                
-                if (index !== -1) {
-                    this.motorcycles[index] = data
-                }
-
-                this.showEditMotoModal = false
-                alert('Мотоцикл обновлен!')
-            } catch(err) {
-                console.error('Failed update moto:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handleMotoMileageUpdated(formData) {
-            // update moto mileage
-            try {
-                this.loading = true
-
-                const { data } = await api.patch(`motorcycle/${formData.id}`, formData)
-
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                
-                if (index !== -1) {
-                    this.motorcycles[index] = data
-                }
-
-                this.showUpdateMileageModal = false
-                alert('Пробег мотоцикла обновлен!')
-            } catch(err) {
-                console.error('Failed update moto mileage', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handleMotoDeleted(motoId) {
-            // delete moto
-            try {
-                this.loading = true
-                await api.delete(`/motorcycle/${motoId}`)
-
-                const index = this.motorcycles.findIndex(m => m.id === motoId)
-                
-                if (index !== -1) {
-                    this.motorcycles.splice(index, 1)
-                }
-
-                this.showDeleteMotoModal = false
-                alert('Мотоцикл удален!')
-            } catch(err) {
-                console.error('Failed delete moto:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-
-        // ---> Modals function
-        
-        // create moto
-        openCreateMotoModal() {
-            this.showCreateMotoModal = true
-        },
-
-        // edit moto
-        openEditMotoModal(moto) {
-            this.selectedMoto = moto
-            this.showEditMotoModal = true
-        },
-        closeEditMotoModal() {
-            this.showEditMotoModal = false
-            this.selectedMoto = null
-        },
-
-        // update moto mileage
-        openUpdateMileageModal() {
-            this.showUpdateMileageModal = true
-        },
-
-        // delete moto
-        openDeleteMotoModal(motoId) {
-            this.deleteMotoId = motoId
-            this.showDeleteMotoModal = true
-        },
-        closeDeleteMotoModal() {
-            this.showDeleteMotoModal = false
-            this.deleteMotoId = null
-        },
-        // ===== --- =====
-
-
-
-        // === MAINTENANCES ===
-
-        // ---> Async functions
-        async handleMaintenanceCreated(formData) {
-            // create history maintenance record
-            try {
-                this.loading = true
-
-                const { data } = await api.post('/maintenance/create-new', formData)
-
-                this.showAddMaintenanceModal = false
-
-                alert('Запись обслуживания добавлена в историю!')
-            } catch (err) {
-                console.error('Failed add maintenence:', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handlePlanMaintenanceCreated(formData) {
-            // create plan maintenance record
-            try {
-                this.loading = true
-
-                const { data } = await api.post('/maintenance/plan', formData)
-
-                this.maintenances.push(data)
-                this.showAddPlanMaintenanceModal = false
-
-                alert('Обслуживание запланировано')
-            } catch(err) {
-                console.error('Failed plan maintenance', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handlePlanMaintenanceUpdated(formData) {
-            // update plan maintenance
-            try {
-                this.loading = true
-
-                const { data } = await api.put(`/maintenance/plan`, formData)
-
-                const index = this.maintenances.findIndex(m => m.id === formData.maintenanceId)
-                if (index !== -1) {
-                    this.maintenances[index] = data
-                }
-
-                this.showEditPlanMaintenanceModal = false
-                alert('Запланированное обслуживание обновлено!')
-            } catch(err) {
-                console.error('Failed edit plan maintenance', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handlePlanMaintenanceDeleted(maintenanceId) {
-            // delete plan maintenance
-            try {
-                this.loading = true
-
-                await api.delete(`/maintenance/plan/${maintenanceId}`)
-                
-                const index = this.maintenances.findIndex(m => m.id === maintenanceId)
-                if (index !== -1) {
-                    this.maintenances.splice(index, 1)
-                }
-
-                this.showDeletePlanMaintenanceModal = false
-                this.selectedPlanMaintenance = null
-                alert('Запланированное обслуживание удалено!')
-            } catch(err) {
-                alert('Ошибка удаления обслуживания')
-                console.error('Failed delete plan maintenance', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async handlePlanMaintenanceMarked(formData) {
-            // mark plan maintenance
-            try {
-                this.loading = true
-
-                const response = await api.post('/maintenance/plan/mark', formData)
-                
-                if (response.maintenance) {
-                    this.maintenances.push(response.maintenance)
-                }
-
-                const index = this.maintenances.findIndex(m => m.id === formData.id)
-                if (index !== -1) {
-                    this.maintenances.splice(index, 1)
-                }
-
-                this.showMarkPlanMaintenanceModal = false
-                this.markPlanMaintenanceId = null
-                alert('Запланированное обслуживание отмечено!')
-            } catch(err) {
-                alert('Ошибка отметки обслуживания')
-                console.error('Failed mark plan maintenance', err)
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) {
-                console.error('Logout failed:', err);
-            } finally {
-                removeTokens();
-                this.$router.push('/login');
-            }
-        },
-
-
-        // ---> Modals functions
-
-        // create history maintenance
-        openAddMaintenanceModal() {
-            this.showAddMaintenanceModal = true
-        },
-
-        // create plan maintenance
-        openAddPlanMaintenanceModal() {
-            this.showAddPlanMaintenanceModal = true
-        },
-
-        // edit plan maintenance
-        openEditPlanMaintenanceModal(maintenance) {
-            this.selectedPlanMaintenance = maintenance
-            this.showEditPlanMaintenanceModal = true
-        },
-        closeEditPlanMaintenanceModal() {
-            this.selectedPlanMaintenance = null
-            this.showEditPlanMaintenanceModal = false
-        },
-
-        // delete plan maintenance
-        openDeletePlanMaintenanceModal(maintenanceId) {
-            this.deletePlanMaintenanceId = maintenanceId
-            this.showDeletePlanMaintenanceModal = true
-        },
-        closeDeletePlanMaintenanceModal() {
-            this.showDeletePlanMaintenanceModal = false
-            this.deletePlanMaintenanceId = null
-        },
-
-        // mark plan maintenance
-        openMarkPlanMaintenanceModal(maintenanceId) {
-            this.showMarkPlanMaintenanceModal = true
-            this.markPlanMaintenanceId = maintenanceId
-        },
-        closeMarkPlanMaintenanceModal() {
-            this.showMarkPlanMaintenanceModal = false
-            this.markPlanMaintenanceId = null
-        }
-    },
-
-        
-    mounted() {
-        this.loadData()
-    }
-}
-</script>
-
 <template>
     <div class="container">
         <!-- === WELCOME SECTION === -->
@@ -443,9 +44,9 @@ export default {
                     </div>
                     <div class="card-body">
                         <p class="card-title">Мотоциклов в гараже</p>
-                        <p class="stat-value">2</p>
+                        <p class="stat-value">{{ motorcycleCount }}</p>
                         <div class="stat-meta-wrapper">
-                            <p class="stat-meta-value positive">+1</p> 
+                            <p class="stat-meta-value positive">+{{ dynamicMotorcycleCount }}</p> 
                             <p class="stat-meta"> за последний месяц</p>
                         </div>
                     </div>
@@ -456,9 +57,9 @@ export default {
                     </div>
                     <div class="card-body">
                         <p class="card-title">Плановых ТО</p>
-                        <p class="stat-value">3</p>
+                        <p class="stat-value">{{ planMaintenanceCount }}</p>
                         <div class="stat-meta-wrapper">
-                            <p class="stat-meta maintenance">2 скоро нужно выполнить</p>
+                            <p class="stat-meta maintenance">{{ pendingMaintenanceCount }} скоро нужно выполнить</p>
                         </div>
                     </div>
                 </div>
@@ -468,9 +69,10 @@ export default {
                     </div>
                     <div class="card-body">
                         <p class="card-title">Обслуживаний</p>
-                        <p class="stat-value">12</p>
+                        <p class="stat-value">{{ maintenanceCount }}</p>
                         <div class="stat-meta-wrapper">
-                            <p class="stat-meta-value positive">+3</p> <p class="stat-meta"> за последний месяц</p>
+                            <p class="stat-meta-value positive">+{{ dynamicMaintenanceCount }}</p> 
+                            <p class="stat-meta"> за последний месяц</p>
                         </div>
                     </div>
                 </div>
@@ -480,45 +82,40 @@ export default {
                     </div>
                     <div class="card-body">
                         <p class="card-title">Общие расходы</p>
-                        <p class="stat-value">142570 ₽</p>
+                        <p class="stat-value">{{ totalSpends }} ₽</p>
                         <div class="stat-meta-wrapper">
-                            <p class="stat-meta-value negative">+12%</p> <p class="stat-meta"> за последний месяц</p>
+                            <p 
+                                class="stat-meta-value" 
+                                :class="dynamicTotalSpendsCount >= 0 ? 'positive' : 'negative'"
+                            >
+                                {{ dynamicTotalSpendsCount >= 0 ? '+' : '' }}{{ dynamicTotalSpendsCount }}%
+                            </p> 
+                            <p class="stat-meta"> за последний месяц</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- === CHARTS SECTION === -->
+        <div class="charts-grid-wrapper">
+            <MaintenanceCostChart :chartData="costChartData" />
+            <MaintenanceCountChart :chartData="countChartData" />
+        </div>
+
+        <!-- === PENDING MAINTENANCE & EVENTS SECTION === -->
         <div class="grid-sections-wrapper">
-            <!-- === MAINTENANCE COST CHART === -->
-            <MaintenanceCostChart />
-
-            <!-- === MAINTENANCE COUNT CHART === -->
-            <MaintenanceCountChart />
-
             <!-- === PENDING MAINTENANCE SECTION === -->
             <section class="pending-maintenance-section">
                 <h3>Ближайшие обслуживания</h3>
                 <div class="cards-wrapper">
                     <MaintenanceCard
-                        :maintenance="
-                            {
-                                'id': 1,
-                                'title': 'Замена масла',
-                                'moto_name': 'Bajaj Pulsar NS 125',
-                                'planned_mileage': '22100',
-                            }
-                        "
-                    />
-                    <MaintenanceCard
-                        :maintenance="
-                            {
-                                'id': 2,
-                                'title': 'Замена цепи и звезд',
-                                'moto_name': 'BMW s1000rr',
-                                'planned_mileage': '20100',
-                            }
-                        "
+                        v-for="maintenance in pendingMaintenances"
+                        :key="maintenance.id"
+                        :maintenance="{
+                            ...maintenance,
+                            moto_name: getMotorcycleName(maintenance.moto_id)
+                        }"
                     />
                 </div>
                 <button class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
@@ -595,6 +192,119 @@ export default {
         
     </div>
 </template>
+
+<script>
+import api from '../api/api';
+import { getUser } from '../api/auth';
+import { removeTokens } from '../api/auth';
+import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
+import MaintenanceCostChart from '../components/charts/MaintenanceCostChart.vue'
+import MaintenanceCountChart from '../components/charts/MaintenanceCountChart.vue'
+
+export default {
+    components: {
+        MaintenanceCard,
+        MaintenanceCostChart,
+        MaintenanceCountChart,
+    },
+
+    data() {
+        return {
+            user: null,
+            loading: false,
+
+            // === Motorcycle vars ===
+            motorcycles: [],
+            maintenances: [],
+
+            // === Statistic vars ===
+            motorcycleCount: 0,
+            planMaintenanceCount: 0,
+            pendingMaintenanceCount: 0,
+            maintenanceCount: 0,
+            totalSpends: 0,
+
+            // dynamic vars
+            dynamicMotorcycleCount: 0,
+            dynamicMaintenanceCount: 0,
+            dynamicTotalSpendsCount: 0,
+
+            // === Chart data ===
+            costChartData: [],
+            countChartData: [],
+
+            // === Other vars ===
+            welcomeDropdownActive: false,
+        }
+    },
+
+    computed: {
+        pendingMaintenances() {
+            if (!this.maintenances) return []
+            return this.maintenances
+                .filter(m => m.status === 'overdue' || m.status === 'soon')
+                .slice(0, 2)
+        }
+    },
+
+    methods: {
+        async loadData() {
+            try {
+                this.loading = true
+                
+                // Загружаем основные данные
+                const dashboardResponse = await api.get('/statistic/dashboard-data')
+                
+                this.user = getUser()
+                this.motorcycles = dashboardResponse.data.motorcycles || []
+                this.maintenances = dashboardResponse.data.maintenance || []
+                this.motorcycleCount = dashboardResponse.data.motorcycles_count || 0
+                this.planMaintenanceCount = dashboardResponse.data.plan_maintenances_count || 0
+                this.maintenanceCount = dashboardResponse.data.maintenances_count || 0
+                this.totalSpends = dashboardResponse.data.total_spends || 0
+                
+                this.dynamicMotorcycleCount = dashboardResponse.data.new_motorcycles_count || 0
+                this.dynamicMaintenanceCount = dashboardResponse.data.month_maintenances_count || 0
+                this.dynamicTotalSpendsCount = dashboardResponse.data.spends_change_percent || 0
+                
+                this.pendingMaintenanceCount = this.maintenances
+                    .filter(m => m.status === 'overdue' || m.status === 'soon')
+                    .length
+
+                // Загружаем данные для графиков
+                const chartsResponse = await api.get('/statistic/dashboard-charts')
+                this.costChartData = chartsResponse.data.cost_chart || []
+                this.countChartData = chartsResponse.data.count_chart || []
+                
+            } catch(err) {
+                console.error('Failed to load dashboard data:', err)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        getMotorcycleName(motoId) {
+            const moto = this.motorcycles.find(m => m.id === motoId)
+            return moto ? moto.model || moto.name || `Мотоцикл #${motoId}` : `Мотоцикл #${motoId}`
+        },
+
+        async logout() {
+            try {
+                await api.post('/auth/logout');
+            } catch(err) {
+                console.error('Logout failed:', err);
+            } finally {
+                removeTokens();
+                this.$router.push('/login');
+            }
+        },
+    },
+
+    mounted() {
+        this.loadData()
+    }
+}
+</script>
 
 <style scoped>
 /*  === WELCOME SECTION ===  */
@@ -759,10 +469,14 @@ export default {
     margin-bottom: 8px;
 }
 
+.stat-meta.maintenance {
+    color: var(--warning);
+}
+
 @media (max-width: 728px) {
     .statistic-cards-grid {
-        grid-template-columns: repeat(1, 1fr);
-        grid-template-rows: repeat(4, 1fr);
+        grid-template-columns: repeat(1, 1fr) !important;
+        grid-template-rows: repeat(4, 1fr) !important;
     }
 
     .stat-card {
@@ -771,24 +485,41 @@ export default {
     }
 }
 
-/*  === MOTORCYCLE SECTION ===  */
-.motorcycle-section {
-    background-color: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 25px;
+@media (max-width: 1220px) {
+    .statistic-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
 
-    margin-bottom: 32px;
-    padding: 28px;
-}
-
-@media (max-width: 728px) {
-    .motorcycle-section {
-        padding: 16px;
+    .stat-card {
+        align-items: center;
+        justify-content: space-evenly;
     }
 }
 
 
 /* === CHART SECTION === */
+.charts-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+}
+
+@media (max-width: 768px) {
+    .charts-grid-wrapper {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 1220px) {
+    .charts-grid-wrapper {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
 .grid-sections-wrapper {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -803,6 +534,19 @@ export default {
     }
 }
 
+@media (max-width: 1220px) {
+    .grid-sections-wrapper {
+        grid-template-columns: repeat(1, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+    }
+
+    .stat-card {
+        align-items: center;
+        justify-content: space-evenly;
+    }
+}
+
+
 /*  === PENDING MAINTENANCE SECTION ===  */
 .pending-maintenance-section {
     background-color: var(--bg-secondary);
@@ -811,7 +555,7 @@ export default {
 
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: space-between;
 }
 
 .pending-maintenance-section h3 {

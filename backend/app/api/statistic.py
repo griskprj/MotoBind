@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import selectinload
+from datetime import datetime, timedelta
 
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
@@ -54,6 +55,27 @@ def get_data():
             maintenance:
               type: array
               description: Все плановые обслуживания с их статусами
+            motorcycles_count:
+              type: integer
+              description: Общее количество мотоциклов
+            plan_maintenances_count:
+              type: integer
+              description: Количество плановых обслуживаний
+            maintenances_count:
+              type: integer
+              description: Количество выполненных обслуживаний
+            total_spends:
+              type: integer
+              description: Общая сумма расходов
+            new_motorcycles_count:
+              type: integer
+              description: Количество новых мотоциклов за последний месяц
+            month_maintenances_count:
+              type: integer
+              description: Количество обслуживаний за последний месяц
+            spends_change_percent:
+              type: float
+              description: Изменение расходов в процентах за последний месяц
       401:
         description: Не авторизован
       404:
@@ -62,46 +84,172 @@ def get_data():
 
     user = User.query.options(
       selectinload(User.motorcycles)
-      .selectinload(Motorcycle.planned_maintenances)
+      .selectinload(Motorcycle.planned_maintenances),
+      selectinload(User.motorcycles)
+      .selectinload(Motorcycle.maintenances)
     ).get(get_jwt_identity())
 
     if not user:
       raise NotFoundError("Пользователь не найден")
 
+    now = datetime.now()
+    month_start = datetime(now.year, now.month, 1)
+    prev_month_start = datetime(now.year - 1, now.month, 1) if now.month == 1 else datetime(now.year, now.month - 1, 1)
+    thirty_days_ago = now - timedelta(days=30)
+
     motorcycle_data = []
     all_planned_maintenances = []
+    total_spends = 0
+    maintenances_count = 0
+
+    new_motorcycles_count = 0
+    month_maintenances_count = 0
+    current_month_spends = 0
+    previous_month_spends = 0
 
     for motorcycle in user.motorcycles:
       planned_records = []
-      overdue_count = 0
 
+      if motorcycle.created_at and motorcycle.created_at >= month_start:
+        new_motorcycles_count += 1
+
+      count = 0
       for plan in motorcycle.planned_maintenances:
+        if count > 5: break
+        count += 1
         status = check_status(plan, motorcycle)
-        planned_records.append({
-          'id': plan.id,
-          'category': plan.category,
-          'moto_name': motorcycle.name,
-          'title': plan.title,
-          'planned_mileage': plan.planned_mileage,
-          'status': status
-        })
+        plan_data = plan.to_dict()
+        plan_data['status'] = status
+        planned_records.append(plan_data)
 
-        if status == 'overdue':
-          overdue_count += 1
-      
-      health = max(0, 100 - (overdue_count * 10))
+      count = 0
+      for maintenance in motorcycle.maintenances:
+        if count > 5: break
+        count += 1
+        if maintenance.cost:
+          total_spends += maintenance.cost
+          maintenances_count += 1
+
+          if maintenance.date and maintenance.date >= month_start:
+            current_month_spends += maintenance.cost
+            month_maintenances_count += 1
+
+          if maintenance.date and prev_month_start <= maintenance.date < month_start:
+            previous_month_spends += maintenance.cost
 
       moto_dict = motorcycle.to_dict()
-      moto_dict['health'] = round(health, 1)
       moto_dict['planned_maintenances'] = planned_records
-      
       motorcycle_data.append(moto_dict)
       all_planned_maintenances.extend(planned_records)
+
+    spends_change_percent = 0
+    if previous_month_spends > 0:
+       spends_change_percent = ((current_month_spends - previous_month_spends) / previous_month_spends) * 100
+    elif current_month_spends > 0:
+      spends_change_percent = 100
 
     return jsonify({
         'user': user.to_dict(),
         'motorcycles': motorcycle_data,
-        'maintenance': all_planned_maintenances
+        'maintenance': all_planned_maintenances,
+        'motorcycles_count': len(motorcycle_data),
+        'plan_maintenances_count': len(all_planned_maintenances),
+        'maintenances_count': maintenances_count,
+        'total_spends': total_spends,
+        'new_motorcycles_count': new_motorcycles_count,
+        'month_maintenances_count': month_maintenances_count,
+        'spends_change_percent': round(spends_change_percent, 1)
+    }), 200
+
+
+@statistic.route('/dashboard-charts')
+@jwt_required()
+def get_dashboard_charts():
+    """
+    Получить данные для графиков на дашборде
+    ---
+    tags:
+      - Statistic
+    summary: Данные для графиков дашборда
+    description: Возвращает данные для графиков затрат и частоты обслуживаний за последние 12 месяцев
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Данные успешно получены
+        schema:
+          type: object
+          properties:
+            cost_chart:
+              type: array
+              description: Данные для графика затрат
+              items:
+                type: object
+                properties:
+                  month: {type: string, example: "Янв 2026"}
+                  value: {type: integer, example: 15000}
+            count_chart:
+              type: array
+              description: Данные для графика частоты обслуживаний
+              items:
+                type: object
+                properties:
+                  month: {type: string, example: "Янв 2026"}
+                  value: {type: integer, example: 5}
+      401:
+        description: Не авторизован
+      404:
+        description: Пользователь не найден
+    """
+    user = User.query.options(
+        selectinload(User.motorcycles)
+        .selectinload(Motorcycle.maintenances)
+    ).get(get_jwt_identity())
+
+    if not user:
+        raise NotFoundError("Пользователь не найден")
+
+    now = datetime.now()
+    cost_data = []
+    count_data = []
+    
+    month_names = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 
+                   'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
+
+    for i in range(11, -1, -1):
+        month_date = now.replace(day=1) - timedelta(days=i*30)
+        month_start = datetime(month_date.year, month_date.month, 1)
+        
+        if month_date.month == 12:
+            month_end = datetime(month_date.year + 1, 1, 1)
+        else:
+            month_end = datetime(month_date.year, month_date.month + 1, 1)
+
+        month_cost = 0
+        month_count = 0
+
+        for motorcycle in user.motorcycles:
+            for maintenance in motorcycle.maintenances:
+                if maintenance.date and month_start <= maintenance.date < month_end:
+                    if maintenance.cost:
+                        month_cost += maintenance.cost
+                    month_count += 1
+
+        month_label = f"{month_names[month_date.month - 1]} {month_date.year}"
+        
+        cost_data.append({
+            'month': month_label,
+            'value': month_cost
+        })
+
+        count_data.append({
+            'month': month_label,
+            'value': month_count
+        })
+
+    return jsonify({
+        'cost_chart': cost_data,
+        'count_chart': count_data
     }), 200
 
 

@@ -1,12 +1,7 @@
-from flask import Blueprint, jsonify, request, current_app, send_from_directory
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime, timezone
-from app.extensions import db
 from app.models.user import User
-from app.models.motorcycle import Motorcycle
-from app.models.maintenance_node import MaintenanceNode
-from app.utils.files import allowed_file, save_moto_photo
-from app.exceptions import BusinessLogicError, ValidationError, ConflictError, NotFoundError, UnauthorizedError, ForbiddenError
+from app.exceptions import ValidationError, NotFoundError
 from app.schemas.motorcycle import CreateMotorcycleSchema, UpdateMotorcycleSchema
 from app.services.motorcycle_service import MotorcycleService
 
