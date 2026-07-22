@@ -56,6 +56,15 @@ def get_event(event_id):
     event = EventService.get_event_by_id(event_id)
     return jsonify(event.to_dict(include_subscriptions=True)), 200
 
+@event.route('/', methods=['GET'])
+@jwt_required()
+def get_all_events():
+    """
+    Возвращает все мероприятия
+    """
+    events = EventService.get_all_events()
+    return jsonify(events), 200
+
 @event.route('/<int:event_id>', methods=['DELETE'])
 @jwt_required()
 def delete_event(event_id):

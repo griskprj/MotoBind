@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from app.models.event import Event
 from app.models.user import User
 from app.extensions import db
@@ -117,3 +117,13 @@ class EventService:
             raise NotFoundError("Мероприятие не найдено")
         
         return event
+    
+    @staticmethod
+    def get_all_events() -> List[Event]:
+        """ Возвращает все мероприятия """
+        events = Event.query.limit(10).all()
+        events_data = []
+        for event in events:
+            events_data.append(event.to_dict(include_subscriptions=False))
+
+        return events_data
