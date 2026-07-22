@@ -8,12 +8,8 @@ export default {
         }
     },
     computed: {
-        // Вычисляем процент выполнения (например, для пробега)
         progressPercent() {
-            // Если нет данных о плановом пробеге, возвращаем 0 или дефолтное значение
             if (!this.maintenance.planned_mileage) return 0;
-            // Примерная логика: берем текущий пробег (если есть) или рандом для демо
-            // В твоем API должно быть поле "current_mileage" или аналоги.
             const current = this.maintenance.current_mileage || 7500; 
             const planned = this.maintenance.planned_mileage;
             // Не даем проценту уйти за 100%
@@ -25,12 +21,10 @@ export default {
 
 <template>
     <div class="maintenance-card">
-        <!-- Левая часть: Иконка (вместо картинки, как на скрине) -->
         <div class="card-icon">
             <i class="fa fa-motorcycle"></i>
         </div>
 
-        <!-- Средняя часть: Инфо и прогресс -->
         <div class="card-info">
             <div class="info-header">
                 <span class="moto-name">{{ maintenance.moto_name || 'Мотоцикл' }}</span>
@@ -40,15 +34,12 @@ export default {
             
             <div class="info-progress">
                 <div class="progress-track">
-                    <!-- Если передается текущий пробег, красим линию -->
                     <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
                 </div>
-                <!-- Вместо хардкода можно вывести current / planned -->
                 <span class="progress-text">{{ maintenance.current_mileage || 7500 }} / {{ maintenance.planned_mileage || 10000 }} км</span>
             </div>
         </div>
 
-        <!-- Правая часть: Стрелка перехода -->
         <div class="card-action">
             <i class="fa fa-chevron-right"></i>
         </div>
