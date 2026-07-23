@@ -114,7 +114,8 @@
                         :key="maintenance.id"
                         :maintenance="{
                             ...maintenance,
-                            moto_name: getMotorcycleName(maintenance.moto_id)
+                            moto_name: getMotorcycleName(maintenance.moto_id),
+                            moto_mileage: getMotorcycleMileage(maintenance.moto_id)
                         }"
                     />
                 </div>
@@ -256,7 +257,12 @@ export default {
 
         getMotorcycleName(motoId) {
             const moto = this.motorcycles.find(m => m.id === motoId)
-            return moto ? moto.model || moto.name || `Мотоцикл #${motoId}` : `Мотоцикл #${motoId}`
+            return moto ? moto.name : `Мотоцикл #${motoId}`
+        },
+
+        getMotorcycleMileage(motoId) {
+            const moto = this.motorcycles.find(m => m.id === motoId)
+            return moto ? moto.mileage : '0'
         },
 
         // === Event formatting methods ===

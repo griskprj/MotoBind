@@ -15,6 +15,7 @@ class Motorcycle(db.Model):
     color = db.Column(db.String(16), default='#FFFFFF')
     license_plate = db.Column(db.String(10))
     vin = db.Column(db.String(64))
+    note = db.Column(db.Text)
     photo_url = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -34,6 +35,7 @@ class Motorcycle(db.Model):
             'mileage': self.mileage,
             'color': self.color,
             'license_plate': self.license_plate,
+            'note': self.note,
             'vin': self.vin,
             'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if self.created_at else None,

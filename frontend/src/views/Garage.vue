@@ -1,284 +1,56 @@
 <script>
-import MaintenanceCostChart from '../components/charts/MaintenanceCostChart.vue';
-import MaintenanceCountChart from '../components/charts/MaintenanceCountChart.vue';
-import MaintenanceNodeCard from '../components/maintenance/MaintenanceNodeCard.vue'
-import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
-import MotoCard from '../components/moto/MotoCard.vue';
-
-import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
-import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue';
-import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMaintenanceModal.vue';
-import EditPlanMaintenanceModal from '../components/modals/maintenance/EditPlanMaintenanceModal.vue';
-import DeletePlanMaintenanceModal from '../components/modals/maintenance/DeletePlanMaintenanceModal.vue';
-import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
-
+import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
 import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
+import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
+import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
 
 import api from '../api/api.js'
 
 export default {
     components: {
+        AddMotoModal,
         EditMotoModal,
         DeleteMotoModal,
+        UpdateMileageModal,
+        EditMotoNoteModal
     },
 
     data() {
         return {
-            maintenances_count: 0,
-            plan_maintenances_count: 0,
-            total_maintenances: 0,
-            month_maintenances: 0,
-            all_cost: 0,
-            total_cost: 0,
-            max_cost: 0,
-            average_cost: 0,
+            // --- motorcycle ---
             motorcycles: [],
-            selectedMoto:null,
-            motoData: null,
-            nodes: [],
-            plannedMaintenances: [],
-            selectedMaintenance: null,
-            selectedDeleteMaintenanceId: null,
-            markPlanMaintenanceId: null,
-            money_chart_data: [],
-            freq_chart_data: [],
-            loading: false,
+            motorcycle: null,
+            selectedMotoId: null,
+            nextMaintenance: null,
 
-            showUpdateMileageModal: false,
+            welcomeDropdownActive: false,
+
+            // --- modals ---
+            showAddMotoModal: false,
             showEditMotoModal: false,
             showDeleteMotoModal: false,
-            showAddMaintenanceModal: false,
-            showPlanMaintenanceModal: false,
-            showEditPlanMaintenanceModal: false,
-            showMarkPlanMaintenanceModal: false,
-            showDeletePlanMaintenanceModal: false,
-            activeNodeIndex: 0,
-            showNodeMaintenances: true,
-            welcomeDropdownActive: false,
-        }
-    },
-
-    computed: {
-        activeNode() {
-            return this.nodes[this.activeNodeIndex] || null;
-        },
-        healthColor() {
-            if (!this.activeNode) return 'var(--health-green, #4CAF50)';
-            const health = this.activeNode.health;
-            if (health >= 80) return 'var(--health-green, #4CAF50)';
-            if (health >= 50) return 'var(--health-yellow, #FFC107)';
-            return 'var(--health-red, #F44336)';
-        },
-        filteredNodes() {
-            return this.activeNode ? [this.activeNode] : [];
+            showUpdateMotoMileageModal: false,
+            showEditMotoNoteModal: false
         }
     },
 
     methods: {
         async loadData() {
             try {
-                const response = await api.get('/statistic/garage')
-                this.maintenances_count = response.data.maintenances_count
-                this.plan_maintenances_count = response.data.plan_maintenances_count
-                this.motorcycles = response.data.motorcycles
-                this.all_cost = response.data.cost
+                const motorcycleResponse = await api.get('/motorcycle/')
+                this.motorcycles = motorcycleResponse.data
+                this.motorcycle = motorcycleResponse.data[0]
             } catch (err) {
                 console.error(err)
             }
         },
-        async getMotoData() {
-            try {
-                this.loading = true
-                const response = await api.get(`/statistic/garage/${this.selectedMoto}`)
-                this.motoData = response.data.motorcycle
-                this.nodes = response.data.nodes
-                this.plannedMaintenances = response.data.planned_maintenances
-                this.total_cost = response.data.total_cost
-                this.max_cost = response.data.max_cost
-                this.average_cost = response.data.average_cost
-                this.money_chart_data = response.data.money_chart_data
-                this.total_maintenances = response.data.total_maintenances
-                this.month_maintenances = response.data.month_maintenances
-                this.freq_chart_data = response.data.freq_chart_data
-                this.activeNodeIndex = 0
-                this.showNodeMaintenances = true
-            } catch (err) {
-                console.error(err)
-            } finally {
-                this.loading = false
-            }
+
+        changeMoto(motoId) {
+            this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
+            this.selectedMotoColor = this.motorcycle.color
         },
-        async updateMotoMileage(formData) {
-            try {
-                this.loading = true
-                const response = await api.patch(`/motorcycle/${formData.id}`, { newMileage: formData.newMileage })
-                const updatedMoto = response.data
-                if (this.motoData && this.motoData.id === formData.id) {
-                    this.motoData.mileage = updatedMoto.mileage
-                }
-                const motoIndex = this.motorcycles.findIndex(m => m.id === formData.id)
-                if (motoIndex !== -1) {
-                    this.motorcycles[motoIndex].mileage = updatedMoto.mileage
-                }
-                this.showUpdateMileageModal = false
-                alert(`Пробег обновлен до ${updatedMoto.mileage} км`)
-            } catch(err) {
-                console.error('Failed update moto mileage', err)
-            } finally {
-                this.loading = false
-            }
-        },
-        async updateMoto(formData) {
-            try {
-                this.loading = true
-                const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                if (index !== -1) this.motorcycles[index] = data
-                this.motoData = data
-                this.showEditMotoModal = false
-                alert("Мотоцикл обновлен")
-            } catch (err) {
-                console.error(`Failed update moto: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async deleteMoto() {
-            try {
-                this.loading = true
-                await api.delete(`/motorcycle/${this.selectedMoto}`)
-                alert("Мотоцикл удален")
-                this.$router.push('/home')
-            } catch (err) {
-                console.error(`Failed delete moto: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async addMaintenance(formData) {
-            try {
-                this.loading = true
-                await api.post('/maintenance/create-new', formData)
-                this.loadData()
-                this.showAddMaintenanceModal = false
-                alert("Обслуживание добавлено в историю")
-            } catch (err) {
-                console.error(`Failed add maintenance: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async addPlanMaintenance(formData) {
-            try {
-                this.loading = true
-                await api.post('/maintenance/plan', formData)
-                this.loadData()
-                this.showPlanMaintenanceModal = false
-                alert("Обслуживание запланированно")
-            } catch (err) {
-                console.error(`Failed plan maintenance: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async editPlanMaintenance(formData) {
-            try {
-                this.loading = true
-                const { data } = await api.put(`/maintenance/plan`, formData)
-                const maintenanceIndex = this.plannedMaintenances.findIndex(m => m.id === formData.maintenanceId)
-                if (maintenanceIndex !== -1) this.plannedMaintenances[maintenanceIndex] = data
-                this.closeEditPlanMaintenanceModal()
-                this.loadData()
-                alert(`Обслуживание обновлено`)
-            } catch (err) {
-                console.error(`Failed update plan maintenance: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async deletePlanMaintenance(maintenenceId) {
-            try {
-                this.loading = true
-                await api.delete(`/maintenance/plan/${maintenenceId}`)
-                const maintnenanceIndex = this.plannedMaintenances.findIndex(m => m.id === maintenenceId)
-                if (maintnenanceIndex !== -1) this.plannedMaintenances.splice(maintnenanceIndex, 1)
-                this.showDeletePlanMaintenanceModal = false
-                this.selectedDeleteMaintenanceId = null
-                this.loadData()
-                alert("Обслуживание удалено!")
-            } catch (err) {
-                console.error(`Failed delete plan maintenance: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        async markPlanMaintenance(formData) {
-            try {
-                this.loading = true
-                await api.post(`/maintenance/plan/mark`, formData)
-                this.loadData()
-                this.showMarkPlanMaintenanceModal = false
-                alert("Обслуживание отмечено выполненным")
-            } catch (err) {
-                console.error(`Failed mark plan maintenance: ${err}`)
-            } finally {
-                this.loading = false
-            }
-        },
-        removeMotoData() {
-            this.motoData = null
-            this.nodes = []
-            this.activeNodeIndex = 0
-        },
-        selectNode(index) {
-            this.activeNodeIndex = index
-            this.showNodeMaintenances = true
-        },
-        prevNode() {
-            if (this.activeNodeIndex > 0) {
-                this.activeNodeIndex--
-                this.showNodeMaintenances = true
-            }
-        },
-        nextNode() {
-            if (this.activeNodeIndex < this.nodes.length - 1) {
-                this.activeNodeIndex++
-                this.showNodeMaintenances = true
-            }
-        },
-        toggleNodeMaintenances() {
-            this.showNodeMaintenances = !this.showNodeMaintenances
-        },
-        openUpdateMileageModal() { this.showUpdateMileageModal = true },
-        openEditMotoModal() { this.showEditMotoModal = true },
-        openDeleteMotoModal() { this.showDeleteMotoModal = true },
-        openAddMaintenanceModal() { this.showAddMaintenanceModal = true },
-        openPlanMaintenanceModal() { this.showPlanMaintenanceModal = true },
-        openEditPlanMaintenanceModal(maintenance) {
-            this.selectedMaintenance = maintenance
-            this.showEditPlanMaintenanceModal = true
-        },
-        closeEditPlanMaintenanceModal() {
-            this.showEditPlanMaintenanceModal = false
-            this.selectedMaintenance = null
-        },
-        openDeletePlanMaintenanceModal(maintenanceId) {
-            this.selectedDeleteMaintenanceId = maintenanceId
-            this.showDeletePlanMaintenanceModal = true
-        },
-        closeDeletePlanMaintenanceModal() {
-            this.showDeletePlanMaintenanceModal = false
-            this.selectedDeleteMaintenanceId = null
-        },
-        openMarkPlanMaintenance(maintenanceId) {
-            this.markPlanMaintenanceId = maintenanceId
-            this.showMarkPlanMaintenanceModal = true
-        },
-        closeMarkPlanMaintenance() {
-            this.markPlanMaintenanceId = null
-            this.showMarkPlanMaintenanceModal = false
-        },
+
         async logout() {
             try {
                 await api.post('/auth/logout');
@@ -288,6 +60,187 @@ export default {
                 removeTokens();
                 this.$router.push('/login');
             }
+        },
+
+
+        // === MOTORCYCLE ===
+        async addMoto(formData) {
+            try {
+                this.loadData()
+
+                const { data } = await api.post('/motorcycle/', formData)
+
+                this.motorcycles.push(data)
+                this.showAddMotoModal = false
+
+                alert('Мотоцикл добавлен!')
+            } catch(err) {
+                console.error('Failed add moto:', err)
+            }
+        },
+
+        async updateMoto(formData) {
+            try {
+                this.loading = true
+                const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
+                const index = this.motorcycles.findIndex(m => m.id === formData.id)
+                if (index !== -1) this.motorcycles[index] = data
+                this.motorcycle = data
+                this.showEditMotoModal = false
+                alert("Мотоцикл обновлен")
+            } catch (err) {
+                console.error(`Failed update moto: ${err}`)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async updateMotoMileage (formData) {
+            try {
+                const { data } = await api.patch(`motorcycle/${formData.id}`, formData)
+
+                const index = this.motorcycles.findIndex(m => m.id === formData.id)
+                if (index !== -1) {
+                    this.motorcycles[index] = data
+                }
+
+                this.motorcycle = data
+
+                this.showUpdateMotoMileageModal = false
+                alert('Пробег мотоцикла обновлен!')
+            } catch(err) {
+                console.error('Failed update moto mileage', err)
+            }
+        },
+
+        async updateMotoNote(formData) {
+            try {
+                const { data } = await api.patch(`/motorcycle/${formData.id}/note`, formData)
+                
+                const index = this.motorcycles.findIndex(m => m.id === formData.id)
+                if (index !== -1) {
+                    this.motorcycles[index] = data
+                }
+
+                this.motorcycle = data
+
+                this.showEditMotoNoteModal = false
+            } catch(err) {
+                console.error('Failed update moto mileage', err)
+            }
+        },
+
+        async deleteMoto(motoId) {
+            try {
+                await api.delete(`/motorcycle/${motoId}`)
+
+                const index = this.motorcycles.findIndex(m => m.id === motoId)
+                if (index !== -1) {
+                    this.motorcycles.splice(index, 1)
+                }
+
+                if (this.motorcycles.length > 0) {
+                    this.motorcycle = this.motorcycles[0];
+                } else {
+                    this.motorcycle = null;
+                }
+                this.showDeleteMotoModal = false;
+                alert("Мотоцикл удален");
+            } catch (err) {
+                console.error(`Failed delete moto: ${err}`);
+                alert("Ошибка при удалении мотоцикла");
+            } finally {
+                this.loading = false;
+            }
+        }
+    },
+
+    computed: {
+        formatDate(dateString) {
+            return (dateString) => {
+                if (!dateString) return '--';
+                
+                try {
+                    if (dateString instanceof Date) {
+                        return dateString.toLocaleDateString('ru-RU', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    }
+                    
+                    const date = new Date(dateString);
+                    
+                    if (isNaN(date.getTime())) {
+                        return '--';
+                    }
+                    
+                    return date.toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                } catch (error) {
+                    console.error('Error formatting date:', dateString, error);
+                    return '--';
+                }
+            };
+        },
+
+        nextMaintenance() {
+            if (!this.motorcycle || !this.motorcycle.planned_maintenances || this.motorcycle.planned_maintenances.length === 0) {
+                return null;
+            }
+
+            const currentMileage = this.motorcycle.mileage || 0;
+            
+            const upcomingMaintenances = this.motorcycle.planned_maintenances
+                .filter(m => m.planned_mileage && m.planned_mileage > currentMileage)
+                .sort((a, b) => a.planned_mileage - b.planned_mileage);
+
+            const overdueMaintenances = this.motorcycle.planned_maintenances
+                .filter(m => m.planned_mileage && m.planned_mileage <= currentMileage)
+                .sort((a, b) => a.planned_mileage - b.planned_mileage);
+
+            if (overdueMaintenances.length > 0) {
+                const overdue = overdueMaintenances[0];
+                const distanceOverdue = currentMileage - overdue.planned_mileage;
+                
+                return {
+                    ...overdue,
+                    distanceOverdue: distanceOverdue,
+                    planned_mileage: overdue.planned_mileage,
+                    isOverdue: true
+                };
+            }
+
+            if (upcomingMaintenances.length > 0) {
+                const next = upcomingMaintenances[0];
+                const distanceToNext = next.planned_mileage - currentMileage;
+                
+                return {
+                    ...next,
+                    distanceToNext: distanceToNext,
+                    planned_mileage: next.planned_mileage,
+                    isOverdue: false
+                };
+            }
+
+            return null;
+        },
+
+        maintenanceSpends() {
+            if (!this.motorcycle || !this.motorcycle.maintenances) {
+                return 0;
+            }
+            return this.motorcycle.maintenances.reduce((sum, item) => sum + (item.cost || 0), 0);
+        },
+
+        maintenanceSpends() {
+            if (!this.motorcycle || !this.motorcycle.maintenances) {
+                return 0;
+            }
+            return this.motorcycle.maintenances.reduce((sum, item) => sum + item.cost, 0);
         },
     },
 
@@ -304,8 +257,8 @@ export default {
             <div class="header-left">
                 <h2>Гараж</h2>
                 <div class="header-tabs">
-                    <button class="tab-btn active">Мои мотоциклы</button>
-                    <button class="tab-btn outline">Добавить мотоцикл</button>
+                    <button class="tab-btn active" disabled>Мои мотоциклы</button>
+                    <button @click="showAddMotoModal = true" class="tab-btn outline">Добавить мотоцикл</button>
                 </div>
             </div>
 
@@ -330,32 +283,20 @@ export default {
         <!-- === MOTORCYCLE SELECTOR (SCROLLABLE) === -->
         <section class="moto-selector-wrapper">
             <div class="moto-scroll-container">
-                <div class="moto-card active">
+                <div @click="changeMoto(moto.id)" class="moto-card"
+                    v-for="moto in motorcycles"
+                    :key="moto.id"
+                    :class="motorcycle?.id === moto.id ? 'active' : ''"
+                >
                     <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
                     <div class="moto-card-info">
-                        <div class="moto-name">BMW s1000rr</div>
-                        <div class="moto-meta">2020 • 7 500 км</div>
+                        <div class="moto-name">{{ moto.name }}</div>
+                        <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
                     </div>
-                    <div class="moto-active-badge"><i class="fa fa-check"></i></div>
+                    <div v-if="motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
                 </div>
                 
-                <div class="moto-card">
-                    <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
-                    <div class="moto-card-info">
-                        <div class="moto-name">Yamaha R6</div>
-                        <div class="moto-meta">2018 • 14 200 км</div>
-                    </div>
-                </div>
-
-                <div class="moto-card">
-                    <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
-                    <div class="moto-card-info">
-                        <div class="moto-name">Kawasaki ZX-6R</div>
-                        <div class="moto-meta">2019 • 8 100 км</div>
-                    </div>
-                </div>
-
-                <div class="moto-card add-card">
+                <div @click="showAddMotoModal = true" class="moto-card add-card">
                     <i class="fa fa-plus"></i>
                     <span>Добавить</span>
                 </div>
@@ -363,31 +304,35 @@ export default {
         </section>
 
         <!-- === MAIN GRID (2 Columns) === -->
-        <div class="main-grid">
+        <div v-if="motorcycle" class="main-grid">
             <!-- LEFT COLUMN: Moto Info -->
             <aside class="moto-details-col">
                 <div class="big-moto-card">
                     <div class="big-card-header">
-                        <span class="big-title">BMW S1000RR</span>
-                        <button class="icon-btn"><i class="fa fa-pen"></i></button>
+                        <span class="big-title">{{ motorcycle.name }}</span>
+                    </div>
+                    <div class="big-card-header-actions">
+                        <button @click="showEditMotoModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
+                        <button @click="showDeleteMotoModal = true" class="icon-btn"><i class="fa fa-trash"></i></button>
+                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn"><i class="fa fa-tachometer"></i></button>
                     </div>
                     <div class="big-card-img">
-                        <img src="../../public/bmw1000.webp" alt="Фото">
+                        <img src="../../public/moto_default.jpg" alt="Фото">
                     </div>
                     <div class="big-card-grid">
-                        <div class="spec-item"><span class="label">Год выпуска</span><span class="value">2020</span></div>
-                        <div class="spec-item"><span class="label">Двигатель</span><span class="value">999 см³</span></div>
-                        <div class="spec-item"><span class="label">Пробег</span><span class="value">20 700 км</span></div>
-                        <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" style="background:#fff990;"></div></div>
-                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">WB10D01033LZR12345</span></div>
-                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">0123AB23</span></div>
+                        <div class="spec-item"><span class="label">Год выпуска</span><span class="value">{{ motorcycle.years }}</span></div>
+                        <div class="spec-item"><span class="label">Двигатель</span><span class="value">{{ motorcycle.volume }} см³</span></div>
+                        <div class="spec-item"><span class="label">Пробег</span><span class="value">{{ motorcycle.mileage }} км</span></div>
+                        <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" :style="{ 'background': motorcycle.color }"></div></div>
+                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '--' }}</span></div>
+                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '--' }}</span></div>
                     </div>
                     <div class="notes-block">
                         <div class="notes-header">
                             <span>Заметки</span>
-                            <button class="icon-btn"><i class="fa fa-pen"></i></button>
+                            <button @click="showEditMotoNoteModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
                         </div>
-                        <p class="notes-text">Мотоцикл пригнан из Германии в 2023 году. Отличное состояние</p>
+                        <p class="notes-text">{{ motorcycle.note }}</p>
                     </div>
                 </div>
             </aside>
@@ -398,19 +343,32 @@ export default {
                 <div class="stats-grid-4">
                     <div class="stat-box">
                         <div class="stat-head"><i class="fa fa-tachometer"></i> Пробег</div>
-                        <div class="stat-val">7 500 км</div>
+                        <div class="stat-val">{{ motorcycle.mileage }} км</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-head"><i class="fa fa-wrench"></i> Обслуживаний</div>
-                        <div class="stat-val">12</div>
+                        <div class="stat-val">{{ motorcycle.maintenances?.length || 0 }}</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-head"><i class="fa fa-calendar"></i> До следующего ТО</div>
-                        <div class="stat-val">1 250 км</div>
+                        <div class="stat-val">
+                            <span v-if="nextMaintenance">
+                                <span v-if="nextMaintenance.isOverdue" style="color: #ef4444;">
+                                    Просрочено на {{ nextMaintenance.distanceOverdue }} км
+                                </span>
+                                <span v-else>
+                                    {{ nextMaintenance.distanceToNext }} км
+                                </span>
+                                <small style="font-size: 12px; color: var(--text-muted); display: block; font-weight: 400;">
+                                    ({{ nextMaintenance.title || 'ТО' }})
+                                </small>
+                            </span>
+                            <span v-else style="font-size: 18px;">Все ТО выполнены</span>
+                        </div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-head"><i class="fa fa-ruble"></i> Общие расходы</div>
-                        <div class="stat-val">86 320 ₽</div>
+                        <div class="stat-val">{{ maintenanceSpends }} ₽</div>
                     </div>
                 </div>
 
@@ -425,48 +383,20 @@ export default {
                         <span class="th"></span>
                     </div>
                     <div class="table-body">
-                        <!-- Row 1 -->
-                        <div class="tr">
+                        <div class="tr"
+                            v-for="maintenance in motorcycle.maintenances || []"
+                            :key="maintenance.id"
+                        >
                             <div class="td date-cell">
                                 <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
-                                <span>12 мая 2025</span>
+                                <span>{{ formatDate(maintenance.date) }}</span>
                             </div>
                             <div class="td service-cell">
-                                <div class="s-title">Замена масла</div>
-                                <div class="s-desc">Масло Motul 7100, масляный фильтр</div>
+                                <div class="s-title">{{ maintenance.title }}</div>
+                                <div class="s-desc">{{ maintenance.description }}</div>
                             </div>
-                            <div class="td">7 500 км</div>
-                            <div class="td">4 250 ₽</div>
-                            <div class="td"><span class="badge-green">Выполнено</span></div>
-                            <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
-                        </div>
-                        <!-- Row 2 -->
-                        <div class="tr">
-                            <div class="td date-cell">
-                                <div class="icon-square green"><i class="fa fa-trash"></i></div>
-                                <span>08 апр 2025</span>
-                            </div>
-                            <div class="td service-cell">
-                                <div class="s-title">Замена воздушного фильтра</div>
-                                <div class="s-desc">Воздушный фильтр K&N</div>
-                            </div>
-                            <div class="td">6 850 км</div>
-                            <div class="td">2 350 ₽</div>
-                            <div class="td"><span class="badge-green">Выполнено</span></div>
-                            <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
-                        </div>
-                        <!-- Row 3 -->
-                        <div class="tr">
-                            <div class="td date-cell">
-                                <div class="icon-square blue"><i class="fa fa-shield-alt"></i></div>
-                                <span>15 мар 2025</span>
-                            </div>
-                            <div class="td service-cell">
-                                <div class="s-title">Замена передних колодок</div>
-                                <div class="s-desc">Тормозные колодки Brembo</div>
-                            </div>
-                            <div class="td">6 300 км</div>
-                            <div class="td">6 800 ₽</div>
+                            <div class="td">{{ maintenance.mileage }} км</div>
+                            <div class="td">{{ maintenance.cost }} ₽</div>
                             <div class="td"><span class="badge-green">Выполнено</span></div>
                             <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
                         </div>
@@ -479,9 +409,39 @@ export default {
         </div>
     </div>
 
-    <!-- Modals (оставляем без изменений) -->
-    <EditMotoModal :isOpen="showEditMotoModal" :motorcycle="motoData" @submit="updateMoto" @close="showEditMotoModal=false" />
-    <DeleteMotoModal :isOpen="showDeleteMotoModal" :motoId="selectedMoto" @submit="deleteMoto" @close="showDeleteMotoModal=false" />
+    <AddMotoModal
+        :isOpen="showAddMotoModal"
+        @submit="addMoto"
+        @close="showAddMotoModal = false"
+    />
+
+    <EditMotoModal 
+        :isOpen="showEditMotoModal" 
+        :motorcycle="motorcycle"
+        @submit="updateMoto" 
+        @close="showEditMotoModal=false"
+    />
+
+    <UpdateMileageModal
+        :isOpen="showUpdateMotoMileageModal"
+        :motorcycle="motorcycle"
+        @submit="updateMotoMileage"
+        @close="showUpdateMotoMileageModal = false"
+    />
+
+    <EditMotoNoteModal
+        :isOpen="showEditMotoNoteModal"
+        :motorcycle="motorcycle"
+        @submit="updateMotoNote"
+        @close="showEditMotoNoteModal = false"
+    />
+
+    <DeleteMotoModal 
+        :isOpen="showDeleteMotoModal" 
+        :motorcycle="motorcycle" 
+        @submit="deleteMoto" 
+        @close="showDeleteMotoModal = false" 
+    />
 </template>
 
 <style scoped>
@@ -695,6 +655,11 @@ export default {
 .big-title {
     font-size: 20px;
     font-weight: 600;
+}
+.big-card-header-actions {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
 }
 .icon-btn {
     background: rgba(255,255,255,0.05);

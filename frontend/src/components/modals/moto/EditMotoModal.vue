@@ -2,41 +2,49 @@
     <ModalWrapper
         :is-open="isOpen"
         title="Редактировать мотоцикл"
+        icon="pen"
         @close="$emit('close')"
-    >
+    >   
+        <div class="inputs-group">
+            <label>
+                Название *
+                <input v-model="form.name" type="text" class="modal-input" required>
+            </label>
+            
+            <div class="inputs-wrapper">
+                <label>
+                    Объем
+                    <input v-model="form.volume" type="number" min="49" max="4000" class="modal-input">
+                </label>
+                <label>
+                    Пробег
+                    <input v-model="form.mileage" type="number" min="0" max="1000000" class="modal-input">
+                </label>
+            </div>
+            <div class="inputs-wrapper">
+                <label>
+                    Год выпуска
+                    <input v-model="form.years" type="number" min="1950" :max="currentYear" class="modal-input">
+                </label>
+                <label>
+                    Гос. номер
+                    <input v-model="form.licensePlate" type="text" min="8" max="9" class="modal-input">
+                </label>
+            </div>
+            <label>
+                VIN
+                <input v-model="form.vin" type="text" min="17" max="17" class="modal-input">
+            </label>
+            <label>
+                Цвет
+                <input v-model="form.color" type="color">
+            </label>
+        </div>
         <input v-model="form.id" type="hidden">
-        <label>
-            Название *
-            <input v-model="form.name" type="text" class="modal-input" required>
-        </label>
-        <label>
-            Объем
-            <input v-model="form.volume" type="number" min="49" max="4000" class="modal-input">
-        </label>
-        <label>
-            Пробег
-            <input v-model="form.mileage" type="number" min="0" max="1000000" class="modal-input">
-        </label>
-        <label>
-            Год выпуска
-            <input v-model="form.years" type="number" min="1950" :max="currentYear" class="modal-input">
-        </label>
-        <label>
-            Гос. номер
-            <input v-model="form.licensePlate" type="text" min="8" max="9" class="modal-input">
-        </label>
-        <label>
-            VIN
-            <input v-model="form.vin" type="text" min="17" max="17" class="modal-input">
-        </label>
-        <label>
-            Цвет
-            <input v-model="form.color" type="color">
-        </label>
 
         <div class="modal-actions">
-            <button @click="submit" class="save-btn">Сохранить</button>
             <button @click="this.$emit('close')" class="cancel-btn">Отменить</button>
+            <button @click="submit" class="save-btn"><i class="fa fa-save""></i> Сохранить</button>
         </div>
     </ModalWrapper>
 </template>
@@ -127,3 +135,30 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.inputs-group {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.inputs-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    gap: 8px;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    gap: 8px;
+}
+
+.modal-actions button {
+    font-weight: 600;
+}
+</style>

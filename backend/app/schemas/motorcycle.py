@@ -10,8 +10,9 @@ class CreateMotorcycleSchema(BaseModel):
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
     color: Optional[str] = None
-    license_plate: Optional[str] = None
+    licensePlate: Optional[str] = None
     vin: Optional[str] = None
+    note: Optional[str] = Field(None, max_length=128)
 
     @field_validator('color')
     def validate_color(cls, v):
@@ -19,7 +20,7 @@ class CreateMotorcycleSchema(BaseModel):
             raise ValueError('Цвет должен быть в формате HEX (#FFFFFF)')
         return v
     
-    @field_validator('license_plate')
+    @field_validator('licensePlate')
     def validate_license_plate(cls, v):
         if v and not (8 <= len(v) <= 9):
             raise ValueError('Неверный формат ГОС номера')
@@ -37,8 +38,9 @@ class  UpdateMotorcycleSchema(BaseModel):
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
     color: Optional[str] = None
-    license_plate: Optional[str] = None
+    licensePlate: Optional[str] = None
     vin: Optional[str] = None
+    note: Optional[str] = Field(None, max_length=128)
 
     @field_validator('color')
     def validate_color(cls, v):
@@ -46,7 +48,7 @@ class  UpdateMotorcycleSchema(BaseModel):
             raise ValueError('Цвет должен быть в формате HEX (#FFFFFF)')
         return v
 
-    @field_validator('license_plate')
+    @field_validator('licensePlate')
     def validate_license_plate(cls, v):
         if v and not (8 <= len(v) <= 9):
             raise ValueError('Неверный формат ГОС номера')

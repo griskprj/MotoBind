@@ -9,7 +9,7 @@ from app.services.motorcycle_service import MotorcycleService
 motorcycle = Blueprint('motorcycle', __name__)
 
 
-@motorcycle.route('/my', methods=['GET'])
+@motorcycle.route('/', methods=['GET'])
 @jwt_required()
 def get_user_moto():
     """
@@ -64,12 +64,12 @@ def get_user_moto():
     if not user:
                 raise NotFoundError('Пользователь не найден')
     
-    motorcycles = MotorcycleService.get_motorcycle_by_id(current_user_id)
-    return jsonify([m.to_dict() for m in motorcycles]), 200
+    motorcycles = MotorcycleService.get_user_motorcycles(current_user_id)
+    return jsonify([m.to_dict(include_maintenance=True, include_planned_maintenance=True) for m in motorcycles]), 200
 
 
 
-@motorcycle.route('/new', methods=['POST'])
+@motorcycle.route('/', methods=['POST'])
 @jwt_required()
 def create_moto():
     """
@@ -153,7 +153,7 @@ def create_moto():
         volume=data.volume,
         mileage=data.mileage,
         color=data.color,
-        license_plate=data.license_plate,
+        license_plate=data.licensePlate,
         vin=data.vin
     )
 
@@ -254,7 +254,7 @@ def update_moto(moto_id):
         volume=data.volume,
         mileage=data.mileage,
         color=data.color,
-        license_plate=data.license_plate,
+        license_plate=data.licensePlate,
         vin=data.vin
     )
 
@@ -334,7 +334,25 @@ def update_moto_mileage(moto_id):
         mileage=new_mileage
     )
     
-    return jsonify(moto.to_dict()), 200
+    return jsonify(moto.to_dict(include_maintenance=True, include_planned_maintenance=True)), 200
+
+
+@motorcycle.route('/<int:moto_id>/note', methods=['PATCH'])
+@jwt_required()
+def update_note(moto_id):
+    """
+    Обновление заметок мотоцикла
+    """
+
+    data = request.get_json()
+    
+    moto = MotorcycleService.update_note(
+        moto_id=moto_id,
+        user_id=int(get_jwt_identity()),
+        note_text=data.get('note')
+    )
+
+    return jsonify(moto.to_dict(include_planned_maintenance=True, include_maintenance=True)), 200
 
 
 @motorcycle.route('/<int:moto_id>', methods=['DELETE'])

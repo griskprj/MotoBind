@@ -36,6 +36,7 @@ body {
   --accent-trans: rgba(138, 92, 246, 0.2);
   
   --danger: #EF4444;
+  --danger-trans: rgba(240, 69, 69, 0.2);
   --danger-hover: #DC2626;
   --success: #10B981;
   --success-hover: #10cb8d;
@@ -379,7 +380,7 @@ position: fixed;
     border-radius: 25px;
     border: 2px solid var(--border-color);
 
-    max-width: 400px;
+    max-width: 450px;
 }
 
 .modal-header {

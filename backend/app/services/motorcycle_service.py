@@ -39,6 +39,37 @@ class MotorcycleService:
         return motorcycle
     
     @staticmethod
+    def update_motorcycle(moto_id: int, user_id: int, **kwargs) -> Motorcycle:
+        """ Обновляет данные мотоцикла """
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+
+        for key, value in kwargs.items():
+            if hasattr(moto, key) and value is not None:
+                setattr(moto, key, value)
+
+        db.session.commit()
+
+        return moto
+    
+    @staticmethod
+    def update_note(moto_id:int, user_id: int, note_text: str) -> Motorcycle:
+        """ Обновляет заметки мотоцикла """
+        if len(note_text) > 128:
+            raise ValidationError("Длина заметок не более 128 символов")
+        
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id)
+        moto.note = note_text
+        db.session.commit()
+        return moto
+    
+    @staticmethod
+    def delete_motorcycle(moto_id: int, user_id: int) -> None:
+        """ Удаляет мотоцикл """
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        db.session.delete(moto)
+        db.session.commit()
+
+    @staticmethod
     def get_user_motorcycles(user_id: int) -> List[Motorcycle]:
         """ Получает все мотоциклы пользователя """
         return Motorcycle.query.filter_by(owner_id=user_id).all()
@@ -54,23 +85,3 @@ class MotorcycleService:
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
         return moto
-    
-    @staticmethod
-    def update_motorcycle(moto_id: int, user_id: int, **kwargs) -> Motorcycle:
-        """ Обновляет данные мотоцикла """
-        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
-
-        for key, value in kwargs.items():
-            if hasattr(moto, key) and value is not None:
-                setattr(moto, key, value)
-
-        db.session.commit()
-
-        return moto
-    
-    @staticmethod
-    def delete_motorcycle(moto_id: int, user_id: int) -> None:
-        """ Удаляет мотоцикл """
-        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
-        db.session.delete(moto)
-        db.session.commit()

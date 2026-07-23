@@ -5,14 +5,18 @@ export default {
             type: Object,
             default: null,
             required: true
+        },
+        motorcycle: {
+            type: Object,
+            default: null,
+            required: true
         }
     },
     computed: {
         progressPercent() {
             if (!this.maintenance.planned_mileage) return 0;
-            const current = this.maintenance.current_mileage || 7500; 
+            const current = this.maintenance.moto_mileage; 
             const planned = this.maintenance.planned_mileage;
-            // Не даем проценту уйти за 100%
             return Math.min((current / planned) * 100, 100);
         }
     }
@@ -28,7 +32,11 @@ export default {
         <div class="card-info">
             <div class="info-header">
                 <span class="moto-name">{{ maintenance.moto_name || 'Мотоцикл' }}</span>
-                <span class="distance-badge">через {{ maintenance.planned_mileage }} км</span>
+                <span v-if="maintenance.planned_mileage > maintenance.moto_mileage" class="distance-badge">
+                    через {{ maintenance.planned_mileage > maintenance.moto_mileage ? maintenance.planned_mileage - maintenance.
+                moto_mileage : '' }} км
+                </span>
+                <span v-else style="color: var(--warning)"><i class="fa fa-exclamation-triangle" style="margin-right: 10px;"></i> Пора обслужить</span>
             </div>
             <div class="info-desc">{{ maintenance.title || 'Обслуживание' }}</div>
             
@@ -36,7 +44,7 @@ export default {
                 <div class="progress-track">
                     <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
                 </div>
-                <span class="progress-text">{{ maintenance.current_mileage || 7500 }} / {{ maintenance.planned_mileage || 10000 }} км</span>
+                <span class="progress-text">{{ maintenance.moto_mileage || 7500 }} / {{ maintenance.planned_mileage || 10000 }} км</span>
             </div>
         </div>
 
