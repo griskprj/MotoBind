@@ -251,7 +251,7 @@ export default {
 </script>
 
 <template>
-    <div class="garage-container">
+    <div class="container">
         <!-- === HEADER === -->
         <header class="page-header">
             <div class="header-left">

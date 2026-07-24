@@ -42,9 +42,9 @@
                             <i class="fa fa-motorcycle"></i>
                             <span>Мотоциклов: {{ user.motorcycles?.length || 0 }}</span>
                         </div>
-                        <div class="user-status" :class="user.is_banned ? 'status-banned' : 'status-active'">
+                        <div class="user-status" :class="user.status === 'banned' ? 'status-banned' : 'status-active'">
                             <span class="status-dot"></span>
-                            {{ user.is_banned ? 'Заблокирован' : 'Активен' }}
+                            {{ user.status === 'banned' ? 'Заблокирован' : 'Активен' }}
                         </div>
                     </div>
 
@@ -52,10 +52,10 @@
                         <button class="btn-action btn-edit" title="Редактировать" @click="editUser(user)">
                             <i class="fa fa-pen"></i>
                         </button>
-                        <button class="btn-action" :class="user.is_banned ? 'btn-unban' : 'btn-ban'" 
-                                :title="user.is_banned ? 'Разблокировать' : 'Заблокировать'"
+                        <button class="btn-action" :class="user.status === 'banned' ? 'btn-unban' : 'btn-ban'" 
+                                :title="user.status === 'banned' ? 'Разблокировать' : 'Заблокировать'"
                                 @click="toggleBanUser(user)">
-                            <i :class="user.is_banned ? 'fa fa-check' : 'fa fa-ban'"></i>
+                            <i :class="user.status === 'banned' ? 'fa fa-check' : 'fa fa-ban'"></i>
                         </button>
                         <button class="btn-action btn-danger" title="Удалить" @click="deleteUser(user)">
                             <i class="fa fa-trash"></i>
@@ -292,7 +292,7 @@
 
                 <div class="stat-card">
                     <div class="stat-card-icon" style="border-color: var(--warning);">
-                        <i class="fa fa-clock-o" style="color: var(--warning);"></i>
+                        <i class="fa fa-clock" style="color: var(--warning);"></i>
                     </div>
                     <div class="stat-card-content">
                         <p class="stat-card-title">На проверке</p>
@@ -734,15 +734,15 @@ export default {
         },
 
         async toggleBanUser(user) {
-            const action = user.is_banned ? 'разблокировать' : 'заблокировать'
+            const action = user.status === 'banned' ? 'разблокировать' : 'заблокировать'
             if (!confirm(`Вы уверены, что хотите ${action} пользователя ${user.username}?`)) return
 
             try {
                 this.isLoading = true
-                const endpoint = user.is_banned ? `/admin/user/${user.id}/unban` : `/admin/user/${user.id}/ban`
+                const endpoint = user.status === 'banned' ? `/admin/user/${user.id}/unban` : `/admin/user/${user.id}/ban`
                 await api.post(endpoint)
                 await this.loadData()
-                this.showNotification(`Пользователь ${user.is_banned ? 'разблокирован' : 'заблокирован'}`, 'success')
+                this.showNotification(`Пользователь ${user.status === 'banned' ? 'разблокирован' : 'заблокирован'}`, 'success')
             } catch (err) {
                 console.error('Error toggling user ban:', err)
                 this.showNotification('Ошибка при изменении статуса пользователя', 'error')

@@ -55,7 +55,7 @@ class UpdatePlannedMaintenanceShema(BaseModel):
         }
     
 class MarkPlannedMaintenanceSchema(BaseModel):
-    planned_id: int = Field(..., alias='id')
+    id: int = Field(..., alias='id')
     mileage: int = Field(..., ge=0, le=1_000_000)
     date: Any = None
     cost: Optional[int] = Field(None, ge=0)

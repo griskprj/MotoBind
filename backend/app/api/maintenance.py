@@ -551,7 +551,7 @@ def mark_maintenance():
     current_user_id = int(get_jwt_identity())
 
     result = MaintenanceService.mark_planned_as_done(
-        planned_id=data.planned_id,
+        planned_id=data.id,
         author_id=current_user_id,
         mileage=data.mileage,
         date=data.date,

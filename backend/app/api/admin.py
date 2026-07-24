@@ -38,13 +38,12 @@ def dashboard_data():
         users_data.append(user.to_dict(include_moto=True))
         users_count += 1
 
-    manuals = Manual.query.filter_by(status='moderate').all()
+    manuals = Manual.query.all()
     manuals_count = 0
     manuals_data = []
     for manual in manuals:
         manuals_count += 1
-        if manual.status == 'moderate':
-            manuals_data.append(manual.to_dict())
+        manuals_data.append(manual.to_dict())
         
     motorcycles_count = len([m for m in Motorcycle.query.all()])
     

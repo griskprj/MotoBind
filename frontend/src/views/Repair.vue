@@ -1,117 +1,186 @@
 <template>
-    <div class="container">
-        <!-- Статистика -->
-        <div class="section">
-            <div class="section-title-wrapper">
-                <i class="fa fa-wrench"></i>
-                <h2>Отремонтируйте свой мотоцикл</h2>
+    <div class="repair-container">
+        <!-- === HEADER === -->
+        <header class="page-header">
+            <div class="header-left">
+                <h2>Ремонт</h2>
             </div>
 
-            <div class="statistics-cards">
-                <div class="stat-card">
-                    <p class="stat-card-title">Просрочено обслуживаний</p>
-                    <p class="stat-card-value">{{ overdue_maintenances_count }}</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-card-title">Скоро обслуживать</p>
-                    <p class="stat-card-value">{{ pending_maintenances_count }}</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-card-title">Запланированно</p>
-                    <p class="stat-card-value">{{ planned_maintenances_count }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Выбор мотоцикла и обслуживания для ремонта -->
-        <div class="section">
-            <div class="section-title-wrapper">
-                <i class="fa fa-motorcycle"></i>
-                <h2>Выберите мотоцикл и обслуживание для ремонта</h2>
-            </div>
-
-            <div class="actions-wrapper">
-                <select v-model="selectedMoto" class="select-action">
-                    <option value="">Выберите мотоцикл</option>
-                    <option v-for="m in motorcycles" :key="m.id" :value="m.id">{{ m.name }}</option>
-                </select>
-                <select v-if="selectedMoto" v-model="selectedMaintenance" class="select-action">
-                    <option value="">Выберите обслуживание</option>
-                    <option v-for="m in filteredMaintenances" :key="m.id" :value="m.id">{{ m.title + ' | ' + m.planned_mileage + 'км' }}</option>
-                </select>
-
-                <button
-                    v-if="!dataLoad"
-                    @click="getRepairData"
-                    :disabled="!selectedMoto || !selectedMaintenance"
-                    class="select-action"
-                >
-                    Ремонт
-                </button>
-
-                <button
-                    v-else
-                    @click="removeRepairData"
-                    class="select-action"
-                >
-                    Закрыть
-                </button>
-            </div>
-        </div>
-
-        <!-- Информация по ремонту -->
-        <div v-if="dataLoad" class="section">
-            <div class="section-title-wrapper">
-                <i class="fa fa-file"></i>
-                <h2>Инструкция по ремонту</h2>
-            </div>
-
-            <!-- Если нет мануала - показываем заглушку -->
-            <div v-if="manual.length === 0 && dataLoad" class="empty-state">
-                <div class="empty-container">
-                    <div class="empty-container-item">
-                        <p>К сожалению, в нашей базе пока что нет инструкции к вашей проблеме. Мы обязательно скоро ее добавим <br> (Вы можете помочь нам в этом, нажав на кнопку "Помощь").</p>
-                        <button @click="this.$router.push('/manual-creator')">Помощь</button>
-                    </div>
-                    
-                    <div class="empty-container-itme">
-                        <p>А пока Вы можете записаться к <br> проверенному мастеру из нашего списка.</p>
-                        <button class="accept-btn">Записаться</button>
+            <div class="header-right">
+                <i class="fa fa-bell notification-icon"></i>
+                <div class="profile-wrapper">
+                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
+                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
+                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
+                    </button>
+                    <div v-if="welcomeDropdownActive" class="dropdown-list">
+                        <ul>
+                            <li><button class="dropdown-item">Профиль</button></li>
+                            <li><button class="dropdown-item">Настройки</button></li>
+                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
+                        </ul>
                     </div>
                 </div>
             </div>
+        </header>
 
-            <!-- Если есть мануал - показываем его -->
-            <div v-else-if="manual" class="manual">
-                <h3 class="manual-title">{{ manual.title }}</h3>
-                <div class="steps">
-                    <div v-for="(step, index) in manual.steps" :key="step.id" class="manual-step">
-                        <div class="step-wrapper">
-                            <div class="step-number">{{ index + 1 }}</div>
+        <!-- === STATISTIC SECTION === -->
+        <section class="section-block">
+            <p class="section-title" v-if="manual">
+                Обслуживание: {{ manual.title }}
+            </p>
+            <p class="section-title" v-else>
+                Выберите мотоцикл и обслуживание для отображения инструкции
+            </p>
+
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-body">
+                        <p class="stat-label">Пробег мотоцикла</p>
+                        <p class="stat-value">{{ selectedMotoData ? selectedMotoData.mileage + ' км' : '—' }}</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-body">
+                        <p class="stat-label">Следующее ТО</p>
+                        <p class="stat-value warning-text" v-if="selectedMaintenanceData">
+                            через {{ selectedMaintenanceData.planned_mileage - (selectedMotoData?.mileage || 0) }} км
+                        </p>
+                        <p class="stat-value warning-text" v-else>—</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-body">
+                        <p class="stat-label">Статус</p>
+                        <div class="stat-badge success" v-if="selectedMaintenanceData">Выполняется</div>
+                        <div class="stat-badge" v-else style="background: rgba(107,114,128,0.2); color: #9ca3af;">Ожидание</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === SELECT SECTION === -->
+        <section class="section-block">
+            <div class="select-cards">
+                <div class="select-card">
+                    <div class="select-header">
+                        <div class="step-badge">1</div>
+                        <p>Выберите мотоцикл</p>
+                    </div>
+                    <select class="styled-select" v-model="selectedMoto" @change="onMotoChange">
+                        <option value="">Выберите мотоцикл</option>
+                        <option v-for="moto in motorcycles" :key="moto.id" :value="moto.id">
+                            {{ moto.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="select-card">
+                    <div class="select-header">
+                        <div class="step-badge">2</div>
+                        <p>Выберите обслуживание</p>
+                    </div>
+                    <select class="styled-select" v-model="selectedMaintenance" @change="onMaintenanceChange" :disabled="!selectedMoto">
+                        <option value="">Выберите обслуживание</option>
+                        <option v-for="m in filteredMaintenances" :key="m.id" :value="m.id">
+                            {{ m.title }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="manual-find-card" :class="{ 'not-found': !manual && selectedMoto && selectedMaintenance }">
+                    <div class="find-header">
+                        <div class="find-badge" v-if="manual"><i class="fa fa-check"></i></div>
+                        <div class="find-badge empty" v-else><i class="fa fa-search"></i></div>
+                        <div class="find-header-wrapper">
+                            <p class="find-title" v-if="manual">Мануал найден</p>
+                            <p class="find-title empty-title" v-else>Поиск мануала</p>
+                            <p class="find-subtitle" v-if="manual">Подобран автоматически</p>
+                            <p class="find-subtitle" v-else>Выберите параметры выше</p>
+                        </div>
+                    </div>
+                    <button @click="removeRepairData" class="outline-btn" v-if="manual">Сменить</button>
+                    <button class="outline-btn" disabled v-else>Ожидание данных</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- === MANUAL INSTRUCTION === -->
+        <section class="section-block" v-if="manual">
+            <div class="manual-wrapper">
+                <div class="manual">
+                    <p class="manual-title">Инструкция по ремонту</p>
+
+                    <div class="steps-list">
+                        <div class="step" v-for="step in manual.steps" :key="step.order">
+                            <div class="step-left">
+                                <div class="step-number">{{ step.order }}</div>
+                                <div class="step-img" v-if="step.image">
+                                    <img :src="step.image" alt="">
+                                </div>
+                            </div>
+                            
                             <div class="step-body">
-                                <p>{{ step.text }}</p>
+                                <p class="step-title">{{ step.title }}</p>
+                                <p class="step-text">{{ step.text }}</p>
+                                <p class="step-tip">{{ step.tip }}</p>
+                                <!-- Вставь сюда блоки step-tip если они приходят с бэка -->
                             </div>
                         </div>
-                        <div class="step-img-wrapper">
-                        </div>
+                    </div>
+
+                    <div class="manual-tips" v-if="manual.tips">
+                        <i class="fa fa-lightbulb"></i>
+                        <p class="tip-text"><strong>Совет:</strong> {{ manual.tip }}</p>
+                    </div>
+                    <div class="manual-tips" v-else>
+                        <i class="fa fa-lightbulb"></i>
+                        <p class="tip-text"><strong>Совет:</strong> Всегда проверяйте затяжку болтов после обслуживания.</p>
                     </div>
                 </div>
 
-                <div class="manual-actions">
-                    <button @click="showMarkMaintenanceModal=true" class="accept-btn">Завершить</button>
-                </div>
+                <div class="manual-meta">
+                    <div class="meta-card">
+                        <p class="meta-title">Необходимые инструменты</p>
+                        <ul class="meta-items" v-if="manual.instruments">
+                            <li class="meta-item" v-for="item in splitList(manual.instruments)" :key="item">
+                                <i class="fa fa-wrench"></i> {{ item }}
+                            </li>
+                        </ul>
+                        <p class="meta-item empty-text" v-else>Не указаны</p>
+                    </div>
 
-                <div class="record-master">
-                    <p>Вы можете записаться к проверенному мастеру из нашего списка.</p>
-                    <p>Он поможет Вам в ремонте самым качественным образом</p>
-                    <button>Записаться</button>
+                    <div class="meta-card">
+                        <p class="meta-title">Материалы</p>
+                        <ul class="meta-items" v-if="manual.parts">
+                            <li class="meta-item" v-for="part in splitList(manual.parts)" :key="part">
+                                <i class="fa fa-oil-can"></i> {{ part }}
+                            </li>
+                        </ul>
+                        <p class="meta-item empty-text" v-else>Не указаны</p>
+                    </div>
+
+                    <div class="mark-card">
+                        <p class="mark-title">Завершить обслуживание</p>
+                        <p class="mark-text">После завершения:</p>
+                        <div class="mark-items">
+                            <div class="mark-item"><i class="fa fa-check-circle"></i> Запись в историю</div>
+                            <div class="mark-item"><i class="fa fa-check-circle"></i> Новое плановое ТО</div>
+                        </div>
+                        <button class="accept-btn" @click="openMarkModal"><i class="fa fa-check"></i> Завершить</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </div>        
+    
+    <!-- === MODALS === -->
     <MarkPlanMaintenanceModal
         :is-open="showMarkMaintenanceModal"
-        :id="selectedMaintenance"
+        :motorcycle="selectedMotoData"
+        :maintenance="selectedMaintenanceData"
         @close="showMarkMaintenanceModal=false"
         @submit="markMaintenance"
     />
@@ -120,6 +189,7 @@
 <script>
 import api from '../api/api'
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
+
 export default {
     components: { MarkPlanMaintenanceModal },
     data() {
@@ -127,39 +197,36 @@ export default {
             overdue_maintenances_count: 0,
             pending_maintenances_count: 0,
             planned_maintenances_count: 0,
-
             motorcycles: [],
             maintenances: [],
-            repairData: null,
             manual: null,
-
             selectedMoto: null,
             selectedMaintenance: null,
+            selectedMotoData: null,
+            selectedMaintenanceData: null,
             dataLoad: false,
-
-            showMarkMaintenanceModal: false
+            showMarkMaintenanceModal: false,
+            welcomeDropdownActive: false,
+            lastMaintenanceDate: null,
         }
     },
-
     computed: {
         filteredMaintenances() {
             if (!this.selectedMoto) return []
-
             return this.maintenances.filter(m => m.moto_id === this.selectedMoto)
         }
     },
-
     watch: {
         selectedMoto() {
             this.selectedMaintenance = ''
+            this.manual = null
+            this.selectedMotoData = this.motorcycles.find(m => m.id === this.selectedMoto) || null
         }
     },
-
     methods: {
         async loadData() {
             try {
                 const response = await api.get('/statistic/repair')
-
                 this.motorcycles = response.data.motorcycles
                 this.maintenances = response.data.maintenances
                 this.overdue_maintenances_count = response.data.overdue
@@ -169,37 +236,68 @@ export default {
                 console.error('Failed load repair data: ', err)
             }
         },
-
-        async getRepairData() {
-            try {
-                const response = await api.get(`/manual/?maintenance_id=${this.selectedMaintenance}&moto_id=${this.selectedMoto}`)
-
-                this.manual = response.data
-                this.dataLoad = true
-            } catch (err) {
-                console.error('Failed get manual: ', err)
+        onMotoChange() {
+            this.selectedMaintenance = '';
+            this.manual = null;
+            this.selectedMaintenanceData = null;
+            this.lastMaintenanceDate = null;
+        },
+        onMaintenanceChange() {
+            if (this.selectedMoto && this.selectedMaintenance) {
+                this.selectedMaintenanceData = this.maintenances.find(m => m.id === this.selectedMaintenance) || null;
+                this.getManual();
+                this.getLastMaintenanceDate();
+            } else {
+                this.manual = null;
             }
         },
-
+        async getManual() {
+            try {
+                const response = await api.get(`/manual/?maintenance_id=${this.selectedMaintenance}&moto_id=${this.selectedMoto}`)
+                if (Array.isArray(response.data) && response.data.length > 0) {
+                    this.manual = response.data[0];
+                } else if (!Array.isArray(response.data) && response.data.id) {
+                    this.manual = response.data;
+                } else {
+                    this.manual = null;
+                }
+            } catch (err) {
+                console.error('Failed get manual: ', err)
+                this.manual = null;
+            }
+        },
+        openMarkModal() {
+            this.showMarkMaintenanceModal = true;
+        },
         async markMaintenance(formData) {
             try {
-                const response = await api.post('/maintenance/plan/mark', formData)
+                await api.post('/maintenance/plan/mark', formData)
                 this.showMarkMaintenanceModal = false
                 this.$router.push('/')
             } catch (err) {
                 console.log('Failed mark maintenance: ', err)
             }
         },
-
-
         removeRepairData() {
             this.selectedMaintenance = null
             this.selectedMoto = null
             this.manual = null
-            this.dataLoad = false
+        },
+        splitList(str) {
+            if (!str) return [];
+            return str.split(/[,;]\s*/).filter(s => s.trim() !== '');
+        },
+        async logout() {
+            try {
+                await api.post('/auth/logout');
+            } catch(err) { console.error(err) }
+            finally {
+                const { removeTokens } = await import('../api/auth');
+                removeTokens();
+                this.$router.push('/login');
+            }
         },
     },
-
     mounted() {
         this.loadData()
     }
@@ -207,244 +305,513 @@ export default {
 </script>
 
 <style scoped>
-.empty-container-item {
+/* ===== HEADER ===== */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
-/* Статистика */
-.statistics-cards {
-  display: flex;
-  flex-direction: row;
-  gap: 24px;
-  justify-content: center;
+.header-left h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.notification-icon {
+    font-size: 20px;
+    color: #8b8b9e;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.notification-icon:hover { color: #fff; }
+
+.profile-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+.profile-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #7c3aed;
+    object-fit: cover;
+}
+.dropdown-trigger {
+    background: transparent;
+    border: none;
+    color: #8b8b9e;
+    cursor: pointer;
+    padding: 4px;
+}
+.dropdown-list {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: #181824;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+.dropdown-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.dropdown-item {
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #ccc;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.dropdown-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
 }
 
+/* ===== COMMON ===== */
+.section-block {
+    margin-bottom: 24px;
+}
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 16px;
+}
+
+/* ===== STATS ===== */
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
 .stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-content: space-evenly;
-  padding: 20px 24px;
-  min-width: 180px;
-  flex: 1;
-  background-color: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 24px;
-  text-align: center;
-  transition: all 0.3s;
-}
-.stat-card:hover {
-  border-bottom: 3px solid var(--accent);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-.stat-card-title {
-  font-weight: 500;
-  font-size: 18px;
-  color: var(--text-secondary);
-}
-.stat-card-value {
-  font-weight: 700;
-  color: var(--accent);
-  font-size: 28px;
-}
-.stat-card.horizontal {
-  flex-direction: column;
-  align-items: stretch;
-  min-width: unset;
-  padding: 16px 20px;
-}
-.stat-card.horizontal h4 {
-  margin-bottom: 8px;
-  color: var(--text-primary);
-}
-.stat-card-items {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  justify-content: space-around;
-  flex-wrap: wrap;
-}
-.stat-card-item {
-  padding: 8px 16px;
-  background-color: var(--bg-primary);
-  border-radius: 18px;
-  min-width: 100px;
-}
-.stat-card-item .stat-card-title {
-  font-size: 14px;
-}
-.stat-card-item .stat-card-value {
-  font-size: 20px;
-}
-
-@media (max-width: 800px) {
-    .statistics-cards {
-        flex-direction: column;
-    }
-}
-
-/* Выбор мотоцикла и обслуживания */
-.actions-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  max-width: 320px;
-  margin: 0 auto;
-}
-.select-action {
-  width: 250px;
-}
-
-/* Инструкция по ремонту */
-.steps {
-    margin-bottom: 32px;
-}
-
-.manual {
-    padding: 18px;
-    border-radius: 18px;
-    border: 2px solid var(--border-color);
-    background-color: var(--bg-secondary);
-
-    margin-bottom: 32px;
-}
-
-.manual-title {
+    padding: 18px 16px;
+    background-color: #181824;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    margin-bottom: 24px;
+    transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: rgba(255,255,255,0.1); }
+
+.stat-label {
+    font-size: 13px;
+    color: #8b8b9e;
+    margin-bottom: 6px;
+}
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+.warning-text {
+    color: #fbbf24;
+}
+.stat-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.stat-badge.success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
 }
 
-.manual-step {
+/* ===== SELECT CARDS ===== */
+.select-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+.select-card, .manual-find-card {
+    padding: 16px;
+    background-color: #181824;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.select-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.select-header p {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+.step-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* Select styling */
+.styled-select {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: #0f0f1a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #e0e0e0;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+.styled-select:focus { border-color: #7c3aed; }
+.styled-select option { background-color: #0f0f1a; }
+
+/* Find card */
+.find-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.find-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+.find-badge.empty {
+    background-color: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+}
+.find-title {
+    color: #4ade80;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+    font-size: 14px;
+}
+.find-title.empty-title {
+    color: #9ca3af;
+}
+.find-subtitle {
+    font-size: 13px;
+    color: #8b8b9e;
+    margin: 0;
+}
+.outline-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 10px;
+    color: #a78bfa;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.outline-btn:hover {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: #7c3aed;
+}
+.outline-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== MANUAL ===== */
+.manual-wrapper {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+.manual {
+    background-color: #181824;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.manual-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+}
+
+.steps-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-bottom: 20px;
 }
-
-.step-wrapper {
+.step {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 18px;
+    gap: 16px;
+    padding: 12px;
+    background-color: #0f0f1a;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
 }
-
-.step-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0; /* Не сжимается */
-
-    padding: 24px;
-    width: 64px;
-    height: 64px;
-
-    background-color: var(--accent);
-    border-radius: 50%;
-
-    font-weight: 600;
-    font-size: 21px;
-}
-
-.step-body {
-    width: 100%;
-    padding: 18px;
-    background-color: var(--bg-primary);
-
-    border-radius: 21px;
-    border: 2px solid var(--border-color);
-}
-
-.manual-actions {
-    margin-top: 24px;
+.step-left {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.step-number {
+    display: flex;
     justify-content: center;
-    gap: 12px;
-
-    margin-bottom: 32px;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #7c3aed;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
 }
-
-.manual-actions button {
-    width: 100%;
-    max-width: 512px;
-}
-
-/* Обертка для картинки */
-.step-img-wrapper {
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-    border-radius: 16px;
-}
-
-.step-img {
-    width: 100%;
-    height: auto;
-    max-height: 300px;
+.step-img img {
+    width: 120px;
+    height: 80px;
+    border-radius: 8px;
     object-fit: cover;
-    border-radius: 16px;
-    display: block;
 }
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .step-wrapper {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-
-    .step-number {
-        width: 48px;
-        height: 48px;
-        padding: 16px;
-        font-size: 18px;
-        margin: 0 auto;
-    }
-
-    .step-img-wrapper {
-        max-width: 100%;
-    }
-
-    .step-img {
-        max-height: 200px;
-    }
-
-    .manual {
-        padding: 12px;
-    }
+.step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
 }
-
-@media (max-width: 480px) {
-    .step-number {
-        width: 40px;
-        height: 40px;
-        padding: 12px;
-        font-size: 16px;
-    }
-
-    .step-body {
-        padding: 12px;
-        font-size: 14px;
-    }
-
-    .step-img {
-        max-height: 150px;
-    }
+.step-title {
+    font-weight: 600;
+    margin: 0;
+    font-size: 16px;
 }
+.step-text {
+    font-size: 14px;
+    color: #8b8b9e;
+    margin: 0;
+}
+.step-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-top: 4px;
+}
+.step-tip p {
+    margin: 0;
+    font-size: 13px;
+}
+.step-tip.info {
+    background-color: rgba(124, 58, 237, 0.08);
+    color: #a78bfa;
+}
+.step-tip.warning {
+    background-color: rgba(251, 191, 36, 0.08);
+    color: #fbbf24;
+}
+.step-tip i { font-size: 16px; margin-top: 1px;}
 
-/* Запись к мастеру */
-.record-master {
-    padding: 12px;
-    border-radius: 21px;
-    border: 2px solid var(--border-color);
-    background-color: var(--bg-secondary);
+.manual-tips {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background-color: rgba(251, 191, 36, 0.06);
+    border-radius: 10px;
+}
+.manual-tips i {
+    color: #fbbf24;
+    font-size: 18px;
+    margin-top: 2px;
+}
+.tip-text {
+    font-size: 14px;
+    color: #d1d1d1;
+    margin: 0;
+    line-height: 1.4;
+}
+.tip-text strong { color: #fff; }
+
+/* ===== MANUAL META (Right column) ===== */
+.manual-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.meta-card {
+    padding: 16px;
+    background-color: #181824;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+}
+.meta-title {
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+.meta-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.meta-item {
+    color: #8b8b9e;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.meta-item i {
+    color: #5a5a72;
+    font-size: 14px;
+    width: 18px;
     text-align: center;
 }
+.empty-text {
+    color: #5a5a72;
+    font-size: 14px;
+    margin: 0;
+}
 
-.record-master button {
+/* ===== MARK CARD ===== */
+.mark-card {
+    padding: 20px 16px;
+    background: rgba(124, 58, 237, 0.06);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    border-radius: 14px;
+}
+.mark-title {
+    color: #a78bfa;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    font-size: 15px;
+}
+.mark-text {
+    color: #8b8b9e;
+    margin: 0 0 12px 0;
+    font-size: 13px;
+}
+.mark-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+.mark-item {
+    color: #d1d1d1;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.mark-item i {
+    color: #4ade80;
+}
+.accept-btn {
     width: 100%;
-    max-width: 512px;
+    padding: 10px;
+    background-color: #7c3aed;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.accept-btn:hover {
+    background-color: #6d28d9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+/* ===== MEDIA QUERIES ===== */
+@media (max-width: 1220px) {
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .select-cards { grid-template-columns: repeat(2, 1fr); }
+    .manual-find-card { grid-column: span 2; }
+    .manual-wrapper { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 820px) {
+    .repair-container { padding: 16px; }
+    .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
+    .header-right { justify-content: flex-end; }
+}
+
+@media (max-width: 560px) {
+    .header-right { display: none;}
+    .stat-cards { grid-template-columns: 1fr; }
+    .select-cards { grid-template-columns: 1fr; }
+    .manual-find-card { grid-column: span 1; }
+    
+    .step {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .step-left {
+        flex-direction: row;
+        gap: 12px;
+    }
+    .step-img img {
+        width: 80px;
+        height: 60px;
+    }
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    .manual-tips {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 </style>

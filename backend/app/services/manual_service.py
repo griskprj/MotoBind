@@ -17,7 +17,8 @@ class ManualService:
         description: Optional[str] = None,
         difficult: str = 'easy',
         instruments: Optional[str] = None,
-        parts: Optional[str] = None
+        parts: Optional[str] = None,
+        tip: Optional[str] = None
     ) -> Manual:
         """ Создает мануал с шагами """
 
@@ -28,6 +29,9 @@ class ManualService:
             category=category,
             difficult=difficult,
             instruments=instruments,
+            motorcycle=motorcycle,
+            parts=parts,
+            tip=tip,
             status='moderate'
         )
 
@@ -39,7 +43,9 @@ class ManualService:
                 manual_id=manual.id,
                 order=step_data['order'],
                 title=step_data['title'],
-                text=step_data.get('text')
+                text=step_data.get('text'),
+                tip=step_data.get('tip'),
+                warning=step_data.get('warning')
             )
             db.session.add(step)
 
@@ -81,6 +87,8 @@ class ManualService:
                 manual_id=manual_id,
                 order=step_data['order'],
                 title=step_data['title'],
-                text=step_data.get('text')
+                text=step_data.get('text'),
+                tip=step_data.get('tip'),
+                warning=step_data.get('warning')
             )
             db.session.add(step)

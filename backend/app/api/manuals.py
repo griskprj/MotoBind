@@ -153,11 +153,14 @@ def get_maintenance_manual():
         'instruments': manual.instruments,
         'parts': manual.parts,
         'motorcycle': manual.motorcycle,
+        'tip': manual.tip,
         'steps': [
             {
                 'order': step.order,
                 'title': step.title,
-                'text': step.text
+                'text': step.text,
+                'tip': step.tip,
+                'warning': step.warning
             }
             for step in sorted(manual.steps, key=lambda s: s.order)
         ]
@@ -288,6 +291,7 @@ def create_new_manual():
         instruments=data.instruments,
         parts=data.parts,
         motorcycle=data.motorcycle,
+        tip=data.tip,
         steps=steps_data
     )
 

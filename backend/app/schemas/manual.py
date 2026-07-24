@@ -6,6 +6,8 @@ class ManualStepSchema(BaseModel):
     """ Схема шага мануала """
     order: int = Field(..., ge=1)
     title: str = Field(..., min_length=1, max_length=200)
+    tip: Optional[str] = Field(None, max_width=128)
+    warning: Optional[str] = Field(None, max_width=128)
     text: Optional[str] = Field(None, max_length=5000)
     
     @field_validator('order')
@@ -20,9 +22,10 @@ class CreateMaintenanceSchema(BaseModel):
     description: Optional[str] = Field(None, max_length=1000)
     category: str = Field(..., min_length=1, max_length=100)
     difficult: str = Field(default='easy')
-    instrument: Optional[str] = Field(None, max_length=500)
+    instruments: Optional[str] = Field(None, max_length=500, alias='instruments')
     parts: Optional[str] = Field(None, max_length=500)
     motorcycle: str = Field(..., min_length=1, max_length=100)
+    tip: Optional[str] = Field(None, max_length=128)
 
     steps: List[ManualStepSchema] = Field(..., min_length=1)
 
@@ -49,21 +52,6 @@ class CreateMaintenanceSchema(BaseModel):
     
     class Config:
         populate_by_name = True
-        json_schema_extra = {
-            "example" : {
-                "title": "Замена масла",
-                "description": "Инструкция по замене масла",
-                "category": "engine",
-                "difficult": "easy",
-                "instruments": "Ключ на 18мм, ветошь",
-                "parts": "Масло, фильтр",
-                "motorcycle": "BMW S1000RR",
-                "steps": [
-                    {"order": 1, "title": "Подготовка", "text": "Прогрейте двигатель"},
-                    {"order": 2, "title": "Слив масла", "text": "Открутите сливную пробку"}
-                ]
-            }
-        }
 
 class UpdateManualSchema(BaseModel):
     """ Схема для обновления мануала """
@@ -71,9 +59,10 @@ class UpdateManualSchema(BaseModel):
     description: Optional[str] = Field(None, max_length=1000)
     category: Optional[str] = Field(..., min_length=1, max_length=100)
     difficult: Optional[str] = Field(default='easy')
-    instrument: Optional[str] = Field(None, max_length=500)
+    instruments: Optional[str] = Field(None, max_length=500, alias='instruments')
     parts: Optional[str] = Field(None, max_length=500)
     motorcycle: Optional[str] = Field(..., min_length=1, max_length=100)
+    tip: Optional[str] = Field(None, max_length=128)
 
     steps: List[ManualStepSchema] = Field(..., min_length=1)
 
@@ -103,6 +92,7 @@ class ManualResponseSchema(BaseModel):
     instruments: Optional[str]
     parts: Optional[str]
     motorcycle: str
+    tip: Optional[str]
     status: str
     author_id: int
     created_at: datetime

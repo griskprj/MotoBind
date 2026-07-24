@@ -115,6 +115,16 @@
                         </label>
                     </div>
 
+                    <div class="form-group">
+                        <label>
+                            Совет
+                            <input 
+                                type="text"
+                                v-model="form.tip"
+                            >
+                        </label>
+                    </div>
+
                     <div class="section-sep">
                         <hr>
                     </div>
@@ -167,6 +177,26 @@
                                     ></textarea>
                                 </label>
                             </div>
+                            <div class="form-group">
+                                <label>
+                                    Совет
+                                    <input
+                                        type="text"
+                                        v-model="step.tip"
+                                        required
+                                    >
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    Предупреждение
+                                    <input
+                                        type="text"
+                                        v-model="step.warning"
+                                        required
+                                    >
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -199,13 +229,13 @@ export default {
                 motorcycle: '',
                 instruments: '',
                 parts: '',
+                tip: '',
                 steps: []
             },
             errors: {},
             isSubmitting: false,
             stepIdCounter: 0,
 
-            isAdmin: false,
             isLoading: false
         };
     },
@@ -215,6 +245,8 @@ export default {
                 id: ++this.stepIdCounter,
                 title: '',
                 text: '',
+                tip: '',
+                warning: '',
                 errors: {}
             });
         },
@@ -261,25 +293,6 @@ export default {
 
             return isValid;
         },
-        checkAdminAccess() {
-            try {
-                const token = localStorage.getItem('access_token');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.isAdmin = payload.role === 'admin';
-                    
-                    // Если не админ - перенаправляем
-                    if (!this.isAdmin) {
-                        this.$router.push('/home');
-                        this.showNotification('Доступ запрещен', 'error');
-                    }
-                } else {
-                    this.$router.push('/login');
-                }
-            } catch {
-                this.$router.push('/login');
-            }
-        },
 
 
         async submitManual() {
@@ -303,10 +316,13 @@ export default {
                     motorcycle: this.form.motorcycle.trim(),
                     instruments: this.form.instruments.trim() || null,
                     parts: this.form.parts.trim() || null,
+                    tip: this.form.tip.trim() || null,
                     steps: this.form.steps.map((step, index) => ({
                         order: index + 1,
                         title: step.title.trim(),
-                        text: step.text.trim() || null
+                        text: step.text.trim() || null,
+                        tip: step.tip.trim() || null,
+                        warning: step.warning.trim() || null
                     }))
                 };
 
@@ -344,6 +360,7 @@ export default {
                 motorcycle: '',
                 instruments: '',
                 parts: '',
+                tip: '',
                 steps: []
             };
             this.errors = {};
@@ -353,7 +370,6 @@ export default {
     },
     mounted() {
         this.addStep();
-        this.checkAdminAccess();
     }
 };
 </script>

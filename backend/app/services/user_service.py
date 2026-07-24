@@ -31,6 +31,8 @@ class UserService:
         user = User.query.filter_by(email=email).first()
         if not user:
             raise NotFoundError("Пользователь с такой почтой не найден")
+        if user.status == 'banned':
+            raise ForbiddenError("Вы были заблокированы")
         if not user.check_password(password):
             raise ForbiddenError("Неверный пароль")
         

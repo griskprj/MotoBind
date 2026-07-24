@@ -39,6 +39,7 @@ body {
   --danger-trans: rgba(240, 69, 69, 0.2);
   --danger-hover: #DC2626;
   --success: #10B981;
+  --success-trans: rgba(16, 185, 129, 0.2);
   --success-hover: #10cb8d;
   --warning: #F59E0B;
   --warning-hover: #db8e08;
@@ -80,10 +81,6 @@ a {
     color: var(--accent-hover);
     text-decoration: underline;
   }
-}
-
-p {
-  margin-bottom: 1rem;
 }
 
 button,
@@ -364,7 +361,7 @@ position: fixed;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;

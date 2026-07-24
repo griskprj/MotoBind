@@ -18,6 +18,7 @@ class Manual(db.Model):
     status = db.Column(db.String(32), default='moderate')
     rejection_reason = db.Column(db.String(32), default='')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    tip = db.Column(db.String(128))
     
     author = db.relationship('User', backref='manuals')
     steps = db.relationship('ManualStep', lazy='select', cascade='all, delete-orphan')
@@ -36,6 +37,7 @@ class Manual(db.Model):
             'parts': self.parts,
             'motorcycle': self.motorcycle,
             'status': self.status,
+            'tip': self.tip,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'steps': [s.to_dict() for s in self.steps]
         }
@@ -49,6 +51,8 @@ class ManualStep(db.Model):
     order = db.Column(db.Integer, default=0, nullable=False)
     title = db.Column(db.String(64), nullable=False)
     text = db.Column(db.Text)
+    tip = db.Column(db.String(128))
+    warning = db.Column(db.String(128))
 
     def to_dict(self):
         return {
@@ -56,6 +60,8 @@ class ManualStep(db.Model):
             'manual_id': self.manual_id,
             'order': self.order,
             'title': self.title,
-            'text': self.text
+            'text': self.text,
+            'tip': self.tip,
+            'warning': self.warning
         }
 
