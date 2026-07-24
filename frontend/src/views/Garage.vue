@@ -350,11 +350,14 @@ export default {
                         <div class="stat-val">{{ motorcycle.maintenances?.length || 0 }}</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-calendar"></i> До следующего ТО</div>
+                        <div class="stat-head"><i class="fa fa-calendar"></i> Следующее ТО</div>
                         <div class="stat-val">
                             <span v-if="nextMaintenance">
-                                <span v-if="nextMaintenance.isOverdue" style="color: #ef4444;">
+                                <span v-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue > 0" style="color: var(--danger);">
                                     Просрочено на {{ nextMaintenance.distanceOverdue }} км
+                                </span>
+                                <span v-else-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue === 0" style="color: var(--danger);">
+                                    Просрочено
                                 </span>
                                 <span v-else>
                                     {{ nextMaintenance.distanceToNext }} км
@@ -736,10 +739,14 @@ export default {
     margin-bottom: 20px;
 }
 .stat-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
     background: #181824;
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 12px;
     padding: 16px;
+    text-align: center;
 }
 .stat-head {
     font-size: 13px;
