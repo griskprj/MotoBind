@@ -302,100 +302,89 @@ def get_garage_stat():
 @statistic.route('/garage/<int:moto_id>', methods=['GET'])
 @jwt_required()
 def get_moto_garage(moto_id):
-  """
-  Получить данные о мотоцикле для гаража
-  ---
-  tags:
-    - Statistic
-  summary: Данные мотоцикла для гаража
-  description: Возвращает информацию о мотоцикле, узлах обслуживания и всех типах обслуживания
-  security:
-    - Bearer: []
-  parameters:
-    - in: path
-      name: moto_id
-      required: true
-      type: integer
-      description: Идентификатор мотоцикла
-  responses:
-    200:
-      description: Данные успешно получены
-      schema:
-        type: object
-        properties:
-          motorcycle:
-            type: object
-            properties:
-              id: {type: integer}
-              model: {type: string}
-              mileage: {type: integer}
-              health: {type: number}
-          maintenance_nodes:
-            type: array
-            items:
-              node:
-                type: object
-                properties:
-                  title: {type: string}
-                  health: {type: integer}
-                  maintenance_count: {type: integer}
-                  planned_maintenances:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: {type: integer}
-                        title: {type: string}
-                        planned_mileage: {type: integer}
-                        status: {type: string, enum: ['overdue', 'soon', 'ok', 'no_mileage']}
-          moneyData:
-            type: object
-            properties:
-              month: {type: string}
-              value: {type: integer}
-          maintenance_count_data:
-            type: object
-            properties:
-              month: {type: string}
-              value: {type: integer}
-  """
+    """
+    Получить данные о мотоцикле для гаража
+    ---
+    tags:
+      - Statistic
+    summary: Данные мотоцикла для гаража
+    description: Возвращает информацию о мотоцикле, узлах обслуживания и всех типах обслуживания
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: moto_id
+        required: true
+        type: integer
+        description: Идентификатор мотоцикла
+    responses:
+      200:
+        description: Данные успешно получены
+      401:
+        description: Не авторизован
+      403:
+        description: Доступ запрещен
+      404:
+        description: Объект не найден
+    """
+    user_id = get_jwt_identity()
+    
+    moto = Motorcycle.query.options(
+        selectinload(Motorcycle.planned_maintenances),
+        selectinload(Motorcycle.maintenances)
+    ).get(moto_id)
+    
+    user = User.query.get(user_id)
 
-  moto = Motorcycle.query.options(
-      selectinload(Motorcycle.planned_maintenances)
-  ).get(moto_id)
-  user = User.query.get(get_jwt_identity())
+    if not moto:
+        raise NotFoundError("Мотоцикл не найден")
+    if not user:
+        raise NotFoundError("Пользователь не найден")
+    if int(moto.owner_id) != int(user.id):
+        raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-  if not moto:
-      raise NotFoundError("Мотоцикл не найден")  
-
-  if not user:
-      raise NotFoundError("Пользователь не найден")
-
-  if int(moto.owner_id) != int(user.id):
-      raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
-
-  try:
-      nodes = gen_maintenance_nodes(moto_id, user.id)
-      cost_data = calculate_maintenance_money(moto_id, user.id)
-      freq_data = calculate_maintenance_freq(moto_id, user.id)
-      
-      return jsonify({
-          'nodes': nodes,
-          'motorcycle': moto.to_dict(),
-          'planned_maintenances': [m.to_dict() for m in moto.planned_maintenances],
-          'total_cost': cost_data['total_cost'],
-          'max_cost': cost_data['max_cost'],
-          'average_cost': cost_data['average_cost'],
-          'month_cost': cost_data['month_cost'],
-          'money_chart_data': cost_data['chart_data'],
-
-          'total_maintenances': freq_data['total_maintenances'],
-          'month_maintenances': freq_data['month_maintenances'],
-          'freq_chart_data': freq_data['chart_data']
-      }), 200
-  except Exception as e:
-      current_app.logger.error(f'Failed load garage moto data: {str(e)}')
-      raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
+    try:
+        planned_maintenances = sorted(
+            moto.planned_maintenances,
+            key=lambda x: x.planned_mileage,
+            reverse=False
+        )[:5]
+        
+        recent_maintenances = sorted(
+            moto.maintenances,
+            key=lambda x: x.date if x.date else datetime.min,
+            reverse=True
+        )[:5]
+        
+        nodes = gen_maintenance_nodes(moto_id, user.id)
+        nodes = nodes[:5] if nodes else []
+        
+        cost_data = calculate_maintenance_money(moto_id, user.id)
+        cost_data['chart_data'] = cost_data.get('chart_data', [])[:5]
+        
+        freq_data = calculate_maintenance_freq(moto_id, user.id)
+        freq_data['chart_data'] = freq_data.get('chart_data', [])[:5]
+        
+        return jsonify({
+            'motorcycle': moto.to_dict(),
+            'planned_maintenances': [m.to_dict() for m in planned_maintenances],
+            'recent_maintenances': [m.to_dict() for m in recent_maintenances],
+            'nodes': nodes,
+            
+            'total_cost': cost_data.get('total_cost', 0),
+            'max_cost': cost_data.get('max_cost', 0),
+            'average_cost': cost_data.get('average_cost', 0),
+            'month_cost': cost_data.get('month_cost', 0),
+            'money_chart_data': cost_data.get('chart_data', []),
+            
+            'total_maintenances': freq_data.get('total_maintenances', 0),
+            'month_maintenances': freq_data.get('month_maintenances', 0),
+            'freq_chart_data': freq_data.get('chart_data', [])
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f'Failed load garage moto data: {str(e)}')
+        raise BusinessLogicError("Ошибка загрузки данных мотоцикла")
 
 @statistic.route('/repair', methods=['GET'])
 @jwt_required()

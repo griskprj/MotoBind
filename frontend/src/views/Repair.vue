@@ -135,8 +135,14 @@
                             <div class="step-body">
                                 <p class="step-title">{{ step.title }}</p>
                                 <p class="step-text">{{ step.text }}</p>
-                                <p class="step-tip">{{ step.tip }}</p>
-                                <!-- Вставь сюда блоки step-tip если они приходят с бэка -->
+                                <div v-if="step.tip" class="step-tip info">
+                                    <i class="fa fa-info-circle"></i>
+                                    <p>{{ step.tip }}</p>
+                                </div>
+                                <div v-if="step.warning" class="step-tip warning">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    <p>{{ step.warning }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -166,7 +172,7 @@
                         <p class="meta-title">Материалы</p>
                         <ul class="meta-items" v-if="manual.parts">
                             <li class="meta-item" v-for="part in splitList(manual.parts)" :key="part">
-                                <i class="fa fa-oil-can"></i> {{ part }}
+                                <i class="fa fa-gear"></i> {{ part }}
                             </li>
                         </ul>
                         <p class="meta-item empty-text" v-else>Не указаны</p>
