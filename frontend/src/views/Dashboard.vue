@@ -108,7 +108,7 @@
             <!-- === PENDING MAINTENANCE SECTION === -->
             <section class="pending-maintenance-section">
                 <h3>Ближайшие обслуживания</h3>
-                <div class="cards-wrapper">
+                <div v-if="pendingMaintenances.length > 0" class="cards-wrapper">
                     <MaintenanceCard
                         v-for="maintenance in pendingMaintenances"
                         :key="maintenance.id"
@@ -119,6 +119,16 @@
                         }"
                     />
                 </div>
+                <div v-else class="empty-state" style="margin-bottom: 14px;">
+                    <div class="empty-header">
+                        <i class="fa fa-wrench"></i>
+                        <p class="empty-title">У вас нет запланированных ТО</p>
+                    </div>
+
+                    <div class="empty-body">
+                        <p class="empty-text">Запланируйте первое ТО на странице <a href="#">"Обслуживание"</a></p>
+                    </div>
+                </div>
                 <button class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
             </section>
 
@@ -126,7 +136,7 @@
             <section class="pending-event-section">
                 <h3>Мероприятия</h3>
 
-                <div class="cards-wrapper">
+                <div v-if="events.length > 0" class="cards-wrapper">
                     <div class="event-card"
                         v-for="event in events"
                         :key="event.id"
@@ -150,6 +160,16 @@
                         <div class="card-action">
                             <i class="fa fa-chevron-right"></i>
                         </div>
+                    </div>
+                </div>
+                <div v-else class="empty-state" style="margin-bottom: 14px;">
+                    <div class="empty-header">
+                        <i class="fa fa-calendar"></i>
+                        <p class="empty-title">Сейчас не проохдит никаких событий</p>
+                    </div>
+
+                    <div class="empty-body">
+                        <p class="empty-text">Создайте свое на странице <a href="#">"События"</a></p>
                     </div>
                 </div>
                 <button class="outline-btn">Все мероприятия <i class="fa fa-angle-right"></i></button>
@@ -840,6 +860,14 @@ export default {
         padding-left: 56px;
         margin-top: 4px;
     }
+}
+
+
+/* === EMPTY STATE === */
+.empty-text {
+    color: #5a5a72;
+    font-size: 14px;
+    margin: 0;
 }
 
 
