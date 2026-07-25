@@ -1,5 +1,5 @@
 <template>
-    <div class="repair-container">
+    <div class="container">
         <!-- === HEADER === -->
         <header class="page-header">
             <div class="header-left">
@@ -44,8 +44,11 @@
                 <div class="stat-card">
                     <div class="stat-body">
                         <p class="stat-label">Следующее ТО</p>
-                        <p class="stat-value warning-text" v-if="selectedMaintenanceData">
+                        <p class="stat-value warning-text" v-if="selectedMaintenanceData && selectedMaintenanceData.planned_mileage - selectedMotoData?.mileage > 0">
                             через {{ selectedMaintenanceData.planned_mileage - (selectedMotoData?.mileage || 0) }} км
+                        </p>
+                        <p class="stat-value danger-text" v-else-if="selectedMaintenanceData && selectedMaintenanceData.planned_mileage - selectedMotoData?.mileage <= 0"">
+                            Пора обслуживать
                         </p>
                         <p class="stat-value warning-text" v-else>—</p>
                     </div>
@@ -102,7 +105,14 @@
                         </div>
                     </div>
                     <button @click="removeRepairData" class="outline-btn" v-if="manual">Сменить</button>
-                    <button class="outline-btn" disabled v-else>Ожидание данных</button>
+                    <button class="outline-btn" disabled v-else>
+                        <p v-if="selectedMaintenance && selectedMoto && !manual">
+                            Не нашли
+                        </p>
+                        <p v-if="!selectedMaintenance || !selectedMoto">
+                            Ожидание данных
+                        </p>
+                    </button>
                 </div>
             </div>
         </section>
@@ -172,6 +182,36 @@
                         <button class="accept-btn" @click="openMarkModal"><i class="fa fa-check"></i> Завершить</button>
                     </div>
                 </div>
+            </div>
+        </section>
+        <section v-if="!selectedMoto || !selectedMaintenance" class="empty-state">
+            <div class="empty-header">
+                <i class="fa fa-gear"></i>
+                <p class="empty-title">Заполните информацию выше</p>
+            </div>
+
+            <div class="empty-body">
+                <p class="empty-text">
+                    Для получения мануала вам необходимо выбрать мотоцикл и небоходимое обслуживание.
+                </p>
+                <p class="empty-text">
+                    Система автоматически подберет для вас мануал, при его наличии в базе.
+                </p>
+            </div>
+        </section>
+        <section v-if="selectedMoto && selectedMaintenance && !manual" class="empty-state">
+            <div class="empty-header">
+                <i class="fa fa-file"></i>
+                <p class="empty-title">Мануал не найден</p>
+            </div>
+
+            <div class="empty-body">
+                <p class="empty-text" style="margin-bottom: 8px;">
+                    К сожалению, мы не нашли в нашей базе подходящего для вас мануала. Вы можете нам помочь, создав этот мануал на основе официальной документации. Подробнее ознакомиться с правилами заполнения мануала вы можете <a href="#">здесь</a>.
+                </p>
+                <p class="empty-text">
+                    Ещё вы можете записаться на ремонт к проверенному мастеру из нашего списка.
+                </p>
             </div>
         </section>
     </div>        
@@ -427,7 +467,10 @@ export default {
     margin: 0;
 }
 .warning-text {
-    color: #fbbf24;
+    color: var(--warning);
+}
+.danger-text {
+    color: var(--danger);
 }
 .stat-badge {
     display: inline-block;
