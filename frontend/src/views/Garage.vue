@@ -332,7 +332,16 @@ export default {
                             <span>Заметки</span>
                             <button @click="showEditMotoNoteModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
                         </div>
-                        <p class="notes-text">{{ motorcycle.note }}</p>
+                        <div class="note-body">
+                            <p v-if="motorcycle.note" class="notes-text">{{ motorcycle.note }}</p>
+                            <div v-else class="empty-note-state">
+                                <div class="empty-note-header">
+                                    <p class="empty-text">
+                                        Добавьте заметку. Например: "Мой любимый мотоцикл..."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -376,7 +385,7 @@ export default {
                 </div>
 
                 <!-- Table -->
-                <div class="maintenance-table-wrapper">
+                <div v-if="motorcycle && motorcycle.maintenances.length > 0" class="maintenance-table-wrapper">
                     <div class="table-header">
                         <span class="th">Дата</span>
                         <span class="th">Обслуживание</span>
@@ -406,6 +415,20 @@ export default {
                     </div>
                     <div class="table-footer">
                         <button class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div v-else class="empty-state">
+                    <div class="empty-header">
+                        <i class="fa fa-wrench"></i>
+                        <p class="empty-title">Здесь буду записи обслуживаний</p>
+                    </div>
+                    <div class="empty-body">
+                        <p class="empty-text">
+                            Начните вести обслуживание своего мотоцикла
+                        </p>
+                        <p class="empty-text">
+                            Запланировать или добавить запись ТО вы можете на странице <a href="#">"Обслуживание"</a>
+                        </p>
                     </div>
                 </div>
             </main>
@@ -856,6 +879,25 @@ export default {
     gap: 6px;
 }
 .show-more:hover { opacity: 0.8; }
+
+/* === EMPTY STATE === */
+.empty-note-state {
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    border: 2px dashed var(--border-color);
+    color: var(--text-secondary);
+    font-size: 14px;
+    padding: 12px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.empty-text {
+    color: #5a5a72;
+    font-size: 14px;
+    margin: 0;
+}
 
 /* ===== MEDIA QUERIES ===== */
 
