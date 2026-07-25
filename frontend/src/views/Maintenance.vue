@@ -168,6 +168,7 @@
                 <div class="tr"
                     v-for="maintenance in filteredMaintenances"
                     :key="maintenance.id"
+                    @click="openDetailsMaintenance(maintenance)"
                 >
                     <div class="td date-cell">
                         <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
@@ -239,18 +240,28 @@
         @submit="planMaintenance"
         @close="showPlanMaintenanceModal = false"
     />
+
+    <MaintenanceDetailsModal
+        v-if="selectedMaintenance"
+        :isOpen="showDetailsMaintenanceModal"
+        :motoName="selectedMaintenanceMotoName"
+        :maintenance="selectedMaintenance"
+        @close="showDetailsMaintenanceModal = false"
+    />
 </template>
 
 <script>
 import api from '../api/api';
 import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue'
 import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMaintenanceModal.vue'
+import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
 
 
 export default {
     components: {
         AddMaintenanceModal,
-        AddPlanMaintenanceModal
+        AddPlanMaintenanceModal,
+        MaintenanceDetailsModal
     },
 
     data() {
@@ -260,6 +271,9 @@ export default {
             historyMaintenances: [],
             plannedMaintenances: [],
             selectedMaintenances: [],
+
+            selectedMaintenance: null,
+            selectedMaintenanceMotoName: '',
             
             // Фильтры
             searchQuery: '',
@@ -275,7 +289,8 @@ export default {
 
             // Модалки
             showAddMaintenanceModal: false,
-            showPlanMaintenanceModal: false
+            showPlanMaintenanceModal: false,
+            showDetailsMaintenanceModal: false,
         }
     },
 
@@ -360,6 +375,13 @@ export default {
                 this.selectedMaintenances = [...this.plannedMaintenances, ...this.historyMaintenances]
             }
             this.clearFilters()
+        },
+
+        openDetailsMaintenance(maintenance) {
+            this.selectedMaintenance = maintenance
+            const moto = this.motorcycles.find(m => m.id === maintenance.moto_id)
+            this.selectedMaintenanceMotoName = moto ? moto.name : maintenance.moto_name || 'Мотоцикл'
+            this.showDetailsMaintenanceModal = true
         },
 
         sortItems(items) {
