@@ -126,15 +126,6 @@ def get_data():
     }), 200
 
 
-def _calculate_change_percent(current: float, previous: float) -> float:
-    """Вычисляет процент изменения расходов"""
-    if previous > 0:
-        return round(((current - previous) / previous) * 100, 1)
-    elif current > 0:
-        return 100.0
-    return 0.0
-
-
 @statistic.route('/dashboard-charts')
 @jwt_required()
 def get_dashboard_charts():
@@ -454,3 +445,88 @@ def get_stat_repair():
     'motorcycles': motorcycles,
     'maintenances': maintenances
   }), 200
+
+
+
+@statistic.route('/maintenance', methods=['GET'])
+@jwt_required()
+def get_maintenance_stat():
+    """
+    Получение статистики и данных для страницы обслуживания
+    ---
+    tags:
+      - Statistic
+    summary: Получение данных для страницы обслуживания
+    description: Возвращает информацию о всех обслуживаниях пользователя
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Данные успешно получены
+        schema:
+          type: object
+          properties:
+            motorcycles:
+              type: array
+              items:
+                type: object
+            history_maintenances:
+              type: array
+              items:
+                type: object
+            planned_maintenances:
+              type: array
+              items:
+                type: object
+            all_maintenances_count:
+              type: integer
+            planned_maintenances_count:
+              type: integer
+            overdue_maintenances_count:
+              type: integer
+      401:
+        description: Не авторизован
+      404:
+        description: Пользователь не найден
+    """
+    current_user_id = int(get_jwt_identity())
+    
+    motorcycles = Motorcycle.query.filter_by(owner_id=current_user_id).options(
+        selectinload(Motorcycle.maintenances),
+        selectinload(Motorcycle.planned_maintenances)
+    ).all()
+
+    history_maintenances = []
+    planned_maintenances = []
+    planned_maintenance_count = 0
+    overdue_maintenance_count = 0
+
+    for motorcycle in motorcycles:
+        for maintenance in motorcycle.maintenances:
+            maintenance = maintenance.to_dict()
+            maintenance['moto_name'] = motorcycle.name
+            history_maintenances.append(maintenance)
+        
+        for maintenance in motorcycle.planned_maintenances:
+            status = check_status(maintenance, motorcycle)
+            maintenance = maintenance.to_dict()
+            maintenance['moto_name'] = motorcycle.name
+            maintenance_dict = maintenance
+            maintenance_dict['status'] = status
+            planned_maintenances.append(maintenance_dict)
+            
+            if status == 'overdue':
+                overdue_maintenance_count += 1
+            elif status == 'ok' or status == 'soon':
+                planned_maintenance_count += 1
+
+    all_maintenances_count = len(history_maintenances) + len(planned_maintenances)
+
+    return jsonify({
+        'motorcycles': [m.to_dict() for m in motorcycles],
+        'history_maintenances': history_maintenances,
+        'planned_maintenances': planned_maintenances,
+        'all_maintenances_count': all_maintenances_count,
+        'planned_maintenances_count': planned_maintenance_count,
+        'overdue_maintenances_count': overdue_maintenance_count
+    }), 200

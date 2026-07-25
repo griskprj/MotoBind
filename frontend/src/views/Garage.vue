@@ -471,14 +471,6 @@ export default {
 </template>
 
 <style scoped>
-.garage-container {
-    padding: 24px 32px;
-    background-color: #0f0f1a;
-    min-height: 100vh;
-    color: #fff;
-    font-family: sans-serif;
-}
-
 /* ===== HEADER ===== */
 .page-header {
     display: flex;
@@ -554,6 +546,7 @@ export default {
     min-width: 140px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     z-index: 100;
+    animation: slideInUp 0.2s ease;
 }
 .dropdown-list ul {
     list-style: none;
@@ -1017,5 +1010,19 @@ export default {
     .stats-grid-4 { grid-template-columns: 1fr; }
     .moto-scroll-container { gap: 8px; }
     .moto-card { flex: 0 0 140px; }
+}
+
+
+/* === ANIMATIONS === */
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

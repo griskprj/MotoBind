@@ -10,7 +10,7 @@ from app.services.maintenance_service import MaintenanceService
 maintenance = Blueprint('maintenance', __name__)
 
 
-@maintenance.route('/create-new', methods=['POST'])
+@maintenance.route('/history', methods=['POST'])
 @jwt_required()
 def create_new_maintenance():
     """
@@ -151,7 +151,7 @@ def create_new_maintenance():
         date=data.date,
     )
 
-    return jsonify(maintenance.to_dict()), 201
+    return jsonify(maintenance), 201
 
 @maintenance.route('/plan', methods=['POST'])
 @jwt_required()
@@ -278,7 +278,7 @@ def plan_maintenance():
         planned_mileage=data.planned_mileage,
     )
 
-    return jsonify(plan_maintenance.to_dict()), 201
+    return jsonify(plan_maintenance), 201
 
 
 @maintenance.route('/plan', methods=['PUT'])

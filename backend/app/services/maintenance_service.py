@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.models.motorcycle import Motorcycle
+from app.utils.check_maintenance_status import check_status
 from app.extensions import db
 from app.exceptions import NotFoundError, ForbiddenError, ValidationError
 
@@ -42,6 +43,9 @@ class MaintenanceService:
         db.session.add(maintenance)
         db.session.commit()
 
+        maintenance = maintenance.to_dict()
+        maintenance['moto_name'] = moto.name
+
         return maintenance
 
     @staticmethod
@@ -64,7 +68,6 @@ class MaintenanceService:
         if planned_mileage and planned_mileage < moto.mileage:
             raise ValidationError("Указан пробег меньше пробега мотоцикла")
         
-        print(planned_mileage)
         planned = PlannedMaintenance(
             author_id=author_id,
             moto_id=moto_id,
@@ -76,6 +79,10 @@ class MaintenanceService:
 
         db.session.add(planned)
         db.session.commit()
+
+        planned = planned.to_dict()
+        planned['moto_name'] = moto.name
+        planned['status'] = check_status(planned, moto)
 
         return planned
     

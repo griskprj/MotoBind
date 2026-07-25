@@ -80,6 +80,17 @@ const router = createRouter({
       }
     },
     {
+      path: '/maintenance',
+      name: 'maintenance',
+      component: () => import('../views/Maintenance.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Обслуживание',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
       path: '/manual-creator',
       name: 'manual creator',
       component: () => import('../views/ManualCreator.vue'),
