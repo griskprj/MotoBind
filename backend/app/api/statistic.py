@@ -8,7 +8,7 @@ from app.models.motorcycle import Motorcycle
 from app.utils.check_maintenance_status import check_status
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 from app.utils.maintenance_nodes import gen_maintenance_nodes
-from app.utils.calculate_maintenance_money import calculate_maintenance_money
+from app.utils.calculate_maintenance_money import calculate_maintenance_money, _calculate_change_percent
 from app.utils.calculate_freq_maintenance import calculate_maintenance_freq
 
 statistic = Blueprint('statistic', __name__)
@@ -29,137 +29,110 @@ def get_data():
     responses:
       200:
         description: Данные успешно получены
-        schema:
-          type: object
-          properties:
-            user:
-              type: object
-            motorcycles:
-              type: array
-              items:
-                type: object
-                properties:
-                  id: {type: integer}
-                  model: {type: string}
-                  mileage: {type: integer}
-                  health: {type: number}
-                  planned_maintenances:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: {type: integer}
-                        title: {type: string}
-                        planned_mileage: {type: integer}
-                        status: {type: string, enum: ['overdue', 'soon', 'ok', 'no_mileage']}
-            maintenance:
-              type: array
-              description: Все плановые обслуживания с их статусами
-            motorcycles_count:
-              type: integer
-              description: Общее количество мотоциклов
-            plan_maintenances_count:
-              type: integer
-              description: Количество плановых обслуживаний
-            maintenances_count:
-              type: integer
-              description: Количество выполненных обслуживаний
-            total_spends:
-              type: integer
-              description: Общая сумма расходов
-            new_motorcycles_count:
-              type: integer
-              description: Количество новых мотоциклов за последний месяц
-            month_maintenances_count:
-              type: integer
-              description: Количество обслуживаний за последний месяц
-            spends_change_percent:
-              type: float
-              description: Изменение расходов в процентах за последний месяц
       401:
         description: Не авторизован
       404:
         description: Пользователь не найден
     """
-
+    user_id = get_jwt_identity()
+    
     user = User.query.options(
-      selectinload(User.motorcycles)
-      .selectinload(Motorcycle.planned_maintenances),
-      selectinload(User.motorcycles)
-      .selectinload(Motorcycle.maintenances)
-    ).get(get_jwt_identity())
+        selectinload(User.motorcycles)
+        .selectinload(Motorcycle.planned_maintenances),
+        selectinload(User.motorcycles)
+        .selectinload(Motorcycle.maintenances)
+    ).get(user_id)
 
     if not user:
-      raise NotFoundError("Пользователь не найден")
+        raise NotFoundError("Пользователь не найден")
 
     now = datetime.now()
     month_start = datetime(now.year, now.month, 1)
-    prev_month_start = datetime(now.year - 1, now.month, 1) if now.month == 1 else datetime(now.year, now.month - 1, 1)
+    prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
     thirty_days_ago = now - timedelta(days=30)
 
+    stats = {
+        'motorcycles_count': 0,
+        'plan_maintenances_count': 0,
+        'maintenances_count': 0,
+        'total_spends': 0,
+        'new_motorcycles_count': 0,
+        'month_maintenances_count': 0,
+        'spends_change_percent': 0.0
+    }
+    
     motorcycle_data = []
     all_planned_maintenances = []
-    total_spends = 0
-    maintenances_count = 0
-
-    new_motorcycles_count = 0
-    month_maintenances_count = 0
+    
     current_month_spends = 0
     previous_month_spends = 0
 
-    for motorcycle in user.motorcycles:
-      planned_records = []
+    for motorcycle in user.motorcycles[:3]:
+        if motorcycle.created_at and motorcycle.created_at >= month_start:
+            stats['new_motorcycles_count'] += 1
 
-      if motorcycle.created_at and motorcycle.created_at >= month_start:
-        new_motorcycles_count += 1
+        planned_records = []
+        for plan in motorcycle.planned_maintenances[:3]:
+            status = check_status(plan, motorcycle)
+            plan_data = plan.to_dict()
+            plan_data['status'] = status
+            planned_records.append(plan_data)
+            stats['plan_maintenances_count'] += 1
 
-      count = 0
-      for plan in motorcycle.planned_maintenances:
-        if count > 5: break
-        count += 1
-        status = check_status(plan, motorcycle)
-        plan_data = plan.to_dict()
-        plan_data['status'] = status
-        planned_records.append(plan_data)
+        recent_maintenances = sorted(
+            motorcycle.maintenances, 
+            key=lambda x: x.date if x.date else datetime.min, 
+            reverse=True
+        )[:3]
 
-      count = 0
-      for maintenance in motorcycle.maintenances:
-        if count > 5: break
-        count += 1
-        if maintenance.cost:
-          total_spends += maintenance.cost
-          maintenances_count += 1
+        for maintenance in recent_maintenances:
+            if maintenance.cost:
+                stats['total_spends'] += maintenance.cost
+                stats['maintenances_count'] += 1
 
-          if maintenance.date and maintenance.date >= month_start:
-            current_month_spends += maintenance.cost
-            month_maintenances_count += 1
+                if maintenance.date:
+                    if maintenance.date >= month_start:
+                        current_month_spends += maintenance.cost
+                        stats['month_maintenances_count'] += 1
+                    elif prev_month_start <= maintenance.date < month_start:
+                        previous_month_spends += maintenance.cost
 
-          if maintenance.date and prev_month_start <= maintenance.date < month_start:
-            previous_month_spends += maintenance.cost
+        moto_dict = motorcycle.to_dict()
+        moto_dict['planned_maintenances'] = planned_records
+        moto_dict['recent_maintenances'] = [
+            m.to_dict() for m in recent_maintenances
+        ]
+        motorcycle_data.append(moto_dict)
+        all_planned_maintenances.extend(planned_records)
 
-      moto_dict = motorcycle.to_dict()
-      moto_dict['planned_maintenances'] = planned_records
-      motorcycle_data.append(moto_dict)
-      all_planned_maintenances.extend(planned_records)
+    stats['spends_change_percent'] = _calculate_change_percent(
+        current_month_spends, 
+        previous_month_spends
+    )
+    
+    stats['motorcycles_count'] = len(user.motorcycles)
 
-    spends_change_percent = 0
-    if previous_month_spends > 0:
-       spends_change_percent = ((current_month_spends - previous_month_spends) / previous_month_spends) * 100
-    elif current_month_spends > 0:
-      spends_change_percent = 100
+    all_planned_maintenances.sort(
+        key=lambda x: {'overdue': 0, 'soon': 1, 'ok': 2}.get(x.get('status', 'ok'), 3)
+    )
+
+    all_planned_maintenances = all_planned_maintenances[:3]
 
     return jsonify({
         'user': user.to_dict(),
         'motorcycles': motorcycle_data,
         'maintenance': all_planned_maintenances,
-        'motorcycles_count': len(motorcycle_data),
-        'plan_maintenances_count': len(all_planned_maintenances),
-        'maintenances_count': maintenances_count,
-        'total_spends': total_spends,
-        'new_motorcycles_count': new_motorcycles_count,
-        'month_maintenances_count': month_maintenances_count,
-        'spends_change_percent': round(spends_change_percent, 1)
+        **stats
     }), 200
+
+
+def _calculate_change_percent(current: float, previous: float) -> float:
+    """Вычисляет процент изменения расходов"""
+    if previous > 0:
+        return round(((current - previous) / previous) * 100, 1)
+    elif current > 0:
+        return 100.0
+    return 0.0
 
 
 @statistic.route('/dashboard-charts')

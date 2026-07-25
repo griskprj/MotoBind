@@ -8,6 +8,14 @@ from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 
+def _calculate_change_percent(current: float, previous: float) -> float:
+    """Вычисляет процент изменения расходов"""
+    if previous > 0:
+        return round(((current - previous) / previous) * 100, 1)
+    elif current > 0:
+        return 100.0
+    return 0.0
+
 def calculate_maintenance_money(moto_id, user_id):
     """
     Возвращает данные о затратах на обслуживание: общие затраты, затраты в этом месяце, самое дорогое обслуживание, данные для графика
