@@ -183,7 +183,6 @@
                                     <input
                                         type="text"
                                         v-model="step.tip"
-                                        required
                                     >
                                 </label>
                             </div>
@@ -193,7 +192,6 @@
                                     <input
                                         type="text"
                                         v-model="step.warning"
-                                        required
                                     >
                                 </label>
                             </div>
