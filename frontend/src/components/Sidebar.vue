@@ -55,15 +55,6 @@
                 <span>Обслуживание</span>
             </router-link>
             <router-link
-                to="/events"
-                class="nav-link"
-                :class="{ active: $route.path === '/events' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-bell"></i>
-                <span>События</span>
-            </router-link>
-            <router-link
                 to="/statistics"
                 class="nav-link"
                 :class="{ active: $route.path === '/statistics' }"
