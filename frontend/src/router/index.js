@@ -91,6 +91,17 @@ const router = createRouter({
       }
     },
     {
+      path: '/statistic',
+      name: 'statistic',
+      component: () => import('../views/Statistic.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Статистика',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
       path: '/manual-creator',
       name: 'manual creator',
       component: () => import('../views/ManualCreator.vue'),

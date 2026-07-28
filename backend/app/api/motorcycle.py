@@ -65,7 +65,7 @@ def get_user_moto():
                 raise NotFoundError('Пользователь не найден')
     
     motorcycles = MotorcycleService.get_user_motorcycles(current_user_id)
-    return jsonify([m.to_dict(include_maintenance=True, include_planned_maintenance=True) for m in motorcycles]), 200
+    return jsonify([m.to_dict(include_maintenance=True, include_planned_maintenance=True, include_maintenance_nodes=True) for m in motorcycles]), 200
 
 
 

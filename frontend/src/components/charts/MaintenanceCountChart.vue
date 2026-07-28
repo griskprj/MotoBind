@@ -148,12 +148,10 @@ export default {
 <style scoped>
 .maintenance-cost-chart {
   width: 100%;
-  max-width: 800px;
-  padding: 20px;
-  background-color: var(--bg-secondary, #ffffff);
-  border-radius: 16px;
-  border: 1px solid var(--border-color, #e0e0e0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .no-data {

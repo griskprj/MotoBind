@@ -24,7 +24,7 @@ class Motorcycle(db.Model):
     maintenances = db.relationship('Maintenance', lazy='select', cascade='all, delete-orphan')
     planned_maintenances = db.relationship('PlannedMaintenance', lazy='select', cascade='all, delete-orphan')
 
-    def to_dict(self, include_maintenance: bool = False, include_planned_maintenance: bool = False):
+    def to_dict(self, include_maintenance: bool = False, include_planned_maintenance: bool = False, include_maintenance_nodes: bool = False):
         """ Serialize data to JSON """
         data = {
             'id': self.id,
@@ -48,4 +48,7 @@ class Motorcycle(db.Model):
         if include_planned_maintenance:
             data['planned_maintenances'] = [m.to_dict() for m in self.planned_maintenances]
         
+        if include_maintenance_nodes:
+            data['maintenance_nodes'] = [n.to_dict() for n in self.maintenance_nodes]
+
         return data

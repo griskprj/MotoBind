@@ -564,3 +564,14 @@ def mark_maintenance():
         'message': 'Обслуживание отмечено как выполненное',
         'new_maintenance': result['new_planned']
     }), 201
+
+
+@maintenance.route('/nodes/<int:moto_id>', methods=['GET'])
+@jwt_required()
+def get_nodes(moto_id):
+    """
+    Полуить узлы обслуживания мотоцикла
+    """
+    user_id = int(get_jwt_identity())
+    nodes = MaintenanceService.get_maintenanc_nodes(user_id, moto_id)
+    return jsonify(nodes), 200

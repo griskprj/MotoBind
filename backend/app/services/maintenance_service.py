@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 from app.models.maintenance import Maintenance, PlannedMaintenance
+from app.models.maintenance_node import MaintenanceNode
 from app.models.motorcycle import Motorcycle
+from app.services.motorcycle_service import MotorcycleService
 from app.utils.check_maintenance_status import check_status
 from app.extensions import db
 from app.exceptions import NotFoundError, ForbiddenError, ValidationError
@@ -186,6 +188,18 @@ class MaintenanceService:
             raise ForbiddenError("Вы не являетесь автором этого обслуживания")
         
         return maintenance
+    
+    @staticmethod
+    def get_last_maintenance_by_category(user_id: int, category: str) -> Maintenance:
+        """ Получить обслуживание по категории """
+        maintenances = Maintenance.query.filter(category=category, author_id=user_id).all()
+        last_maintenance = None
+        for m in maintenances:
+            if m.mileage and m.mileage > last_maintenance.mileage:
+                last_maintenance = m
+        
+        return m.to_dict()
+            
         
     @staticmethod
     def get_planned_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
@@ -198,3 +212,16 @@ class MaintenanceService:
             raise ForbiddenError("Вы не являетесь автором этого обслуживания")
         
         return planned_maintenance
+    
+
+    @staticmethod
+    def get_maintenanc_nodes(user_id: int, moto_id: int) -> MaintenanceNode:
+        """ Возвращает узлы обслуживания мотоцикла с информацией о здоровье узла и о последнем обслуживании"""
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id)
+        nodes_data = []
+        for node in moto.maintenance_nodes:
+            node = node.to_dict()
+            node['last_maintenance'] = MaintenanceService.get_last_maintenance_by_category(user_id, node.category)
+            nodes_data.append(node)
+        
+        return nodes_data

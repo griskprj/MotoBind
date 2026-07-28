@@ -55,15 +55,6 @@
                 <span>Обслуживание</span>
             </router-link>
             <router-link
-                to="/statistics"
-                class="nav-link"
-                :class="{ active: $route.path === '/statistics' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-chart-bar"></i>
-                <span>Статистика</span>
-            </router-link>
-            <router-link
                 to="/manuals"
                 class="nav-link"
                 :class="{ active: $route.path === '/manuals' }"
@@ -73,13 +64,13 @@
                 <span>Мануалы</span>
             </router-link>
             <router-link
-                to="/settings"
+                to="/profile"
                 class="nav-link"
-                :class="{ active: $route.path === '/settings' }"
+                :class="{ active: $route.path === '/profile' }"
                 @click="closeSidebar"
             >
-                <i class="fa fa-cog"></i>
-                <span>Настройки</span>
+                <i class="fa fa-user"></i>
+                <span>Профиль</span>
             </router-link>
 
             <!-- Админ-панель (только для админов) -->

@@ -432,6 +432,12 @@ export default {
     color: #fff;
 }
 
+@media (max-width: 720px) {
+    .header-right {
+        display: none;
+    }
+}
+
 /* ===== COMMON ===== */
 .section-block {
     margin-bottom: 24px;
