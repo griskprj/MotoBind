@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
+from app.models.manual import Manual
 from app.utils.check_maintenance_status import check_status
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError
 from app.utils.maintenance_nodes import gen_maintenance_nodes
@@ -529,4 +531,78 @@ def get_maintenance_stat():
         'all_maintenances_count': all_maintenances_count,
         'planned_maintenances_count': planned_maintenance_count,
         'overdue_maintenances_count': overdue_maintenance_count
+    }), 200
+
+
+
+@statistic.route('/registrations-chart', methods=['GET'])
+@jwt_required()
+def get_registrations_chart():
+    """
+    Получить данные для графика регистраций пользователей
+    ---
+    tags:
+      - Statistic
+    summary: Данные для графика регистраций
+    description: Возвращает количество регистраций пользователей по месяцам за последние 12 месяцев
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Данные успешно получены
+        schema:
+          type: object
+          properties:
+            registrations:
+              type: array
+              items:
+                type: object
+                properties:
+                  month: {type: string, example: "Июл 2026"}
+                  value: {type: integer, example: 15}
+      401:
+        description: Не авторизован
+    """
+    user = User.query.get(get_jwt_identity())
+    if not user or user.role != 'admin':
+       raise ForbiddenError("Доступ запрещен. Требуются права администратора")
+
+    now = datetime.now()
+    registrations_data = []
+    month_names = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 
+                   'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
+
+    for i in range(11, -1, -1):
+        month_date = now.replace(day=1) - timedelta(days=i*30)
+        month_start = datetime(month_date.year, month_date.month, 1)
+        
+        if month_date.month == 12:
+            month_end = datetime(month_date.year + 1, 1, 1)
+        else:
+            month_end = datetime(month_date.year, month_date.month + 1, 1)
+        
+        count = User.query.filter(
+            User.created_at >= month_start,
+            User.created_at < month_end
+        ).count()
+        
+        month_label = f"{month_names[month_date.month - 1]} {month_date.year}"
+        
+        registrations_data.append({
+            'month': month_label,
+            'value': count
+        })
+
+    users_count = User.query.count()
+    motos_count = Motorcycle.query.count()
+    manuals_count = Manual.query.count()
+
+    last_reg = User.query.order_by(User.created_at.desc()).limit(5).all()
+    last_reg_data = [u.to_dict() for u in last_reg]
+    return jsonify({
+        'registrations': registrations_data,
+        'users_count': users_count,
+        'motos_count': motos_count,
+        'manuals_count': manuals_count,
+        'last_reg': last_reg_data
     }), 200

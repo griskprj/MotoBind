@@ -15,7 +15,7 @@ class User(db.Model):
     role = db.Column(db.String(32), default='motorcyclist') # motorcyclist, admin, motoclub
     refresh_token = db.Column(db.String(512))
     status = db.Column(db.String, default='active')
-    is_premium = db.Column(db.Bool, default=False)
+    is_premium = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     motorcycles = db.relationship('Motorcycle', backref='motorcycle_owner', lazy=True, cascade='all, delete-orphan')

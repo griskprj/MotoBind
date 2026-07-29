@@ -91,17 +91,6 @@ const router = createRouter({
       }
     },
     {
-      path: '/statistic',
-      name: 'statistic',
-      component: () => import('../views/Statistic.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'MotoBind - Статистика',
-        showFooter: true,
-        showHeader: true
-      }
-    },
-    {
       path: '/manual-creator',
       name: 'manual creator',
       component: () => import('../views/ManualCreator.vue'),
@@ -113,8 +102,8 @@ const router = createRouter({
       }
     },
     {
-      path: '/admin',
-      name: 'admin',
+      path: '/admin/panel',
+      name: 'admin panel',
       component: () => import('../views/AdminPanel.vue'),
       meta: {
         requiresAuth: true,

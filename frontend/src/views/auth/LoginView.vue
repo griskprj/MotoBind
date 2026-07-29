@@ -26,7 +26,7 @@ export default {
                 
                 const role = response.data.user.role
                 if (role === 'admin') {
-                    this.$router.push('/admin')
+                    this.$router.push('/admin/panel')
                 } else {
                     this.$router.push('/home')
                 }

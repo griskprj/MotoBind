@@ -13,77 +13,130 @@
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
         <!-- Логотип -->
         <div class="sidebar-logo">
-            <h1 class="logo-left">Moto</h1><h1 class="logo-right">Bind</h1>
+            <h1 class="logo-left">Moto</h1><h1 class="logo-right">Bind</h1> <h2 v-if="$route.path.startsWith('/admin')" class="admin-logo">Admin</h2>
         </div>
 
         <!-- Навигация -->
         <nav class="sidebar-nav">
-            <router-link
-                to="/home"
-                class="nav-link"
-                :class="{ active: $route.path === '/home' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-home"></i>
-                <span>Главная</span>
-            </router-link>
-            <router-link
-                to="/garage"
-                class="nav-link"
-                :class="{ active: $route.path === '/garage' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-motorcycle"></i>
-                <span>Гараж</span>
-            </router-link>
-            <router-link
-                to="/repair"
-                class="nav-link"
-                :class="{ active: $route.path === '/repair' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-wrench"></i>
-                <span>Ремонт</span>
-            </router-link>
-            <router-link
-                to="/maintenance"
-                class="nav-link"
-                :class="{ active: $route.path === '/maintenance' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-tools"></i>
-                <span>Обслуживание</span>
-            </router-link>
-            <router-link
-                to="/manuals"
-                class="nav-link"
-                :class="{ active: $route.path === '/manuals' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-book"></i>
-                <span>Мануалы</span>
-            </router-link>
-            <router-link
-                to="/profile"
-                class="nav-link"
-                :class="{ active: $route.path === '/profile' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-user"></i>
-                <span>Профиль</span>
-            </router-link>
+            <div v-if="!$route.path.startsWith('/admin')" class="user-nav">
+                <router-link
+                    to="/home"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/home' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-home"></i>
+                    <span>Главная</span>
+                </router-link>
+                <router-link
+                    to="/garage"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/garage' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-motorcycle"></i>
+                    <span>Гараж</span>
+                </router-link>
+                <router-link
+                    to="/repair"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/repair' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-wrench"></i>
+                    <span>Ремонт</span>
+                </router-link>
+                <router-link
+                    to="/maintenance"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/maintenance' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-tools"></i>
+                    <span>Обслуживание</span>
+                </router-link>
+                <router-link
+                    to="/manuals"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/manuals' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-book"></i>
+                    <span>Мануалы</span>
+                </router-link>
+                <router-link
+                    to="/profile"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/profile' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-user"></i>
+                    <span>Профиль</span>
+                </router-link>
+    
+                <!-- Админ-панель (только для админов) -->
+                <router-link
+                    v-if="isAdmin"
+                    to="/admin/panel"
+                    class="nav-link admin-link"
+                    :class="{ active: $route.path === '/admin' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-shield"></i>
+                    <span>Админ-панель</span>
+                </router-link>
+            </div>
 
-            <!-- Админ-панель (только для админов) -->
-            <router-link
-                v-if="isAdmin"
-                to="/admin"
-                class="nav-link admin-link"
-                :class="{ active: $route.path === '/admin' }"
-                @click="closeSidebar"
-            >
-                <i class="fa fa-shield"></i>
-                <span>Админ-панель</span>
-            </router-link>
+            <!-- === ADMIN NAV === -->
+            <div v-if="$route.path.startsWith('/admin')" class="admin-nav">
+                <div class="admin-nav-group">
+                    <p class="nav-group-title">ГЛАВНАЯ</p>
+                    <router-link
+                        to="/admin/panel"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/panel'}"
+                    >
+                        <i class="fa fa-sitemap"></i>
+                        Панель управления
+                    </router-link>
+                </div>
+
+                <div class="admin-nav-group">
+                    <p class="nav-group-title">УПРАВЛЕНИЕ</p>
+                    <router-link
+                        to="/admin/users"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/users'}"
+                    >
+                        <i class="fa fa-users"></i>
+                        Пользователи
+                    </router-link>
+                    <router-link
+                        to="/admin/motorcycles"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/motorcycles'}"
+                    >
+                        <i class="fa fa-motorcycle"></i>
+                        Мотоциклы
+                    </router-link>
+                    <router-link
+                        to="/admin/maintenances"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/maintenances'}"
+                    >
+                        <i class="fa fa-tools"></i>
+                        Мануалы
+                    </router-link>
+                    <router-link
+                        to="/admin/news"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/news'}"
+                    >
+                        <i class="fa fa-file-text"></i>
+                        Новости
+                    </router-link>
+                </div>
+            </div>
         </nav>
 
         <!-- Сообщение premium -->
@@ -281,7 +334,6 @@ export default {
     flex-direction: column;
     padding: 24px 20px;
     transition: transform 0.3s ease;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     transform: translateX(0);
 }
@@ -325,6 +377,13 @@ export default {
 
 .logo-right {
     color: var(--accent) !important;
+}
+
+.admin-logo {
+    font-size: 16px;
+    color: var(--accent);
+    margin-left: 8px;
+    margin-bottom: 0;
 }
 
 /* ===== Навигация ===== */
@@ -373,6 +432,17 @@ export default {
 
 .nav-link.active i {
     color: var(--accent);
+}
+
+.admin-nav-group {
+    margin-bottom: 10px;
+}
+
+.nav-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
 }
 
 /* === ПРЕМИУМ СООБЩЕНИЕ === */

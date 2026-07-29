@@ -9,6 +9,7 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance import Maintenance
 from app.models.manual import Manual
 from app.models.reports import Report
+from app.services.admin_service import AdminService
 
 admin = Blueprint('admin', __name__)
 
@@ -237,6 +238,27 @@ def delete_manual(manual_id):
     return jsonify({
         'message': 'Мануал удален',
     }), 200
+
+
+
+@admin.route('/user', methods=['POST'])
+@jwt_required()
+@admin_required
+def create_user():
+    """
+    Создание пользователя
+    """
+    data = request.get_json()
+
+    user = AdminService.create_user(
+        email=data.get('email'),
+        username=data.get('username'),
+        role=data.get('role'),
+        status=data.get('status'),
+        password=data.get('password')
+    )
+
+    return jsonify(user.to_dict()), 201
 
 @admin.route('/user/<int:user_id>/ban', methods=['POST'])
 @jwt_required()

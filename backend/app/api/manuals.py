@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import or_
 
@@ -6,10 +6,8 @@ from app.extensions import db
 from app.models.user import User
 from app.models.motorcycle import Motorcycle
 from app.models.maintenance import PlannedMaintenance
-from app.models.manual import Manual
+from app.models.manual import Manual, ManualStep
 from app.exceptions import NotFoundError, ForbiddenError, BusinessLogicError, ValidationError
-from app.schemas.manual import CreateMaintenanceSchema, UpdateManualSchema
-from app.services.manual_service import ManualService
 
 
 manual = Blueprint('maunal', __name__)
@@ -153,14 +151,11 @@ def get_maintenance_manual():
         'instruments': manual.instruments,
         'parts': manual.parts,
         'motorcycle': manual.motorcycle,
-        'tip': manual.tip,
         'steps': [
             {
                 'order': step.order,
                 'title': step.title,
-                'text': step.text,
-                'tip': step.tip,
-                'warning': step.warning
+                'text': step.text
             }
             for step in sorted(manual.steps, key=lambda s: s.order)
         ]
@@ -273,53 +268,74 @@ def create_new_manual():
                                     type: string
     """
 
-    try:
-        data = CreateMaintenanceSchema(**request.get_json())
-    except Exception as e:
-        raise ValidationError(f"Ошибка валидации: {str(e)}")
+    data = request.get_json()
 
-    user_id = int(get_jwt_identity())
-
-    steps_data = [step.model_dump() for step in data.steps]
-
-    manual = ManualService.create_manual(
-        author_id=user_id,
-        title=data.title,
-        description=data.description,
-        category=data.category,
-        difficult=data.difficult,
-        instruments=data.instruments,
-        parts=data.parts,
-        motorcycle=data.motorcycle,
-        tip=data.tip,
-        steps=steps_data
-    )
-
-    return jsonify(manual.to_dict()), 201
-
-
-@manual.route('/<int:manual_id>', methods=['PUT'])
-@jwt_required()
-def update_manual(manual_id):
-    """
-    Обновление мануала
-    """
-
-    data = UpdateManualSchema(**request.get_json)
-
-    updates = data.get_updates()
-    if not updates:
-        raise ValidationError("Нет данных для обновления")
+    if not data:
+        raise ValidationError("Нет данных")
     
-    user_id = int(get_jwt_identity())
+    required = ['title', 'category', 'motorcycle']
+    for field in required:
+        if field not in data or not data[field]:
+            raise ValidationError(f"Пропущено обязательное поле {field}")
+        
+    steps_data = data.get('steps', [])
+    if not isinstance(steps_data, list) or len(steps_data) == 0:
+        raise ValidationError("В мануале должен быть хотя бы один шаг")
 
-    if 'steps' in updates:
-        updates['steps'] = [step.model_dump() for step in updates['steps']]
+    for idx, step in enumerate(steps_data):
+        if 'title' not in step or not step['title']:
+            return ValidationError(f"Шаг {idx} не имеет заголовка")
+        if 'order' not in step:
+            step['order'] = idx + 1
+    
+    db.session.begin()
 
-    manual = ManualService.update_manual(
-        manual_id=manual_id,
-        user_id=user_id,
-        **updates
+    manual = Manual(
+        author_id=get_jwt_identity(),
+        title=data['title'],
+        description=data.get('description'),
+        category=data['category'],
+        difficult=data.get('difficult', 'easy'),
+        instruments=data.get('instruments'),
+        parts=data.get('parts'),
+        motorcycle=data['motorcycle']
     )
 
-    return jsonify(manual.to_dict()), 200
+    for step_data in steps_data:
+        if 'order' not in step_data or 'title' not in step_data:
+                raise ValidationError("Заполните обязательные поля")
+
+        step = ManualStep(
+            order=step_data['order'],
+            title=step_data['title'],
+            text=step_data['text'] if step_data['text'] else None
+        )
+        manual.steps.append(step)
+    
+    try:
+        db.session.add(manual)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed create manual: {str(e)}')
+        raise BusinessLogicError("Ошибка создания мануала")
+
+    result = {
+        'id': manual.id,
+        'title': manual.title,
+        'description': manual.description,
+        'category': manual.category,
+        'difficult': manual.difficult,
+        'instruments': manual.instruments,
+        'parts': manual.parts,
+        'motorcycle': manual.motorcycle,
+        'steps': [
+            {
+                'order': step.order,
+                'title': step.title,
+                'text': step.text
+            }
+            for step in sorted(manual.steps, key=lambda s: s.order)
+        ]
+    }
+    return jsonify(result), 201
