@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
-
+from sqlalchemy import or_, desc
 from app.extensions import db
 from app.exceptions import NotFoundError, ForbiddenError, ValidationError
 from app.decorators import admin_required
@@ -55,6 +55,75 @@ def dashboard_data():
         'manuals_count': manuals_count,
         'motorcycles_count': motorcycles_count
     }), 200
+
+
+@admin.route('/users', methods=['GET'])
+@jwt_required()
+@admin_required
+def get_users():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '')
+    role = request.args.get('role', '')
+    status = request.args.get('status')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    query = User.query
+
+    if search:
+        query = query.filter(
+            or_(
+                User.username.ilike(f'%{search}'),
+                User.email.ilike(f'%{search}'),
+                User.id.ilike(f'%{search}')
+            )
+        )
+
+    if role:
+        query = query.filter(User.role == role)
+    if status:
+        query = query.filter(User.status == status)
+    if date_from:
+        query = query.filter(User.created_at >= date_from)
+    if date_to:
+        query = query.filter(User.created_at <= date_to)
+
+    sort_by = request.args.get('sort_by', 'created_at')
+    sort_order = request.args.get('sort_order', 'desc')
+
+    if sort_order == 'desc':
+        query = query.order_by(desc(getattr(User, sort_by, User.created_at)))
+    else:
+        query = query.order_by(getattr(User, sort_by, User.created_at))
+
+    paginated = query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
+
+    total_users = User.query.count()
+    active_users = User.query.filter(User.status == 'active').count()
+    block_users = User.query.filter(User.status == 'banned').count()
+    admin_users = User.query.filter(User.role == 'admin').count()
+
+    return jsonify({
+        'users': [user.to_dict() for user in paginated.items],
+        'total': paginated.total,
+        'pages': paginated.pages,
+        'current_page': paginated.page,
+        'per_page': paginated.per_page,
+        'has_prev': paginated.has_prev,
+        'has_next': paginated.has_next,
+        'stats': {
+            'total': total_users,
+            'active': active_users,
+            'banned': block_users,
+            'admin': admin_users
+        }
+    })
+
 
 @admin.route('/manual/<int:manual_id>/approve', methods=['POST'])
 @jwt_required()
@@ -345,6 +414,35 @@ def unban_user(user_id):
         'message': f'Пользователь {user.username} разблокирован',
         'user': user.to_dict()
     }), 200
+
+@admin.route('/user/<int:user_id>', methods=['PUT'])
+@jwt_required()
+@admin_required
+def update_user(user_id):
+    """
+    Обновление пользователя
+    """
+
+    data = request.get_json()
+    if not data:
+        raise ValidationError("Нет данных")
+
+    user = User.query.get(user_id)
+    if not user:
+        raise NotFoundError("Пользователь не найден")
+    
+    if 'username' in data:
+        user.username = data.get('username')
+    if 'email' in data:
+        user.email = data.get('email')
+    if 'role' in data:
+        user.role = data.get('role')
+    if 'status' in data:
+        user.status = data.get('status')
+
+    db.session.commit()
+
+    return jsonify(user.to_dict()), 200
 
 @admin.route('/user/<int:user_id>', methods=['DELETE'])
 @jwt_required()

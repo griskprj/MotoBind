@@ -56,7 +56,7 @@ export default {
                     <select v-model="form.role">
                         <option value="motorcyclist">Мотоциклист</option>
                         <option value="clubMember">Член мотоклуба</option>
-                        <option value="amdin">Админ</option>
+                        <option value="admin">Админ</option>
                     </select>
                 </label>
 

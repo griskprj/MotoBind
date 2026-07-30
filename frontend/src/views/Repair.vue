@@ -4,6 +4,7 @@
         <header class="page-header">
             <div class="header-left">
                 <h2>Ремонт</h2>
+                <p class="header-subtitle">Обслужите свой мотоцикл.</p>
             </div>
 
             <div class="header-right">
@@ -364,6 +365,10 @@ export default {
     margin: 0;
     font-size: 24px;
     font-weight: 600;
+}
+.header-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
 }
 .header-right {
     display: flex;

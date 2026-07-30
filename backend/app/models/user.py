@@ -36,7 +36,8 @@ class User(db.Model):
             'email': self.email,
             'username': self.username,
             'role': self.role,
-            'status': self.status
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
         if include_moto:
             data['motorcycles'] = [m.to_dict() for m in self.motorcycles]

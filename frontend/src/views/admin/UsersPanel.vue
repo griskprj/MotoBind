@@ -1,184 +1,560 @@
 <template>
     <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Пользователи</h2>
-                <p class="header-subtitle">
-                    Управление пользователями платформы.
-                </p>
+    <header class="page-header">
+        <div class="header-left">
+            <h2>Пользователи</h2>
+            <p class="header-subtitle">
+                Управление пользователями платформы.
+            </p>
+        </div>
+
+        <div class="header-right">
+            <button @click="showAddUserModal = true"><i class="fa fa-plus"></i> Добавить пользователя</button>
+            <i class="fa fa-bell notification-icon"></i>
+            <div class="profile-wrapper">
+                <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
+                <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
+                    <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
+                </button>
+                <div v-if="welcomeDropdownActive" class="dropdown-list">
+                    <ul>
+                        <li><button class="dropdown-item">Профиль</button></li>
+                        <li><button class="dropdown-item">Настройки</button></li>
+                        <li><button @click="logout" class="dropdown-item">Выйти</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- === STATISTIC === -->
+    <section>
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="card-icon">
+                    <i class="fa fa-users"></i>
+                </div>
+                <div class="card-body">
+                    <p class="card-title">Всего пользователей</p>
+                    <p class="card-value">{{ stats.total || 0 }}</p>
+                </div>
             </div>
 
-            <div class="header-right">
-                <button><i class="fa fa-plus"></i> Добавить пользователя</button>
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
+            <div class="stat-card">
+                <div class="card-icon success">
+                    <i class="fa fa-user-plus"></i>
+                </div>
+                <div class="card-body">
+                    <p class="card-title">Активных</p>
+                    <p class="card-value">{{ stats.active || 0 }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-icon danger">
+                    <i class="fa fa-times"></i>
+                </div>
+                <div class="card-body">
+                    <p class="card-title">Заблокированных</p>
+                    <p class="card-value">{{ stats.banned || 0 }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-icon">
+                    <i class="fa fa-clock"></i>
+                </div>
+                <div class="card-body">
+                    <p class="card-title">Администраторов</p>
+                    <p class="card-value">{{ stats.admin || 0 }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- === TABLE === -->
+    <section class="table-section">
+        <div class="table-filters">
+            <div class="inputs-group">
+                <div class="inputs-wrapper">
+                    <label>
+                        Поиск
+                        <input 
+                            type="search" 
+                            v-model="filters.search" 
+                            @input="debouncedSearch"
+                            placeholder="Поиск по имени, email или ID"
+                        >
+                    </label>
+                    <label>
+                        Роль
+                        <select v-model="filters.role" @change="applyFilters">
+                            <option value="">Все роли</option>
+                            <option value="motorcyclist">Мотоциклист</option>
+                            <option value="club_member">Член мотоклуба</option>
+                            <option value="admin">Админ</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="inputs-wrapper">
+                    <label>
+                        Статус
+                        <select v-model="filters.status" @change="applyFilters">
+                            <option value="">Все статусы</option>
+                            <option value="active">Активен</option>
+                            <option value="banned">Заблокирован</option>
+                        </select>
+                    </label>
+                    <label>
+                        Дата регистрации
+                        <input type="date" v-model="filters.date_from" @change="applyFilters">
+                    </label>
+                </div>
+            </div>
+
+            <button class="outline-btn" @click="resetFilters"><i class="fa fa-refresh"></i> Сбросить фильтры</button>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="loading" class="loading-state">
+            <i class="fa fa-spinner fa-spin"></i> Загрузка...
+        </div>
+
+        <div v-else class="users-table-wrapper">
+            <div class="table-header">
+                <span class="th">Пользователь</span>
+                <span class="th">Роль</span>
+                <span class="th">Статус</span>
+                <span class="th">Дата регистрации</span>
+                <span class="th">Действия</span>
+            </div>
+            <div class="table-body">
+                <div v-if="users.length === 0" class="tr empty-state">
+                    <div class="td" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
+                        Пользователи не найдены
+                    </div>
+                </div>
+                <div 
+                    v-for="user in users" 
+                    :key="user.id" 
+                    class="tr"
+                >
+                    <div class="td user-cell">
+                        <img :src="user.avatar || '/BaseAvatar.jpg'" alt="" class="user-img">
+                        <div class="user-info">
+                            <p class="user-name">{{ user.username }}</p>
+                            <p class="user-email">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="td role-cell">
+                        <span>{{ getUserRoleName(user.role) }}</span>
+                    </div>
+                    <div class="td status-cell">
+                        <span :class="getStatusClass(user.status)">{{ getUserStatusName(user.status) }}</span>
+                    </div>
+                    <div class="td date-cell">
+                        <span>{{ formatDate(user.created_at) }}</span>
+                    </div>
+                    <div class="td table-actions-wrapper">
+                        <button class="btn-small" @click="openEditUserModal(user)"><i class="fa fa-pen"></i></button>
+                        <button 
+                            v-if="user.status === 'active'" 
+                            class="btn-small danger" 
+                            @click="banUser(user)"
+                            title="Заблокировать"
+                        >
+                            <i class="fa fa-ban"></i>
+                        </button>
+                        <button 
+                            v-else-if="user.status === 'banned'" 
+                            class="btn-small success" 
+                            @click="unbanUser(user)"
+                            title="Разблокировать"
+                        >
+                            <i class="fa fa-check"></i>
+                        </button>
+                        <button 
+                            class="btn-small danger" 
+                            @click="openDeleteUserModal(user)"
+                            title="Удалить"
+                        >
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === PAGINATION === -->
+        <div v-if="!loading" class="table-paginate">
+            <p class="paginate-show">
+                Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
+                {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
+                из {{ pagination.total }}
+            </p>
+            
+            <div class="paginate-ui">
+                <button 
+                    class="outline-btn" 
+                    @click="goToPage(pagination.current_page - 1)"
+                    :disabled="!pagination.has_prev"
+                >
+                    <i class="fa fa-angle-left"></i>
+                </button>
+                <div class="paginate-btns">
+                    <button 
+                        v-for="page in visiblePages" 
+                        :key="page"
+                        class="outline-btn paginate" 
+                        :class="{ active: page === pagination.current_page }"
+                        @click="goToPage(page)"
+                    >
+                        {{ page }}
                     </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button class="dropdown-item">Настройки</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
+                    <p v-if="showEllipsisEnd">...</p>
+                    <button 
+                        v-if="showLastPage"
+                        class="outline-btn paginate" 
+                        @click="goToPage(pagination.pages)"
+                    >
+                        {{ pagination.pages }}
+                    </button>
                 </div>
-            </div>
-        </header>
-
-        <!-- === STATISTIC === -->
-         <section>
-            <div class="stat-cards">
-                <div class="stat-card">
-                    <div class="card-icon">
-                        <i class="fa fa-users"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Всего пользователей</p>
-                        <p class="card-value">{{ usersCount }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon success">
-                        <i class="fa fa-user-plus"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Активных</p>
-                        <p class="card-value">{{ activeUsers }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon danger">
-                        <i class="fa fa-times"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Заблокированных</p>
-                        <p class="card-value">{{ blockUsers }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon">
-                        <i class="fa fa-clock"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Администраторв</p>
-                        <p class="card-value">{{ adminUsers }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- === TABLE === -->
-        <section class="table-section">
-            <div class="table-filters">
-                <div class="inputs-group">
-                    <div class="inputs-wrapper">
-                        <label>
-                            Поиск
-                            <input type="search" placeholder="Поиск по имени, email или ID">
-                        </label>
-                        <label>
-                            Роль
-                            <select>
-                                <option value="motorcyclist">Мотоциклист</option>
-                                <option value="clubMember">Член мотоклуба</option>
-                                <option value="amdin">Админ</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="inputs-wrapper">
-                        <label>
-                            Статус
-                            <select>
-                                <option value="active">Активен</option>
-                                <option value="ban">Заблокирован</option>
-                            </select>
-                        </label>
-                        <label>
-                            Дата регистрации
-                            <input type="date">
-                        </label>
-                    </div>
-                </div>
-
-                <button class="outline-btn"><i class="fa fa-refresh"></i> Сброисить фильтры</button>
+                <button 
+                    class="outline-btn" 
+                    @click="goToPage(pagination.current_page + 1)"
+                    :disabled="!pagination.has_next"
+                >
+                    <i class="fa fa-angle-right"></i>
+                </button>
             </div>
 
-            <div class="users-table-wrapper">
-                <div class="table-header">
-                    <span class="th">Пользователь</span>
-                    <span class="th">Роль</span>
-                    <span class="th">Статус</span>
-                    <span class="th">Дата регистрации</span>
-                    <span class="th">Действия</span>
-                </div>
-                <div class="table-body">
-                    <div class="tr">
-                        <div class="td user-cell">
-                            <img src="/BaseAvatar.jpg" alt="" class="user-img">
-                            <div class="user-info">
-                                <p class="user-name">Grisky</p>
-                                <p class="user-email">grisky@icloud.com</p>
-                            </div>
-                        </div>
-                        <div class="td role-cell">
-                            <span>Администратор</span>
-                        </div>
-                        <div class="td status-cell">
-                            <span>Активен</span>
-                        </div>
-                        <div class="td date-cell">
-                            <span>26.08.2008</span>
-                        </div>
-                        <div class="td table-actions-wrapper">
-                            <button class="btn-small"><i class="fa fa-pen"></i></button>
-                            <button class="btn-small danger"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-footer">
-                    <button class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
-                </div>
+            <div class="show-per-page">
+                <select v-model="pagination.per_page" @change="changePerPage">
+                    <option :value="10">10</option>
+                    <option :value="20">20</option>
+                    <option :value="50">50</option>
+                    <option :value="100">100</option>
+                </select>
             </div>
-            <div class="table-paginate">
-                <p class="paginate-show">Показано 1-10 из 1024</p>
-                
-                <div class="paginate-ui">
-                    <button class="outline-btn"><i class="fa fa-angle-left"></i></button>
-                    <div class="paginate-btns">
-                        <button class="outline-btn paginate active">1</button>
-                        <button class="outline-btn paginate">1</button>
-                        <button class="outline-btn paginate">1</button>
-                        <p>...</p>
-                        <button class="outline-btn paginate">125</button>
-                    </div>
-                    <button class="outline-btn"><i class="fa fa-angle-right"></i></button>
-                </div>
+        </div>
+    </section>
 
-                <div class="show-per-page">
-                    <select>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-            </div>
-        </section>
+    <AddUserModal
+        :is-open="showAddUserModal"
+        @close="showAddUserModal = false"
+        @submit="addUser"
+    />
+
+    <EditUserModal
+        :is-open="showEditUserModal"
+        :user="selectedUser"
+        @close="closeEditUserModal"
+        @submit="editUser"
+    />
+
+    <DeleteUserModal
+        :is-open="showDeleteUserModal"
+        :user="selectedUser"
+        @close="closeDeleteUserModal"
+        @submit="deleteUser"
+    />
 </template>
 
 <script>
+import api from '../../api/api'
+import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
+import EditUserModal from '../../components/modals/admin/EditUserModal.vue';
+import DeleteUserModal from '../../components/modals/admin/DeleteUserModal.vue';
+
 export default {
+    components: {
+        AddUserModal,
+        EditUserModal,
+        DeleteUserModal
+    },
+    
     data() {
         return {
-            usersCount: 0,
-            activeUsers: 0,
-            blockUsers: 0,
-            adminUsers: 0
+            loading: false,
+            welcomeDropdownActive: false,
+            users: [],
+            stats: {
+                total: 0,
+                active: 0,
+                banned: 0,
+                admin: 0
+            },
+            pagination: {
+                current_page: 1,
+                per_page: 10,
+                total: 0,
+                pages: 0,
+                has_prev: false,
+                has_next: false
+            },
+            filters: {
+                search: '',
+                role: '',
+                status: '',
+                date_from: '',
+                date_to: ''
+            },
+            searchTimeout: null,
+
+            showAddUserModal: false,
+            showEditUserModal: false,
+            showDeleteUserModal: false,
+            selectedUser: null,
+        }
+    },
+    computed: {
+        visiblePages() {
+            const current = this.pagination.current_page
+            const total = this.pagination.pages
+            const delta = 2
+            const range = []
+            
+            for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+                range.push(i)
+            }
+            
+            if (current - delta > 2) {
+                range.unshift('...')
+            }
+            
+            if (current + delta < total - 1) {
+                range.push('...')
+            }
+            
+            range.unshift(1)
+            
+            if (total > 1) {
+                range.push(total)
+            }
+            
+            return range.filter((v, i, a) => a.indexOf(v) === i)
+        },
+        showEllipsisEnd() {
+            const current = this.pagination.current_page
+            const total = this.pagination.pages
+            return total > 1 && current + 2 < total - 1
+        },
+        showLastPage() {
+            const total = this.pagination.pages
+            return total > 1 && this.pagination.current_page + 2 < total
+        }
+    },
+    created() {
+        this.loadUsers()
+    },
+    methods: {
+        async loadUsers() {
+            this.loading = true
+            try {
+                const params = {
+                    page: this.pagination.current_page,
+                    per_page: this.pagination.per_page,
+                    ...this.filters
+                }
+                
+                // Убираем пустые параметры
+                Object.keys(params).forEach(key => {
+                    if (!params[key]) delete params[key]
+                })
+                
+                const response = await api.get('/admin/users', { params })
+                const data = response.data
+                
+                this.users = data.users || []
+                this.pagination = {
+                    current_page: data.current_page,
+                    per_page: data.per_page,
+                    total: data.total,
+                    pages: data.pages,
+                    has_prev: data.has_prev,
+                    has_next: data.has_next
+                }
+                this.stats = data.stats || {
+                    total: 0,
+                    active: 0,
+                    banned: 0,
+                    admin: 0
+                }
+            } catch (error) {
+                console.error('Error loading users:', error)
+                if (error.response?.status === 401) {
+                    this.$router.push('/login')
+                }
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async addUser(formData) {
+            try {
+                const response = await api.post('/admin/user', formData)
+                this.showAddUserModal = false
+                this.loadUsers()
+            } catch (err) {
+                console.error(`Failed add user: ${err}`)
+            }
+        },
+        
+        goToPage(page) {
+            if (page < 1 || page > this.pagination.pages) return
+            this.pagination.current_page = page
+            this.loadUsers()
+        },
+        
+        changePerPage() {
+            this.pagination.current_page = 1
+            this.loadUsers()
+        },
+        
+        applyFilters() {
+            this.pagination.current_page = 1
+            this.loadUsers()
+        },
+        
+        debouncedSearch() {
+            clearTimeout(this.searchTimeout)
+            this.searchTimeout = setTimeout(() => {
+                this.applyFilters()
+            }, 500)
+        },
+        
+        resetFilters() {
+            this.filters = {
+                search: '',
+                role: '',
+                status: '',
+                date_from: '',
+                date_to: ''
+            }
+            this.pagination.current_page = 1
+            this.loadUsers()
+        },
+        
+        loadAllUsers() {
+            this.pagination.per_page = 10000 // Большое число для загрузки всех
+            this.pagination.current_page = 1
+            this.loadUsers()
+        },
+        
+        // Вспомогательные методы
+        getUserRoleName(role) {
+            const roles = {
+                'admin': 'Администратор',
+                'motorcyclist': 'Мотоциклист',
+                'club_member': 'Член клуба'
+            }
+            return roles[role] || role
+        },
+        
+        getUserStatusName(status) {
+            const statuses = {
+                'active': 'Активен',
+                'banned': 'Заблокирован',
+                'pending': 'Ожидает'
+            }
+            return statuses[status] || status
+        },
+        
+        getStatusClass(status) {
+            const classes = {
+                'active': 'status-active',
+                'banned': 'status-banned',
+                'pending': 'status-pending'
+            }
+            return classes[status] || ''
+        },
+        
+        formatDate(date) {
+            if (!date) return '-'
+            const d = new Date(date)
+            return d.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            })
+        },
+        
+        // Действия с пользователями
+        async banUser(user) {
+            if (!confirm(`Заблокировать пользователя ${user.username}?`)) return
+            try {
+                await api.post(`/admin/user/${user.id}/ban`)
+                await this.loadUsers()
+            } catch (error) {
+                console.error('Error banning user:', error)
+                alert(error.response?.data?.message || 'Ошибка при блокировке')
+            }
+        },
+        
+        async unbanUser(user) {
+            if (!confirm(`Разблокировать пользователя ${user.username}?`)) return
+            try {
+                await api.post(`/admin/user/${user.id}/unban`)
+                await this.loadUsers()
+                
+            } catch (error) {
+                console.error('Error unbanning user:', error)
+                alert(error.response?.data?.message || 'Ошибка при разблокировке')
+            }
+        },
+        
+        async deleteUser(userId) {
+            try {
+                await api.delete(`/admin/user/${userId}`)
+                await this.loadUsers()
+                this.closeDeleteUserModal()
+            } catch (error) {
+                console.error('Error deleting user:', error)
+                alert(error.response?.data?.message || 'Ошибка при удалении')
+            }
+        },
+        openDeleteUserModal(user) {
+            this.showDeleteUserModal = true
+            this.selectedUser = user
+        },
+        closeDeleteUserModal() {
+            this.showDeleteUserModal = false
+            this.selectedUser = null
+        },
+        
+        async editUser(formData) {
+            try {
+                const { data } = await api.put(`/admin/user/${formData.id}`, formData)
+
+                const index = this.users.findIndex(u => u.id === formData.id)
+                if (index !== -1) {
+                    this.users[index] = data
+                }
+
+                this.closeEditUserModal()
+            } catch (error) {
+                console.error('Failed update user:', error)
+                alert(error.response?.data?.message || 'Ошибка при удалении')
+            }
+        },
+        openEditUserModal(user) {
+            this.showEditUserModal = true
+            this.selectedUser = user
+        },
+        closeEditUserModal() {
+            this.showEditUserModal = false
+            this.selectedUser = null
+        },
+        
+        openCreateUserModal() {
+            // TODO: Открыть модалку создания
+            console.log('Open create user modal')
+        },
+        
+        logout() {
+            // TODO: Реализовать выход
+            console.log('Logout')
         }
     }
 }
@@ -363,8 +739,9 @@ export default {
 .table-filters {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: last baseline;
     margin-bottom: 16px;
+    gap: 16px;
 }
 
 .inputs-group {
@@ -372,6 +749,11 @@ export default {
     gap: 14px;
     justify-content: center;
     align-items: center;
+}
+
+.inputs-wrapper {
+    display: flex;
+    gap: 14px;
 }
 
 @media (max-width: 1200px) {
@@ -512,6 +894,10 @@ export default {
 .btn-small.danger {
     background-color: var(--danger-trans);
     color: var(--danger);
+}
+.btn-small.success{ 
+    background-color: var(--success-trans);
+    color: var(--success);
 }
 
 /* paginate */
