@@ -136,6 +136,16 @@
                         Новости
                     </router-link>
                 </div>
+
+                <router-link
+                    v-if="isAdmin"
+                    to="/home"
+                    class="nav-link admin-link"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-home"></i>
+                    <span>Назад к сервису</span>
+                </router-link>
             </div>
         </nav>
 

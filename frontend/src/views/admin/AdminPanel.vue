@@ -78,7 +78,7 @@
                         v-for="user in lastRegUserData"    
                     >
                         <div class="user-info">
-                            <img class="user-img" src="../../public/BaseAvatar.jpg" alt="">
+                            <img class="user-img" src="/BaseAvatar.jpg" alt="">
                             <div class="reg-card-body">
                                 <p class="user-name">{{ user.username }}</p>
                                 <p class="user-time">26.08.2008, 12:45</p>
@@ -89,9 +89,9 @@
                         </div>
                     </div>
                 </div>
-                <button class="outline-btn">
+                <router-link class="btn outline-btn" style="text-decoration: none; width: 100%;" to="/admin/users">
                     Смотреть всех пользователей <i class="fa fa-angle-right"></i>
-                </button>
+                </router-link>
             </div>
         </section>
 
@@ -146,9 +146,9 @@
 </template>
 
 <script>
-import api from '../api/api'
-import UserRegistrationsChart from '../components/charts/UserRegistrationsChart.vue';
-import AddUserModal from '../components/modals/admin/AddUserModal.vue';
+import api from '../../api/api'
+import UserRegistrationsChart from '../../components/charts/UserRegistrationsChart.vue';
+import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
 
 export default {
     components: {
@@ -485,6 +485,20 @@ export default {
 
 .fast-action-text {
     color: var(--text-secondary);
+}
+
+@media (max-width: 800px) {
+    .fast-action-card-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 620px) {
+    .fast-action-card-wrapper {
+        grid-template-columns: repeat(1, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+    }
 }
 
 

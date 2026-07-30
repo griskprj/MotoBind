@@ -104,11 +104,23 @@ const router = createRouter({
     {
       path: '/admin/panel',
       name: 'admin panel',
-      component: () => import('../views/AdminPanel.vue'),
+      component: () => import('../views/admin/AdminPanel.vue'),
       meta: {
         requiresAuth: true,
         requiresAdmin: true,
         title: 'MotoBind - Админ-панель',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
+      path: '/admin/users',
+      name: 'users',
+      component: () => import('../views/admin/UsersPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'MotoBind - Пользователи',
         showFooter: true,
         showHeader: true
       }
