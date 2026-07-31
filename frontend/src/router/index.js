@@ -147,6 +147,18 @@ const router = createRouter({
         showHeader: true
       }
     },
+    {
+      path: '/admin/manuals',
+      name: 'admin manuals',
+      component: () => import('../views/admin/ManualsPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'MotoBind - Мануалы',
+        showFooter: true,
+        showHeader: true
+      }
+    },
   ]
 })
 

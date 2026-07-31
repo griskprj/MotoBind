@@ -438,6 +438,10 @@ def update_user(user_id):
     if 'role' in data:
         user.role = data.get('role')
     if 'status' in data:
+        if user.id == int(get_jwt_identity()) and data.get('status') == 'banned':
+            raise ValidationError("Вы не можете заблокировать сами себя")
+        if user.id == int(get_jwt_identity()) and data.get('role') != 'admin':
+                    raise ValidationError("Вы не можете самостоятельно лишить себя роли администратора")
         user.status = data.get('status')
 
     db.session.commit()

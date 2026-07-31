@@ -46,7 +46,7 @@
                     Статус
                     <select v-model="form.status">
                         <option value="active">Активен</option>
-                        <option value="ban">Заблокирован</option>
+                        <option value="banned">Заблокирован</option>
                     </select>
                 </label>
             </div>

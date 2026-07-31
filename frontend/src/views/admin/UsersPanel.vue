@@ -535,7 +535,7 @@ export default {
                 this.closeEditUserModal()
             } catch (error) {
                 console.error('Failed update user:', error)
-                alert(error.response?.data?.message || 'Ошибка при удалении')
+                alert(error.response?.data?.message || 'Ошибка при редактировании')
             }
         },
         openEditUserModal(user) {

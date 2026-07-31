@@ -13,10 +13,10 @@
     
             <div class="right-col">
                 <nav>
-                    <router-link class="link-item" to="/lending">MotoBind</router-link>
-                    <router-link class="link-item" to="/about">О проекте</router-link>
-                    <router-link class="link-item" to="/privacy-policy">Политика конфиденциальности</router-link>
-                    <router-link class="link-item" to="/rules">Правила сервиса</router-link>
+                    <router-link class="link-item" to="/home">MotoBind</router-link>
+                    <router-link class="link-item" to="/home">О проекте</router-link>
+                    <router-link class="link-item" to="/home">Политика конфиденциальности</router-link>
+                    <router-link class="link-item" to="/home">Правила сервиса</router-link>
                 </nav>
             </div>
         </div>

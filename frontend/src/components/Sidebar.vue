@@ -112,7 +112,7 @@
                         Пользователи
                     </router-link>
                     <router-link
-                        to="/admin/motorcycles"
+                        to="/admin/panel"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/motorcycles'}"
                     >
@@ -120,15 +120,15 @@
                         Мотоциклы
                     </router-link>
                     <router-link
-                        to="/admin/maintenances"
+                        to="/admin/manuals"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/maintenances'}"
+                        :class="{ active: $route.path === '/admin/manuals'}"
                     >
                         <i class="fa fa-tools"></i>
                         Мануалы
                     </router-link>
                     <router-link
-                        to="/admin/news"
+                        to="/admin/panel"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/news'}"
                     >

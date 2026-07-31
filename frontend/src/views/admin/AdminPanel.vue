@@ -117,7 +117,7 @@
                     </p>
                 </router-link>
     
-                <router-link class="fast-action-card link" to="admin/manual">
+                <router-link class="fast-action-card link" to="/admin/manuals">
                     <div class="action-card-icon">
                         <i class="fa fa-pen"></i>
                     </div>
