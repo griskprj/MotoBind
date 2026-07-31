@@ -488,6 +488,7 @@ export default {
 
 .premium-text {
     color: var(--text-muted);
+    margin-bottom: 10px;
 }
 
 .premium-wrapper button {

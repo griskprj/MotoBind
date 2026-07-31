@@ -8,20 +8,20 @@
     >
         <div class="modal-header">
             <div class="header-top">
-                <div
+                <span
                     class="badge"
                     :class="{
                         'badge-green': maintenance?.status === 'ok',
                         'badge-warning': maintenance?.status === 'soon',
                         'badge-danger': maintenance?.status === 'overdue',
-                        'badge-gray': !maintenance?.status
+                        'badge-gray': !maintenance?.status || maintenance?.status === 'planned'
                     }"
                 >
                     {{ getStatusLabel(maintenance?.status) }}
-                </div>
-                <div v-if="maintenance?.date" class="header-date">
+                </span>
+                <span v-if="maintenance?.date" class="header-date">
                     {{ formatDate(maintenance.date) }}
-                </div>
+                </span>
             </div>
 
             <p v-if="maintenance?.description" class="header-subtitle">
@@ -33,34 +33,44 @@
             <p class="modal-card-title">Детали обслуживания</p>
             <div class="card-items">
                 <div v-if="maintenance?.date" class="card-item">
-                    <p class="item-title"><i class="fa fa-calendar"></i> Дата</p>
-                    <p class="item-value">{{ formatDate(maintenance.date) }}</p>
+                    <span class="item-title">
+                        <i class="fa fa-calendar"></i> Дата
+                    </span>
+                    <span class="item-value">{{ formatDate(maintenance.date) }}</span>
                 </div>
 
                 <div v-if="maintenance?.mileage" class="card-item">
-                    <p class="item-title"><i class="fa fa-tachometer"></i> Пробег выполнения</p>
-                    <p class="item-value">{{ maintenance.mileage }} км</p>
+                    <span class="item-title">
+                        <i class="fa fa-tachometer"></i> Пробег выполнения
+                    </span>
+                    <span class="item-value">{{ maintenance.mileage }} км</span>
                 </div>
                 
                 <div v-if="maintenance?.planned_mileage" class="card-item">
-                    <p class="item-title"><i class="fa fa-tachometer"></i> Плановый пробег</p>
-                    <p class="item-value">{{ maintenance.planned_mileage }} км</p>
+                    <span class="item-title">
+                        <i class="fa fa-tachometer"></i> Плановый пробег
+                    </span>
+                    <span class="item-value">{{ maintenance.planned_mileage }} км</span>
                 </div>
                 
                 <div v-if="maintenance?.cost" class="card-item">
-                    <p class="item-title"><i class="fa fa-ruble"></i> Стоимость</p>
-                    <p class="item-value">{{ maintenance.cost }} ₽</p>
+                    <span class="item-title">
+                        <i class="fa fa-ruble"></i> Стоимость
+                    </span>
+                    <span class="item-value">{{ maintenance.cost }} ₽</span>
                 </div>
 
                 <div v-if="maintenance?.category" class="card-item">
-                    <p class="item-title"><i class="fa fa-tags"></i> Категория</p>
-                    <p class="item-value">{{ getCategory(maintenance.category) }}</p>
+                    <span class="item-title">
+                        <i class="fa fa-tags"></i> Категория
+                    </span>
+                    <span class="item-value">{{ getCategory(maintenance.category) }}</span>
                 </div>
             </div>
         </div>
 
         <div class="modal-actions">
-            <button @click="$emit('close')" class="cancel-btn">Закрыть</button>
+            <button @click="$emit('close')" class="btn-close">Закрыть</button>
         </div>
     </ModalWrapper>
 </template>
@@ -104,7 +114,7 @@ export default {
                     month: 'short',
                     year: 'numeric'
                 })
-            } catch (error) {
+            } catch {
                 return '—'
             }
         },
@@ -119,19 +129,19 @@ export default {
             return labels[status] || '—'
         },
 
-        getCategory(category){
+        getCategory(category) {
             const categories = {
                 'engine': 'Двигатель',
                 'drive': 'Привод',
                 'steering': 'Рулевое управление',
-                'suspension' : 'Подвеска',
+                'suspension': 'Подвеска',
                 'electronics': 'Электроника',
-                'wheel': 'Колеса/Шины',
+                'wheel': 'Колеса / Шины',
                 'brakes': 'Тормозная система',
                 'fuel': 'Топливная система',
                 'cooling': 'Система охлаждения',
             }
-            return categories[category]
+            return categories[category] || category
         }
     }
 }
@@ -146,41 +156,42 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     flex-wrap: wrap;
     gap: 8px;
 }
 
 .badge {
     display: inline-block;
-    padding: 4px 14px;
+    padding: 3px 14px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 .badge-green {
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(74, 222, 128, 0.12);
     color: #4ade80;
 }
 
 .badge-warning {
-    background: rgba(251, 191, 36, 0.15);
+    background: rgba(251, 191, 36, 0.12);
     color: #fbbf24;
 }
 
 .badge-danger {
-    background: rgba(239, 68, 68, 0.15);
+    background: rgba(239, 68, 68, 0.12);
     color: #ef4444;
 }
 
 .badge-gray {
-    background: rgba(107, 114, 128, 0.15);
+    background: rgba(107, 114, 128, 0.12);
     color: #9ca3af;
 }
 
 .header-date {
-    font-size: 14px;
+    font-size: 13px;
     color: #8b8b9e;
 }
 
@@ -194,82 +205,78 @@ export default {
 .modal-card {
     background: #0f0f1a;
     border-radius: 12px;
-    padding: 16px;
+    padding: 16px 18px;
     margin-bottom: 16px;
 }
 
 .modal-card-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #8b8b9e;
-    margin: 0 0 12px 0;
+    margin: 0 0 14px 0;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
 
 .card-items {
-    width: 256px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .card-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
     background: #181824;
-    padding: 12px;
-    border-radius: 10px;
+    border-radius: 8px;
+    transition: background 0.2s;
 }
 
-.card-item.full-width {
-    grid-column: 1 / -1;
+.card-item:hover {
+    background: #1e1e2e;
 }
 
 .item-title {
-    font-size: 12px;
-    color: var(--accent);
-    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: #8b8b9e;
 }
 
 .item-title i {
-    margin-right: 4px;
+    margin-right: 6px;
+    font-size: 13px;
+    color: #7c3aed;
+    width: 16px;
+    text-align: center;
 }
 
 .item-value {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
-}
-
-.item-value i {
-    margin-right: 4px;
-    color: #a78bfa;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
 }
 
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
-.cancel-btn {
-    padding: 10px 24px;
+.btn-close {
+    padding: 8px 28px;
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    color: #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: #b0b0c8;
     cursor: pointer;
     transition: 0.2s;
     font-size: 14px;
 }
 
-.cancel-btn:hover {
-    background: rgba(255,255,255,0.05);
-}
-
-@media (max-width: 480px) {
-    .card-items {
-        grid-template-columns: 1fr;
-    }
+.btn-close:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e0e0e0;
 }
 </style>

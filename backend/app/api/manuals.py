@@ -164,6 +164,102 @@ def get_maintenance_manual():
     return jsonify(result), 200
 
 
+@manual.route('/list', methods=['GET'])
+@jwt_required()
+def get_manuals_list():
+    """
+    Получение списка мануалов с пагинацией и фильтрами
+    """
+    current_user_id = int(get_jwt_identity())
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 8, type=int)
+    tab = request.args.get('tab', 'all')
+    search = request.args.get('search', '')
+    motorcycle_filter = request.args.get('motorcycle', '')
+    category = request.args.get('category', '')
+    sort_by = request.args.get('sort_by', 'created_at_dec')
+
+    query = Manual.query
+
+    if tab == 'my':
+        query = query.filter(Manual.author_id == current_user_id)
+    elif tab == 'myMotos':
+        user_motorcycles = Motorcycle.query.filter_by(owner_id=current_user_id).all()
+
+        moto_names = [moto.name for moto in user_motorcycles]
+        if moto_names:
+            query = query.filter(Manual.motorcycle.in_(moto_names))
+        else:
+            return jsonify({
+                'manuals': [],
+                'total': 0,
+                'pages': 0,
+                'current_page': page,
+                'per_page': per_page,
+                'has_prev': False,
+                'has_next': False
+            }), 200
+
+    if search:
+        query = query.filter(
+            or_(
+                Manual.title.ilike(f'%{search}'),
+                Manual.motorcycle.ilike(f'%{search}'),
+                Manual.description.ilike(f'${search}')
+            )
+        )
+
+    if motorcycle_filter:
+        query = query.filter(Manual.motorcycle.ilike(f'${motorcycle_filter}'))
+
+    if category:
+        query = query.filter(Manual.category == category)
+
+    sort_mapping = {
+        'created_at_desc': Manual.created_at.desc(),
+        'created_at_asc': Manual.created_at.asc(),
+        'title_asc': Manual.title.asc(),
+        'title_desc': Manual.title.desc()
+    }
+    query = query.order_by(sort_mapping.get(sort_by, Manual.created_at.desc()))
+
+    paginated = query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
+
+    result = {
+        'manuals': [manual.to_dict() for manual in paginated.items],
+        'total': paginated.total,
+        'pages': paginated.pages,
+        'current_page': paginated.page,
+        'per_page': paginated.per_page,
+        'has_prev': paginated.has_prev,
+        'has_next': paginated.has_next
+    }
+
+    return jsonify(result), 200
+
+
+@manual.route('/<int:manual_id>', methods=['GET'])
+@jwt_required()
+def get_manual_by_id(manual_id):
+    """
+    Получение детальной информации о мануале
+    """
+
+    manual = Manual.query.get(manual_id)
+    if not manual:
+        raise NotFoundError("Мануал не найден")
+
+    if manual.status != 'approved':
+        raise ForbiddenError("Мануал не был допущен к публикации")
+
+    return jsonify(manual.to_dict())
+
+
 @manual.route('/new-manual', methods=['POST'])
 @jwt_required()
 def create_new_manual():

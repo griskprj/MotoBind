@@ -19,7 +19,6 @@
                     <div v-if="welcomeDropdownActive" class="dropdown-list">
                         <ul>
                             <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button class="dropdown-item">Настройки</button></li>
                             <li><button @click="logout" class="dropdown-item">Выйти</button></li>
                         </ul>
                     </div>
@@ -87,6 +86,14 @@
         <!-- === MAINTENANCE TABLE === -->
         <div class="table-filter-wrap">
             <div class="tabs">
+                <div 
+                    @click="changeTab('all')" 
+                    class="tab"
+                    :class="selectedTab === 'all' ? 'active' : ''"
+                >   
+                    <p>Все записи</p>
+                    <hr v-if="selectedTab === 'all'">
+                </div>
                 <div
                     @click="changeTab('planned')"
                     class="tab" 
@@ -102,14 +109,6 @@
                 >
                     <p>История</p>
                     <hr v-if="selectedTab === 'history'">
-                </div>
-                <div 
-                    @click="changeTab('all')" 
-                    class="tab"
-                    :class="selectedTab === 'all' ? 'active' : ''"
-                >   
-                    <p>Все записи</p>
-                    <hr v-if="selectedTab === 'all'">
                 </div>
             </div>
 
@@ -285,7 +284,7 @@ export default {
             allMaintenancesCount: 0,
             plannedMaintenancesCount: 0,
             overdueMaintenancesCount: 0,
-            selectedTab: 'planned',
+            selectedTab: 'all',
 
             // Модалки
             showAddMaintenanceModal: false,
@@ -337,7 +336,7 @@ export default {
                 this.plannedMaintenancesCount = response.data.planned_maintenances_count || 0
                 this.overdueMaintenancesCount = response.data.overdue_maintenances_count || 0
                 
-                this.changeTab('planned')
+                this.changeTab('all')
             } catch (err) {
                 console.error(`Failed load maintenance data:`, err)
             }
@@ -477,29 +476,6 @@ export default {
 .header-subtitle {
     font-size: 14px;
     color: var(--text-secondary);
-}
-.header-tabs {
-    display: flex;
-    gap: 8px;
-}
-.tab-btn {
-    padding: 8px 20px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: transparent;
-    color: #8b8b9e;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: 0.2s;
-}
-.tab-btn.active {
-    background: rgba(124, 58, 237, 0.2);
-    border-color: #7c3aed;
-    color: #a78bfa;
-}
-.tab-btn.outline:hover {
-    background: rgba(124, 58, 237, 0.1);
 }
 .header-right {
     display: flex;

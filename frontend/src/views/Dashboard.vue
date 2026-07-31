@@ -25,7 +25,6 @@
                             <div v-if="welcomeDropdownActive" class="dropdown-list">
                                 <ul>
                                     <li><button class="dropdown-item-btn">Профиль</button></li>
-                                    <li><button class="dropdown-item-btn">Настройки</button></li>
                                     <li><button @click="logout()" class="dropdown-item-btn">Выйти</button></li>
                                 </ul>
                             </div>
@@ -158,7 +157,6 @@ export default {
             // === Arrays ===
             motorcycles: [],
             maintenances: [],
-            events: [],
 
             // === Statistic vars ===
             motorcycleCount: 0,
@@ -219,11 +217,6 @@ export default {
                 this.costChartData = chartsResponse.data.cost_chart || []
                 this.countChartData = chartsResponse.data.count_chart || []
 
-                const eventsResponse = await api.get('/event/')
-                this.events = eventsResponse.data.filter(
-                    e => e.status === 'planned' || e.status === 'active'
-                ).slice(0, 3) // Ограничиваем тремя первыми
-                
             } catch(err) {
                 console.error('Failed to load dashboard data:', err)
             } finally {

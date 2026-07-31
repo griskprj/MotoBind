@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getAccessToken, removeTokens, getRefreshToken, setTokens } from './auth'
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.41:5000/api',
+  baseURL: 'http://192.168.1.40:5000/api',
 })
 
 let isRefreshing = false

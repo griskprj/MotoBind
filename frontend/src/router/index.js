@@ -91,12 +91,34 @@ const router = createRouter({
       }
     },
     {
+      path: '/manuals',
+      name: 'manuals',
+      component: () => import('../views/Manuals.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Мануалы',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
       path: '/manual-creator',
       name: 'manual creator',
       component: () => import('../views/ManualCreator.vue'),
       meta: {
         requiresAuth: true,
         title: 'MotoBind - Конструктор мануалов',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/Profile.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Профиль пользователя',
         showFooter: true,
         showHeader: true
       }

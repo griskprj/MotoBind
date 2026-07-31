@@ -34,6 +34,7 @@ class UserService:
         if user.status == 'banned':
             raise ForbiddenError("Вы были заблокированы")
         if not user.check_password(password):
+            print(password)
             raise ForbiddenError("Неверный пароль")
         
         return user
@@ -56,6 +57,8 @@ class UserService:
         user =  User.query.get(user_id)
         if not user:
             raise NotFoundError("Пользователь не найден")
+
+        return user
         
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:

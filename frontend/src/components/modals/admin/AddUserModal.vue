@@ -71,7 +71,7 @@ export default {
 
             <label>
                 Пароль
-                <input type="password">
+                <input v-model="form.password" type="password">
             </label>
         </div>
 

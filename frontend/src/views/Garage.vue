@@ -272,7 +272,6 @@ export default {
                     <div v-if="welcomeDropdownActive" class="dropdown-list">
                         <ul>
                             <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button class="dropdown-item">Настройки</button></li>
                             <li><button @click="logout" class="dropdown-item">Выйти</button></li>
                         </ul>
                     </div>

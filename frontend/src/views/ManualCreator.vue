@@ -1,213 +1,203 @@
 <template>
     <div class="container">
-        <section class="section">
-            <div class="section-header">
-                <div class="section-title-wrapper">
-                    <i class="fa fa-wrench"></i>
-                    <h2>Создайте мануал по обслуживанию</h2>
+        <!-- === HEADER === -->
+        <header class="page-header">
+            <div class="header-left">
+                <h2>Конструктор мануалов</h2>
+                <p class="header-subtitle">
+                    Конструктор для создания мануалов. Правила оформления мануалов <a href="#">здесь</a>.
+                </p>
+            </div>
+
+            <div class="header-right">
+                <i class="fa fa-bell notification-icon"></i>
+                <div class="profile-wrapper">
+                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
+                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
+                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
+                    </button>
+                    <div v-if="welcomeDropdownActive" class="dropdown-list">
+                        <ul>
+                            <li><button class="dropdown-item">Профиль</button></li>
+                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
+                        </ul>
+                    </div>
                 </div>
-                <p class="subtitle">Мануал должен соответствовать стандарту сервиса. Подробнее о правилах написания мануала вы можете узнать <a href="#">здесь</a></p>
             </div>
-        </section>
+        </header>
 
-        <section class="section">
-            <div class="section-title-wrapper">
-                <i class="fa fa-pen"></i>
-                <h2>Конструктор</h2>
-            </div>
-
-            <div class="section-body">
-                <form @submit.prevent="submitManual">
-                    <!-- Основная информация -->
-                    <div class="form-group">
-                        <label>
-                            Название*
-                            <input 
-                                type="text" 
-                                v-model="form.title" 
-                                required
-                                placeholder="Например: Замена масла в двигателе"
-                                :class="{ 'error': errors.title }"
-                            >
-                            <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
-                        </label>
+        <!-- === FORM === -->
+        <section class="form-section">
+            <form @submit.prevent="submitManual">
+                <!-- Основная информация -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="fa fa-info-circle"></i>
+                        <h3>Основная информация</h3>
                     </div>
 
-                    <div class="form-group">
-                        <label>
-                            Описание*
-                            <input 
-                                type="text" 
-                                v-model="form.description" 
-                                required
-                                placeholder="Краткое описание процедуры"
-                                :class="{ 'error': errors.description }"
-                            >
-                            <span v-if="errors.description" class="error-message">{{ errors.description }}</span>
-                        </label>
-                    </div>
-
-                    <div class="form-row">
+                    <div class="form-card-body">
                         <div class="form-group">
                             <label>
-                                Категория
-                                <select v-model="form.category">
-                                    <option value="">Выберите категорию</option>
-                                    <option value="engine">Двигатель</option>
-                                    <option value="drive">Привод</option>
-                                    <option value="steering">Рулевое управление</option>
-                                    <option value="suspension">Подвеска</option>
-                                    <option value="electronics">Электроника</option>
-                                    <option value="wheel">Колеса/Шины</option>
-                                    <option value="brakes">Тормозная система</option>
-                                    <option value="fuel">Топливная система</option>
-                                    <option value="cooling">Система охлаждения</option>
-                                </select>
+                                Название*
+                                <input 
+                                    type="text" 
+                                    v-model="form.title" 
+                                    required
+                                    placeholder="Например: Замена масла в двигателе"
+                                    :class="{ 'error': errors.title }"
+                                >
+                                <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
                             </label>
                         </div>
 
                         <div class="form-group">
                             <label>
-                                Сложность
-                                <select v-model="form.difficult">
-                                    <option value="">Выберите сложность</option>
-                                    <option value="easy">Легко</option>
-                                    <option value="medium">Средне</option>
-                                    <option value="hard">Сложно</option>
-                                </select>
+                                Описание*
+                                <input 
+                                    type="text" 
+                                    v-model="form.description" 
+                                    required
+                                    placeholder="Краткое описание процедуры"
+                                    :class="{ 'error': errors.description }"
+                                >
+                                <span v-if="errors.description" class="error-message">{{ errors.description }}</span>
+                            </label>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    Категория
+                                    <select v-model="form.category">
+                                        <option value="">Выберите категорию</option>
+                                        <option value="engine">Двигатель</option>
+                                        <option value="drive">Привод</option>
+                                        <option value="steering">Рулевое управление</option>
+                                        <option value="suspension">Подвеска</option>
+                                        <option value="electronics">Электроника</option>
+                                        <option value="wheel">Колеса/Шины</option>
+                                        <option value="brakes">Тормозная система</option>
+                                        <option value="fuel">Топливная система</option>
+                                        <option value="cooling">Система охлаждения</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    Сложность
+                                    <select v-model="form.difficult">
+                                        <option value="">Выберите сложность</option>
+                                        <option value="easy">Легко</option>
+                                        <option value="medium">Средне</option>
+                                        <option value="hard">Сложно</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                Модель мотоцикла*
+                                <input 
+                                    type="text" 
+                                    v-model="form.motorcycle" 
+                                    required
+                                    placeholder="Например: BMW S1000RR"
+                                    :class="{ 'error': errors.motorcycle }"
+                                >
+                                <span v-if="errors.motorcycle" class="error-message">{{ errors.motorcycle }}</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                Инструменты (через запятую)
+                                <input 
+                                    type="text" 
+                                    v-model="form.instruments" 
+                                    placeholder="Ключ на 18мм, ветошь, динамометрический ключ"
+                                >
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                Материалы и запчасти (через запятую)
+                                <input 
+                                    type="text" 
+                                    v-model="form.parts" 
+                                    placeholder="Масло моторное 10W-40, масляный фильтр, прокладка"
+                                >
                             </label>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>
-                            Модель мотоцикла*
-                            <input 
-                                type="text" 
-                                v-model="form.motorcycle" 
-                                required
-                                placeholder="Например: BMW S1000RR"
-                                :class="{ 'error': errors.motorcycle }"
-                            >
-                            <span v-if="errors.motorcycle" class="error-message">{{ errors.motorcycle }}</span>
-                        </label>
+                <!-- Шаги -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="fa fa-list-ol"></i>
+                        <h3>Шаги инструкции</h3>
+                        <span class="steps-count">{{ form.steps.length }} шаг(ов)</span>
                     </div>
 
-                    <div class="form-group">
-                        <label>
-                            Инструменты (через запятую)
-                            <input 
-                                type="text" 
-                                v-model="form.instruments" 
-                                placeholder="Ключ на 18мм, ветошь, динамометрический ключ"
-                            >
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            Материалы и запчасти (через запятую)
-                            <input 
-                                type="text" 
-                                v-model="form.parts" 
-                                placeholder="Масло моторное 10W-40, масляный фильтр, прокладка"
-                            >
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            Совет
-                            <input 
-                                type="text"
-                                v-model="form.tip"
-                            >
-                        </label>
-                    </div>
-
-                    <div class="section-sep">
-                        <hr>
-                    </div>
-
-                    <!-- Шаги -->
-                    <div class="steps-header">
-                        <div class="steps-header-left">
-                            <i class="fa fa-list-ol"></i>
-                            <h3>Шаги инструкции</h3>
-                            <span class="steps-count">{{ form.steps.length }} шаг(ов)</span>
+                    <div class="form-card-body">
+                        <div v-if="form.steps.length === 0" class="empty-state">
+                            <i class="fa fa-hand-pointer"></i>
+                            <p>Нажмите "Добавить шаг", чтобы создать инструкцию</p>
                         </div>
+
+                        <div v-for="(step, index) in form.steps" :key="step.id" class="step-card">
+                            <div class="step-header">
+                                <span class="step-number">Шаг {{ index + 1 }}</span>
+                                <button type="button" class="btn-remove-step" @click="removeStep(index)">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="step-content">
+                                <div class="form-group">
+                                    <label>
+                                        Заголовок шага*
+                                        <input 
+                                            type="text" 
+                                            v-model="step.title" 
+                                            required
+                                            :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
+                                            :class="{ 'error': step.errors && step.errors.title }"
+                                        >
+                                        <span v-if="step.errors && step.errors.title" class="error-message">{{ step.errors.title }}</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        Описание шага
+                                        <textarea 
+                                            v-model="step.text" 
+                                            rows="3"
+                                            :placeholder="`Подробное описание шага ${index + 1}`"
+                                        ></textarea>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="button" class="btn-add-step" @click="addStep">
                             <i class="fa fa-plus"></i> Добавить шаг
                         </button>
                     </div>
+                </div>
 
-                    <div v-if="form.steps.length === 0" class="empty-state">
-                        <i class="fa fa-hand-pointer"></i>
-                        <p>Нажмите "Добавить шаг", чтобы создать инструкцию</p>
-                    </div>
-
-                    <div v-for="(step, index) in form.steps" :key="step.id" class="step-card">
-                        <div class="step-header">
-                            <span class="step-number">Шаг {{ index + 1 }}</span>
-                            <button type="button" class="btn-remove-step" @click="removeStep(index)">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="step-content">
-                            <div class="form-group">
-                                <label>
-                                    Заголовок шага*
-                                    <input 
-                                        type="text" 
-                                        v-model="step.title" 
-                                        required
-                                        :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
-                                        :class="{ 'error': step.errors && step.errors.title }"
-                                    >
-                                    <span v-if="step.errors && step.errors.title" class="error-message">{{ step.errors.title }}</span>
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    Описание шага
-                                    <textarea 
-                                        v-model="step.text" 
-                                        rows="3"
-                                        :placeholder="`Подробное описание шага ${index + 1}`"
-                                    ></textarea>
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    Совет
-                                    <input
-                                        type="text"
-                                        v-model="step.tip"
-                                    >
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label>
-                                    Предупреждение
-                                    <input
-                                        type="text"
-                                        v-model="step.warning"
-                                    >
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Кнопки отправки -->
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" @click="resetForm">Отменить</button>
-                        <button type="submit" class="btn" :disabled="isSubmitting">
-                            <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
-                            <span v-else><i class="fa fa-check"></i> Создать мануал</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <!-- Кнопки отправки -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" @click="resetForm">Отменить</button>
+                    <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+                        <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
+                        <span v-else><i class="fa fa-check"></i> Создать мануал</span>
+                    </button>
+                </div>
+            </form>
         </section>
     </div>
 </template>
@@ -219,6 +209,7 @@ export default {
     name: 'ManualCreator',
     data() {
         return {
+            welcomeDropdownActive: false,
             form: {
                 title: '',
                 description: '',
@@ -227,14 +218,11 @@ export default {
                 motorcycle: '',
                 instruments: '',
                 parts: '',
-                tip: '',
                 steps: []
             },
             errors: {},
             isSubmitting: false,
-            stepIdCounter: 0,
-
-            isLoading: false
+            stepIdCounter: 0
         };
     },
     methods: {
@@ -243,8 +231,6 @@ export default {
                 id: ++this.stepIdCounter,
                 title: '',
                 text: '',
-                tip: '',
-                warning: '',
                 errors: {}
             });
         },
@@ -254,9 +240,6 @@ export default {
                 return;
             }
             this.form.steps.splice(index, 1);
-            this.form.steps.forEach((step, idx) => {
-                step.id = idx + 1;
-            });
         },
         validateForm() {
             this.errors = {};
@@ -292,7 +275,6 @@ export default {
             return isValid;
         },
 
-
         async submitManual() {
             if (!this.validateForm()) {
                 const firstError = document.querySelector('.error');
@@ -314,18 +296,14 @@ export default {
                     motorcycle: this.form.motorcycle.trim(),
                     instruments: this.form.instruments.trim() || null,
                     parts: this.form.parts.trim() || null,
-                    tip: this.form.tip.trim() || null,
                     steps: this.form.steps.map((step, index) => ({
                         order: index + 1,
                         title: step.title.trim(),
-                        text: step.text.trim() || null,
-                        tip: step.tip.trim() || null,
-                        warning: step.warning.trim() || null
+                        text: step.text.trim() || null
                     }))
                 };
 
-                const response = await api.post('/manual/new-manual', payload, {
-                });
+                const response = await api.post('/manual/new-manual', payload);
 
                 if (response.status === 201) {
                     this.$emit('manual-created', response.data);
@@ -358,12 +336,22 @@ export default {
                 motorcycle: '',
                 instruments: '',
                 parts: '',
-                tip: '',
                 steps: []
             };
             this.errors = {};
             this.stepIdCounter = 0;
             this.addStep();
+        },
+
+        async logout() {
+            try {
+                await api.post('/auth/logout');
+            } catch(err) { console.error(err) }
+            finally {
+                const { removeTokens } = await import('../api/auth');
+                removeTokens();
+                this.$router.push('/login');
+            }
         }
     },
     mounted() {
@@ -373,91 +361,181 @@ export default {
 </script>
 
 <style scoped>
-.section {
-    background-color: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 25px;
-    padding: 28px;
-    margin-bottom: 32px;
-}
-
-.section-header {
-    text-align: center;
-}
-
-.section-title-wrapper {
+/* ===== HEADER ===== */
+.page-header {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 24px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
-
-.section-title-wrapper i {
-    font-size: 32px;
-    color: var(--accent);
+.header-left h2 {
+    margin: 0 0 12px 0;
+    font-size: 24px;
 }
-
-.section-title-wrapper h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.subtitle {
+.header-subtitle {
+    font-size: 14px;
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    margin: 0;
-    text-align: center;
 }
-
-.subtitle a {
+.header-subtitle a {
     color: var(--accent);
     text-decoration: none;
 }
-
-.subtitle a:hover {
-    color: var(--accent-hover);
+.header-subtitle a:hover {
     text-decoration: underline;
 }
-
-.section-body {
-    margin-top: 24px;
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.notification-icon {
+    font-size: 20px;
+    color: #8b8b9e;
+    cursor: pointer;
+}
+.profile-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+.profile-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #7c3aed;
+}
+.dropdown-trigger {
+    background: transparent;
+    border: none;
+    color: #8b8b9e;
+    cursor: pointer;
+}
+.dropdown-list {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: #181824;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 100;
+    animation: slideInUp 0.2s ease;
+}
+.dropdown-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.dropdown-item {
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #ccc;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.dropdown-item:hover {
+    background: rgba(255,255,255,0.05);
 }
 
-/* Форма */
+@media (max-width: 720px) {
+    .header-right {
+        display: none;
+    }
+}
+
+/* ===== FORM SECTION ===== */
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===== FORM CARD ===== */
+.form-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02);
+}
+
+.form-card-header i {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.form-card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.steps-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 12px;
+    border-radius: 20px;
+}
+
+.form-card-body {
+    padding: 20px;
+}
+
+/* ===== FORM ELEMENTS ===== */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 16px;
 }
 
 .form-group label {
     display: block;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-secondary);
     margin-bottom: 6px;
-    font-size: 0.875rem;
+    font-size: 14px;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 10px 14px;
+    font-size: 14px;
     font-family: inherit;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
     color: var(--text-primary);
-    transition: border 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
 }
 
 .form-group input:focus,
@@ -465,7 +543,12 @@ export default {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
 }
 
 .form-group input.error,
@@ -475,7 +558,7 @@ export default {
 
 .form-group input.error:focus,
 .form-group textarea.error:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
 .form-group textarea {
@@ -486,99 +569,21 @@ export default {
 .error-message {
     display: block;
     color: var(--danger);
-    font-size: 0.8rem;
+    font-size: 13px;
     margin-top: 4px;
 }
 
-/* Разделитель */
-.section-sep {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin: 24px 0;
-}
-
-.section-sep hr {
-    width: 60%;
-    border: none;
-    border-top: 1px solid var(--border-color);
-}
-
-/* Шаги */
-.steps-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 12px 16px;
-    background-color: var(--bg-secondary);
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-}
-
-.steps-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.steps-header-left i {
-    font-size: 20px;
-    color: var(--accent);
-}
-
-.steps-header-left h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.steps-count {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    background-color: var(--bg-card);
-    padding: 2px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-}
-
-.btn-add-step {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1;
-    border-radius: var(--radius);
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.3s;
-    background-color: var(--accent);
-    color: white;
-    white-space: nowrap;
-}
-
-.btn-add-step:hover {
-    background-color: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.btn-add-step:active {
-    transform: translateY(0);
-}
-
-/* Пустое состояние */
+/* ===== STEPS ===== */
 .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px;
-    background-color: var(--bg-secondary);
-    border-radius: 24px;
-    border: 2px dashed var(--border-color);
+    padding: 40px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,255,255,0.06);
     text-align: center;
+    margin-bottom: 16px;
 }
 
 .empty-state i {
@@ -588,41 +593,38 @@ export default {
 }
 
 .empty-state p {
-    font-size: 18px;
+    font-size: 16px;
     color: var(--text-secondary);
-    font-style: italic;
-    margin-bottom: 0;
+    margin: 0;
 }
 
-/* Карточка шага */
 .step-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
     transition: border-color 0.2s;
 }
 
 .step-card:hover {
-    border-color: var(--accent);
+    border-color: rgba(124, 58, 237, 0.3);
 }
 
 .step-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .step-number {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 14px;
     color: var(--accent);
-    background-color: var(--accent-light);
-    padding: 4px 14px;
+    background: rgba(124, 58, 237, 0.12);
+    padding: 2px 14px;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
 }
 
 .btn-remove-step {
@@ -630,14 +632,14 @@ export default {
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
     font-size: 16px;
 }
 
 .btn-remove-step:hover {
-    background-color: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.1);
     color: var(--danger);
 }
 
@@ -649,61 +651,89 @@ export default {
     margin-bottom: 0;
 }
 
-/* Кнопки действий */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+/* ===== BUTTONS ===== */
+.btn-add-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: 1px dashed rgba(124, 58, 237, 0.4);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
 }
 
-/* Глобальные кнопки переопределены через .btn */
+.btn-add-step:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: var(--accent);
+}
+
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
+    gap: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
     font-weight: 500;
-    line-height: 1;
-    border-radius: var(--radius);
-    border: 1px solid transparent;
+    border-radius: 10px;
+    border: none;
     cursor: pointer;
-    transition: all 0.3s;
-    background-color: var(--accent);
-    color: white;
-    white-space: nowrap;
-}
-
-.btn:hover:not(:disabled) {
-    background-color: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.btn:active:not(:disabled) {
-    transform: translateY(0);
+    transition: all 0.2s;
 }
 
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #6d28d9;
+    transform: translateY(-2px);
 }
 
 .btn-secondary {
-    background-color: var(--bg-secondary);
-    border-color: var(--border-color);
-    color: var(--text-primary);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255,255,255,0.08);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: var(--border-color);
+    background: rgba(255,255,255,0.05);
 }
 
-/* Анимация спиннера */
+/* ===== FORM ACTIONS ===== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .fa-spin {
     animation: fa-spin 1s linear infinite;
 }
@@ -713,40 +743,20 @@ export default {
     100% { transform: rotate(360deg); }
 }
 
-/* Адаптивность */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .section {
-        padding: 20px;
-    }
-
-    .section-title-wrapper {
-        flex-direction: column;
-        text-align: center;
-        gap: 12px;
-    }
-
-    .section-title-wrapper i {
-        font-size: 28px;
-    }
-
-    .section-title-wrapper h2 {
-        font-size: 1.25rem;
-    }
-
     .form-row {
         grid-template-columns: 1fr;
         gap: 0;
     }
 
-    .steps-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-        text-align: center;
+    .form-card-header {
+        flex-wrap: wrap;
     }
 
-    .steps-header-left {
-        justify-content: center;
+    .steps-count {
+        margin-left: 0;
+        width: 100%;
     }
 
     .form-actions {
@@ -759,30 +769,25 @@ export default {
     }
 
     .step-card {
-        padding: 16px;
+        padding: 12px;
     }
 }
 
 @media (max-width: 480px) {
-    .section {
+    .form-card-body {
         padding: 16px;
     }
 
     .empty-state {
-        padding: 32px 20px;
+        padding: 24px;
     }
 
     .empty-state i {
-        font-size: 28px;
+        font-size: 24px;
     }
 
     .empty-state p {
-        font-size: 16px;
-    }
-
-    .btn-add-step {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
+        font-size: 14px;
     }
 }
 </style>
