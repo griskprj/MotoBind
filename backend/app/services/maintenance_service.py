@@ -1,16 +1,17 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+from app.exceptions import ForbiddenError, NotFoundError, ValidationError
+from app.extensions import db
 from app.models.maintenance import Maintenance, PlannedMaintenance
 from app.models.maintenance_node import MaintenanceNode
 from app.models.motorcycle import Motorcycle
 from app.services.motorcycle_service import MotorcycleService
 from app.utils.check_maintenance_status import check_status
-from app.extensions import db
-from app.exceptions import NotFoundError, ForbiddenError, ValidationError
 
 
 class MaintenanceService:
-    """ Сервис для работы с обслуживанием """
+    """Сервис для работы с обслуживанием"""
 
     @staticmethod
     def create_maintenance(
@@ -21,16 +22,18 @@ class MaintenanceService:
         description: Optional[str] = None,
         mileage: Optional[int] = None,
         cost: Optional[int] = None,
-        date: Optional[datetime] = None
+        date: Optional[datetime] = None,
     ) -> Maintenance:
-        """ Создает запись о выполненном обслуживании """
+        """Создает запись о выполненном обслуживании"""
         moto = Motorcycle.query.get(moto_id)
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
-        
+
         if moto.owner_id != author_id:
-            raise ForbiddenError("Вы можете добавлять обслуживание только для своего мотоцикла")
-        
+            raise ForbiddenError(
+                "Вы можете добавлять обслуживание только для своего мотоцикла"
+            )
+
         maintenance = Maintenance(
             author_id=author_id,
             moto_id=moto_id,
@@ -39,14 +42,14 @@ class MaintenanceService:
             description=description,
             mileage=mileage,
             cost=cost or 0,
-            date=date or datetime.now()
+            date=date or datetime.now(),
         )
-        
+
         db.session.add(maintenance)
         db.session.commit()
 
         maintenance = maintenance.to_dict()
-        maintenance['moto_name'] = moto.name
+        maintenance["moto_name"] = moto.name
 
         return maintenance
 
@@ -59,35 +62,37 @@ class MaintenanceService:
         planned_mileage: int,
         description: Optional[str] = None,
     ) -> PlannedMaintenance:
-        """ Создает запись планового обслуживания """
+        """Создает запись планового обслуживания"""
         moto = Motorcycle.query.get(moto_id)
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
-        
+
         if moto.owner_id != author_id:
-            raise ForbiddenError("Вы можете планировать обслуживание только для своего мотоцикла")
-        
+            raise ForbiddenError(
+                "Вы можете планировать обслуживание только для своего мотоцикла"
+            )
+
         if planned_mileage and planned_mileage < moto.mileage:
             raise ValidationError("Указан пробег меньше пробега мотоцикла")
-        
+
         planned = PlannedMaintenance(
             author_id=author_id,
             moto_id=moto_id,
             title=title,
             category=category,
             description=description,
-            planned_mileage=planned_mileage
+            planned_mileage=planned_mileage,
         )
 
         db.session.add(planned)
         db.session.commit()
 
         planned = planned.to_dict()
-        planned['moto_name'] = moto.name
-        planned['status'] = check_status(planned, moto)
+        planned["moto_name"] = moto.name
+        planned["status"] = check_status(planned, moto)
 
         return planned
-    
+
     @staticmethod
     def mark_planned_as_done(
         planned_id: int,
@@ -98,18 +103,18 @@ class MaintenanceService:
         repeat: bool = False,
         interval: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """ Отмечает плановое обслуживание как выполненное """
+        """Отмечает плановое обслуживание как выполненное"""
         planned = PlannedMaintenance.query.get(planned_id)
         if not planned:
             raise NotFoundError("Обслуживание не найдено")
-        
+
         if planned.author_id != author_id:
             raise ForbiddenError("Вы можете отмечать только свое обслуживание")
-        
+
         moto = Motorcycle.query.get(planned.moto_id)
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
-        
+
         maintenance = Maintenance(
             moto_id=moto.id,
             author_id=author_id,
@@ -118,7 +123,7 @@ class MaintenanceService:
             cost=cost or 0,
             description=planned.description,
             mileage=mileage,
-            date=date
+            date=date,
         )
         db.session.add(maintenance)
 
@@ -133,34 +138,35 @@ class MaintenanceService:
                 category=planned.category,
                 title=planned.title,
                 description=planned.description,
-                planned_mileage=moto.mileage + interval
+                planned_mileage=moto.mileage + interval,
             )
             db.session.add(new_planned)
 
         db.session.delete(planned)
         db.session.commit()
 
-        return {
-            'maintenance': maintenance,
-            'new_planned': new_planned
-        }
-    
+        return {"maintenance": maintenance, "new_planned": new_planned}
+
     @staticmethod
-    def update_planned_maintenance(maintenance_id: int, user_id: int, **kwargs) -> PlannedMaintenance:
-        """ Обновляет данные запланированного обслуживания """
-        plan_maintenance = MaintenanceService.get_planned_maintenance_by_id(user_id, maintenance_id)
-        
-        if 'moto_id' in kwargs and kwargs['moto_id'] is not None:
-            moto = Motorcycle.query.get(kwargs['moto_id'])
+    def update_planned_maintenance(
+        maintenance_id: int, user_id: int, **kwargs
+    ) -> PlannedMaintenance:
+        """Обновляет данные запланированного обслуживания"""
+        plan_maintenance = MaintenanceService.get_planned_maintenance_by_id(
+            user_id, maintenance_id
+        )
+
+        if "moto_id" in kwargs and kwargs["moto_id"] is not None:
+            moto = Motorcycle.query.get(kwargs["moto_id"])
             if not moto:
                 raise NotFoundError("Мотоцикл не найден")
             if moto.owner_id != user_id:
                 raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        if 'planned_mileage' in kwargs and kwargs['planned_mileage'] is not None:
-            current_moto_id = kwargs.get('moto_id', plan_maintenance.moto_id)
+        if "planned_mileage" in kwargs and kwargs["planned_mileage"] is not None:
+            current_moto_id = kwargs.get("moto_id", plan_maintenance.moto_id)
             moto = Motorcycle.query.get(current_moto_id)
-            if moto and kwargs['planned_mileage'] < moto.mileage:
+            if moto and kwargs["planned_mileage"] < moto.mileage:
                 raise ValidationError("Указан пробег меньше пробега мотоцикла")
 
         for key, value in kwargs.items():
@@ -169,59 +175,65 @@ class MaintenanceService:
 
         db.session.commit()
         return plan_maintenance
-    
+
     @staticmethod
     def delete_plan_maintenance(maintenance_id: int, user_id: int) -> None:
-        """ Удаляет плановое обслуживание """
-        plan_maintenance = MaintenanceService.get_maintenance_by_id(user_id, maintenance_id)
+        """Удаляет плановое обслуживание"""
+        plan_maintenance = MaintenanceService.get_maintenance_by_id(
+            user_id, maintenance_id
+        )
         db.session.delete(plan_maintenance)
         db.session.commit()
 
     @staticmethod
     def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
-        """ Получить обслуживание по ID """
+        """Получить обслуживание по ID"""
         maintenance = Maintenance.query.get(maintenance_id)
         if not maintenance:
             raise NotFoundError("Обслуживание не найдено")
-        
+
         if int(maintenance.author_id) != int(user_id):
             raise ForbiddenError("Вы не являетесь автором этого обслуживания")
-        
+
         return maintenance
-    
+
     @staticmethod
     def get_last_maintenance_by_category(user_id: int, category: str) -> Maintenance:
-        """ Получить обслуживание по категории """
-        maintenances = Maintenance.query.filter(category=category, author_id=user_id).all()
+        """Получить обслуживание по категории"""
+        maintenances = Maintenance.query.filter(
+            category=category, author_id=user_id
+        ).all()
         last_maintenance = None
         for m in maintenances:
             if m.mileage and m.mileage > last_maintenance.mileage:
                 last_maintenance = m
-        
+
         return m.to_dict()
-            
-        
+
     @staticmethod
     def get_planned_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
-        """ Получить плановое обслуживание по ID """
+        """Получить плановое обслуживание по ID"""
         planned_maintenance = PlannedMaintenance.query.get(maintenance_id)
         if not planned_maintenance:
             raise NotFoundError("Обслуживание не найдено")
-        
+
         if planned_maintenance.author_id != user_id:
             raise ForbiddenError("Вы не являетесь автором этого обслуживания")
-        
+
         return planned_maintenance
-    
 
     @staticmethod
     def get_maintenanc_nodes(user_id: int, moto_id: int) -> MaintenanceNode:
-        """ Возвращает узлы обслуживания мотоцикла с информацией о здоровье узла и о последнем обслуживании"""
+        """Возвращает узлы обслуживания мотоцикла с информацией о здоровье узла и о последнем обслуживании"""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id)
         nodes_data = []
         for node in moto.maintenance_nodes:
             node = node.to_dict()
-            node['last_maintenance'] = MaintenanceService.get_last_maintenance_by_category(user_id, node.category)
+            node[
+                "last_maintenance"
+            ] = MaintenanceService.get_last_maintenance_by_category(
+                user_id, node.category
+            )
             nodes_data.append(node)
-        
+
         return nodes_data

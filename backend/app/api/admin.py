@@ -1,35 +1,24 @@
-from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import or_, desc
-from app.extensions import db
-from app.exceptions import NotFoundError, ForbiddenError, ValidationError
 from app.decorators import admin_required
-from app.models.user import User
-from app.models.motorcycle import Motorcycle
-from app.models.maintenance import Maintenance
+from app.exceptions import NotFoundError, ValidationError
+from app.extensions import db
 from app.models.manual import Manual
-from app.models.reports import Report
+from app.models.motorcycle import Motorcycle
+from app.models.user import User
+from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy import desc, or_
 
-admin = Blueprint('admin', __name__)
+admin = Blueprint("admin", __name__)
 
-@admin.route('/get', methods=['GET'])
+
+@admin.route("/get", methods=["GET"])
 @jwt_required()
 @admin_required
-def dashboard_data():
+def get_dashboard_data():
     """
-    Получение данные для админ-панели
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Получение данных для админ-панели
-    description: Возвращает данные о пользователях, мануалах и статистики сайта
-
-    responses:
-        201:
-            description: Данные получены
+    Получение данных админ-панели
     """
 
     users = User.query.all()
@@ -45,38 +34,46 @@ def dashboard_data():
     for manual in manuals:
         manuals_count += 1
         manuals_data.append(manual.to_dict())
-        
+
     motorcycles_count = len([m for m in Motorcycle.query.all()])
-    
-    return jsonify({
-        'users': users_data,
-        'manuals': manuals_data,
-        'users_count': users_count,
-        'manuals_count': manuals_count,
-        'motorcycles_count': motorcycles_count
-    }), 200
+
+    return (
+        jsonify(
+            {
+                "users": users_data,
+                "manuals": manuals_data,
+                "users_count": users_count,
+                "manuals_count": manuals_count,
+                "motorcycles_count": motorcycles_count,
+            }
+        ),
+        200,
+    )
 
 
-@admin.route('/users', methods=['GET'])
+@admin.route("/users", methods=["GET"])
 @jwt_required()
 @admin_required
 def get_users():
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    search = request.args.get('search', '')
-    role = request.args.get('role', '')
-    status = request.args.get('status')
-    date_from = request.args.get('date_from', '')
-    date_to = request.args.get('date_to', '')
+    """
+    Получение пользователей
+    """
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    search = request.args.get("search", "")
+    role = request.args.get("role", "")
+    status = request.args.get("status")
+    date_from = request.args.get("date_from", "")
+    date_to = request.args.get("date_to", "")
 
     query = User.query
 
     if search:
         query = query.filter(
             or_(
-                User.username.ilike(f'%{search}'),
-                User.email.ilike(f'%{search}'),
-                User.id.ilike(f'%{search}')
+                User.username.ilike(f"%{search}"),
+                User.email.ilike(f"%{search}"),
+                User.id.ilike(f"%{search}"),
             )
         )
 
@@ -89,274 +86,168 @@ def get_users():
     if date_to:
         query = query.filter(User.created_at <= date_to)
 
-    sort_by = request.args.get('sort_by', 'created_at')
-    sort_order = request.args.get('sort_order', 'desc')
+    sort_by = request.args.get("sort_by", "created_at")
+    sort_order = request.args.get("sort_order", "desc")
 
-    if sort_order == 'desc':
+    if sort_order == "desc":
         query = query.order_by(desc(getattr(User, sort_by, User.created_at)))
     else:
         query = query.order_by(getattr(User, sort_by, User.created_at))
 
-    paginated = query.paginate(
-        page=page,
-        per_page=per_page,
-        error_out=False
-    )
+    paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
     total_users = User.query.count()
-    active_users = User.query.filter(User.status == 'active').count()
-    block_users = User.query.filter(User.status == 'banned').count()
-    admin_users = User.query.filter(User.role == 'admin').count()
+    active_users = User.query.filter(User.status == "active").count()
+    block_users = User.query.filter(User.status == "banned").count()
+    admin_users = User.query.filter(User.role == "admin").count()
 
-    return jsonify({
-        'users': [user.to_dict() for user in paginated.items],
-        'total': paginated.total,
-        'pages': paginated.pages,
-        'current_page': paginated.page,
-        'per_page': paginated.per_page,
-        'has_prev': paginated.has_prev,
-        'has_next': paginated.has_next,
-        'stats': {
-            'total': total_users,
-            'active': active_users,
-            'banned': block_users,
-            'admin': admin_users
+    return jsonify(
+        {
+            "users": [user.to_dict() for user in paginated.items],
+            "total": paginated.total,
+            "pages": paginated.pages,
+            "current_page": paginated.page,
+            "per_page": paginated.per_page,
+            "has_prev": paginated.has_prev,
+            "has_next": paginated.has_next,
+            "stats": {
+                "total": total_users,
+                "active": active_users,
+                "banned": block_users,
+                "admin": admin_users,
+            },
         }
-    })
+    )
 
 
-@admin.route('/manual/<int:manual_id>/approve', methods=['POST'])
+@admin.route("/manual/<int:manual_id>/approve", methods=["POST"])
 @jwt_required()
 @admin_required
 def approve_manual(manual_id):
     """
     Одобрение мануала
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Одобрение мануала
-    description: Устанавливает статус мануала на 'approved'
-
-    parameters:
-      - name: manual_id
-        in: path
-        required: true
-        type: integer
-        description: ID мануала
-
-    responses:
-        200:
-            description: Мануал успешно одобрен
-        404:
-            description: Мануал не найден
-        400:
-            description: Мануал уже обработан
     """
     manual = Manual.query.get(manual_id)
     if not manual:
-        raise NotFoundError('Мануал не найден')
-    
-    if manual.status != 'moderate':
-        raise ValidationError(f'Мануал уже обработан (статус: {manual.status})')
-    
-    manual.status = 'approved'
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Мануал успешно одобрен',
-        'manual': manual.to_dict()
-    }), 200
+        raise NotFoundError("Мануал не найден")
 
-@admin.route('/manual/<int:manual_id>/reject', methods=['POST'])
+    if manual.status != "moderate":
+        raise ValidationError(f"Мануал уже обработан (статус: {manual.status})")
+
+    manual.status = "approved"
+    db.session.commit()
+
+    return (
+        jsonify({"message": "Мануал успешно одобрен", "manual": manual.to_dict()}),
+        200,
+    )
+
+
+@admin.route("/manual/<int:manual_id>/reject", methods=["POST"])
 @jwt_required()
 @admin_required
-def decline_manual(manual_id):
+def reject_manual(manual_id):
     """
-    Одобрение мануала
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Одобрение мануала
-    description: Устанавливает статус мануала на 'declined'
-
-    parameters:
-      - name: manual_id
-        in: path
-        required: true
-        type: integer
-        description: ID мануала
-
-    responses:
-        200:
-            description: Мануал успешно одобрен
-        404:
-            description: Мануал не найден
-        400:
-            description: Мануал уже обработан
+    Отклонение мануала
     """
 
     manual = Manual.query.get(manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
-    
-    if manual.status != 'moderate': 
+
+    if manual.status != "moderate":
         raise ValidationError(f"Мануал уже обработан (статус: {manual.status})")
-    
+
     data = request.get_json()
     if not data:
         raise ValidationError("Нет данных")
-    
-    reason = data.get('reazon', 'Без указания причины')
 
-    manual.status = 'rejected'
+    reason = data.get("reason", "Без указания причины")
+
+    manual.status = "rejected"
     manual.rejection_reason = reason
 
     db.session.commit()
 
-    return jsonify({
-        'message': 'Мануал отклонен',
-        'manual': manual.to_dict()
-    }), 200
+    return jsonify({"message": "Мануал отклонен", "manual": manual.to_dict()}), 200
 
-@admin.route('/manual/<int:manual_id>/reconsider', methods=['POST'])
+
+@admin.route("/manual/<int:manual_id>/reconsider", methods=["POST"])
 @jwt_required()
 @admin_required
 def reconsider_manual(manual_id):
     """
     Пересмотр мануала
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Пересмотр мануала
-    description: Возвращает мануал на проверку (статус 'moderate')
-
-    parameters:
-      - name: manual_id
-        in: path
-        required: true
-        type: integer
-        description: ID мануала
-
-    responses:
-        200:
-            description: Мануал возвращен на проверку
-        404:
-            description: Мануал не найден
-        400:
-            description: Мануал уже на проверке
     """
 
     manual = Manual.query.get(manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
-    
 
-    if manual.status == 'moderate':
+    if manual.status == "moderate":
         raise ValidationError("Мануал уже на проверке")
-    
-    manual.status = 'moderate'
+
+    manual.status = "moderate"
     manual.rejection_reason = None
     db.session.commit()
 
-    return jsonify({
-        'message': 'Мануал возвращен на проверку',
-        'manual': manual.to_dict()
-    }), 200
+    return (
+        jsonify(
+            {"message": "Мануал возвращен на проверку", "manual": manual.to_dict()}
+        ),
+        200,
+    )
 
-@admin.route('/manual/<int:manual_id>', methods=['DELETE'])
+
+@admin.route("/manual/<int:manual_id>", methods=["DELETE"])
 @jwt_required()
 @admin_required
 def delete_manual(manual_id):
     """
     Удаление мануала
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Удаление мануала
-    description: Полностью удаляет мануал из базы данных
-
-    parameters:
-      - name: manual_id
-        in: path
-        required: true
-        type: integer
-        description: ID мануала
-
-    responses:
-        200:
-            description: Мануал успешно удален
-        404:
-            description: Мануал не найден
     """
 
     manual = Manual.query.get(manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
-    
+
     db.session.delete(manual)
     db.session.commit()
 
-    return jsonify({
-        'message': 'Мануал удален',
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Мануал удален",
+            }
+        ),
+        200,
+    )
 
 
-
-@admin.route('/user', methods=['POST'])
+@admin.route("/user", methods=["POST"])
 @jwt_required()
 @admin_required
 def create_user():
     """
     Создание пользователя
     """
-    data = request.get_json()
-
+    data = CreateUserSchema(**request.get_json())
     user = AdminService.create_user(
-        email=data.get('email'),
-        username=data.get('username'),
-        role=data.get('role'),
-        status=data.get('status'),
-        password=data.get('password')
+        email=data.email,
+        username=data.username,
+        role=data.role,
+        status=data.status,
+        password=data.password,
     )
-
     return jsonify(user.to_dict()), 201
 
-@admin.route('/user/<int:user_id>/ban', methods=['POST'])
+
+@admin.route("/user/<int:user_id>/ban", methods=["POST"])
 @jwt_required()
 @admin_required
 def ban_user(user_id):
     """
     Блокировка пользователя
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Блокировка пользователя
-    description: Блокирует пользователя
-
-    parameters:
-      - name: user_id
-        in: path
-        required: true
-        type: integer
-        description: ID пользователя
-
-    responses:
-        200:
-            description: Пользователь заблокирован
-        404:
-            description: Пользователь не найден
-        400:
-            description: Нельзя заблокировать админа или себя
     """
 
     user = User.query.get(user_id)
@@ -366,129 +257,76 @@ def ban_user(user_id):
     current_user_id = int(get_jwt_identity())
     if int(user.id) == current_user_id:
         raise ValidationError("Нельзя заблокировать самого себя")
-    
-    user.status = 'banned'
+
+    user.status = "banned"
     db.session.commit()
 
-    return jsonify({
-        'message': f'Пользователь {user.username} заблокирован',
-        'user': user.to_dict()
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": f"Пользователь {user.username} заблокирован",
+                "user": user.to_dict(),
+            }
+        ),
+        200,
+    )
 
-@admin.route('/user/<int:user_id>/unban', methods=['POST'])
+
+@admin.route("/user/<int:user_id>/unban", methods=["POST"])
 @jwt_required()
 @admin_required
 def unban_user(user_id):
     """
     Разблокировка пользователя
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Разблокировка пользователя
-    description: Разблокирует пользователя
-
-    parameters:
-      - name: user_id
-        in: path
-        required: true
-        type: integer
-        description: ID пользователя
-
-    responses:
-        200:
-            description: Пользователь разблокирован
-        404:
-            description: Пользователь не найден
     """
 
     user = User.query.get(user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
-    
-    user.status = 'active'
+
+    user.status = "active"
     db.session.commit()
 
-    return jsonify({
-        'message': f'Пользователь {user.username} разблокирован',
-        'user': user.to_dict()
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": f"Пользователь {user.username} разблокирован",
+                "user": user.to_dict(),
+            }
+        ),
+        200,
+    )
 
-@admin.route('/user/<int:user_id>', methods=['PUT'])
+
+@admin.route("/user/<int:user_id>", methods=["PUT"])
 @jwt_required()
 @admin_required
 def update_user(user_id):
     """
     Обновление пользователя
     """
-
-    data = request.get_json()
-    if not data:
-        raise ValidationError("Нет данных")
-
-    user = User.query.get(user_id)
-    if not user:
-        raise NotFoundError("Пользователь не найден")
-    
-    if 'username' in data:
-        user.username = data.get('username')
-    if 'email' in data:
-        user.email = data.get('email')
-    if 'role' in data:
-        user.role = data.get('role')
-    if 'status' in data:
-        if user.id == int(get_jwt_identity()) and data.get('status') == 'banned':
-            raise ValidationError("Вы не можете заблокировать сами себя")
-        if user.id == int(get_jwt_identity()) and data.get('role') != 'admin':
-                    raise ValidationError("Вы не можете самостоятельно лишить себя роли администратора")
-        user.status = data.get('status')
-
-    db.session.commit()
-
+    data = UpdateUserSchema(**request.get_json())
+    user = AdminService.update_user(user_id, data.get_updates())
     return jsonify(user.to_dict()), 200
 
-@admin.route('/user/<int:user_id>', methods=['DELETE'])
+
+@admin.route("/user/<int:user_id>", methods=["DELETE"])
 @jwt_required()
 @admin_required
 def delete_user(user_id):
     """
     Удаление пользователя
-    ---
-    tags:
-      - Admin
-    security:
-      - Bearer: []
-    summary: Удаление пользователя
-    description: Полностью удаляет пользователя из базы данных
-
-    parameters:
-      - name: user_id
-        in: path
-        required: true
-        type: integer
-        description: ID пользователя
-
-    responses:
-        200:
-            description: Пользователь успешно удален
-        404:
-            description: Пользователь не найден
-        400:
-            description: Нельзя удалить админа или себя
     """
-     
+
     user = User.query.get(user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
-    
+
     current_user_id = int(get_jwt_identity())
     if int(user.id) == current_user_id:
         raise ValidationError("Нельзя удалить самого себя")
-    
+
     db.session.delete(user)
     db.session.commit()
 
-    return jsonify({
-        'message': f'Пользователь {user.username} удален'
-    }), 200
+    return jsonify({"message": f"Пользователь {user.username} удален"}), 200

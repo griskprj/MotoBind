@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class CreateMotorcycleSchema(BaseModel):
@@ -14,25 +15,26 @@ class CreateMotorcycleSchema(BaseModel):
     vin: Optional[str] = None
     note: Optional[str] = Field(None, max_length=128)
 
-    @field_validator('color')
+    @field_validator("color")
     def validate_color(cls, v):
-        if v and not re.match(r'^#[0-9a-fA-F]{6}$', v):
-            raise ValueError('Цвет должен быть в формате HEX (#FFFFFF)')
-        return v
-    
-    @field_validator('licensePlate')
-    def validate_license_plate(cls, v):
-        if v and not (8 <= len(v) <= 9):
-            raise ValueError('Неверный формат ГОС номера')
+        if v and not re.match(r"^#[0-9a-fA-F]{6}$", v):
+            raise ValueError("Цвет должен быть в формате HEX (#FFFFFF)")
         return v
 
-    @field_validator('vin')
+    @field_validator("licensePlate")
+    def validate_license_plate(cls, v):
+        if v and not (8 <= len(v) <= 9):
+            raise ValueError("Неверный формат ГОС номера")
+        return v
+
+    @field_validator("vin")
     def validate_vin(cls, v):
         if v and len(v) != 17:
-            raise ValueError('VIN должен содержать 17 символов')
+            raise ValueError("VIN должен содержать 17 символов")
         return v
-    
-class  UpdateMotorcycleSchema(BaseModel):
+
+
+class UpdateMotorcycleSchema(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=128)
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
@@ -42,25 +44,24 @@ class  UpdateMotorcycleSchema(BaseModel):
     vin: Optional[str] = None
     note: Optional[str] = Field(None, max_length=128)
 
-    @field_validator('color')
+    @field_validator("color")
     def validate_color(cls, v):
-        if v and not re.match(r'^#[0-9a-fA-F]{6}$', v):
-            raise ValueError('Цвет должен быть в формате HEX (#FFFFFF)')
+        if v and not re.match(r"^#[0-9a-fA-F]{6}$", v):
+            raise ValueError("Цвет должен быть в формате HEX (#FFFFFF)")
         return v
 
-    @field_validator('licensePlate')
+    @field_validator("licensePlate")
     def validate_license_plate(cls, v):
         if v and not (8 <= len(v) <= 9):
-            raise ValueError('Неверный формат ГОС номера')
+            raise ValueError("Неверный формат ГОС номера")
         return v
 
-    @field_validator('vin')
+    @field_validator("vin")
     def validate_vin(cls, v):
         if v and len(v) != 17:
-            raise ValueError('VIN должен содержать 17 символов')
+            raise ValueError("VIN должен содержать 17 символов")
         return v
-    
+
     def get_updates(self) -> dict:
-        """ Возвращает только те поля, которые были переданы """
-        raise {k: v for k, v in self.model_dump().items() if v is not None}
-    
+        """Возвращает только те поля, которые были переданы"""
+        return {k: v for k, v in self.model_dump().items() if v is not None}

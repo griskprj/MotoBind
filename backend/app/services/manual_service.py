@@ -1,11 +1,12 @@
-from typing import Optional, List, Dict, Any
-from app.models.manual import Manual, ManualStep
+from typing import Any, Dict, List, Optional
+
+from app.exceptions import ForbiddenError, NotFoundError
 from app.extensions import db
-from app.exceptions import ForbiddenError, NotFoundError, BusinessLogicError, ValidationError
+from app.models.manual import Manual, ManualStep
 
 
 class ManualService:
-    """ Сервис для работы с мануалами """
+    """Сервис для работы с мануалами"""
 
     @staticmethod
     def create_manual(
@@ -15,12 +16,12 @@ class ManualService:
         motorcycle: str,
         steps: List[Dict[str, Any]],
         description: Optional[str] = None,
-        difficult: str = 'easy',
+        difficult: str = "easy",
         instruments: Optional[str] = None,
         parts: Optional[str] = None,
-        tip: Optional[str] = None
+        tip: Optional[str] = None,
     ) -> Manual:
-        """ Создает мануал с шагами """
+        """Создает мануал с шагами"""
 
         manual = Manual(
             author_id=author_id,
@@ -32,7 +33,7 @@ class ManualService:
             motorcycle=motorcycle,
             parts=parts,
             tip=tip,
-            status='moderate'
+            status="moderate",
         )
 
         db.session.add(manual)
@@ -41,54 +42,53 @@ class ManualService:
         for step_data in steps:
             step = ManualStep(
                 manual_id=manual.id,
-                order=step_data['order'],
-                title=step_data['title'],
-                text=step_data.get('text'),
-                tip=step_data.get('tip'),
-                warning=step_data.get('warning')
+                order=step_data["order"],
+                title=step_data["title"],
+                text=step_data.get("text"),
+                tip=step_data.get("tip"),
+                warning=step_data.get("warning"),
             )
             db.session.add(step)
 
         db.session.commit()
         return manual
-    
+
     @staticmethod
-    def update_manual(
-        manual_id: int,
-        user_id: int,
-        **kwargs
-    ) -> Manual:
-        """ Обновляет мануал """
+    def update_manual(manual_id: int, user_id: int, **kwargs) -> Manual:
+        """Обновляет мануал"""
         manual = Manual.query.get(manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
-        
+
         if manual.author_id != user_id:
             raise ForbiddenError("Вы можете редактировать только свои мануалы")
-        
-        if 'steps' in kwargs:
-            steps_data = kwargs.pop('steps')
+
+        if "steps" in kwargs:
+            steps_data = kwargs.pop("steps")
             ManualService._update_steps(manual.id, steps_data)
 
-        for key, value, in kwargs.items():
+        for (
+            key,
+            value,
+        ) in kwargs.items():
             if hasattr(manual, key) and value is not None:
                 setattr(manual, key, value)
 
         db.session.commit()
         return manual
-    
+
     @staticmethod
     def _update_steps(manual_id: int, steps_data: List[Dict[str, Any]]) -> None:
-        """ Обновляет шаги мануала """
+        """Обновляет шаги мануала"""
         ManualStep.query.filter_by(manual_id=manual_id).delete()
 
         for step_data in steps_data:
             step = ManualStep(
                 manual_id=manual_id,
-                order=step_data['order'],
-                title=step_data['title'],
-                text=step_data.get('text'),
-                tip=step_data.get('tip'),
-                warning=step_data.get('warning')
+                order=step_data["order"],
+                title=step_data["title"],
+                text=step_data.get("text"),
+                tip=step_data.get("tip"),
+                warning=step_data.get("warning"),
             )
             db.session.add(step)
