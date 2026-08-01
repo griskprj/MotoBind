@@ -1,7 +1,7 @@
-from flask import Flask, jsonify
-from config import settings
-from app.extensions import cors, db, migrate, jwt, swagger
 from app.exceptions import register_error_handlers
+from app.extensions import cors, db, jwt, migrate, swagger
+from config import settings
+from flask import Flask
 
 
 def create_app():
@@ -17,10 +17,14 @@ def create_app():
         JWT_REFRESH_TOKEN_EXPIRES=settings.JWT_REFRESH_TOKEN_EXPIRES,
         UPLOAD_FOLDER=settings.UPLOAD_FOLDER,
         MAX_CONTENT_LENGTH=settings.MAX_CONTENT_LENGTH,
-        CORS_ORIGINS=settings.get_cors_origins()
+        CORS_ORIGINS=settings.get_cors_origins(),
     )
 
-    cors.init_app(app, resources={r"/api/*": {"origins": settings.get_cors_origins()}}, supports_credentials=True)
+    cors.init_app(
+        app,
+        resources={r"/api/*": {"origins": settings.get_cors_origins()}},
+        supports_credentials=True,
+    )
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
@@ -35,12 +39,12 @@ def create_app():
     from app.api.statistic import statistic
     from app.api.user import user
 
-    app.register_blueprint(auth, url_prefix='/api/auth')
-    app.register_blueprint(motorcycle, url_prefix='/api/motorcycle')
-    app.register_blueprint(statistic, url_prefix='/api/statistic')
-    app.register_blueprint(maintenance, url_prefix='/api/maintenance')
-    app.register_blueprint(manual, url_prefix='/api/manual')
-    app.register_blueprint(admin, url_prefix='/api/admin')
-    app.register_blueprint(user, url_prefix='/api/user')
+    app.register_blueprint(auth, url_prefix="/api/auth")
+    app.register_blueprint(motorcycle, url_prefix="/api/motorcycle")
+    app.register_blueprint(statistic, url_prefix="/api/statistic")
+    app.register_blueprint(maintenance, url_prefix="/api/maintenance")
+    app.register_blueprint(manual, url_prefix="/api/manual")
+    app.register_blueprint(admin, url_prefix="/api/admin")
+    app.register_blueprint(user, url_prefix="/api/user")
 
     return app

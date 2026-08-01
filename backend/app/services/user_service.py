@@ -1,66 +1,95 @@
 from typing import Optional
 
-from app.models.user import User
+from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
-from app.exceptions import NotFoundError, ValidationError, ForbiddenError
+from app.models.user import User
 
 
 class UserService:
-    """ Сервис для работы с пользователями """
-    
+    """Сервис для работы с пользователями"""
+
     @staticmethod
     def create_user(email: str, password: str, username: str, role: str) -> User:
-        ''' Создает нового пользователя '''
+        """Создает нового пользователя"""
         if User.query.filter_by(email=email).first():
             raise ValidationError("Пользователь с таким email уже существует")
-        
+
         if User.query.filter_by(username=username).first():
             raise ValidationError("Имя пользователя занято")
-        
-        user = User(email=email, username=username, role=role, status='active')
+
+        user = User(email=email, username=username, role=role, status="active")
         user.set_password(password)
 
         db.session.add(user)
         db.session.commit()
 
         return user
-    
+
     @staticmethod
     def authenticate_user(email: str, password: str) -> User:
-        """ Аутентифицирует пользователя """
+        """Аутентифицирует пользователя"""
         user = User.query.filter_by(email=email).first()
         if not user:
             raise NotFoundError("Пользователь с такой почтой не найден")
-        if user.status == 'banned':
+        if user.status == "banned":
             raise ForbiddenError("Вы были заблокированы")
         if not user.check_password(password):
             print(password)
             raise ForbiddenError("Неверный пароль")
-        
+
         return user
-    
+
+    @staticmethod
+    def update_profile(user_id: int, **kwargs) -> User:
+        """Обновляет данные профиля"""
+        user = UserService.get_user_by_id(user_id)
+        for key, value in kwargs.items():
+            if hasattr(user, key) and value is not None:
+                setattr(user, key, value)
+        db.session.commit()
+        return user
+
+    @staticmethod
+    def change_password(user_id: int, current_password: str, new_password: str) -> User:
+        """Обновляет пароль"""
+        user = UserService.get_user_by_id(user_id)
+        if not user.check_password(current_password):
+            raise ForbiddenError("Неверный текущий пароль")
+        user.set_password(new_password)
+        db.session.commit()
+        return user
+
+    @staticmethod
+    def delete_account(user_id: int, password: str) -> None:
+        """Удаляет аккаунт"""
+        user = UserService.get_user_by_id(user_id)
+        if not user.check_password(password):
+            raise ForbiddenError("Неверный пароль")
+        db.session.delete(user)
+        db.session.commit()
+
     @staticmethod
     def update_refresh_token(user: User, refresh_token: str) -> None:
-        """ Обновляет refresh-токен пользователя """
+        """Обновляет refresh-токен пользователя"""
         user.refresh_token = refresh_token
         db.session.commit()
 
     @staticmethod
     def clear_refresh_token(user: User) -> None:
-        """ Очищает refresh-токен пользователя """
+        """Очищает refresh-токен пользователя"""
         user.refresh_token = None
         db.session.commit()
 
     @staticmethod
     def get_user_by_id(user_id: int) -> User:
-        """ Получает пользователя по ID """
-        user =  User.query.get(user_id)
+        """Получает пользователя по ID"""
+        user = User.query.get(user_id)
         if not user:
             raise NotFoundError("Пользователь не найден")
 
         return user
-        
+
     @staticmethod
     def get_user_by_email(email: str) -> Optional[User]:
-        """ Получает пользователя по email """
+        """Получает пользователя по email"""
         return User.query.filter_by(email=email).first()

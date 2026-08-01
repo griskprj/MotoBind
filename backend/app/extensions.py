@@ -1,11 +1,12 @@
 """
 Create extensions obj
 """
+
+from flasgger import Swagger
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flasgger import Swagger
+from flask_sqlalchemy import SQLAlchemy
 
 swagger_config = {
     "headers": [],
@@ -25,9 +26,9 @@ swagger_config = {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header",
-            "description": "JWT-токен. Пример: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "description": "JWT-токен. Пример: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
         }
-    }
+    },
 }
 
 
