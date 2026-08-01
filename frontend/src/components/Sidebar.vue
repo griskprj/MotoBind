@@ -112,28 +112,12 @@
                         Пользователи
                     </router-link>
                     <router-link
-                        to="/admin/panel"
-                        class="nav-link"
-                        :class="{ active: $route.path === '/admin/motorcycles'}"
-                    >
-                        <i class="fa fa-motorcycle"></i>
-                        Мотоциклы
-                    </router-link>
-                    <router-link
                         to="/admin/manuals"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/manuals'}"
                     >
                         <i class="fa fa-tools"></i>
                         Мануалы
-                    </router-link>
-                    <router-link
-                        to="/admin/panel"
-                        class="nav-link"
-                        :class="{ active: $route.path === '/admin/news'}"
-                    >
-                        <i class="fa fa-file-text"></i>
-                        Новости
                     </router-link>
                 </div>
 
