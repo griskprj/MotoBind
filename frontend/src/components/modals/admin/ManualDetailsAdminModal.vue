@@ -96,7 +96,7 @@
                 <!-- Одобрить (Только если на проверке) -->
                 <button 
                     v-if="manual?.status === 'moderate'" 
-                    @click="$emit('approve')" 
+                    @click="$emit('approve', manual.id)" 
                     class="btn-action btn-success"
                 >
                     <i class="fa fa-check"></i> Одобрить

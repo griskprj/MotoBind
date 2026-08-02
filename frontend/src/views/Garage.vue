@@ -70,8 +70,8 @@ export default {
 
                 const { data } = await api.post('/motorcycle/', formData)
 
-                this.motorcycles.push(data)
                 this.showAddMotoModal = false
+                this.motorcycles.push(data)
 
                 alert('Мотоцикл добавлен!')
             } catch(err) {

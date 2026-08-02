@@ -285,7 +285,6 @@ export default {
         async handleApprove(manualId) {
             try {
                 await api.post(`/admin/manual/${manualId}/approve`)
-                // Обновляем статус локально без перезагрузки страницы
                 const manual = this.manuals.find(m => m.id === manualId)
                 if (manual) manual.status = 'approved'
                 this.showDetailsModal = false
