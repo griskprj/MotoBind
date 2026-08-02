@@ -1,24 +1,33 @@
 <script>
-import Sidebar from './components/Sidebar.vue';
-import Footer from './components/Footer.vue';
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from './stores/auth'
+import Sidebar from './components/Sidebar.vue'
+import Footer from './components/Footer.vue'
 
 export default {
+  name: 'App',
   components: {
     Sidebar,
     Footer
   },
-
-  data() {
+  setup() {
+    const route = useRoute()
+    const authStore = useAuthStore()
+    const { isAuthenticated } = storeToRefs(authStore)
+    
+    // Синхронизируем состояние аутентификации при загрузке
+    authStore.syncAuthState()
+    
+    const showHeader = computed(() => route.meta.showHeader !== false)
+    const showFooter = computed(() => route.meta.showFooter !== false)
+    
     return {
-      user: false,
+      isAuthenticated,
+      showHeader,
+      showFooter
     }
-  },
-
-  mounted() {
-      const user = localStorage.getItem('user')
-      if (user) {
-        this.user = true
-      }
   }
 }
 </script>
@@ -26,29 +35,25 @@ export default {
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <div v-if="isLoading" class="loading-overlay">
-      <div class="spinner"></div>
-  </div>
   <div class="animated-bg"></div>
-
-  <Sidebar v-if="$route.meta.showHeader">
+  
+  <Sidebar v-if="showHeader">
     <router-view />
   </Sidebar>
   <router-view v-else />
   
-  <Footer v-if="$route.meta.showFooter" />
+  <Footer v-if="showFooter" />
 </template>
-
 
 <style>
 .animated-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -2;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 @media (max-width: 768px) {
@@ -57,7 +62,6 @@ export default {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Карточный вид для таблиц на мобильных */
   .mobile-card-table {
     border: none;
   }
@@ -102,7 +106,6 @@ export default {
     margin-right: 1rem;
   }
 
-  /* Для ячеек с действиями */
   .mobile-card-table td.col-actions {
     justify-content: flex-end;
     gap: 0.5rem;
@@ -118,7 +121,6 @@ export default {
   }
 }
 
-/* Для планшетов */
 @media (min-width: 769px) and (max-width: 1024px) {
   .groups-table th,
   .groups-table td {

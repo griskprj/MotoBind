@@ -116,7 +116,7 @@ export default {
         async updateMotoNote(formData) {
             try {
                 const { data } = await api.patch(`/motorcycle/${formData.id}/note`, formData)
-                
+
                 const index = this.motorcycles.findIndex(m => m.id === formData.id)
                 if (index !== -1) {
                     this.motorcycles[index] = data
@@ -159,7 +159,7 @@ export default {
         formatDate(dateString) {
             return (dateString) => {
                 if (!dateString) return '--';
-                
+
                 try {
                     if (dateString instanceof Date) {
                         return dateString.toLocaleDateString('ru-RU', {
@@ -168,13 +168,13 @@ export default {
                             year: 'numeric'
                         });
                     }
-                    
+
                     const date = new Date(dateString);
-                    
+
                     if (isNaN(date.getTime())) {
                         return '--';
                     }
-                    
+
                     return date.toLocaleDateString('ru-RU', {
                         day: '2-digit',
                         month: 'short',
@@ -193,7 +193,7 @@ export default {
             }
 
             const currentMileage = this.motorcycle.mileage || 0;
-            
+
             const upcomingMaintenances = this.motorcycle.planned_maintenances
                 .filter(m => m.planned_mileage && m.planned_mileage > currentMileage)
                 .sort((a, b) => a.planned_mileage - b.planned_mileage);
@@ -205,7 +205,7 @@ export default {
             if (overdueMaintenances.length > 0) {
                 const overdue = overdueMaintenances[0];
                 const distanceOverdue = currentMileage - overdue.planned_mileage;
-                
+
                 return {
                     ...overdue,
                     distanceOverdue: distanceOverdue,
@@ -217,7 +217,7 @@ export default {
             if (upcomingMaintenances.length > 0) {
                 const next = upcomingMaintenances[0];
                 const distanceToNext = next.planned_mileage - currentMileage;
-                
+
                 return {
                     ...next,
                     distanceToNext: distanceToNext,
@@ -294,7 +294,7 @@ export default {
                     </div>
                     <div v-if="motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
                 </div>
-                
+
                 <div @click="showAddMotoModal = true" class="moto-card add-card">
                     <i class="fa fa-plus"></i>
                     <span>Добавить</span>
@@ -440,10 +440,10 @@ export default {
         @close="showAddMotoModal = false"
     />
 
-    <EditMotoModal 
-        :isOpen="showEditMotoModal" 
+    <EditMotoModal
+        :isOpen="showEditMotoModal"
         :motorcycle="motorcycle"
-        @submit="updateMoto" 
+        @submit="updateMoto"
         @close="showEditMotoModal=false"
     />
 
@@ -461,11 +461,11 @@ export default {
         @close="showEditMotoNoteModal = false"
     />
 
-    <DeleteMotoModal 
-        :isOpen="showDeleteMotoModal" 
-        :motorcycle="motorcycle" 
-        @submit="deleteMoto" 
-        @close="showDeleteMotoModal = false" 
+    <DeleteMotoModal
+        :isOpen="showDeleteMotoModal"
+        :motorcycle="motorcycle"
+        @submit="deleteMoto"
+        @close="showDeleteMotoModal = false"
     />
 </template>
 
@@ -948,7 +948,7 @@ export default {
     }
     .moto-card-icon { display: none; }
     .moto-name { font-size: 13px; }
-    
+
     .big-moto-card {
         grid-template-columns: 1fr;
     }
@@ -962,7 +962,7 @@ export default {
     .stats-grid-4 {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     /* Мобильная таблица (превращается в карточки) */
     .table-header { display: none; }
     .tr {

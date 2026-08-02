@@ -29,29 +29,29 @@
         <!-- === TABS & FILTERS === -->
         <div class="controls-wrapper">
             <div class="tabs">
-                <div 
-                    @click="changeTab('all')" 
+                <div
+                    @click="changeTab('all')"
                     class="tab"
                     :class="selectedTab === 'all' ? 'active' : ''"
-                >   
+                >
                     <p>Все</p>
                 </div>
                 <div
                     @click="changeTab('moderate')"
-                    class="tab" 
+                    class="tab"
                     :class="selectedTab === 'moderate' ? 'active' : ''"
                 >
                     <p>На проверке</p>
                 </div>
-                <div 
-                    @click="changeTab('approved')" 
+                <div
+                    @click="changeTab('approved')"
                     class="tab"
                     :class="selectedTab === 'approved' ? 'active' : ''"
                 >
                     <p>Одобренные</p>
                 </div>
-                <div 
-                    @click="changeTab('rejected')" 
+                <div
+                    @click="changeTab('rejected')"
                     class="tab"
                     :class="selectedTab === 'rejected' ? 'active' : ''"
                 >
@@ -61,14 +61,14 @@
 
             <div class="filters">
                 <div class="filter-group">
-                    <input 
-                        type="text" 
-                        v-model="searchQuery" 
+                    <input
+                        type="text"
+                        v-model="searchQuery"
                         placeholder="Поиск по названию, автору..."
                         class="search-input"
                     >
                 </div>
-                
+
                 <select v-model="filterCategory" class="filter-select">
                     <option value="">Все категории</option>
                     <option value="engine">Двигатель</option>
@@ -108,15 +108,15 @@
 
         <!-- === GRID OF MANUALS === -->
         <div v-if="filteredManuals && filteredManuals.length > 0" class="manuals-grid">
-            <div 
-                class="manual-card" 
-                v-for="manual in filteredManuals" 
+            <div
+                class="manual-card"
+                v-for="manual in filteredManuals"
                 :key="manual.id"
                 @click="openDetailsModal(manual)"
             >
                 <div class="card-header">
                     <span class="card-title">{{ manual.title }}</span>
-                    <span 
+                    <span
                         class="status-badge"
                         :class="{
                             'badge-green': manual.status === 'approved',
@@ -199,7 +199,7 @@ export default {
             welcomeDropdownActive: false,
             manuals: [],
             motorcycles: [],
-            
+
             selectedManual: null,
             showDetailsModal: false,
 
@@ -215,7 +215,7 @@ export default {
     computed: {
         filteredManuals() {
             let items = [...this.manuals]
-            
+
             // Фильтрация по табам (статус)
             if (this.selectedTab === 'moderate') {
                 items = items.filter(m => m.status === 'moderate')
@@ -225,33 +225,33 @@ export default {
                 items = items.filter(m => m.status === 'rejected')
             }
             // 'all' ничего не фильтрует
-            
+
             // Поиск
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
-                items = items.filter(m => 
+                items = items.filter(m =>
                     m.title?.toLowerCase().includes(query) ||
                     m.motorcycle?.toLowerCase().includes(query) ||
                     m.author?.username?.toLowerCase().includes(query)
                 )
             }
-            
+
             // Категория
             if (this.filterCategory) {
                 items = items.filter(m => m.category === this.filterCategory)
             }
-            
+
             // Мотоцикл
             if (this.filterMotorcycle) {
                 items = items.filter(m => m.motorcycle === this.filterMotorcycle)
             }
-            
+
             // Сортировка
             items = this.sortItems(items)
-            
+
             return items
         },
-        
+
         hasActiveFilters() {
             return this.searchQuery || this.filterCategory || this.filterMotorcycle || this.sortBy !== 'created_at_desc'
         }
@@ -312,7 +312,7 @@ export default {
 
         async handleDelete(manualId) {
             if (!confirm('Вы уверены, что хотите удалить этот мануал?')) return
-            
+
             try {
                 await api.delete(`/admin/manual/${manualId}`)
                 this.manuals = this.manuals.filter(m => m.id !== manualId)

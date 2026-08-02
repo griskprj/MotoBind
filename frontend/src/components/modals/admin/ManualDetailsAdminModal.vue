@@ -75,8 +75,8 @@
                     <i class="fa fa-list-ol"></i> Шаги выполнения
                 </p>
                 <div class="steps-list">
-                    <div 
-                        v-for="(step, index) in manual.steps" 
+                    <div
+                        v-for="(step, index) in manual.steps"
                         :key="index"
                         class="step-item"
                     >
@@ -94,32 +94,32 @@
         <div class="admin-actions-wrapper">
             <div class="admin-buttons">
                 <!-- Одобрить (Только если на проверке) -->
-                <button 
-                    v-if="manual?.status === 'moderate'" 
-                    @click="$emit('approve', manual.id)" 
+                <button
+                    v-if="manual?.status === 'moderate'"
+                    @click="$emit('approve', manual.id)"
                     class="btn-action btn-success"
                 >
                     <i class="fa fa-check"></i> Одобрить
                 </button>
 
                 <!-- Отклонить (Только если на проверке) -->
-                <button 
-                    v-if="manual?.status === 'moderate'" 
-                    @click="openRejectModal" 
+                <button
+                    v-if="manual?.status === 'moderate'"
+                    @click="openRejectModal"
                     class="btn-action btn-danger"
                 >
                     <i class="fa fa-times"></i> Отклонить
                 </button>
 
                 <!-- Удалить (Всегда доступно) -->
-                <button 
-                    @click="confirmDelete" 
+                <button
+                    @click="confirmDelete"
                     class="btn-action btn-delete"
                 >
                     <i class="fa fa-trash"></i> Удалить
                 </button>
             </div>
-            
+
             <!-- Кнопка закрытия -->
             <button @click="$emit('close')" class="btn-close">Закрыть</button>
         </div>
@@ -129,9 +129,9 @@
             <div class="reject-box">
                 <h4 class="reject-title">Причина отклонения</h4>
                 <p class="reject-sub">Укажите причину, чтобы автор мог исправить ошибки</p>
-                <textarea 
-                    v-model="rejectReason" 
-                    class="reject-input" 
+                <textarea
+                    v-model="rejectReason"
+                    class="reject-input"
                     placeholder="Например: Не хватает шагов, ошибки в тексте..."
                     rows="4"
                 ></textarea>
@@ -236,9 +236,9 @@ export default {
         },
         submitReject() {
             // Передаем ID мануала и причину на родительский компонент
-            this.$emit('reject', { 
-                id: this.manual.id, 
-                reason: this.rejectReason.trim() || 'Без указания причины' 
+            this.$emit('reject', {
+                id: this.manual.id,
+                reason: this.rejectReason.trim() || 'Без указания причины'
             });
             this.closeRejectModal();
         },
