@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import api from '../api/api'
-import { 
-  getAccessToken, 
-  getRefreshToken, 
-  setTokens, 
-  setUser, 
-  getUser, 
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  setUser,
+  getUser,
   removeTokens,
   isAuthenticated
 } from '../api/auth'
@@ -45,23 +45,23 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await api.post('/auth/login', {
           email,
           password
         })
-        
+
         const { access_token, refresh_token, user } = response.data
-        
+
         setTokens(access_token, refresh_token)
         setUser(user)
-        
+
         this.user = user
         this.accessToken = access_token
         this.refreshToken = refresh_token
         this.isAuthenticated = true
-        
+
         return user
       } catch (error) {
         this.error = error.response?.data?.error || 'Ошибка входа'
@@ -74,7 +74,7 @@ export const useAuthStore = defineStore('auth', {
     async register(userData) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await api.post('/auth/register', userData)
         return response.data
@@ -88,7 +88,7 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       this.isLoading = true
-      
+
       try {
         await api.post('/auth/logout')
       } catch (error) {
@@ -100,7 +100,7 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = null
         this.isAuthenticated = false
         this.isLoading = false
-        
+
         if (window.location.pathname !== '/login') {
           window.location.href = '/login'
         }
@@ -111,7 +111,7 @@ export const useAuthStore = defineStore('auth', {
       const user = getUser()
       const token = getAccessToken()
       const refreshToken = getRefreshToken()
-      
+
       this.user = user
       this.accessToken = token
       this.refreshToken = refreshToken

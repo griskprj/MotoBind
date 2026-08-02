@@ -16,13 +16,13 @@ export default {
     const route = useRoute()
     const authStore = useAuthStore()
     const { isAuthenticated } = storeToRefs(authStore)
-    
+
     // Синхронизируем состояние аутентификации при загрузке
     authStore.syncAuthState()
-    
+
     const showHeader = computed(() => route.meta.showHeader !== false)
     const showFooter = computed(() => route.meta.showFooter !== false)
-    
+
     return {
       isAuthenticated,
       showHeader,
@@ -34,14 +34,14 @@ export default {
 
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <div class="animated-bg"></div>
-  
+
   <Sidebar v-if="showHeader">
     <router-view />
   </Sidebar>
   <router-view v-else />
-  
+
   <Footer v-if="showFooter" />
 </template>
 

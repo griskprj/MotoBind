@@ -79,7 +79,7 @@
                     v-if="isAdmin"
                     to="/admin/panel"
                     class="nav-link admin-link"
-                    :class="{ active: $route.path === '/admin' }"
+                    :class="{ active: $route.path.startsWith('/admin') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-shield"></i>
@@ -94,7 +94,7 @@
                     <router-link
                         to="/admin/panel"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/panel'}"
+                        :class="{ active: $route.path === '/admin/panel' }"
                     >
                         <i class="fa fa-sitemap"></i>
                         Панель управления
@@ -106,7 +106,7 @@
                     <router-link
                         to="/admin/users"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/users'}"
+                        :class="{ active: $route.path === '/admin/users' }"
                     >
                         <i class="fa fa-users"></i>
                         Пользователи
@@ -114,7 +114,7 @@
                     <router-link
                         to="/admin/manuals"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/manuals'}"
+                        :class="{ active: $route.path === '/admin/manuals' }"
                     >
                         <i class="fa fa-tools"></i>
                         Мануалы
@@ -152,7 +152,7 @@
         <!-- Нижняя часть сайдбара -->
         <div class="sidebar-footer">
             <!-- Кнопка выхода -->
-            <button class="btn-logout-sidebar" @click="logout">
+            <button class="btn-logout-sidebar" @click="handleLogout">
                 <i class="fa fa-sign-out"></i>
                 <span>Выйти</span>
             </button>
@@ -166,95 +166,80 @@
 </template>
 
 <script>
-import api from '../api/api';
-import { removeTokens } from '../api/auth';
-import router from '../router';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '../stores/auth'
+import { useAuth } from '../composables/useAuth'
 
 export default {
-    data() {
-        return {
-            isSidebarOpen: false,
-            isAdmin: false,
-            isDesktop: window.innerWidth > 770,
-            userName: 'Grisky' // Можно загружать из localStorage
-        }
-    },
-
-    mounted() {
-        this.checkAdminStatus();
-        this.handleResize();
-        window.addEventListener('resize', this.handleResize);
+    name: 'Sidebar',
+    setup() {
+        const route = useRoute()
+        const router = useRouter()
+        const authStore = useAuthStore()
+        const { logout } = useAuth()
+        const { isAdmin, user } = storeToRefs(authStore)
         
-        // Загружаем имя пользователя
-        const user = localStorage.getItem('user');
-        if (user) {
-            try {
-                const userData = JSON.parse(user);
-                this.userName = userData.name || userData.username || 'Grisky';
-            } catch {
-                this.userName = 'Grisky';
+        const isSidebarOpen = ref(false)
+        const isDesktop = ref(window.innerWidth > 770)
+        const userName = ref('Пользователь')
+
+        // Загружаем имя пользователя из хранилища
+        onMounted(() => {
+            if (user.value?.username) {
+                userName.value = user.value.username
             }
+            handleResize()
+            window.addEventListener('resize', handleResize)
+        })
+
+        onBeforeUnmount(() => {
+            document.body.style.overflow = ''
+            window.removeEventListener('resize', handleResize)
+        })
+
+        const toggleSidebar = () => {
+            isSidebarOpen.value = !isSidebarOpen.value
+            document.body.style.overflow = isSidebarOpen.value ? 'hidden' : ''
         }
-    },
 
-    beforeUnmount() {
-        document.body.style.overflow = '';
-        window.removeEventListener('resize', this.handleResize);
-    },
+        const closeSidebar = () => {
+            isSidebarOpen.value = false
+            document.body.style.overflow = ''
+        }
 
-    methods: {
-        checkAdminStatus() {
-            try {
-                const token = localStorage.getItem('access_token');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.isAdmin = payload.role === 'admin';
-                } else {
-                    this.isAdmin = false;
-                }
-            } catch {
-                this.isAdmin = false;
-            }
-        },
-
-        toggleSidebar() {
-            this.isSidebarOpen = !this.isSidebarOpen;
-            document.body.style.overflow = this.isSidebarOpen ? 'hidden' : '';
-        },
-
-        closeSidebar() {
-            this.isSidebarOpen = false;
-            document.body.style.overflow = '';
-        },
-
-        handleResize() {
-            this.isDesktop = window.innerWidth > 770;
-            if (this.isDesktop) {
-                this.isSidebarOpen = true;
-                document.body.style.overflow = '';
+        const handleResize = () => {
+            isDesktop.value = window.innerWidth > 770
+            if (isDesktop.value) {
+                isSidebarOpen.value = true
+                document.body.style.overflow = ''
             } else {
-                this.isSidebarOpen = false;
-                document.body.style.overflow = '';
-            }
-        },
-
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) {
-                console.error('Logout failed:', err);
-            } finally {
-                removeTokens();
-                this.closeSidebar();
-                router.push('/login');
+                isSidebarOpen.value = false
+                document.body.style.overflow = ''
             }
         }
-    },
 
-    watch: {
-        '$route'() {
-            this.closeSidebar();
-            this.checkAdminStatus();
+        const handleLogout = async () => {
+            await logout()
+            closeSidebar()
+            router.push('/login')
+        }
+
+        // Следим за изменением маршрута
+        watch(() => route.path, () => {
+            closeSidebar()
+        })
+
+        return {
+            isSidebarOpen,
+            isDesktop,
+            isAdmin,
+            userName,
+            toggleSidebar,
+            closeSidebar,
+            handleResize,
+            handleLogout
         }
     }
 }
@@ -449,7 +434,6 @@ export default {
     border: 2px solid var(--border-color);
     border-radius: 20px;
     font-size: 14px;
-
     text-align: center;
 }
 
