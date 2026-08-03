@@ -56,7 +56,7 @@ def login():
 
 @auth.route("/me", methods=["GET"])
 @jwt_required()
-def get_current_user():
+def get_me():
     """
     Получение данных текущего пользователя
     """

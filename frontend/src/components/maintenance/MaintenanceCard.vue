@@ -47,10 +47,6 @@ export default {
                 <span class="progress-text">{{ maintenance.moto_mileage || 7500 }} / {{ maintenance.planned_mileage || 10000 }} км</span>
             </div>
         </div>
-
-        <div class="card-action">
-            <i class="fa fa-chevron-right"></i>
-        </div>
     </div>
 </template>
 
@@ -150,18 +146,6 @@ export default {
     white-space: nowrap;
     min-width: 70px;
     text-align: right;
-}
-
-/* Стрелка справа */
-.card-action {
-    color: #4b4b5e;
-    font-size: 14px;
-    transition: color 0.2s ease;
-    margin-left: 4px;
-}
-
-.maintenance-card:hover .card-action {
-    color: #a78bfa;
 }
 
 /* Адаптив для маленьких экранов */

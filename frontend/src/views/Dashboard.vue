@@ -24,7 +24,7 @@
 
                             <div v-if="welcomeDropdownActive" class="dropdown-list">
                                 <ul>
-                                    <li><button class="dropdown-item-btn">Профиль</button></li>
+                                    <li><button @click="this.$router.push('/profile')" class="dropdown-item-btn">Профиль</button @click="this.$route.push('/profile')"></li>
                                     <li><button @click="logout()" class="dropdown-item-btn">Выйти</button></li>
                                 </ul>
                             </div>
@@ -85,7 +85,7 @@
                         <div class="stat-meta-wrapper">
                             <p 
                                 class="stat-meta-value" 
-                                :class="dynamicTotalSpendsCount >= 0 ? 'positive' : 'negative'"
+                                :class="dynamicTotalSpendsCount >= 0 ? 'negative' : 'positive'"
                             >
                                 {{ dynamicTotalSpendsCount >= 0 ? '+' : '' }}{{ dynamicTotalSpendsCount }}%
                             </p> 
@@ -128,7 +128,7 @@
                         <p class="empty-text">Запланируйте первое ТО на странице <a href="#">"Обслуживание"</a></p>
                     </div>
                 </div>
-                <button class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
+                <button @click="this.$router.push('/maintenance')" class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
             </section>
         </div>
     </div>
@@ -232,113 +232,6 @@ export default {
         getMotorcycleMileage(motoId) {
             const moto = this.motorcycles.find(m => m.id === motoId)
             return moto ? moto.mileage : '0'
-        },
-
-        // === Event formatting methods ===
-        formatEventDate(dateString) {
-            if (!dateString) return 'Дата не указана'
-            
-            const date = new Date(dateString)
-            const now = new Date()
-            
-            // Проверяем, что дата валидна
-            if (isNaN(date.getTime())) return 'Неверная дата'
-            
-            // Форматируем дату: "15 января 2024"
-            const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 
-                           'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
-            
-            const day = date.getDate()
-            const month = months[date.getMonth()]
-            const year = date.getFullYear()
-            
-            // Проверяем, сколько дней осталось
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            const eventDate = new Date(date)
-            eventDate.setHours(0, 0, 0, 0)
-            
-            const diffTime = eventDate.getTime() - today.getTime()
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-            
-            // Если мероприятие уже прошло
-            if (diffDays < 0) {
-                return `${day} ${month} ${year}`
-            }
-            
-            // Если сегодня
-            if (diffDays === 0) {
-                return `Сегодня, ${day} ${month}`
-            }
-            
-            // Если завтра
-            if (diffDays === 1) {
-                return `Завтра, ${day} ${month}`
-            }
-            
-            // Если в ближайшие 3 дня
-            if (diffDays <= 3) {
-                return `Через ${diffDays} дня, ${day} ${month}`
-            }
-            
-            // Если в ближайшую неделю
-            if (diffDays <= 7) {
-                const weekDays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 
-                                 'Четверг', 'Пятница', 'Суббота']
-                const weekDay = weekDays[date.getDay()]
-                return `${weekDay}, ${day} ${month}`
-            }
-            
-            // Иначе обычная дата
-            return `${day} ${month} ${year}`
-        },
-
-        getStatusLabel(status) {
-            const labels = {
-                'planned': 'Запланировано',
-                'active': 'Активно',
-                'moderate': 'На модерации',
-                'decline': 'Отклонено'
-            }
-            return labels[status] || status
-        },
-
-        getStatusClass(status) {
-            const classes = {
-                'planned': 'status-planned',
-                'active': 'status-active',
-                'moderate': 'status-moderate',
-                'decline': 'status-decline'
-            }
-            return classes[status] || ''
-        },
-
-        getEventIcon(status) {
-            const icons = {
-                'planned': 'fa-calendar-plus',
-                'active': 'fa-calendar-check',
-                'moderate': 'fa-clock',
-                'decline': 'fa-calendar-times'
-            }
-            return icons[status] || 'fa-calendar'
-        },
-
-        getEventIconClass(status) {
-            const classes = {
-                'planned': 'blue-bg',
-                'active': 'green-bg',
-                'moderate': 'yellow-bg',
-                'decline': 'red-bg'
-            }
-            return classes[status] || 'blue-bg'
-        },
-
-        truncateDescription(description) {
-            if (!description) return ''
-            if (description.length > 60) {
-                return description.substring(0, 60) + '...'
-            }
-            return description
         },
 
         async logout() {
