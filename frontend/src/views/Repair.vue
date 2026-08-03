@@ -132,7 +132,7 @@
                                     <img :src="step.image" alt="">
                                 </div>
                             </div>
-                            
+
                             <div class="step-body">
                                 <p class="step-title">{{ step.title }}</p>
                                 <p class="step-text">{{ step.text }}</p>
@@ -219,8 +219,8 @@
                 <button @click="openMarkModal" class="outline-btn">Отметить обслуживание</button>
             </div>
         </section>
-    </div>        
-    
+    </div>
+
     <!-- === MODALS === -->
     <MarkPlanMaintenanceModal
         :is-open="showMarkMaintenanceModal"
@@ -831,7 +831,7 @@ export default {
     .stat-cards { grid-template-columns: 1fr; }
     .select-cards { grid-template-columns: 1fr; }
     .manual-find-card { grid-column: span 1; }
-    
+
     .step {
         flex-direction: column;
         align-items: stretch;
