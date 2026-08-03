@@ -1,3 +1,7 @@
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy import or_
+
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.maintenance import PlannedMaintenance
 from app.models.manual import Manual
@@ -5,9 +9,6 @@ from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.schemas.manual import CreateManualSchema
 from app.services.manual_service import ManualService
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import or_
 
 manual = Blueprint("maunal", __name__)
 

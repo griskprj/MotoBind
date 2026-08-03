@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
+from sqlalchemy.orm import selectinload
+
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
@@ -9,7 +11,6 @@ from app.utils.calculate_freq_maintenance import calculate_maintenance_freq
 from app.utils.calculate_maintenance_money import calculate_maintenance_money
 from app.utils.check_maintenance_status import check_status
 from app.utils.maintenance_nodes import gen_maintenance_nodes
-from sqlalchemy.orm import selectinload
 
 
 class StatisticService:

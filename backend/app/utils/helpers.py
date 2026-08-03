@@ -1,9 +1,10 @@
 from typing import Optional
 
+from flask_jwt_extended import get_jwt_identity
+
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
-from flask_jwt_extended import get_jwt_identity
 
 
 def get_current_user() -> User:

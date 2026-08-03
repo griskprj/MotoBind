@@ -1,6 +1,7 @@
-from app.services.statistic_service import StatisticService
 from flask import Blueprint, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
+
+from app.services.statistic_service import StatisticService
 
 statistic = Blueprint("statistic", __name__)
 

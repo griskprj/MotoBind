@@ -1,3 +1,7 @@
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy import desc, or_
+
 from app.decorators import admin_required
 from app.exceptions import NotFoundError, ValidationError
 from app.extensions import db
@@ -6,9 +10,6 @@ from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import desc, or_
 
 admin = Blueprint("admin", __name__)
 

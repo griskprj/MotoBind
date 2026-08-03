@@ -1,14 +1,13 @@
-from app.exceptions import ValidationError
-from app.schemas.maintenance import (
-    CreateMaintenanceSchema,
-    CreatePlannedMaintenanceSchema,
-    MarkPlannedMaintenanceSchema,
-    UpdatePlannedMaintenanceSchema,
-)
-from app.services.maintenance_service import MaintenanceService
-from app.utils.helpers import check_motorcycle_owner, get_current_user
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+
+from app.exceptions import ValidationError
+from app.schemas.maintenance import (CreateMaintenanceSchema,
+                                     CreatePlannedMaintenanceSchema,
+                                     MarkPlannedMaintenanceSchema,
+                                     UpdatePlannedMaintenanceSchema)
+from app.services.maintenance_service import MaintenanceService
+from app.utils.helpers import check_motorcycle_owner, get_current_user
 
 maintenance = Blueprint("maintenance", __name__)
 
@@ -88,7 +87,7 @@ def delete_planned_maintenance(maintenance_id):
     return jsonify({"message": "Запись удалена"}), 200
 
 
-@maintenance.route("/<int:maintenance_id>", methods=['DELETE'])
+@maintenance.route("/<int:maintenance_id>", methods=["DELETE"])
 @jwt_required()
 def delete_maintenance(maintenance_id):
     """

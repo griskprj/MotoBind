@@ -6,12 +6,12 @@ from app.models.reports import Report
 from app.models.user import User
 
 __all__ = [
-    'User',
-    'Motorcycle',
-    'Maintenance',
-    'PlannedMaintenance',
-    'MaintenanceNode',
-    'Manual',
-    'ManualStep',
-    'Report'
+    "User",
+    "Motorcycle",
+    "Maintenance",
+    "PlannedMaintenance",
+    "MaintenanceNode",
+    "Manual",
+    "ManualStep",
+    "Report",
 ]

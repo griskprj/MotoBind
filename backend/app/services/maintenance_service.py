@@ -189,10 +189,7 @@ class MaintenanceService:
     @staticmethod
     def delete_maintenance(maintenance_id: int, user_id: int) -> None:
         """Удаляет обслуживание"""
-        maintenance = MaintenanceService.get_maintenance_by_id(
-            maintenance_id,
-            user_id
-        )
+        maintenance = MaintenanceService.get_maintenance_by_id(maintenance_id, user_id)
         db.session.delete(maintenance)
         db.session.commit()
 
@@ -252,10 +249,10 @@ class MaintenanceService:
         nodes_data = []
         for node in moto.maintenance_nodes:
             node = node.to_dict()
-            node[
-                "last_maintenance"
-            ] = MaintenanceService.get_last_maintenance_by_category(
-                user_id, node.category
+            node["last_maintenance"] = (
+                MaintenanceService.get_last_maintenance_by_category(
+                    user_id, node.category
+                )
             )
             nodes_data.append(node)
 

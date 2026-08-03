@@ -1,7 +1,8 @@
+from flask import Flask
+
 from app.exceptions import register_error_handlers
 from app.extensions import cors, db, jwt, migrate, swagger
 from config import settings
-from flask import Flask
 
 
 def create_app():

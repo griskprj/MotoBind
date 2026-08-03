@@ -1,8 +1,9 @@
 from functools import wraps
 
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
+
 from app.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from app.models.motorcycle import Motorcycle
-from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 
 def admin_required(fn):

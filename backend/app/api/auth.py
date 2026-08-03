@@ -1,11 +1,13 @@
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import (create_access_token, create_refresh_token,
+                                jwt_required)
+
 from app.exceptions import UnauthorizedError, ValidationError
 from app.extensions import db
 from app.models.user import User
 from app.schemas.auth import LoginSchema, RefreshSchema, RegisterSchema
 from app.services.user_service import UserService
 from app.utils.helpers import get_current_user
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required
 
 auth = Blueprint("auth", __name__)
 

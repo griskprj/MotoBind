@@ -1,9 +1,11 @@
-from app.decorators import moto_owner_required
-from app.schemas.motorcycle import CreateMotorcycleSchema, UpdateMotorcycleSchema
-from app.services.motorcycle_service import MotorcycleService
-from app.utils.helpers import get_current_user_id
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+
+from app.decorators import moto_owner_required
+from app.schemas.motorcycle import (CreateMotorcycleSchema,
+                                    UpdateMotorcycleSchema)
+from app.services.motorcycle_service import MotorcycleService
+from app.utils.helpers import get_current_user_id
 
 motorcycle = Blueprint("motorcycle", __name__)
 

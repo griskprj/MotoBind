@@ -1,9 +1,10 @@
+from sqlalchemy.orm import selectinload
+
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.utils.calculate_node_health import calculate_node_health
 from app.utils.check_maintenance_status import check_status
-from sqlalchemy.orm import selectinload
 
 
 def gen_maintenance_nodes(moto_id, user_id):

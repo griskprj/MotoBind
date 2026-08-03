@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
+from sqlalchemy.orm import selectinload
+
 from app.exceptions import BusinessLogicError, ForbiddenError, NotFoundError
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
-from sqlalchemy.orm import selectinload
 
 
 def calculate_maintenance_freq(moto_id, user_id):

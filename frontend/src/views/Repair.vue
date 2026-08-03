@@ -594,25 +594,7 @@ export default {
     color: #8b8b9e;
     margin: 0;
 }
-.outline-btn {
-    width: 100%;
-    padding: 8px;
-    background: transparent;
-    border: 1px solid rgba(124, 58, 237, 0.3);
-    border-radius: 10px;
-    color: #a78bfa;
-    font-weight: 500;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.outline-btn:hover {
-    background: rgba(124, 58, 237, 0.1);
-    border-color: #7c3aed;
-}
-.outline-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+
 
 /* ===== MANUAL ===== */
 .manual-wrapper {

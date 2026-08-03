@@ -1,9 +1,10 @@
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
 from app.exceptions import ForbiddenError
 from app.extensions import db
 from app.schemas.user import ChangePasswordSchema, UpdateProfileSchema
 from app.services.user_service import UserService
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
 
 user = Blueprint("user", __name__)
 
