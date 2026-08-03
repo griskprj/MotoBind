@@ -38,15 +38,6 @@
                     <span>Гараж</span>
                 </router-link>
                 <router-link
-                    to="/repair"
-                    class="nav-link"
-                    :class="{ active: $route.path === '/repair' }"
-                    @click="closeSidebar"
-                >
-                    <i class="fa fa-wrench"></i>
-                    <span>Ремонт</span>
-                </router-link>
-                <router-link
                     to="/maintenance"
                     class="nav-link"
                     :class="{ active: $route.path === '/maintenance' }"
@@ -54,6 +45,15 @@
                 >
                     <i class="fa fa-tools"></i>
                     <span>Обслуживание</span>
+                </router-link>
+                <router-link
+                    to="/repair"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/repair' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-wrench"></i>
+                    <span>Ремонт</span>
                 </router-link>
                 <router-link
                     to="/manuals"

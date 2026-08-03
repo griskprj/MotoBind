@@ -163,7 +163,7 @@
             </div>
 
             <!-- === PAGINATION === -->
-            <div v-if="!loading && manuals.length > 0" class="paginate">
+            <div v-if="!loading && manuals.length > 0" class="table-paginate">
                 <p class="paginate-show">
                     Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
                     {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
@@ -208,6 +208,7 @@
 
                 <div class="show-per-page">
                     <select v-model="pagination.per_page" @change="changePerPage">
+                        <option :value="1">1</option>
                         <option :value="6">6</option>
                         <option :value="12">12</option>
                         <option :value="24">24</option>
@@ -321,7 +322,6 @@ export default {
                     ...this.filters
                 }
                 
-                // Убираем пустые параметры
                 Object.keys(params).forEach(key => {
                     if (!params[key]) delete params[key]
                 })
@@ -719,6 +719,11 @@ export default {
 .paginate-btns {
     display: flex;
     gap: 8px;
+    text-align: center;
+}
+
+.paginate-btns button {
+    margin-top: 0;
 }
 
 .outline-btn.paginate {

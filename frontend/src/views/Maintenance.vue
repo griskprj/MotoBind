@@ -1,30 +1,10 @@
 <template>
     <div class="container">
         <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Обслуживание</h2>
-                <p class="header-subtitle">
-                    Планируйте и отслеживайте техническое обслуживание ваших мотоциклов.
-                </p>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <Header
+            title="Ремонт"
+            subtitle="Обслужите свой мотоцикл"
+        />
 
         <!-- === ACTIONS BUTTONS --- -->
         <section>
@@ -175,20 +155,20 @@
                     </div>
                     <div class="td service-cell">
                         <div class="s-title">{{ maintenance.title }}</div>
-                        <div class="s-desc">{{ maintenance.description || '—' }}</div>
+                        <div class="s-desc">{{ maintenance.description.slice(0, 60) + '...' || '—' }}</div>
                     </div>
                     <div class="td moto-name">{{ maintenance.moto_name }}</div>
                     <div class="td">
-                        <span v-if="selectedTab !== 'planned'">
-                            {{ maintenance.mileage || '—' }} км
-                        </span>
-                        <span v-else-if="selectedTab === 'planned'">
-                            {{ maintenance.planned_mileage || '' }} км
+                        <span>
+                            {{ maintenance.planned_mileage || maintenance.mileage || '—' }} км
                         </span>
                     </div>
                     <div class="td">{{ maintenance.cost || '—' }} ₽</div>
                     <div class="td">
-                        <span v-if="selectedTab === 'planned'" class="badge" :class="{
+                        <span v-if="!maintenance.status" class="badge badge-green">
+                            Выполнено
+                        </span>
+                        <span v-else class="badge" :class="{
                             'badge-green': maintenance.status === 'ok',
                             'badge-warning': maintenance.status === 'soon',
                             'badge-danger': maintenance.status === 'overdue',
@@ -196,15 +176,9 @@
                         }">
                             {{ getStatusLabel(maintenance.status) }}
                         </span>
-                        <span v-if="selectedTab !== 'planned'" class="badge badge-green">
-                            Выполнено
-                        </span>
                     </div>
                     <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
                 </div>
-            </div>
-            <div class="table-footer">
-                <button class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
             </div>
         </div>
         <div v-else class="empty-state">
@@ -245,22 +219,25 @@
         :isOpen="showDetailsMaintenanceModal"
         :motoName="selectedMaintenanceMotoName"
         :maintenance="selectedMaintenance"
+        @delete="deleteMaintenance"
         @close="showDetailsMaintenanceModal = false"
     />
 </template>
 
 <script>
 import api from '../api/api';
+import formatDate from '../utils/DateFormatter.js';
 import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue'
 import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMaintenanceModal.vue'
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
-
+import Header from '../components/Header.vue'
 
 export default {
     components: {
         AddMaintenanceModal,
         AddPlanMaintenanceModal,
-        MaintenanceDetailsModal
+        MaintenanceDetailsModal,
+        Header
     },
 
     data() {
@@ -347,6 +324,7 @@ export default {
                 const { data } = await api.post('/maintenance/history', formData)
 
                 this.historyMaintenances.push(data)
+                this.changeTab('history')
                 this.showAddMaintenanceModal = false
             } catch (err) {
                 consol.error(`Failed create maintenance: ${err}`)
@@ -358,9 +336,27 @@ export default {
                 const { data } = await api.post('/maintenance/plan', formData)
 
                 this.plannedMaintenances.push(data)
+                this.changeTab('planned')
                 this.showPlanMaintenanceModal = false
             } catch (err) {
                 consol.error(`Failed create maintenance: ${err}`)
+            }
+        },
+
+        async deleteMaintenance(maintenance) {
+            try {
+                if (maintenance.status) {
+                    await api.delete(`/maintenance/plan/${maintenance.id}`)
+                } else {
+                    await api.delete(`/maintenance/${maintenance.id}`)
+                }
+                
+                this.loadData()
+                this.showDetailsMaintenanceModal = false
+                alert("Обслуживание успешно удалено")
+            } catch (err) {
+                console.error(`Failed delete maintenance: ${err}`)
+                alert("Ошибка удаления обслуживания")
             }
         },
 
@@ -403,32 +399,7 @@ export default {
         },
 
         formatDate(dateString) {
-            if (!dateString) return '--'
-            
-            try {
-                if (dateString instanceof Date) {
-                    return dateString.toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    })
-                }
-                
-                const date = new Date(dateString)
-                
-                if (isNaN(date.getTime())) {
-                    return '--'
-                }
-                
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })
-            } catch (error) {
-                console.error('Error formatting date:', dateString, error)
-                return '--'
-            }
+            return formatDate(dateString)
         },
 
         getStatusLabel(status) {
@@ -814,11 +785,6 @@ export default {
 }
 
 .tr:hover .action-cell { color: #a78bfa; }
-
-.table-footer {
-    padding: 16px;
-    text-align: center;
-}
 
 .outline-btn {
     padding: 10px 20px;

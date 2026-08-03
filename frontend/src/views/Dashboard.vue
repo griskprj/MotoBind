@@ -1,38 +1,11 @@
 <template>
     <div class="container">
         <!-- === WELCOME SECTION === -->
-        <section>
-            <div class="welcome-wrapper">
-                <h2>Добро пожаловать, {{ user?.username }} 👋</h2>
-
-                <div class="welcome-actions">
-                    <i class="fa fa-bell"></i>
-                    
-                    <div class="profile-link">
-                        <router-link
-                            to="/profile"
-                            class="nav-link"
-                            :class="{ active: $route.path === '/profile' }"
-                        >
-                            <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                        </router-link>
-
-                        <div class="dropdown-menu">
-                            <button @click="welcomeDropdownActive = !welcomeDropdownActive" class="dropdown-btn">
-                                <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                            </button>
-
-                            <div v-if="welcomeDropdownActive" class="dropdown-list">
-                                <ul>
-                                    <li><button @click="this.$router.push('/profile')" class="dropdown-item-btn">Профиль</button @click="this.$route.push('/profile')"></li>
-                                    <li><button @click="logout()" class="dropdown-item-btn">Выйти</button></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <Header
+            v-if="user"
+            :title="`Добро пожаловать, ${user.username} 👋`"
+            subtitle="Ваша статистика"
+        />
 
         <!-- === STATISTICS SECTION === -->
         <section>
@@ -102,35 +75,32 @@
             <MaintenanceCountChart :chartData="countChartData" />
         </div>
 
-        <!-- === PENDING MAINTENANCE & EVENTS SECTION === -->
-        <div class="grid-sections-wrapper">
-            <!-- === PENDING MAINTENANCE SECTION === -->
-            <section class="pending-maintenance-section">
-                <h3>Ближайшие обслуживания</h3>
-                <div v-if="pendingMaintenances.length > 0" class="cards-wrapper">
-                    <MaintenanceCard
-                        v-for="maintenance in pendingMaintenances"
-                        :key="maintenance.id"
-                        :maintenance="{
-                            ...maintenance,
-                            moto_name: getMotorcycleName(maintenance.moto_id),
-                            moto_mileage: getMotorcycleMileage(maintenance.moto_id)
-                        }"
-                    />
+        <!-- === PENDING MAINTENANCE SECTION === -->
+        <section class="pending-maintenance-section">
+            <h3>Ближайшие обслуживания</h3>
+            <div v-if="pendingMaintenances.length > 0" class="cards-wrapper">
+                <MaintenanceCard
+                    v-for="maintenance in pendingMaintenances"
+                    :key="maintenance.id"
+                    :maintenance="{
+                        ...maintenance,
+                        moto_name: getMotorcycleName(maintenance.moto_id),
+                        moto_mileage: getMotorcycleMileage(maintenance.moto_id)
+                    }"
+                />
+            </div>
+            <div v-else class="empty-state" style="margin-bottom: 14px;">
+                <div class="empty-header">
+                    <i class="fa fa-wrench"></i>
+                    <p class="empty-title">У вас нет запланированных ТО</p>
                 </div>
-                <div v-else class="empty-state" style="margin-bottom: 14px;">
-                    <div class="empty-header">
-                        <i class="fa fa-wrench"></i>
-                        <p class="empty-title">У вас нет запланированных ТО</p>
-                    </div>
 
-                    <div class="empty-body">
-                        <p class="empty-text">Запланируйте первое ТО на странице <a href="#">"Обслуживание"</a></p>
-                    </div>
+                <div class="empty-body">
+                    <p class="empty-text">Запланируйте первое ТО на странице <a href="/maintenance">"Обслуживание"</a></p>
                 </div>
-                <button @click="this.$router.push('/maintenance')" class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
-            </section>
-        </div>
+            </div>
+            <button @click="this.$router.push('/maintenance')" class="outline-btn">Все обслуживания <i class="fa fa-angle-right"></i></button>
+        </section>
     </div>
 </template>
 
@@ -138,12 +108,15 @@
 import api from '../api/api';
 import { getUser } from '../api/auth';
 import { removeTokens } from '../api/auth';
+
+import Header from '../components/Header.vue';
 import MaintenanceCard from '../components/maintenance/MaintenanceCard.vue';
 import MaintenanceCostChart from '../components/charts/MaintenanceCostChart.vue'
 import MaintenanceCountChart from '../components/charts/MaintenanceCountChart.vue'
 
 export default {
     components: {
+        Header,
         MaintenanceCard,
         MaintenanceCostChart,
         MaintenanceCountChart,
@@ -164,8 +137,7 @@ export default {
             pendingMaintenanceCount: 0,
             maintenanceCount: 0,
             totalSpends: 0,
-
-            // dynamic vars
+            // dynamic stat vars
             dynamicMotorcycleCount: 0,
             dynamicMaintenanceCount: 0,
             dynamicTotalSpendsCount: 0,
@@ -173,14 +145,12 @@ export default {
             // === Chart data ===
             costChartData: [],
             countChartData: [],
-
-            // === Other vars ===
-            welcomeDropdownActive: false,
         }
     },
 
     computed: {
         pendingMaintenances() {
+            // check pending maintenances
             if (!this.maintenances) return []
             return this.maintenances
                 .filter(m => m.status === 'overdue' || m.status === 'soon')
@@ -190,10 +160,10 @@ export default {
 
     methods: {
         async loadData() {
+            // load page data. First - dashboard stat and obj. Second - charts data
             try {
                 this.loading = true
                 
-                // Загружаем основные данные
                 const dashboardResponse = await api.get('/statistic/dashboard-data')
                 
                 this.user = getUser()
@@ -212,12 +182,12 @@ export default {
                     .filter(m => m.status === 'overdue' || m.status === 'soon')
                     .length
 
-                // Загружаем данные для графиков
                 const chartsResponse = await api.get('/statistic/dashboard-charts')
                 this.costChartData = chartsResponse.data.cost_chart || []
                 this.countChartData = chartsResponse.data.count_chart || []
 
             } catch(err) {
+                alert("Не удалось загрузить данные")
                 console.error('Failed to load dashboard data:', err)
             } finally {
                 this.loading = false
@@ -225,16 +195,19 @@ export default {
         },
 
         getMotorcycleName(motoId) {
+            // Get motorcycle name
             const moto = this.motorcycles.find(m => m.id === motoId)
             return moto ? moto.name : `Мотоцикл #${motoId}`
         },
 
         getMotorcycleMileage(motoId) {
+            // Get motorcycle mileage
             const moto = this.motorcycles.find(m => m.id === motoId)
             return moto ? moto.mileage : '0'
         },
 
         async logout() {
+            // Logout
             try {
                 await api.post('/auth/logout');
             } catch(err) {
@@ -466,26 +439,7 @@ export default {
     }
 }
 
-.grid-sections-wrapper {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 12px;
-}
-
-@media (max-width: 728px) {
-    .grid-sections-wrapper {
-        grid-template-columns: repeat(1, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-    }
-}
-
 @media (max-width: 1220px) {
-    .grid-sections-wrapper {
-        grid-template-columns: repeat(1, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-    }
-
     .stat-card {
         align-items: center;
         justify-content: space-evenly;

@@ -127,12 +127,23 @@ button,
 }
 
 .btn-outline {
-  background: transparent;
-  border-color: var(--accent);
-  color: var(--accent);
-  &:hover {
-    background-color: var(--accent-light);
-  }
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 10px;
+    color: #a78bfa;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-outline:hover {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: #7c3aed;
+}
+.btn-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .btn-danger {
@@ -450,12 +461,11 @@ position: fixed;
     margin-bottom: 12px;
 }
 
-.empty-state p {
-    font-size: 18px;
-    color: var(--text-secondary);
-
+.empty-text {
+    color: #5a5a72;
+    font-size: 14px;
     font-style: italic;
-    margin-bottom: 12px;
+    margin: 0;
 }
 
 .empty-container {

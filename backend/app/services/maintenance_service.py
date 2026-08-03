@@ -85,13 +85,14 @@ class MaintenanceService:
         )
 
         db.session.add(planned)
+        db.session.flush()
         db.session.commit()
 
-        planned = planned.to_dict()
-        planned["moto_name"] = moto.name
-        planned["status"] = check_status(planned, moto)
+        planned_dict = planned.to_dict()
+        planned_dict["moto_name"] = moto.name
+        planned_dict["status"] = check_status(planned, moto)
 
-        return planned
+        return planned_dict
 
     @staticmethod
     def mark_planned_as_done(
@@ -179,16 +180,38 @@ class MaintenanceService:
     @staticmethod
     def delete_plan_maintenance(maintenance_id: int, user_id: int) -> None:
         """Удаляет плановое обслуживание"""
-        plan_maintenance = MaintenanceService.get_maintenance_by_id(
+        plan_maintenance = MaintenanceService.get_plan_maintenance_by_id(
             user_id, maintenance_id
         )
         db.session.delete(plan_maintenance)
         db.session.commit()
 
     @staticmethod
+    def delete_maintenance(maintenance_id: int, user_id: int) -> None:
+        """Удаляет обслуживание"""
+        maintenance = MaintenanceService.get_maintenance_by_id(
+            maintenance_id,
+            user_id
+        )
+        db.session.delete(maintenance)
+        db.session.commit()
+
+    @staticmethod
     def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
         """Получить обслуживание по ID"""
         maintenance = Maintenance.query.get(maintenance_id)
+        if not maintenance:
+            raise NotFoundError("Обслуживание не найдено")
+
+        if int(maintenance.author_id) != int(user_id):
+            raise ForbiddenError("Вы не являетесь автором этого обслуживания")
+
+        return maintenance
+
+    @staticmethod
+    def get_plan_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
+        """Получить обслуживание по ID"""
+        maintenance = PlannedMaintenance.query.get(maintenance_id)
         if not maintenance:
             raise NotFoundError("Обслуживание не найдено")
 

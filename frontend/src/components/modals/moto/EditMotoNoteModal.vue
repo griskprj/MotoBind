@@ -81,6 +81,7 @@ export default {
                 v-model="form.note" 
                 maxlength="128"
                 class="form-textarea"
+                style="resize: none;"
                 placeholder="Введите заметки о мотоцикле..."
             ></textarea>
             <div class="char-counter">{{ form.note?.length || 0 }}/128</div>

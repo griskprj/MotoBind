@@ -4,6 +4,8 @@
         title="Добавление мотоцикла"
         subtitle="Заполните информацию о вашем мотоцикле"
         icon="motorcycle"
+        bg-icon-color="var(--success-trans)"
+        icon-color="var(--success)"
         @close="$emit('close')"
     >
         <div class="modal-group">
@@ -39,7 +41,7 @@
                 </label>
                 <label>
                     Цвет
-                    <input v-model="form.color" type="color">
+                    <input v-model="form.color" type="color" :style="'background-color:' + form.color">
                 </label>
             </div>
         </div>
@@ -54,7 +56,7 @@
 
         <div class="modal-actions">
             <button @click="$emit('close')" class="cancel-btn">Отменить</button>
-            <button @click="submit" class="save-btn"><i class="fa fa-plus"></i> Добавить</button>
+            <button @click="submit" class="accept-btn"><i class="fa fa-plus"></i> Добавить</button>
         </div>
     </ModalWrapper>
 </template>
@@ -146,13 +148,13 @@ export default {
 .info-block {
     display: flex;
     padding: 12px;
-    background-color: var(--accent-trans);
+    background-color: var(--success-trans);
     border-radius: 10px;
-    border: 1px solid var(--accent-light);
+    border: 1px solid var(--success-light);
 }
 
 .block-icon {
-    color: var(--accent);
+    color: var(--success);
     font-size: 24px;
     margin-right: 12px;
 }

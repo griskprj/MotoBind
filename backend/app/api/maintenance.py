@@ -88,6 +88,18 @@ def delete_planned_maintenance(maintenance_id):
     return jsonify({"message": "Запись удалена"}), 200
 
 
+@maintenance.route("/<int:maintenance_id>", methods=['DELETE'])
+@jwt_required()
+def delete_maintenance(maintenance_id):
+    """
+    Удаление обслуживания
+    """
+    user_id = int(get_jwt_identity())
+    MaintenanceService.delete_maintenance(maintenance_id, user_id)
+
+    return jsonify({"message": "Запись удалена"}), 200
+
+
 @maintenance.route("/plan/mark", methods=["POST"])
 @jwt_required()
 def mark_planned_as_done():

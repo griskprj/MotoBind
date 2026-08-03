@@ -70,6 +70,7 @@
         </div>
 
         <div class="modal-actions">
+            <button @click="$emit('delete', maintenance)" class="btn-danger"><i class="fa fa-trash"></i> Удалить</button>
             <button @click="$emit('close')" class="btn-close">Закрыть</button>
         </div>
     </ModalWrapper>
@@ -126,7 +127,7 @@ export default {
                 'overdue': 'Просрочено',
                 'planned': 'Запланировано'
             }
-            return labels[status] || '—'
+            return labels[status] || 'Выполнено'
         },
 
         getCategory(category) {
@@ -227,6 +228,7 @@ export default {
 .card-item {
     display: flex;
     justify-content: space-between;
+    gap: 10px;
     align-items: center;
     padding: 10px 12px;
     background: #181824;

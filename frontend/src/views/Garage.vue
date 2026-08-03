@@ -1,11 +1,229 @@
+<template>
+    <div class="container">
+        <!-- === HEADER === -->
+        <Header
+            title="Гараж"
+            subtitle="Управляйте своими мотоциклами"
+        />
+
+        <!-- === TABS === -->
+        <div class="header-tabs">
+            <button class="tab-btn active disable" disabled>Мои мотоциклы</button>
+            <button @click="showAddMotoModal = true" class="tab-btn outline">Добавить мотоцикл</button>
+        </div>
+
+        <!-- === MOTORCYCLE SELECTOR === -->
+        <section class="moto-selector-wrapper">
+            <div class="moto-scroll-container">
+                <div @click="changeMoto(moto.id)" class="moto-card"
+                    v-for="moto in motorcycles"
+                    :key="moto.id"
+                    :class="motorcycle?.id === moto.id ? 'active' : ''"
+                >
+                    <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
+                    <div class="moto-card-info">
+                        <div class="moto-name">{{ moto.name }}</div>
+                        <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
+                    </div>
+                    <div v-if="motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
+                </div>
+                
+                <div @click="showAddMotoModal = true" class="moto-card add-card">
+                    <i class="fa fa-plus"></i>
+                    <span>Добавить</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- === MAIN GRID === -->
+        <div v-if="motorcycle" class="main-grid">
+            <!-- LEFT COLUMN: Moto Info -->
+            <aside class="moto-details-col">
+                <div class="big-moto-card">
+                    <div class="big-card-header">
+                        <span class="big-title">{{ motorcycle.name }}</span>
+                    </div>
+                    <div class="big-card-header-actions">
+                        <button @click="showEditMotoModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
+                        <button @click="showDeleteMotoModal = true" class="icon-btn"><i class="fa fa-trash"></i></button>
+                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn"><i class="fa fa-tachometer"></i></button>
+                    </div>
+                    <div class="big-card-img">
+                        <img src="../../public/moto_default.jpg" alt="Фото">
+                    </div>
+                    <div class="big-card-grid">
+                        <div class="spec-item"><span class="label">Год выпуска</span><span class="value">{{ motorcycle.years }}</span></div>
+                        <div class="spec-item"><span class="label">Двигатель</span><span class="value">{{ motorcycle.volume }} см³</span></div>
+                        <div class="spec-item"><span class="label">Пробег</span><span class="value">{{ motorcycle.mileage }} км</span></div>
+                        <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" :style="{ 'background': motorcycle.color }"></div></div>
+                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '--' }}</span></div>
+                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '--' }}</span></div>
+                    </div>
+                    <div class="notes-block">
+                        <div class="notes-header">
+                            <span>Заметки</span>
+                            <button @click="showEditMotoNoteModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
+                        </div>
+                        <div class="note-body">
+                            <p v-if="motorcycle.note" class="notes-text">{{ motorcycle.note }}</p>
+                            <div v-else class="empty-note-state">
+                                <div class="empty-note-header">
+                                    <p class="empty-text">
+                                        Добавьте заметку. Например: "Мой любимый мотоцикл..."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT COLUMN: Stats & Table -->
+            <main class="stats-col">
+                <!-- 4 Stats Cards -->
+                <div class="stats-grid-4">
+                    <div class="stat-box">
+                        <div class="stat-head"><i class="fa fa-tachometer"></i> Пробег</div>
+                        <div class="stat-val">{{ motorcycle.mileage }} км</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-head"><i class="fa fa-wrench"></i> Обслуживаний</div>
+                        <div class="stat-val">{{ motorcycle.maintenances?.length || 0 }}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-head"><i class="fa fa-calendar"></i> Следующее ТО</div>
+                        <div class="stat-val">
+                            <span v-if="nextMaintenance">
+                                <span v-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue > 0" style="color: var(--danger);">
+                                    Просрочено на {{ nextMaintenance.distanceOverdue }} км
+                                </span>
+                                <span v-else-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue === 0" style="color: var(--danger);">
+                                    Просрочено
+                                </span>
+                                <span v-else>
+                                    {{ nextMaintenance.distanceToNext }} км
+                                </span>
+                                <small style="font-size: 12px; color: var(--text-muted); display: block; font-weight: 400;">
+                                    ({{ nextMaintenance.title || 'ТО' }})
+                                </small>
+                            </span>
+                            <span v-else style="font-size: 18px;">Все ТО выполнены</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-head"><i class="fa fa-ruble"></i> Общие расходы</div>
+                        <div class="stat-val">{{ maintenanceSpends }} ₽</div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div v-if="motorcycle && motorcycle.maintenances && motorcycle.maintenances.length > 0" class="maintenance-table-wrapper">
+                    <div class="table-header">
+                        <span class="th">Дата</span>
+                        <span class="th">Обслуживание</span>
+                        <span class="th">Пробег</span>
+                        <span class="th">Стоимость</span>
+                        <span class="th">Статус</span>
+                        <span class="th"></span>
+                    </div>
+                    <div class="table-body">
+                        <div class="tr"
+                            v-for="maintenance in motorcycle.maintenances.slice(0, 6) || []"
+                            :key="maintenance.id"
+                            @click="openMaintenanceDetailsModal(maintenance)"
+                        >
+                            <div class="td date-cell">
+                                <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
+                                <span>{{ formatDate(maintenance.date) }}</span>
+                            </div>
+                            <div class="td service-cell">
+                                <div class="s-title">{{ maintenance.title }}</div>
+                                <div class="s-desc">{{ maintenance.description }}</div>
+                            </div>
+                            <div class="td">{{ maintenance.mileage }} км</div>
+                            <div class="td">{{ maintenance.cost }} ₽</div>
+                            <div class="td"><span class="badge-green">Выполнено</span></div>
+                            <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                    <div class="table-footer">
+                        <button @click="this.$router.push('/maintenance')" class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <!-- Table empty state -->
+                <div v-else class="empty-state">
+                    <div class="empty-header">
+                        <i class="fa fa-wrench"></i>
+                        <p class="empty-title">Здесь буду записи обслуживаний</p>
+                    </div>
+                    <div class="empty-body">
+                        <p class="empty-text">
+                            Начните вести обслуживание своего мотоцикла
+                        </p>
+                        <p class="empty-text">
+                            Запланировать или добавить запись ТО вы можете на странице <a href="/maintenance">"Обслуживание"</a>
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- === MODALS === -->
+    <AddMotoModal
+        :isOpen="showAddMotoModal"
+        @submit="addMoto"
+        @close="showAddMotoModal = false"
+    />
+
+    <EditMotoModal 
+        :isOpen="showEditMotoModal" 
+        :motorcycle="motorcycle"
+        @submit="updateMoto" 
+        @close="showEditMotoModal=false"
+    />
+
+    <UpdateMileageModal
+        :isOpen="showUpdateMotoMileageModal"
+        :motorcycle="motorcycle"
+        @submit="updateMotoMileage"
+        @close="showUpdateMotoMileageModal = false"
+    />
+
+    <EditMotoNoteModal
+        :isOpen="showEditMotoNoteModal"
+        :motorcycle="motorcycle"
+        @submit="updateMotoNote"
+        @close="showEditMotoNoteModal = false"
+    />
+
+    <DeleteMotoModal 
+        :isOpen="showDeleteMotoModal" 
+        :motorcycle="motorcycle" 
+        @submit="deleteMoto" 
+        @close="showDeleteMotoModal = false" 
+    />
+
+    <MaintenanceDetailsModal
+        v-if="motorcycle"
+        :isOpen="showMaintenanceDetailsModal"
+        :maintenance="selectedMaintenance"
+        :motoName="motorcycle.name"
+        @close="closeMaintenanceDetailsModal"
+    />
+</template>
+
 <script>
+import Header from '../components/Header.vue';
 import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
 import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
 import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
+import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
 
 import api from '../api/api.js'
+import formatDate from '../utils/DateFormatter.js'
 
 export default {
     components: {
@@ -13,7 +231,9 @@ export default {
         EditMotoModal,
         DeleteMotoModal,
         UpdateMileageModal,
-        EditMotoNoteModal
+        EditMotoNoteModal,
+        MaintenanceDetailsModal,
+        Header
     },
 
     data() {
@@ -22,7 +242,10 @@ export default {
             motorcycles: [],
             motorcycle: null,
             selectedMotoId: null,
+
+            // --- maintenance ---
             nextMaintenance: null,
+            selectedMaintenance: null,
 
             welcomeDropdownActive: false,
 
@@ -31,7 +254,8 @@ export default {
             showEditMotoModal: false,
             showDeleteMotoModal: false,
             showUpdateMotoMileageModal: false,
-            showEditMotoNoteModal: false
+            showEditMotoNoteModal: false,
+            showMaintenanceDetailsModal: false,
         }
     },
 
@@ -44,11 +268,6 @@ export default {
             } catch (err) {
                 console.error(err)
             }
-        },
-
-        changeMoto(motoId) {
-            this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
-            this.selectedMotoColor = this.motorcycle.color
         },
 
         async logout() {
@@ -66,8 +285,6 @@ export default {
         // === MOTORCYCLE ===
         async addMoto(formData) {
             try {
-                this.loadData()
-
                 const { data } = await api.post('/motorcycle/', formData)
 
                 this.showAddMotoModal = false
@@ -152,41 +369,31 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+
+        changeMoto(motoId) {
+            this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
+            this.selectedMotoColor = this.motorcycle.color
+        },
+
+
+        // === MODALS ===
+        openMaintenanceDetailsModal(maintenance) {
+            this.selectedMaintenance = maintenance
+            this.showMaintenanceDetailsModal = true
+        },
+        closeMaintenanceDetailsModal() {
+            this.selectedMaintenance = null
+            this.showMaintenanceDetailsModal = false
+        },
+
+        // === UTILS ===
+        formatDate(dateString) {
+            return formatDate(dateString)
         }
     },
 
     computed: {
-        formatDate(dateString) {
-            return (dateString) => {
-                if (!dateString) return '--';
-                
-                try {
-                    if (dateString instanceof Date) {
-                        return dateString.toLocaleDateString('ru-RU', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                    }
-                    
-                    const date = new Date(dateString);
-                    
-                    if (isNaN(date.getTime())) {
-                        return '--';
-                    }
-                    
-                    return date.toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    });
-                } catch (error) {
-                    console.error('Error formatting date:', dateString, error);
-                    return '--';
-                }
-            };
-        },
-
         nextMaintenance() {
             if (!this.motorcycle || !this.motorcycle.planned_maintenances || this.motorcycle.planned_maintenances.length === 0) {
                 return null;
@@ -250,242 +457,12 @@ export default {
 }
 </script>
 
-<template>
-    <div class="container">
-        <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Гараж</h2>
-                <div class="header-tabs">
-                    <button class="tab-btn active" disabled>Мои мотоциклы</button>
-                    <button @click="showAddMotoModal = true" class="tab-btn outline">Добавить мотоцикл</button>
-                </div>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- === MOTORCYCLE SELECTOR (SCROLLABLE) === -->
-        <section class="moto-selector-wrapper">
-            <div class="moto-scroll-container">
-                <div @click="changeMoto(moto.id)" class="moto-card"
-                    v-for="moto in motorcycles"
-                    :key="moto.id"
-                    :class="motorcycle?.id === moto.id ? 'active' : ''"
-                >
-                    <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
-                    <div class="moto-card-info">
-                        <div class="moto-name">{{ moto.name }}</div>
-                        <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
-                    </div>
-                    <div v-if="motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
-                </div>
-                
-                <div @click="showAddMotoModal = true" class="moto-card add-card">
-                    <i class="fa fa-plus"></i>
-                    <span>Добавить</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- === MAIN GRID (2 Columns) === -->
-        <div v-if="motorcycle" class="main-grid">
-            <!-- LEFT COLUMN: Moto Info -->
-            <aside class="moto-details-col">
-                <div class="big-moto-card">
-                    <div class="big-card-header">
-                        <span class="big-title">{{ motorcycle.name }}</span>
-                    </div>
-                    <div class="big-card-header-actions">
-                        <button @click="showEditMotoModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
-                        <button @click="showDeleteMotoModal = true" class="icon-btn"><i class="fa fa-trash"></i></button>
-                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn"><i class="fa fa-tachometer"></i></button>
-                    </div>
-                    <div class="big-card-img">
-                        <img src="../../public/moto_default.jpg" alt="Фото">
-                    </div>
-                    <div class="big-card-grid">
-                        <div class="spec-item"><span class="label">Год выпуска</span><span class="value">{{ motorcycle.years }}</span></div>
-                        <div class="spec-item"><span class="label">Двигатель</span><span class="value">{{ motorcycle.volume }} см³</span></div>
-                        <div class="spec-item"><span class="label">Пробег</span><span class="value">{{ motorcycle.mileage }} км</span></div>
-                        <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" :style="{ 'background': motorcycle.color }"></div></div>
-                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '--' }}</span></div>
-                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '--' }}</span></div>
-                    </div>
-                    <div class="notes-block">
-                        <div class="notes-header">
-                            <span>Заметки</span>
-                            <button @click="showEditMotoNoteModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
-                        </div>
-                        <div class="note-body">
-                            <p v-if="motorcycle.note" class="notes-text">{{ motorcycle.note }}</p>
-                            <div v-else class="empty-note-state">
-                                <div class="empty-note-header">
-                                    <p class="empty-text">
-                                        Добавьте заметку. Например: "Мой любимый мотоцикл..."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- RIGHT COLUMN: Stats & Table -->
-            <main class="stats-col">
-                <!-- 4 Stats Cards -->
-                <div class="stats-grid-4">
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-tachometer"></i> Пробег</div>
-                        <div class="stat-val">{{ motorcycle.mileage }} км</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-wrench"></i> Обслуживаний</div>
-                        <div class="stat-val">{{ motorcycle.maintenances?.length || 0 }}</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-calendar"></i> Следующее ТО</div>
-                        <div class="stat-val">
-                            <span v-if="nextMaintenance">
-                                <span v-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue > 0" style="color: var(--danger);">
-                                    Просрочено на {{ nextMaintenance.distanceOverdue }} км
-                                </span>
-                                <span v-else-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue === 0" style="color: var(--danger);">
-                                    Просрочено
-                                </span>
-                                <span v-else>
-                                    {{ nextMaintenance.distanceToNext }} км
-                                </span>
-                                <small style="font-size: 12px; color: var(--text-muted); display: block; font-weight: 400;">
-                                    ({{ nextMaintenance.title || 'ТО' }})
-                                </small>
-                            </span>
-                            <span v-else style="font-size: 18px;">Все ТО выполнены</span>
-                        </div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-ruble"></i> Общие расходы</div>
-                        <div class="stat-val">{{ maintenanceSpends }} ₽</div>
-                    </div>
-                </div>
-
-                <!-- Table -->
-                <div v-if="motorcycle && motorcycle.maintenances.length > 0" class="maintenance-table-wrapper">
-                    <div class="table-header">
-                        <span class="th">Дата</span>
-                        <span class="th">Обслуживание</span>
-                        <span class="th">Пробег</span>
-                        <span class="th">Стоимость</span>
-                        <span class="th">Статус</span>
-                        <span class="th"></span>
-                    </div>
-                    <div class="table-body">
-                        <div class="tr"
-                            v-for="maintenance in motorcycle.maintenances || []"
-                            :key="maintenance.id"
-                        >
-                            <div class="td date-cell">
-                                <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
-                                <span>{{ formatDate(maintenance.date) }}</span>
-                            </div>
-                            <div class="td service-cell">
-                                <div class="s-title">{{ maintenance.title }}</div>
-                                <div class="s-desc">{{ maintenance.description }}</div>
-                            </div>
-                            <div class="td">{{ maintenance.mileage }} км</div>
-                            <div class="td">{{ maintenance.cost }} ₽</div>
-                            <div class="td"><span class="badge-green">Выполнено</span></div>
-                            <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
-                        </div>
-                    </div>
-                    <div class="table-footer">
-                        <button class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
-                    </div>
-                </div>
-                <div v-else class="empty-state">
-                    <div class="empty-header">
-                        <i class="fa fa-wrench"></i>
-                        <p class="empty-title">Здесь буду записи обслуживаний</p>
-                    </div>
-                    <div class="empty-body">
-                        <p class="empty-text">
-                            Начните вести обслуживание своего мотоцикла
-                        </p>
-                        <p class="empty-text">
-                            Запланировать или добавить запись ТО вы можете на странице <a href="#">"Обслуживание"</a>
-                        </p>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <AddMotoModal
-        :isOpen="showAddMotoModal"
-        @submit="addMoto"
-        @close="showAddMotoModal = false"
-    />
-
-    <EditMotoModal 
-        :isOpen="showEditMotoModal" 
-        :motorcycle="motorcycle"
-        @submit="updateMoto" 
-        @close="showEditMotoModal=false"
-    />
-
-    <UpdateMileageModal
-        :isOpen="showUpdateMotoMileageModal"
-        :motorcycle="motorcycle"
-        @submit="updateMotoMileage"
-        @close="showUpdateMotoMileageModal = false"
-    />
-
-    <EditMotoNoteModal
-        :isOpen="showEditMotoNoteModal"
-        :motorcycle="motorcycle"
-        @submit="updateMotoNote"
-        @close="showEditMotoNoteModal = false"
-    />
-
-    <DeleteMotoModal 
-        :isOpen="showDeleteMotoModal" 
-        :motorcycle="motorcycle" 
-        @submit="deleteMoto" 
-        @close="showDeleteMotoModal = false" 
-    />
-</template>
-
 <style scoped>
-/* ===== HEADER ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.header-left h2 {
-    margin: 0 0 12px 0;
-    font-size: 24px;
-}
+/* === TABS === */
 .header-tabs {
     display: flex;
     gap: 8px;
+    margin-bottom: 14px;
 }
 .tab-btn {
     padding: 8px 20px;
@@ -502,6 +479,9 @@ export default {
     background: rgba(124, 58, 237, 0.2);
     border-color: #7c3aed;
     color: #a78bfa;
+}
+.tab-btn.disable {
+    cursor: default;
 }
 .tab-btn.outline:hover {
     background: rgba(124, 58, 237, 0.1);
@@ -806,11 +786,11 @@ export default {
     padding: 14px 16px;
     align-items: center;
     border-bottom: 1px solid rgba(255,255,255,0.03);
-    transition: background 0.2s;
+    transition: background-color 0.2s;
     cursor: pointer;
 }
 .tr:hover {
-    background: rgba(255,255,255,0.02);
+    background-color: rgba(255,255,255,0.02);
 }
 .td {
     font-size: 14px;
@@ -884,11 +864,6 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.empty-text {
-    color: #5a5a72;
-    font-size: 14px;
-    margin: 0;
 }
 
 /* ===== MEDIA QUERIES ===== */
@@ -1009,19 +984,5 @@ export default {
     .stats-grid-4 { grid-template-columns: 1fr; }
     .moto-scroll-container { gap: 8px; }
     .moto-card { flex: 0 0 140px; }
-}
-
-
-/* === ANIMATIONS === */
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 </style>
