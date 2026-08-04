@@ -8,9 +8,9 @@
                     </router-link>
                 </div>
             </div>
-            
+
             <hr>
-    
+
             <div class="right-col">
                 <nav>
                     <router-link class="link-item" to="/landing">MotoBind</router-link>
@@ -32,7 +32,7 @@
     flex-direction: column;
     align-items: center;
     padding: 32px;
-    
+
     background-color: var(--bg-primary);
 
     margin-top: 48px;
@@ -66,7 +66,7 @@
     height: 100%;
 
     line-height: 30px;
-    
+
 }
 
 .link-item {

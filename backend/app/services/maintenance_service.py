@@ -189,7 +189,7 @@ class MaintenanceService:
     @staticmethod
     def delete_maintenance(maintenance_id: int, user_id: int) -> None:
         """Удаляет обслуживание"""
-        maintenance = MaintenanceService.get_maintenance_by_id(maintenance_id, user_id)
+        maintenance = MaintenanceService.get_maintenance_by_id(user_id, maintenance_id)
         db.session.delete(maintenance)
         db.session.commit()
 

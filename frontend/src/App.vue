@@ -25,7 +25,7 @@ export default {
 
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
   </div>

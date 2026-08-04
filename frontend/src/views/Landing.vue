@@ -6,7 +6,7 @@
         <div class="logo">
           <span class="logo-m">Moto</span><span class="accent">Bind</span>
         </div>
-        
+
         <div class="header-actions">
           <button @click="this.$router.push('/login')" class="btn-outline">Войти</button>
           <button @click="this.$router.push('/register')" class="btn-primary">Начать</button>
@@ -112,7 +112,7 @@
             <h3>Каталог работ</h3>
             <p class="catalog-desc">Готовые инструкции по обслуживанию и ремонту мотоциклов для разных моделей.</p>
           </div>
-          
+
           <div class="catalog-right">
             <div class="screenshot-placeholder">
               <img src="/ManualsUI.png" alt="" class="landing-img">
@@ -175,10 +175,10 @@
         <div class="riders-right">
           <h2 class="section-title">Создан мотоциклистами <br><span class="accent">для мотоциклистов</span></h2>
           <p class="section-desc left-align">
-            Мы создали MotoBind, чтобы каждый мотоциклист мог легко управлять уходом за своим железным конём. 
+            Мы создали MotoBind, чтобы каждый мотоциклист мог легко управлять уходом за своим железным конём.
             Никакой сложной логистики и лишнего шума — только нужные инструменты в одном месте.
           </p>
-          
+
           <div class="riders-grid">
             <div class="rider-item">
               <div class="rider-icon"><i class="fa fa-road"></i></div>
