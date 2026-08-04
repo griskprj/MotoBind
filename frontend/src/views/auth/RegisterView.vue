@@ -68,6 +68,16 @@ export default {
                         </select>
                     </label>
                 </div>
+
+                <label class="checkbox-group">
+                    <input type="checkbox" v-model="agreeToTerms" required>
+                    <span>
+                    Я принимаю
+                    <router-link to="/terms">Пользовательское соглашение</router-link>
+                    и даю
+                    <router-link to="/consent">согласие на обработку ПД</router-link>
+                    </span>
+                </label>
             </div>
             <button class="submit-btn" type="submit">Зарегистрироваться</button>
         </form>

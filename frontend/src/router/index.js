@@ -159,6 +159,63 @@ const router = createRouter({
         showHeader: true
       }
     },
+
+    {
+      path: '/landing',
+      name: 'landing',
+      component: () => import('../views/Landing.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind',
+        showFooter: true,
+        showHeader: false
+      }
+    },
+
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../views/documents/PrivacyPolicy.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind - Политика конфиденциальности',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('../views/documents/TermsOfService.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind - Пользовательское соглашение',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
+      path: '/consent',
+      name: 'consent',
+      component: () => import('../views/documents/Consent.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind - Согласие на обработку персональных данных',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
+      path: '/rules',
+      name: 'rules',
+      component: () => import('../views/documents/Rules.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind - Правила использования',
+        showFooter: false,
+        showHeader: false
+      }
+    },
   ]
 })
 

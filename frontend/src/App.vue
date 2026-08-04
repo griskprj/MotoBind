@@ -5,7 +5,7 @@ import Footer from './components/Footer.vue';
 export default {
   components: {
     Sidebar,
-    Footer
+    Footer,
   },
 
   data() {
@@ -35,7 +35,7 @@ export default {
     <router-view />
   </Sidebar>
   <router-view v-else />
-  
+
   <Footer v-if="$route.meta.showFooter" />
 </template>
 

@@ -129,6 +129,12 @@ export default {
     background: rgba(255,255,255,0.05);
 }
 
+@media(max-width: 720px) {
+    .header-right {
+        display: none;
+    }
+}
+
 /* === ANIMATIONS === */
 @keyframes slideInUp {
     from {
