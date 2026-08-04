@@ -113,6 +113,17 @@ const router = createRouter({
       }
     },
     {
+      path: '/manual/rules',
+      name: 'manual rules',
+      component: () => import('../views/documents/ManualRules.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Правила оформления мануалов',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
       path: '/profile',
       name: 'profile',
       component: () => import('../views/Profile.vue'),
