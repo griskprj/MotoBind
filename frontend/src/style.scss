@@ -89,7 +89,7 @@ button,
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 1rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1;
@@ -128,7 +128,7 @@ button,
 
 .btn-outline {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     background: transparent;
     border: 1px solid rgba(124, 58, 237, 0.3);
     border-radius: 10px;
@@ -361,6 +361,16 @@ label {
     .filters {
       justify-content: center;
     }
+}
+
+
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 
