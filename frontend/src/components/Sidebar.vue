@@ -13,6 +13,7 @@
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
         <!-- Логотип -->
         <div class="sidebar-logo">
+            <img src="/icons/favicon-remove-bg.png" alt="">
             <h1 class="logo-left">Moto</h1><h1 class="logo-right">Bind</h1> <h2 v-if="$route.path.startsWith('/admin')" class="admin-logo">Admin</h2>
         </div>
 
@@ -363,6 +364,11 @@ export default {
     font-weight: 700;
     margin: 0;
     color: var(--text-primary, #fff);
+}
+
+.sidebar-logo img {
+    width: 48px;
+    height: 48px;
 }
 
 .logo-left {

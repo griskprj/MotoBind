@@ -3,8 +3,8 @@
         <!-- === WELCOME SECTION === -->
         <Header
             v-if="user"
-            :title="`Добро пожаловать, ${user.username} 👋`"
-            subtitle="Ваша статистика"
+            :title="`Добро пожаловать, ${user.username}!`"
+            subtitle="Следите за состоянием своего мотоцикла и обслуживайте его вовремя."
         />
 
         <!-- === STATISTICS SECTION === -->

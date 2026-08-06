@@ -86,7 +86,7 @@
             <div
               class="role-card"
               :class="{ selected: formData.role === 'motoclub' }"
-              @click="selectRole('motoclub')"
+              @click="error='Эта роль находится в разработке'"
             >
               <div class="role-icon">
                 <i class="fa fa-store"></i>
@@ -378,6 +378,7 @@ export default {
       },
       error: null,
       loading: false,
+      skipMotorcycleMode: false, // Флаг для режима пропуска
     };
   },
   computed: {
@@ -409,10 +410,14 @@ export default {
       }
     },
     addMotorcycle() {
+      // Переход на шаг добавления мотоцикла
+      this.skipMotorcycleMode = false;
       this.currentStep = 4;
     },
     skipMotorcycle() {
-      this.finishRegistration({ skipMoto: true });
+      // Устанавливаем флаг пропуска и переходим на финальный шаг
+      this.skipMotorcycleMode = true;
+      this.currentStep = 7; // Переход на финальный экран
     },
     handleFileUpload(event) {
       const file = event.target.files[0];
@@ -446,11 +451,12 @@ export default {
         opacity: opacity,
       };
     },
-    async finishRegistration(options = { skipMoto: false }) {
+    async finishRegistration() {
       this.error = null;
       this.loading = true;
 
       try {
+        // 1. Регистрация пользователя
         const registerPayload = {
           email: this.formData.email,
           username: this.formData.username,
@@ -468,7 +474,8 @@ export default {
         setTokens(access_token, refresh_token);
         setUser(user);
 
-        if (!options.skipMoto && this.formData.motorcycle.name) {
+        // 2. Создаём мотоцикл только если не в режиме пропуска
+        if (!this.skipMotorcycleMode && this.formData.motorcycle.name) {
           const motoPayload = {
             name: this.formData.motorcycle.name,
             years: this.formData.motorcycle.years || null,
@@ -485,6 +492,7 @@ export default {
           });
         }
 
+        // 3. Перенаправление
         const role = user.role || this.formData.role;
         const targetRoute = role === 'admin' ? '/admin/panel' : '/home';
         this.$router.push(targetRoute);
@@ -811,11 +819,11 @@ export default {
 .completion-icon {
   text-align: center;
   font-size: 64px;
-  color: var(--success);
+  color: var(--accent);
   margin: 16px 0 8px;
   position: relative;
   z-index: 2;
-  filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.2));
+  filter: drop-shadow(0 0 30px var(--accent-trans));
 }
 
 .completion-step .step-title,

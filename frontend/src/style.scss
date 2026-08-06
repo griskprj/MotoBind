@@ -19,6 +19,7 @@ body {
   touch-action: pan-x pan-y;
 }
 
+/* ===== ТЕМНАЯ ТЕМА (по умолчанию) ===== */
 :root {
   --bg-primary: #0A0A0F;
   --bg-secondary: #111118;
@@ -45,11 +46,32 @@ body {
   --warning-hover: #c97704;
   --warning-trans: rgba(245, 159, 11, 0.1);
 
-  
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
   --radius: 0.75rem;
+}
+
+/* ===== СВЕТЛАЯ ТЕМА ===== */
+[data-theme="light"] {
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #94A3B8;
+  
+  --border-color: #E2E8F0;
+  --accent: #7C3AED;
+  --accent-hover: #6D28D9;
+  --accent-light: #EDE9FE;
+  --accent-trans: rgba(124, 58, 237, 0.1);
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 body {
@@ -57,6 +79,7 @@ body {
   color: var(--text-primary);
 }
 
+/* Остальные стили остаются без изменений... */
 section {
   margin-bottom: 24px;
 }
@@ -260,7 +283,6 @@ label {
   }
 }
 
-
 /* Spiner */
 .loading-overlay {
   position: fixed;
@@ -290,8 +312,6 @@ label {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-
 
 /* Sections */
 .section-sep {
@@ -343,8 +363,6 @@ label {
     }
 }
 
-
-
 /* Filters */
 .filters {
   display: flex;
@@ -363,8 +381,6 @@ label {
     }
 }
 
-
-
 .container {
   width: 100%;
   max-width: 1400px;
@@ -372,8 +388,6 @@ label {
   padding-left: 16px;
   padding-right: 16px;
 }
-
-
 
 /* Modals */
 .modal-wrapper {
@@ -450,7 +464,6 @@ position: fixed;
   background-color: var(--danger-hover);
   border-color: var(--danger-hover);
 }
-
 
 /* Empty State */
 .empty-state {

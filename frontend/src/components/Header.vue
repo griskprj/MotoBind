@@ -7,20 +7,15 @@
         </div>
 
         <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button @click="this.$router.push('/profile')" class="dropdown-item">Профиль</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <i class="fa fa-bell notification-icon"></i>
+            <button 
+                class="theme-toggle" 
+                @click="toggleTheme"
+                :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
+            >
+                <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
+            </button>
+        </div>
     </header>
 </template>
 
@@ -30,7 +25,8 @@ export default {
 
     data() {
         return {
-            welcomeDropdownActive: false
+            welcomeDropdownActive: false,
+            isDark: true
         }
     },
 
@@ -46,6 +42,33 @@ export default {
             default: '',
             required: true
         }
+    },
+
+    mounted() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            this.isDark = savedTheme === 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.isDark = prefersDark;
+            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        }
+    },
+
+    methods: {
+        toggleTheme() {
+            this.isDark = !this.isDark;
+            const theme = this.isDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            // Обновляем иконку солнца/луны на кнопке
+            const icon = this.$el.querySelector('.theme-toggle i');
+            if (icon) {
+                icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';
+            }
+        },
     }
 }
 </script>
@@ -74,9 +97,18 @@ export default {
     gap: 16px;
 }
 .notification-icon {
+    padding: 10px 12px;
     font-size: 20px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
+    background-color: var(--bg-primary);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.notification-icon:hover {
+    background-color: var(--border-color);
+    color: var(--accent);
 }
 .profile-wrapper {
     display: flex;
@@ -90,6 +122,40 @@ export default {
     border-radius: 50%;
     border: 2px solid #7c3aed;
 }
+
+/* ===== КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ===== */
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    transform: rotate(30deg);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.theme-toggle:active {
+    transform: rotate(60deg) scale(0.9);
+}
+
+.theme-toggle i {
+    transition: transform 0.3s ease;
+}
+
 .dropdown-trigger {
     background: transparent;
     border: none;
