@@ -36,9 +36,9 @@ class Maintenance(db.Model):
             "mileage": self.mileage,
             "category": self.category,
             "cost": self.cost,
-            "date": self.date,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "date": self.date.isoformat() if self.date else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
 
@@ -72,6 +72,6 @@ class PlannedMaintenance(db.Model):
             "description": self.description,
             "planned_mileage": self.planned_mileage,
             "category": self.category,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

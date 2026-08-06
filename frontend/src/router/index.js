@@ -25,6 +25,17 @@ const router = createRouter({
       redirect: '/home'
     },
     {
+      path: '/welcome',
+      name: 'welcome screen',
+      component: () => import('../views/auth/WelcomeScreen.vue'),
+      meta: {
+        requiresGuest: true,
+        title: 'MotoBind - Начало',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginView.vue'),
@@ -235,7 +246,7 @@ router.beforeEach((to, from, next) => {
   const admin = isAdmin()
 
   if (to.meta.requiresAuth && !authenticated) {
-    next('/login')
+    next('/welcome')
     return
   }
 
@@ -243,7 +254,7 @@ router.beforeEach((to, from, next) => {
     if (authenticated) {
       next('/home')
     } else {
-      next('/login')
+      next('/welcome')
     }
     return
   }

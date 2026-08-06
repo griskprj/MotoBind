@@ -23,7 +23,20 @@ def register():
         email=data.email, password=data.password, username=data.username, role=data.role
     )
 
-    return jsonify({"message": "Регистрация успешна", "user": user.to_dict()}), 201
+    access_token = create_access_token(
+        identity=str(user.id), additional_claims={"role": user.role}
+    )
+    refresh_token = create_refresh_token(identity=str(user.id))
+
+    user.refresh_token = refresh_token
+    db.session.commit()
+
+    return jsonify({
+        "message": "Регистрация успешна",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user": user.to_dict()
+    }), 201
 
 
 @auth.route("/login", methods=["POST"])
