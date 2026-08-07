@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     UPLOAD_FOLDER: str = "uploads"
     MAX_CONTENT_LENGTH: int = 50 * 1024 * 1024  # 50 MB
+    BASE_URL: str = "http://localhost:5000"
 
     CORS_ORIGINS: str = "*"
 

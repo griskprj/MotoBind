@@ -1,31 +1,9 @@
 <template>
     <!-- === HEADER === -->
-    <header class="page-header">
-        <div class="header-left">
-            <h2>Пользователи</h2>
-            <p class="header-subtitle">
-                Управление пользователями платформы.
-            </p>
-        </div>
-
-        <div class="header-right">
-            <button @click="showAddUserModal = true"><i class="fa fa-plus"></i> Добавить пользователя</button>
-            <i class="fa fa-bell notification-icon"></i>
-            <div class="profile-wrapper">
-                <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                    <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                </button>
-                <div v-if="welcomeDropdownActive" class="dropdown-list">
-                    <ul>
-                        <li><button class="dropdown-item">Профиль</button></li>
-                        <li><button class="dropdown-item">Настройки</button></li>
-                        <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </header>
+    <Header
+        title="Пользователи"
+        subtitle="Управление пользователями платформы"
+    />
 
     <!-- === STATISTIC === -->
     <section>
@@ -112,7 +90,10 @@
                 </div>
             </div>
 
-            <button class="outline-btn" @click="resetFilters"><i class="fa fa-refresh"></i> Сбросить фильтры</button>
+            <div class="filters-actions">
+                <button class="outline-btn" @click="resetFilters"><i class="fa fa-refresh"></i> Сбросить фильтры</button>
+                <button @click="showAddUserModal = true"><i class="fa fa-plus"></i> Добавить пользователя</button>
+            </div>
         </div>
 
         <!-- Loading state -->
@@ -140,7 +121,12 @@
                     class="tr"
                 >
                     <div class="td user-cell">
-                        <img :src="user.avatar || '/BaseAvatar.jpg'" alt="" class="user-img">
+                        <img 
+                            :src="getAvatarUrl(user.avatar)" 
+                            alt=""
+                            class="user-img"
+                            @error="(e) => e.target.src = '/BaseAvatar.jpg'"
+                        >
                         <div class="user-info">
                             <p class="user-name">{{ user.username }}</p>
                             <p class="user-email">{{ user.email }}</p>
@@ -266,18 +252,19 @@ import api from '../../api/api'
 import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
 import EditUserModal from '../../components/modals/admin/EditUserModal.vue';
 import DeleteUserModal from '../../components/modals/admin/DeleteUserModal.vue';
+import Header from '../../components/Header.vue';
 
 export default {
     components: {
         AddUserModal,
         EditUserModal,
-        DeleteUserModal
+        DeleteUserModal,
+        Header
     },
     
     data() {
         return {
             loading: false,
-            welcomeDropdownActive: false,
             users: [],
             stats: {
                 total: 0,
@@ -349,6 +336,16 @@ export default {
         this.loadUsers()
     },
     methods: {
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.jpg';
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath;
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || '';
+            return `${baseUrl}/uploads/${avatarPath}`;
+        },
         async loadUsers() {
             this.loading = true
             try {
@@ -561,93 +558,6 @@ export default {
 </script>
 
 <style scoped>
-/* ===== HEADER ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.header-left h2 {
-    margin: 0 0 12px 0;
-    font-size: 24px;
-}
-
-.header-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.notification-icon {
-    font-size: 20px;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.profile-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-}
-.profile-img {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 2px solid #7c3aed;
-}
-.dropdown-trigger {
-    background: transparent;
-    border: none;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.dropdown-list {
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    padding: 8px;
-    min-width: 140px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 100;
-    animation: slideInUp 0.2s ease;
-}
-.dropdown-list ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.dropdown-item {
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: #ccc;
-    text-align: left;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-}
-.dropdown-item:hover {
-    background: rgba(255,255,255,0.05);
-}
-
-@media (max-width: 720px) {
-    .header-right {
-        display: none;
-    }
-}
-
-
 /* === STATISTIC === */
 .stat-cards {
     display: grid;
@@ -756,6 +666,11 @@ export default {
     gap: 14px;
 }
 
+.filters-actions {
+    display: flex;
+    gap: 8px;
+}
+
 @media (max-width: 1200px) {
     .table-filters {
         flex-direction: column;
@@ -787,6 +702,9 @@ export default {
 @media (max-width: 520px) {
     .inputs-wrapper {
         grid-template-columns: repeat(1, 1fr);
+    }
+    .filters-actions {
+        flex-direction: column;
     }
 }
 

@@ -15,6 +15,7 @@ class User(db.Model):
     password = db.Column(db.String(512), nullable=False)
     username = db.Column(db.String(64), nullable=False)
     bio = db.Column(db.String(128), nullable=True)
+    avatar = db.Column(db.String(256), nullable=True)
     role = db.Column(
         db.String(32), default="motorcyclist"
     )  # motorcyclist, admin, motoclub
@@ -45,6 +46,7 @@ class User(db.Model):
             "email": self.email,
             "username": self.username,
             "bio": self.bio,
+            "avatar": self.avatar,
             "role": self.role,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,

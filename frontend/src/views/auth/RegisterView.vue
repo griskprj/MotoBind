@@ -410,14 +410,12 @@ export default {
       }
     },
     addMotorcycle() {
-      // Переход на шаг добавления мотоцикла
       this.skipMotorcycleMode = false;
       this.currentStep = 4;
     },
     skipMotorcycle() {
-      // Устанавливаем флаг пропуска и переходим на финальный шаг
       this.skipMotorcycleMode = true;
-      this.currentStep = 7; // Переход на финальный экран
+      this.currentStep = 7;
     },
     handleFileUpload(event) {
       const file = event.target.files[0];
@@ -475,6 +473,7 @@ export default {
         setUser(user);
 
         // 2. Создаём мотоцикл только если не в режиме пропуска
+        let motoId = null;
         if (!this.skipMotorcycleMode && this.formData.motorcycle.name) {
           const motoPayload = {
             name: this.formData.motorcycle.name,
@@ -487,14 +486,37 @@ export default {
             note: this.formData.motorcycle.note || null,
           };
 
-          await api.post('/motorcycle/', motoPayload, {
+          const motoResponse = await api.post('/motorcycle/', motoPayload, {
             headers: { Authorization: `Bearer ${access_token}` },
           });
+          
+          motoId = motoResponse.data.id;
+
+          // 3. Загружаем фото, если есть
+          if (this.formData.motorcycle.photo) {
+            try {
+              const response = await fetch(this.formData.motorcycle.photo);
+              const blob = await response.blob();
+              const file = new File([blob], 'motorcycle_photo.jpg', { type: 'image/jpeg' });
+              
+              const uploadFormData = new FormData();
+              uploadFormData.append('photo', file);
+              
+              await api.post(`/motorcycle/${motoId}/photo`, uploadFormData, {
+                headers: { 
+                  Authorization: `Bearer ${access_token}`,
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+            } catch (photoError) {
+              console.warn('Не удалось загрузить фото:', photoError);
+            }
+          }
         }
 
-        // 3. Перенаправление
+        // 4. Перенаправление
         const role = user.role || this.formData.role;
-        const targetRoute = role === 'admin' ? '/admin/panel' : '/home';
+        const targetRoute = role === 'admin' ? '/admin/panel' : '/garage';
         this.$router.push(targetRoute);
       } catch (err) {
         if (err.response?.data?.detail) {

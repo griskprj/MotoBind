@@ -21,15 +21,6 @@
         <nav class="sidebar-nav">
             <div v-if="!$route.path.startsWith('/admin')" class="user-nav">
                 <router-link
-                    to="/home"
-                    class="nav-link"
-                    :class="{ active: $route.path === '/home' }"
-                    @click="closeSidebar"
-                >
-                    <i class="fa fa-home"></i>
-                    <span>Главная</span>
-                </router-link>
-                <router-link
                     to="/garage"
                     class="nav-link"
                     :class="{ active: $route.path === '/garage' }"
@@ -124,7 +115,7 @@
 
                 <router-link
                     v-if="isAdmin"
-                    to="/home"
+                    to="/garage"
                     class="nav-link admin-link"
                     @click="closeSidebar"
                 >

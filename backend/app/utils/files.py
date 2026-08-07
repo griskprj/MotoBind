@@ -22,7 +22,23 @@ def save_moto_photo(file, moto_id):
 
     filepath = os.path.join(upload_dir, filename)
     file.save(filepath)
+    
     return f"user_moto/{filename}"
+
+
+def save_user_avatar(file, user_id):
+    """Save user avatar"""
+    if not file or not allowed_file(file.filename):
+        return None
+
+    filename = secure_filename(f"avatar_{user_id}_{file.filename}")
+    upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "avatars")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filepath = os.path.join(upload_dir, filename)
+    file.save(filepath)
+    
+    return f"avatars/{filename}"
 
 
 def delete_file(relative_path):
@@ -33,3 +49,12 @@ def delete_file(relative_path):
     full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], relative_path)
     if os.path.exists(full_path):
         os.remove(full_path)
+
+
+def get_file_url(relative_path):
+    """Get full URL for file"""
+    if not relative_path:
+        return None
+    
+    base_url = current_app.config.get('BASE_URL', '')
+    return f"{base_url}/uploads/{relative_path}"

@@ -1,4 +1,6 @@
-from flask import Flask
+from flask import Flask, send_from_directory, jsonify
+import os
+import mimetypes
 
 from app.exceptions import register_error_handlers
 from app.extensions import cors, db, jwt, migrate, swagger
@@ -31,6 +33,43 @@ def create_app():
     jwt.init_app(app)
     swagger.init_app(app)
     register_error_handlers(app)
+
+    # Простой маршрут для раздачи файлов
+    @app.route('/uploads/<path:filename>')
+    def serve_uploaded_file(filename):
+        """Сервит загруженные файлы"""
+        try:
+            upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+            file_path = os.path.join(upload_folder, filename)
+            
+            # Проверяем существование файла
+            if not os.path.exists(file_path):
+                # Пробуем найти в подпапках
+                for root, dirs, files in os.walk(upload_folder):
+                    if os.path.basename(filename) in files:
+                        # Нашли файл, вычисляем относительный путь
+                        rel_path = os.path.relpath(
+                            os.path.join(root, os.path.basename(filename)), 
+                            upload_folder
+                        )
+                        return send_from_directory(upload_folder, rel_path)
+                
+                # Если файл не найден
+                app.logger.error(f"File not found: {file_path}")
+                return jsonify({"error": "File not found"}), 404
+            
+            # Возвращаем файл
+            return send_from_directory(upload_folder, filename)
+            
+        except Exception as e:
+            app.logger.error(f"Error serving file: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    # Добавляем также маршрут с /api
+    @app.route('/api/uploads/<path:filename>')
+    def serve_uploaded_file_api(filename):
+        """Сервит загруженные файлы через /api"""
+        return serve_uploaded_file(filename)
 
     from app.api.admin import admin
     from app.api.auth import auth

@@ -1,30 +1,10 @@
 <template>
     <div class="container">
         <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Модерация мануалов</h2>
-                <p class="header-subtitle">
-                    Управляйте мануалами: проверяйте, одобряйте или отклоняйте заявки пользователей.
-                </p>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <Header
+            title="Мануалы"
+            subtitle="Управление мануалами и модерация"
+        />
 
         <!-- === TABS & FILTERS === -->
         <div class="controls-wrapper">
@@ -187,16 +167,17 @@
 
 <script>
 import api from '../../api/api';
+import Header from '../../components/Header.vue';
 import ManualDetailsAdminModal from '../../components/modals/admin/ManualDetailsAdminModal.vue';
 export default {
     name: 'AdminManuals',
     components: {
-        ManualDetailsAdminModal
+        ManualDetailsAdminModal,
+        Header
     },
 
     data() {
         return {
-            welcomeDropdownActive: false,
             manuals: [],
             motorcycles: [],
             
@@ -398,94 +379,6 @@ export default {
 </script>
 
 <style scoped>
-.admin-manuals-container {
-    padding: 24px 32px;
-    background-color: #0f0f1a;
-    min-height: 100vh;
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-}
-
-/* ===== HEADER ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.header-left h2 {
-    margin: 0 0 8px 0;
-    font-size: 24px;
-    font-weight: 600;
-}
-.header-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-}
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.notification-icon {
-    font-size: 20px;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.profile-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-}
-.profile-img {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 2px solid #7c3aed;
-    object-fit: cover;
-}
-.dropdown-trigger {
-    background: transparent;
-    border: none;
-    color: #8b8b9e;
-    cursor: pointer;
-    padding: 4px;
-}
-.dropdown-list {
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    padding: 8px;
-    min-width: 140px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 100;
-}
-.dropdown-list ul { list-style: none; margin: 0; padding: 0; }
-.dropdown-item {
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: #ccc;
-    text-align: left;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: 0.2s;
-}
-.dropdown-item:hover {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-}
-
-/* ===== CONTROLS (TABS & FILTERS) ===== */
 .controls-wrapper {
     margin-bottom: 16px;
     display: flex;

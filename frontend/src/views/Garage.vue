@@ -20,7 +20,10 @@
                     :key="moto.id"
                     :class="motorcycle?.id === moto.id ? 'active' : ''"
                 >
-                    <div class="moto-card-icon"><i class="fa fa-motorcycle"></i></div>
+                    <div class="moto-card-icon">
+                        <img v-if="moto.photo_url" :src="getPhotoUrl(moto.photo_url)" alt="Фото" class="moto-thumb">
+                        <i v-else class="fa fa-motorcycle"></i>
+                    </div>
                     <div class="moto-card-info">
                         <div class="moto-name">{{ moto.name }}</div>
                         <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
@@ -47,9 +50,20 @@
                         <button @click="showEditMotoModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
                         <button @click="showDeleteMotoModal = true" class="icon-btn"><i class="fa fa-trash"></i></button>
                         <button @click="showUpdateMotoMileageModal = true" class="icon-btn"><i class="fa fa-tachometer"></i></button>
+                        <button @click="showPhotoModal = true" class="icon-btn"><i class="fa fa-camera"></i></button>
                     </div>
-                    <div class="big-card-img">
-                        <img src="../../public/moto_default.jpg" alt="Фото">
+                    <div class="big-card-img" @click="showPhotoModal = true" style="cursor: pointer;">
+                        <img 
+                            v-if="motorcycle.photo_url" 
+                            :src="getPhotoUrl(motorcycle.photo_url)" 
+                            alt="Фото мотоцикла"
+                            @error="handleImageError"
+                        >
+                        <img v-else src="../../public/moto_default.jpg" alt="Фото по умолчанию">
+                        <div class="photo-overlay">
+                            <i class="fa fa-camera"></i>
+                            <span>Изменить фото</span>
+                        </div>
                     </div>
                     <div class="big-card-grid">
                         <div class="spec-item"><span class="label">Год выпуска</span><span class="value">{{ motorcycle.years }}</span></div>
@@ -211,6 +225,15 @@
         :motoName="motorcycle.name"
         @close="closeMaintenanceDetailsModal"
     />
+
+    <!-- Новый модал для фото -->
+    <PhotoModal
+        :isOpen="showPhotoModal"
+        :motorcycle="motorcycle"
+        @upload="uploadPhoto"
+        @delete="deletePhoto"
+        @close="showPhotoModal = false"
+    />
 </template>
 
 <script>
@@ -220,7 +243,8 @@ import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
 import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
 import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
-import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
+import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
+import PhotoModal from '../components/modals/moto/PhotoModal.vue';
 
 import api from '../api/api.js'
 import formatDate from '../utils/DateFormatter.js'
@@ -233,6 +257,7 @@ export default {
         UpdateMileageModal,
         EditMotoNoteModal,
         MaintenanceDetailsModal,
+        PhotoModal,
         Header
     },
 
@@ -247,8 +272,6 @@ export default {
             nextMaintenance: null,
             selectedMaintenance: null,
 
-            welcomeDropdownActive: false,
-
             // --- modals ---
             showAddMotoModal: false,
             showEditMotoModal: false,
@@ -256,6 +279,7 @@ export default {
             showUpdateMotoMileageModal: false,
             showEditMotoNoteModal: false,
             showMaintenanceDetailsModal: false,
+            showPhotoModal: false,
         }
     },
 
@@ -264,7 +288,9 @@ export default {
             try {
                 const motorcycleResponse = await api.get('/motorcycle/')
                 this.motorcycles = motorcycleResponse.data
-                this.motorcycle = motorcycleResponse.data[0]
+                if (this.motorcycles.length > 0) {
+                    this.motorcycle = this.motorcycles[0]
+                }
             } catch (err) {
                 console.error(err)
             }
@@ -281,32 +307,137 @@ export default {
             }
         },
 
+        // === PHOTO ===
+        getPhotoUrl(photoPath) {
+            if (!photoPath) return null;
+            // Если путь уже начинается с http, возвращаем как есть
+            if (photoPath.startsWith('http')) return photoPath;
+            // Иначе добавляем базовый URL
+            const baseUrl = import.meta.env.VITE_API_URL || '';
+            return `/uploads/${photoPath}`;
+        },
+
+        handleImageError(event) {
+            event.target.src = '/public/moto_default.jpg';
+        },
+
+        async uploadPhoto(formData) {
+            try {
+                const file = formData.get('photo');
+                const uploadFormData = new FormData();
+                uploadFormData.append('photo', file);
+
+                const { data } = await api.post(
+                    `/motorcycle/${this.motorcycle.id}/photo`,
+                    uploadFormData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                // Обновляем данные
+                const index = this.motorcycles.findIndex(m => m.id === data.id);
+                if (index !== -1) {
+                    this.motorcycles[index] = data;
+                }
+                this.motorcycle = data;
+                this.showPhotoModal = false;
+                alert('Фото успешно загружено!');
+            } catch (err) {
+                console.error('Failed upload photo:', err);
+                alert(err.response?.data?.error || 'Ошибка загрузки фото');
+            }
+        },
+
+        async deletePhoto() {
+            if (!confirm('Удалить фото?')) return;
+            
+            try {
+                const { data } = await api.delete(`/motorcycle/${this.motorcycle.id}/photo`);
+                
+                const index = this.motorcycles.findIndex(m => m.id === data.id);
+                if (index !== -1) {
+                    this.motorcycles[index] = data;
+                }
+                this.motorcycle = data;
+                this.showPhotoModal = false;
+                alert('Фото удалено');
+            } catch (err) {
+                console.error('Failed delete photo:', err);
+                alert(err.response?.data?.error || 'Ошибка удаления фото');
+            }
+        },
 
         // === MOTORCYCLE ===
         async addMoto(formData) {
             try {
-                const { data } = await api.post('/motorcycle/', formData)
+                const { photoFile, ...motoData } = formData
+                
+                const { data } = await api.post('/motorcycle/', motoData)
+                
+                if (photoFile) {
+                    const uploadFormData = new FormData()
+                    uploadFormData.append('photo', photoFile)
+                    
+                    await api.post(`/motorcycle/${data.id}/photo`, uploadFormData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    })
+                    
+                    const updatedResponse = await api.get(`/motorcycle/`)
+                    this.motorcycles = updatedResponse.data
+                    this.motorcycle = this.motorcycles.find(m => m.id === data.id) || this.motorcycles[0]
+                } else {
+                    this.motorcycles.push(data)
+                    this.motorcycle = data
+                }
 
                 this.showAddMotoModal = false
-                this.motorcycles.push(data)
-
                 alert('Мотоцикл добавлен!')
             } catch(err) {
                 console.error('Failed add moto:', err)
+                alert(err.response?.data?.error || 'Ошибка добавления мотоцикла')
             }
         },
 
         async updateMoto(formData) {
             try {
                 this.loading = true
-                const { data } = await api.put(`/motorcycle/${formData.id}`, formData)
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                if (index !== -1) this.motorcycles[index] = data
-                this.motorcycle = data
+                
+                const { newPhotoFile, deleteExistingPhoto, ...motoData } = formData
+                
+                const { data } = await api.put(`/motorcycle/${motoData.id}`, motoData)
+                
+                if (deleteExistingPhoto) {
+                    await api.delete(`/motorcycle/${motoData.id}/photo`)
+                }
+                
+                if (newPhotoFile) {
+                    const uploadFormData = new FormData()
+                    uploadFormData.append('photo', newPhotoFile)
+                    
+                    await api.post(`/motorcycle/${motoData.id}/photo`, uploadFormData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    })
+                }
+                
+                const index = this.motorcycles.findIndex(m => m.id === motoData.id)
+                if (index !== -1) {
+                    const updatedResponse = await api.get('/motorcycle/')
+                    this.motorcycles = updatedResponse.data
+                    this.motorcycle = this.motorcycles.find(m => m.id === motoData.id)
+                }
+                
                 this.showEditMotoModal = false
                 alert("Мотоцикл обновлен")
             } catch (err) {
-                console.error(`Failed update moto: ${err}`)
+                console.error('Failed update moto:', err)
+                alert(err.response?.data?.error || 'Ошибка обновления мотоцикла')
             } finally {
                 this.loading = false
             }
@@ -327,6 +458,7 @@ export default {
                 alert('Пробег мотоцикла обновлен!')
             } catch(err) {
                 console.error('Failed update moto mileage', err)
+                alert(err.response?.data?.error || 'Ошибка обновления пробега')
             }
         },
 
@@ -343,7 +475,8 @@ export default {
 
                 this.showEditMotoNoteModal = false
             } catch(err) {
-                console.error('Failed update moto mileage', err)
+                console.error('Failed update moto note', err)
+                alert(err.response?.data?.error || 'Ошибка обновления заметки')
             }
         },
 
@@ -365,7 +498,7 @@ export default {
                 alert("Мотоцикл удален");
             } catch (err) {
                 console.error(`Failed delete moto: ${err}`);
-                alert("Ошибка при удалении мотоцикла");
+                alert(err.response?.data?.error || "Ошибка при удалении мотоцикла");
             } finally {
                 this.loading = false;
             }
@@ -373,9 +506,7 @@ export default {
 
         changeMoto(motoId) {
             this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
-            this.selectedMotoColor = this.motorcycle.color
         },
-
 
         // === MODALS ===
         openMaintenanceDetailsModal(maintenance) {
@@ -442,13 +573,6 @@ export default {
             }
             return this.motorcycle.maintenances.reduce((sum, item) => sum + (item.cost || 0), 0);
         },
-
-        maintenanceSpends() {
-            if (!this.motorcycle || !this.motorcycle.maintenances) {
-                return 0;
-            }
-            return this.motorcycle.maintenances.reduce((sum, item) => sum + item.cost, 0);
-        },
     },
 
     mounted() {
@@ -458,6 +582,75 @@ export default {
 </script>
 
 <style scoped>
+/* Добавляем стили для фото */
+.moto-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.moto-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(124, 58, 237, 0.15);
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.moto-card-icon i {
+    font-size: 18px;
+}
+
+/* Стили для фото на большой карточке */
+.big-card-img {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    cursor: pointer;
+}
+
+.big-card-img img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+}
+
+.photo-overlay i {
+    font-size: 32px;
+}
+
+.photo-overlay span {
+    font-size: 14px;
+}
+
+.big-card-img:hover .photo-overlay {
+    opacity: 1;
+}
+
 /* === TABS === */
 .header-tabs {
     display: flex;
@@ -591,17 +784,6 @@ export default {
     justify-content: center;
     color: #7c3aed;
 }
-.moto-card-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: rgba(124, 58, 237, 0.15);
-    color: #a78bfa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
 .moto-card-info {
     flex: 1;
     overflow: hidden;
@@ -673,11 +855,15 @@ export default {
     background: rgba(255,255,255,0.1);
     color: #fff;
 }
+.big-card-img {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+}
 .big-card-img img {
     width: 100%;
-    height: auto;
-    border-radius: 12px;
-    margin-bottom: 16px;
+    height: 200px;
     object-fit: cover;
 }
 .big-card-grid {
@@ -883,6 +1069,7 @@ export default {
     }
     .big-card-img {
         grid-row: span 2;
+        margin-bottom: 0;
     }
     .big-card-img img {
         height: 100%;
@@ -906,7 +1093,7 @@ export default {
         display: none;
     }
 
-    .garage-container { padding: 16px; }
+    .container { padding: 16px; }
     .page-header {
         flex-direction: column;
         align-items: stretch;
@@ -921,7 +1108,14 @@ export default {
         flex: 0 0 160px;
         padding: 10px 12px;
     }
-    .moto-card-icon { display: none; }
+    .moto-card-icon { 
+        width: 32px;
+        height: 32px;
+    }
+    .moto-thumb {
+        width: 32px;
+        height: 32px;
+    }
     .moto-name { font-size: 13px; }
     
     .big-moto-card {
@@ -929,6 +1123,7 @@ export default {
     }
     .big-card-img {
         grid-row: auto;
+        margin-bottom: 16px;
     }
     .big-card-img img {
         height: 160px;

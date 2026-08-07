@@ -1,29 +1,10 @@
 <template>
     <div class="container">
         <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Ремонт</h2>
-                <p class="header-subtitle">Обслужите свой мотоцикл.</p>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button class="dropdown-item">Настройки</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <Header
+            title="Ремонт"
+            subtitle="Проводите обслуживание мотоцикла с нашими мануалами"
+        />
 
         <!-- === STATISTIC SECTION === -->
         <section class="section-block">
@@ -234,9 +215,10 @@
 <script>
 import api from '../api/api'
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
+import Header from '../components/Header.vue'
 
 export default {
-    components: { MarkPlanMaintenanceModal },
+    components: { MarkPlanMaintenanceModal, Header },
     data() {
         return {
             overdue_maintenances_count: 0,

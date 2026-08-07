@@ -45,7 +45,7 @@
 
           <div class="form-options">
             <div class="checkbox-group">
-              <input type="checkbox" id="remember" />
+              <input v-model="rememberMe" type="checkbox" id="remember" />
               <label for="remember" class="checkbox-label">Запомнить меня</label>
             </div>
             <router-link to="/forgot-password" class="forgot-link">
@@ -86,6 +86,7 @@ export default {
     return {
       email: '',
       password: '',
+      rememberMe: false,
       error: null,
     };
   },
@@ -97,6 +98,7 @@ export default {
         const response = await api.post('/auth/login', {
           email: this.email,
           password: this.password,
+          rememberMe: this.rememberMe,
         });
         const { access_token, refresh_token } = response.data;
         setTokens(access_token, refresh_token);
@@ -106,7 +108,7 @@ export default {
         if (role === 'admin') {
           this.$router.push('/admin/panel');
         } else {
-          this.$router.push('/home');
+          this.$router.push('/garage');
         }
       } catch (err) {
         this.error = err.response?.data?.error || 'Ошибка входа. Проверьте email и пароль.';

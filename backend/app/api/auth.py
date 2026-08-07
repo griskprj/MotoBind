@@ -27,7 +27,6 @@ def register():
         identity=str(user.id), additional_claims={"role": user.role}
     )
     refresh_token = create_refresh_token(identity=str(user.id))
-
     user.refresh_token = refresh_token
     db.session.commit()
 
@@ -51,17 +50,21 @@ def login():
     access_token = create_access_token(
         identity=str(user.id), additional_claims={"role": user.role}
     )
-    refresh_token = create_refresh_token(identity=str(user.id))
+    if data.rememberMe:
+        refresh_token = create_refresh_token(identity=str(user.id))
+        user.refresh_token = refresh_token
+        db.session.commit()
 
-    user.refresh_token = refresh_token
-    db.session.commit()
+    if not(data.rememberMe) and user.refresh_token:
+        user.refresh_token = None
+        db.session.commit()
 
     return (
         jsonify(
             {
                 "message": "Вы вошли в аккаунт",
                 "access_token": access_token,
-                "refresh_token": refresh_token,
+                "refresh_token": refresh_token if data.rememberMe else None,
                 "user": user.to_dict(),
             }
         ),

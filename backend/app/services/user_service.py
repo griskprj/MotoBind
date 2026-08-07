@@ -3,6 +3,7 @@ from typing import Optional
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.user import User
+from app.utils.files import delete_file, save_user_avatar
 
 
 class UserService:
@@ -34,7 +35,6 @@ class UserService:
         if user.status == "banned":
             raise ForbiddenError("Вы были заблокированы")
         if not user.check_password(password):
-            print(password)
             raise ForbiddenError("Неверный пароль")
 
         return user
@@ -47,6 +47,37 @@ class UserService:
             if hasattr(user, key) and value is not None:
                 setattr(user, key, value)
         db.session.commit()
+        return user
+
+    @staticmethod
+    def update_avatar(user_id: int, file) -> User:
+        """Обновляет аватар пользователя"""
+        user = UserService.get_user_by_id(user_id)
+        
+        # Удаляем старый аватар, если есть
+        if user.avatar:
+            delete_file(user.avatar)
+        
+        # Сохраняем новый аватар
+        avatar_path = save_user_avatar(file, user_id)
+        if not avatar_path:
+            raise ValidationError("Недопустимый формат файла. Разрешены: jpg, jpeg, png, gif, bmp, webp")
+        
+        user.avatar = avatar_path
+        db.session.commit()
+        
+        return user
+
+    @staticmethod
+    def delete_avatar(user_id: int) -> User:
+        """Удаляет аватар пользователя"""
+        user = UserService.get_user_by_id(user_id)
+        
+        if user.avatar:
+            delete_file(user.avatar)
+            user.avatar = None
+            db.session.commit()
+        
         return user
 
     @staticmethod
@@ -65,7 +96,6 @@ class UserService:
         user = UserService.get_user_by_id(user_id)
         if not user.check_password(password):
             raise ForbiddenError("Неверный пароль")
-        db.session.delete(user)
         db.session.commit()
 
     @staticmethod

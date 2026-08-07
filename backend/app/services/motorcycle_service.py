@@ -1,10 +1,12 @@
 from typing import List, Optional
+from flask import current_app
 
 from app.exceptions import ValidationError
 from app.extensions import db
 from app.models.maintenance_node import MaintenanceNode
 from app.models.motorcycle import Motorcycle
 from app.utils.helpers import get_motorcycle_or_404
+from app.utils.files import save_moto_photo, delete_file
 
 
 class MotorcycleService:
@@ -50,7 +52,6 @@ class MotorcycleService:
                 setattr(moto, key, value)
 
         db.session.commit()
-
         return moto
 
     @staticmethod
@@ -68,6 +69,10 @@ class MotorcycleService:
     def delete_motorcycle(moto_id: int, user_id: int) -> None:
         """Удаляет мотоцикл"""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        
+        if moto.photo_url:
+            delete_file(moto.photo_url)
+            
         db.session.delete(moto)
         db.session.commit()
 
@@ -80,3 +85,32 @@ class MotorcycleService:
     def get_motorcycle_by_id(moto_id: int, user_id: Optional[int] = None) -> Motorcycle:
         """Получает мотоцикл по ID с проверкой прав"""
         return get_motorcycle_or_404(moto_id, user_id)
+
+    @staticmethod
+    def update_moto_photo(moto_id: int, user_id: int, file) -> Motorcycle:
+        """Обновляет фото мотоцикла"""
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        
+        if moto.photo_url:
+            delete_file(moto.photo_url)
+        
+        photo_path = save_moto_photo(file, moto_id)
+        if not photo_path:
+            raise ValidationError("Недопустимый формат файла. Разрешены: jpg, jpeg, png, gif, bmp, webp")
+        
+        moto.photo_url = photo_path
+        db.session.commit()
+        
+        return moto
+
+    @staticmethod
+    def delete_moto_photo(moto_id: int, user_id: int) -> Motorcycle:
+        """Удаляет фото мотоцикла"""
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        
+        if moto.photo_url:
+            delete_file(moto.photo_url)
+            moto.photo_url = None
+            db.session.commit()
+        
+        return moto

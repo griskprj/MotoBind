@@ -242,7 +242,6 @@ export default {
 
     data() {
         return {
-            welcomeDropdownActive: false,
             motorcycles: [],
             historyMaintenances: [],
             plannedMaintenances: [],
@@ -431,84 +430,6 @@ export default {
 </script>
 
 <style scoped>
-/* ===== HEADER ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.header-left h2 {
-    margin: 0 0 12px 0;
-    font-size: 24px;
-}
-.header-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.notification-icon {
-    font-size: 20px;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.profile-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-}
-.profile-img {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 2px solid #7c3aed;
-}
-.dropdown-trigger {
-    background: transparent;
-    border: none;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.dropdown-list {
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    padding: 8px;
-    min-width: 140px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 100;
-    animation: slideInUp 0.2s ease;
-}
-.dropdown-list ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.dropdown-item {
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: #ccc;
-    text-align: left;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-}
-.dropdown-item:hover {
-    background: rgba(255,255,255,0.05);
-}
-
 /* === ACTIONS WRAPPER === */
 .actions-wrapper {
     display: flex;

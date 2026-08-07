@@ -9,7 +9,7 @@
 
         <div class="header-actions">
           <button @click="this.$router.push('/login')" class="btn-outline">Войти</button>
-          <button @click="this.$router.push('/register')" class="btn-primary">Начать</button>
+          <button @click="this.$router.push('/welcome')" class="btn-primary">Начать</button>
         </div>
       </div>
     </header>
@@ -55,14 +55,14 @@
           </div>
 
           <div class="hero-buttons">
-            <button @click="this.$router.push('/register')" class="btn-primary big">Начать бесплатно</button>
+            <button @click="this.$router.push('/welcome')" class="btn-primary big">Начать бесплатно</button>
           </div>
         </div>
 
         <!-- Hero Image Placeholder -->
         <div class="hero-image-wrapper">
           <div class="hero-image-placeholder">
-            <img src="/moto_default.jpg" alt="" class="landing-img">
+            <img src="/16x9Auth-Bg.png" alt="" class="landing-img">
           </div>
         </div>
       </div>
@@ -109,28 +109,28 @@
       <div class="container">
         <div class="catalog-layout">
           <div class="catalog-left">
-            <h3>Каталог работ</h3>
-            <p class="catalog-desc">Готовые инструкции по обслуживанию и ремонту мотоциклов для разных моделей.</p>
+            <h3>Интерфейс, созданный для мотоциклистов</h3>
+            <p class="interface-desc">Лёгкий дизайн, удобная навигация, всё необходимое под рукой. Создан для тех, кто ценит своё время.</p>
           </div>
 
           <div class="catalog-right">
             <div class="screenshot-placeholder">
-              <img src="/ManualsUI.png" alt="" class="landing-img">
+              <img src="/MobileUI.png" alt="" class="landing-img">
             </div>
           </div>
         </div>
 
         <div class="interface-layout">
           <div class="interface-content">
-            <h3>Интерфейс, созданный для мотоциклистов</h3>
-            <p class="interface-desc">Лёгкий дизайн, удобная навигация, всё необходимое под рукой. Создан для тех, кто ценит своё время.</p>
+            <h3>Каталог работ</h3>
+            <p class="catalog-desc">Готовые инструкции по обслуживанию и ремонту мотоциклов для разных моделей.</p>
           </div>
           <div class="interface-right">
             <div class="screenshot-placeholder big">
-              <img src="/MobileUI.png" alt="" class="landing-img">
+              <img src="/ManualsUI.png" alt="" class="landing-img">
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </section>
 
@@ -232,7 +232,7 @@
         <div class="cta-left">
           <h2 class="cta-title">Готовы взять контроль <br>над своим мотоциклом?</h2>
           <p class="cta-desc">Присоединяйтесь к MotoBind и сделайте обслуживание простым и понятным.</p>
-          <button @click="this.$router.push('/register')" class="btn-primary big">Начать бесплатно <i class="fa fa-arrow-right"></i></button>
+          <button @click="this.$router.push('/welcome')" class="btn-primary big">Начать бесплатно <i class="fa fa-arrow-right"></i></button>
         </div>
         <div class="cta-right">
           <div class="cta-image-placeholder">

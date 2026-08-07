@@ -1,30 +1,10 @@
 <template>
     <div class="container">
         <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>Профиль</h2>
-                <p class="header-subtitle">
-                    Управление личными данными и настройками аккаунта.
-                </p>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img :src="user?.avatar || '/BaseAvatar.jpg'" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item" disabled>Профиль</button></li>
-                            <li><button class="dropdown-item" @click="logout">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <Header
+            title="Профиль"
+            subtitle="Управление личными данными и настройками аккаунта"
+        />
 
         <!-- === PROFILE CONTENT === -->
         <div class="profile-grid">
@@ -33,10 +13,21 @@
                 <div class="profile-card">
                     <div class="profile-avatar-wrapper">
                         <img 
-                            :src="user?.avatar || '/BaseAvatar.jpg'" 
+                            :src="getAvatarUrl(user?.avatar)" 
                             alt="avatar" 
                             class="profile-avatar"
+                            @error="handleAvatarError"
                         >
+                        <button class="avatar-edit-btn" @click="$refs.avatarInput.click()" title="Изменить аватар">
+                            <i class="fa fa-camera"></i>
+                        </button>
+                        <input
+                            ref="avatarInput"
+                            type="file"
+                            accept="image/*"
+                            @change="handleAvatarUpload"
+                            style="display: none"
+                        />
                     </div>
                     <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
                     <p class="profile-email">{{ user?.email || '—' }}</p>
@@ -47,8 +38,14 @@
                         <span class="role-badge">{{ getRoleName(user?.role) }}</span>
                     </div>
 
+                    <div v-if="user?.avatar" class="avatar-actions">
+                        <button class="btn btn-danger" @click="deleteAvatar">
+                            <i class="fa fa-trash"></i> Удалить аватар
+                        </button>
+                    </div>
+
                     <p class="profile-bio">
-                        {{ user?.bio }}
+                        {{ user?.bio || 'Нет описания' }}
                     </p>
 
                     <div class="profile-actions">
@@ -146,6 +143,7 @@ import { removeTokens } from '../api/auth'
 import EditUserModal from '../components/modals/user/EditUserModal.vue';
 import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue';
 import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue';
+import Header from '../components/Header.vue'
 
 export default {
     name: 'ProfilePage',
@@ -153,13 +151,14 @@ export default {
     components: {
         EditUserModal,
         ChangePasswordModal,
-        DeleteAccountModal
+        DeleteAccountModal,
+        Header
     },
 
     data() {
         return {
-            welcomeDropdownActive: false,
             loading: false,
+            uploadingAvatar: false,
 
             user: null,
             stats: {
@@ -176,6 +175,71 @@ export default {
     },
 
     methods: {
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath) return '/BaseAvatar.jpg';
+            if (avatarPath.startsWith('http')) return avatarPath;
+            const baseUrl = import.meta.env.VITE_API_URL || '';
+            return `${baseUrl}/uploads/${avatarPath}`;
+        },
+
+        handleAvatarError(event) {
+            event.target.src = '/BaseAvatar.jpg';
+        },
+
+        async handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Проверка размера (5 МБ)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимальный размер 5 МБ.');
+                this.$refs.avatarInput.value = '';
+                return;
+            }
+
+            // Проверка типа
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP');
+                this.$refs.avatarInput.value = '';
+                return;
+            }
+
+            this.uploadingAvatar = true;
+            try {
+                const formData = new FormData();
+                formData.append('avatar', file);
+
+                const { data } = await api.post('/user/avatar', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                this.user = data;
+                alert('Аватар успешно обновлен!');
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                alert(error.response?.data?.error || 'Ошибка загрузки аватара');
+            } finally {
+                this.uploadingAvatar = false;
+                this.$refs.avatarInput.value = '';
+            }
+        },
+
+        async deleteAvatar() {
+            if (!confirm('Удалить аватар?')) return;
+
+            try {
+                const { data } = await api.delete('/user/avatar');
+                this.user = data;
+                alert('Аватар удален');
+            } catch (error) {
+                console.error('Error deleting avatar:', error);
+                alert(error.response?.data?.error || 'Ошибка удаления аватара');
+            }
+        },
+
         async loadProfile() {
             this.loading = true
             try {
@@ -243,8 +307,6 @@ export default {
             }
         },
 
-        // Работа с модальными окнами
-
         // Вспомогательные методы
         formatDate(dateString) {
             if (!dateString) return '—'
@@ -286,19 +348,6 @@ export default {
                 'club_member': 'Член клуба'
             }
             return map[role] || role || '—'
-        },
-
-        getDeviceIcon(device) {
-            const map = {
-                'desktop': 'fa-desktop',
-                'mobile': 'fa-mobile',
-                'tablet': 'fa-tablet',
-                'chrome': 'fa-chrome',
-                'firefox': 'fa-firefox',
-                'safari': 'fa-safari',
-                'edge': 'fa-edge'
-            }
-            return map[device] || 'fa-laptop'
         }
     },
 
@@ -309,94 +358,6 @@ export default {
 </script>
 
 <style scoped>
-/* ===== HEADER ===== */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.header-left h2 {
-    margin: 0 0 12px 0;
-    font-size: 24px;
-}
-.header-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.notification-icon {
-    font-size: 20px;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.profile-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-}
-.profile-img {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 2px solid #7c3aed;
-}
-.dropdown-trigger {
-    background: transparent;
-    border: none;
-    color: #8b8b9e;
-    cursor: pointer;
-}
-.dropdown-list {
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    padding: 8px;
-    min-width: 140px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    z-index: 100;
-    animation: slideInUp 0.2s ease;
-}
-.dropdown-list ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.dropdown-item {
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: #ccc;
-    text-align: left;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-}
-.dropdown-item:hover {
-    background: rgba(255,255,255,0.05);
-}
-.dropdown-item:disabled {
-    opacity: 0.6;
-    cursor: default;
-}
-
-@media (max-width: 720px) {
-    .header-right {
-        display: none;
-    }
-}
-
 /* ===== PROFILE GRID ===== */
 .profile-grid {
     display: grid;
@@ -454,6 +415,50 @@ export default {
 .avatar-edit-btn:hover {
     background: #6d28d9;
     transform: scale(1.05);
+}
+
+.avatar-edit-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-edit-btn:hover {
+    background: #6d28d9;
+    transform: scale(1.05);
+}
+
+.avatar-actions {
+    margin: 8px 0;
+    text-align: center;
+}
+
+.btn-small {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
 }
 
 .profile-username {

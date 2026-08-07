@@ -7,7 +7,7 @@
         @close="$emit('close')"
     >
         <div v-if="user" class="user-card">
-            <img src="/BaseAvatar.jpg" alt="" class="user-img">
+            <img :src="getAvatarUrl(user.avatar)" alt="" class="user-img">
 
             <div class="user-card-body">
                 <div class="user-top">
@@ -172,6 +172,16 @@ export default {
                 console.error('Error formatting date:', dateString, error)
                 return '--'
             }
+        },
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.jpg';
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath;
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || '';
+            return `${baseUrl}/uploads/${avatarPath}`;
         },
     }
 }

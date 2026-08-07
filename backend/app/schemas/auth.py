@@ -13,6 +13,7 @@ class RegisterSchema(BaseModel):
 class LoginSchema(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1)
+    rememberMe: bool = Field(...)
 
 
 class RefreshSchema(BaseModel):

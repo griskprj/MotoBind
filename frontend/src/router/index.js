@@ -22,7 +22,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/home'
+      redirect: '/landing'
     },
     {
       path: '/welcome',
@@ -56,17 +56,6 @@ const router = createRouter({
         showFooter: false,
         showHeader: false
       }
-    },
-    {
-      path: '/home',
-      name: 'home',
-      component: () => import('../views/Dashboard.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'MotoBind - Главная',
-        showFooter: true,
-        showHeader: true
-       }
     },
     {
       path: '/garage',
@@ -252,7 +241,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAdmin && !admin) {
     if (authenticated) {
-      next('/home')
+      next('/garage')
     } else {
       next('/welcome')
     }
