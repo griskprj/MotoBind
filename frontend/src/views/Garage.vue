@@ -59,7 +59,7 @@
                             alt="Фото мотоцикла"
                             @error="handleImageError"
                         >
-                        <img v-else src="../../public/moto_default.jpg" alt="Фото по умолчанию">
+                        <img v-else src="/moto_default.jpg" alt="Фото по умолчанию">
                         <div class="photo-overlay">
                             <i class="fa fa-camera"></i>
                             <span>Изменить фото</span>
@@ -318,7 +318,7 @@ export default {
         },
 
         handleImageError(event) {
-            event.target.src = '/public/moto_default.jpg';
+            event.target.src = '/moto_default.jpg';
         },
 
         async uploadPhoto(formData) {
