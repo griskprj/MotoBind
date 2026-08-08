@@ -9,14 +9,14 @@
         <div class="inputs-wrapper">
             <label>
                 <i class="fa fa-motorcycle"></i> Мотоцикл
-                <select v-model="form.id">
+                <select v-model="form.motorcycleId">
                     <option value="">Выберите мотоцикл</option>
                     <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
                 </select>
             </label>
             <label>
-                <i class="fa fa-wrench"></i>
-                <select v-model="form.category">
+                <i class="fa fa-wrench"></i> Категория
+                <select v-model="form.category" @change="onCategoryChange">
                     <option value="">Выберите категорию</option>
                     <option value="engine">Двигатель</option>
                     <option value="drive">Привод</option>
@@ -30,10 +30,19 @@
                 </select>
             </label>
         </div>
-        <label>
-            <i class="fa fa-font"></i> Название
-            <input v-model="form.title" type="text">
+
+        <!-- ШАБЛОНЫ -->
+        <label v-if="templates.length > 0">
+            <i class="fa fa-list"></i> Тип обслуживания
+            <select v-model="form.templateId" @change="onTemplateChange">
+                <option value="">Выберите тип обслуживания</option>
+                <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">
+                    {{ tpl.label }}
+                </option>
+            </select>
         </label>
+        <input v-model="form.title" type="hidden">
+
         <label>
             <i class="fa fa-align-justify"></i> Описание
             <input v-model="form.description" type="text">
@@ -61,6 +70,7 @@
 
 <script>
 import ModalWrapper from '../ModalWrapper.vue';
+import { getTemplatesByCategory } from '../../../constants/maintenanceTemplates';
 
 export default {
     components: { ModalWrapper },
@@ -79,12 +89,14 @@ export default {
     data() {
         return {
             form: {
-                id: null,
+                motorcycleId: null,
                 title: '',
                 category: '',
+                templateId: '',
                 description: '',
                 planned_mileage: null,
             },
+            templates: []
         }
     },
 
@@ -97,8 +109,19 @@ export default {
     },
 
     methods: {
+        onCategoryChange() {
+            this.form.templateId = '';
+            this.form.title = '';
+            this.templates = this.form.category ? getTemplatesByCategory(this.form.category) : [];
+        },
+
+        onTemplateChange() {
+            const found = this.templates.find(t => t.id === this.form.templateId);
+            this.form.title = found ? found.label : '';
+        },
+
         submit() {
-            if (!this.form.id) {
+            if (!this.form.motorcycleId) {
                 alert('Выберите мотоцикл')
                 return
             }
@@ -113,18 +136,28 @@ export default {
                 return
             }
 
-            this.$emit('submit', this.form)
+            const payload = {
+                motorcycleId: this.form.motorcycleId,
+                title: this.form.title,
+                category: this.form.category,
+                description: this.form.description,
+                planned_mileage: this.form.planned_mileage
+            }
+
+            this.$emit('submit', payload)
             this.resetForm()
         },
 
         resetForm() {
             this.form = {
-                id: null,
+                motorcycleId: null,
                 title: '',
                 category: '',
+                templateId: '',
                 description: '',
                 planned_mileage: null,
             }
+            this.templates = []
         }
     }
 }
@@ -164,9 +197,5 @@ export default {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(1, 1fr);
     gap: 8px;
-}
-
-.modal-actions button {
-    font-weight: 600;
 }
 </style>

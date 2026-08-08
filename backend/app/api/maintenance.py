@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from datetime import datetime
 
 from app.exceptions import ValidationError
 from app.schemas.maintenance import (CreateMaintenanceSchema,
@@ -20,11 +21,11 @@ def create_maintenance():
     """
     data = CreateMaintenanceSchema(**request.get_json())
     user = get_current_user()
-    check_motorcycle_owner(data.id, user.id)
+    check_motorcycle_owner(data.motorcycle_id, user.id)
 
     maintenance = MaintenanceService.create_maintenance(
         author_id=user.id,
-        moto_id=data.id,
+        moto_id=data.motorcycle_id,
         category=data.category,
         title=data.title,
         description=data.description,
@@ -46,7 +47,7 @@ def create_planned_maintenance():
 
     planned_maintenance = MaintenanceService.create_planned_maintenance(
         author_id=int(get_jwt_identity()),
-        moto_id=data.id,
+        moto_id=data.motorcycle_id,
         title=data.title,
         description=data.description,
         category=data.category,
@@ -109,7 +110,7 @@ def mark_planned_as_done():
     data = MarkPlannedMaintenanceSchema(**request.get_json())
     current_user_id = int(get_jwt_identity())
     result = MaintenanceService.mark_planned_as_done(
-        planned_id=data.id,
+        planned_id=data.maintenance_id,
         author_id=current_user_id,
         mileage=data.mileage,
         date=data.date,
