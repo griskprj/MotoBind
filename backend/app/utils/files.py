@@ -1,5 +1,6 @@
 import os
-
+import uuid
+from datetime import datetime
 from flask import current_app
 from werkzeug.utils import secure_filename
 
@@ -11,20 +12,23 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def save_moto_photo(file, moto_id):
-    """Save moto photo"""
+def save_user_avatar(file, user_id):
+    """Save user avatar"""
     if not file or not allowed_file(file.filename):
         return None
 
-    filename = secure_filename(f"{moto_id}_{file.filename}")
-    upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "user_moto")
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    unique_id = str(uuid.uuid4())[:8]
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    filename = secure_filename(f"avatar_{user_id}_{timestamp}_{unique_id}.{ext}")
+    
+    upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "avatars")
     os.makedirs(upload_dir, exist_ok=True)
 
     filepath = os.path.join(upload_dir, filename)
     file.save(filepath)
     
-    return f"user_moto/{filename}"
-
+    return f"avatars/{filename}"
 
 def save_user_avatar(file, user_id):
     """Save user avatar"""
