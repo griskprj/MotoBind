@@ -178,8 +178,7 @@ export default {
         getAvatarUrl(avatarPath) {
             if (!avatarPath) return '/BaseAvatar.jpg';
             if (avatarPath.startsWith('http')) return avatarPath;
-            const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `${baseUrl}/uploads/${avatarPath}`;
+            return `/uploads/${avatarPath}`;
         },
 
         handleAvatarError(event) {

@@ -343,8 +343,7 @@ export default {
             if (avatarPath.startsWith('http')) {
                 return avatarPath;
             }
-            const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `${baseUrl}/uploads/${avatarPath}`;
+            return `/uploads/${avatarPath}`;
         },
         async loadUsers() {
             this.loading = true
