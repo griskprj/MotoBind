@@ -12,9 +12,9 @@
             <div class="inputs-wrapper">
                 <label>
                     <i class="fa fa-motorcycle"></i> Мотоцикл
-                    <select v-model="form.motorcycleId">
+                    <select v-model="form.motorcycleId"> <!-- ИСПРАВЛЕНО: id → motorcycleId -->
                         <option value="">Выберите мотоцикл</option>
-                        <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                        <option v-for="moto in motorcycles" :key="moto.id" :value="moto.id">{{ moto.name }}</option>
                     </select>
                 </label>
                 <label>
@@ -96,18 +96,18 @@ export default {
         },
         motorcycles: {
             type: Array,
-            default: []
+            default: () => []
         }
     },
 
     data() {
         return {
             form: {
-                motorcycleId: null,
+                motorcycleId: null, // ИСПРАВЛЕНО: id → motorcycleId
                 title: '',
                 description: '',
                 category: '',
-                templateId: '', // ID шаблона
+                templateId: '',
                 cost: null,
                 mileage: null,
                 date: null
@@ -138,7 +138,7 @@ export default {
         },
 
         submit() {
-            if (!this.form.motorcycleId) {
+            if (!this.form.motorcycleId) { // ИСПРАВЛЕНО: form.id → form.motorcycleId
                 alert('Выберите мотоцикл')
                 return
             }
@@ -154,13 +154,13 @@ export default {
             }
 
             const payload = {
-                motorcycleId: this.form.motorcycleId,
+                motorcycleId: this.form.motorcycleId, // ИСПРАВЛЕНО: id → motorcycleId
                 title: this.form.title,
-                description: this.form.description,
+                description: this.form.description || '',
                 category: this.form.category,
-                cost: this.form.cost,
+                cost: this.form.cost || null,
                 mileage: this.form.mileage,
-                date: this.form.date
+                date: this.form.date || null
             }
 
             this.$emit('submit', payload)
@@ -169,7 +169,7 @@ export default {
 
         resetForm() {
             this.form = {
-                motorcycleId: null,
+                motorcycleId: null, // ИСПРАВЛЕНО: id → motorcycleId
                 title: '',
                 description: '',
                 category: '',

@@ -9,9 +9,9 @@
         <div class="inputs-wrapper">
             <label>
                 <i class="fa fa-motorcycle"></i> Мотоцикл
-                <select v-model="form.motorcycleId">
+                <select v-model="form.motorcycleId"> <!-- ИСПРАВЛЕНО: id → motorcycleId -->
                     <option value="">Выберите мотоцикл</option>
-                    <option v-for="moto in motorcycles" :value="moto.id">{{ moto.name }}</option>
+                    <option v-for="moto in motorcycles" :key="moto.id" :value="moto.id">{{ moto.name }}</option>
                 </select>
             </label>
             <label>
@@ -48,7 +48,7 @@
             <input v-model="form.description" type="text">
         </label>
         <label>
-            <i class="fa fa-tachometer"></i> Пробег
+            <i class="fa fa-tachometer"></i> Плановый пробег
             <input v-model="form.planned_mileage" type="number" max="1000000" min="0">
         </label>
 
@@ -82,14 +82,14 @@ export default {
         },
         motorcycles: {
             type: Array,
-            default: []
+            default: () => []
         }
     },
     
     data() {
         return {
             form: {
-                motorcycleId: null,
+                motorcycleId: null, // ИСПРАВЛЕНО: id → motorcycleId
                 title: '',
                 category: '',
                 templateId: '',
@@ -121,7 +121,7 @@ export default {
         },
 
         submit() {
-            if (!this.form.motorcycleId) {
+            if (!this.form.motorcycleId) { // ИСПРАВЛЕНО: form.id → form.motorcycleId
                 alert('Выберите мотоцикл')
                 return
             }
@@ -137,10 +137,10 @@ export default {
             }
 
             const payload = {
-                motorcycleId: this.form.motorcycleId,
+                motorcycleId: this.form.motorcycleId, // ИСПРАВЛЕНО: id → motorcycleId
                 title: this.form.title,
                 category: this.form.category,
-                description: this.form.description,
+                description: this.form.description || '',
                 planned_mileage: this.form.planned_mileage
             }
 
@@ -150,7 +150,7 @@ export default {
 
         resetForm() {
             this.form = {
-                motorcycleId: null,
+                motorcycleId: null, // ИСПРАВЛЕНО: id → motorcycleId
                 title: '',
                 category: '',
                 templateId: '',
