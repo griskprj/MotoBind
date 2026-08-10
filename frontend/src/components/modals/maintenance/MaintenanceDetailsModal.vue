@@ -11,7 +11,7 @@
                 <span
                     class="badge"
                     :class="{
-                        'badge-green': maintenance?.status === 'ok',
+                        'badge-green': maintenance?.status === 'ok' || maintenance?.status === 'completed',
                         'badge-warning': maintenance?.status === 'soon',
                         'badge-danger': maintenance?.status === 'overdue',
                         'badge-gray': !maintenance?.status || maintenance?.status === 'planned'
@@ -78,22 +78,40 @@
         </div>
 
         <div class="modal-actions">
-            <button @click="$emit('delete', maintenance)" class="btn-danger">
-                <i class="fa fa-trash-can"></i> Удалить
-            </button>
+            <div class="actions-wrapper">
+                <button @click="openDeleteModal" class="btn-close danger"><i class="fa fa-trash"></i> Удалить</button>
+                <button @click="openEditModal" class="btn-close edit" disabled><i class="fa fa-pen"></i> Редактировать</button>
+            </div>
             <button @click="$emit('close')" class="btn-close">
                 <i class="fa fa-xmark"></i> Закрыть
             </button>
         </div>
+
+        <DeleteMaintenanceModal
+            :isOpen="showDeleteModal"
+            :maintenanceId="maintenance.id"
+            :isPlanned="!maintenance.status || maintenance.status !== 'completed'"
+            @submit="handleDelete"
+            @close="showDeleteModal = false"
+        />
     </ModalWrapper>
 </template>
 
 <script>
 import ModalWrapper from '../ModalWrapper.vue';
+import DeleteMaintenanceModal from './DeleteMaintenanceModal.vue';
 
 export default {
     components: {
-        ModalWrapper
+        ModalWrapper,
+        DeleteMaintenanceModal
+    },
+
+    data() {
+        return {
+            showDeleteModal: false,
+            showEditModal: false,
+        }
     },
 
     props: {
@@ -155,6 +173,18 @@ export default {
                 'cooling': 'Система охлаждения',
             }
             return categories[category] || category
+        },
+
+        openDeleteModal() {
+            this.showDeleteModal = true
+        },
+        handleDelete(payload) {
+            this.$emit('delete', payload)
+            this.showDeleteModal = false
+        },
+
+        openEditModal() {
+            this.showEditModal = true
         }
     }
 }
@@ -163,6 +193,8 @@ export default {
 <style scoped>
 /* ===== HEADER ===== */
 .modal-header {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 24px;
 }
 
@@ -173,6 +205,10 @@ export default {
     margin-bottom: 12px;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.header-subtitle {
+    width: 100%;
 }
 
 .badge {
@@ -348,6 +384,12 @@ export default {
     border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.actions-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
 .btn-danger {
     display: inline-flex;
     align-items: center;
@@ -391,6 +433,16 @@ export default {
     transform: translateY(-1px);
 }
 
+.btn-close.danger {
+    background-color: var(--danger-trans);
+    color: var(--danger);
+}
+
+.btn-close.edit {
+    background-color: var(--warning-trans);
+    color: var(--warning);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 480px) {
     .header-top {
@@ -414,6 +466,13 @@ export default {
     .modal-actions button {
         justify-content: center;
         padding: 10px;
+    }
+}
+
+@media (max-width: 320px) {
+    .actions-wrapper {
+        grid-template-columns: repeat(1, 1fr);
+        grid-template-rows: repeat(2, 1fr);
     }
 }
 </style>

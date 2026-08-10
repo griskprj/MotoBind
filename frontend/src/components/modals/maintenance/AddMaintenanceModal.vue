@@ -113,7 +113,7 @@ export default {
                 date: null
             },
             templates: [],
-            currentDate: new Date().toISOString().split('T')[0]
+            currentDate: new Date().toISOString().split('T')[0],
         }
     },
 
@@ -126,14 +126,12 @@ export default {
     },
 
     methods: {
-        // При смене категории — подгружаем шаблоны
         onCategoryChange() {
             this.form.templateId = '';
             this.form.title = '';
             this.templates = this.form.category ? getTemplatesByCategory(this.form.category) : [];
         },
 
-        // При выборе шаблона — заполняем название
         onTemplateChange() {
             const found = this.templates.find(t => t.id === this.form.templateId);
             this.form.title = found ? found.label : '';
@@ -155,7 +153,6 @@ export default {
                 return
             }
 
-            // Отправляем только нужные поля (без templateId)
             const payload = {
                 motorcycleId: this.form.motorcycleId,
                 title: this.form.title,

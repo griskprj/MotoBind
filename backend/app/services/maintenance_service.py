@@ -34,6 +34,9 @@ class MaintenanceService:
                 "Вы можете добавлять обслуживание только для своего мотоцикла"
             )
 
+        if mileage > moto.mileage:
+            raise ValidationError("Пробег обслуживания не может быть больше пробега мотоцикла")
+
         maintenance = Maintenance(
             author_id=author_id,
             moto_id=moto_id,
@@ -42,6 +45,7 @@ class MaintenanceService:
             description=description,
             mileage=mileage,
             cost=cost or 0,
+            status='completed',
             date=date or datetime.now(),
         )
 
@@ -124,6 +128,7 @@ class MaintenanceService:
             cost=cost or 0,
             description=planned.description,
             mileage=mileage,
+            status='completed',
             date=date,
         )
         db.session.add(maintenance)

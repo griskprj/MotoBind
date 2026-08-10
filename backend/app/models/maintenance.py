@@ -17,6 +17,7 @@ class Maintenance(db.Model):
     category = db.Column(db.String, nullable=False)
     cost = db.Column(db.Integer, default=0, nullable=False)
     date = db.Column(db.DateTime)
+    status = db.Column(db.String(32), default='completed')
     photo_url = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
@@ -37,6 +38,7 @@ class Maintenance(db.Model):
             "category": self.category,
             "cost": self.cost,
             "date": self.date.isoformat() if self.date else None,
+            "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

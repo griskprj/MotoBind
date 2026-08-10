@@ -220,9 +220,10 @@
 
     <MaintenanceDetailsModal
         v-if="motorcycle"
-        :isOpen="showMaintenanceDetailsModal"
+        :isOpen="showDetailsMaintenanceModal"
         :maintenance="selectedMaintenance"
         :motoName="motorcycle.name"
+        @delete="deleteMaintenance"
         @close="closeMaintenanceDetailsModal"
     />
 
@@ -278,7 +279,7 @@ export default {
             showDeleteMotoModal: false,
             showUpdateMotoMileageModal: false,
             showEditMotoNoteModal: false,
-            showMaintenanceDetailsModal: false,
+            showDetailsMaintenanceModal: false,
             showPhotoModal: false,
         }
     },
@@ -504,6 +505,29 @@ export default {
             }
         },
 
+
+        async deleteMaintenance(payload) {
+            try {
+                const { id, isPlanned } = payload;
+                
+                let endpoint;
+                if (isPlanned) {
+                    endpoint = `/maintenance/plan/${id}`;
+                } else {
+                    endpoint = `/maintenance/${id}`;
+                }
+                
+                await api.delete(endpoint);
+                
+                this.loadData();
+                this.showDetailsMaintenanceModal = false;
+                alert("Обслуживание успешно удалено");
+            } catch (err) {
+                console.error(`Failed delete maintenance: ${err}`);
+                alert("Ошибка удаления обслуживания");
+            }
+        },
+
         changeMoto(motoId) {
             this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
         },
@@ -511,11 +535,11 @@ export default {
         // === MODALS ===
         openMaintenanceDetailsModal(maintenance) {
             this.selectedMaintenance = maintenance
-            this.showMaintenanceDetailsModal = true
+            this.showDetailsMaintenanceModal = true
         },
         closeMaintenanceDetailsModal() {
             this.selectedMaintenance = null
-            this.showMaintenanceDetailsModal = false
+            this.showDetailsMaintenanceModal = false
         },
 
         // === UTILS ===
@@ -711,7 +735,7 @@ export default {
     position: absolute;
     top: 48px;
     right: 0;
-    background: #181824;
+    background: var(--bg-primary);
     border: 1px solid rgba(255,255,255,0.05);
     border-radius: 12px;
     padding: 8px;

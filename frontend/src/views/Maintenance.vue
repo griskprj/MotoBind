@@ -109,7 +109,7 @@
                 </select>
                 <select v-model="filterStatus" class="filter-select">
                     <option value="">Все статусы</option>
-                    <option value="ok">Выполнено</option>
+                    <option value="completed">Выполнено</option>
                     <option value="soon">Скоро</option>
                     <option value="overdue">Просрочено</option>
                     <option value="planned">Запланировано</option>
@@ -169,7 +169,7 @@
                             Выполнено
                         </span>
                         <span v-else class="badge" :class="{
-                            'badge-green': maintenance.status === 'ok',
+                            'badge-green': maintenance.status === 'ok' || maintenance.status === 'completed',
                             'badge-warning': maintenance.status === 'soon',
                             'badge-danger': maintenance.status === 'overdue',
                             'badge-gray': !maintenance.status
@@ -177,7 +177,9 @@
                             {{ getStatusLabel(maintenance.status) }}
                         </span>
                     </div>
-                    <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
+                    <div class="td action-cell">
+                        <i class="fa fa-angle-right"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,6 +268,7 @@ export default {
             showAddMaintenanceModal: false,
             showPlanMaintenanceModal: false,
             showDetailsMaintenanceModal: false,
+            showDeleteMaintenanceModal: false,
         }
     },
 
@@ -342,20 +345,25 @@ export default {
             }
         },
 
-        async deleteMaintenance(maintenance) {
+        async deleteMaintenance(payload) {
             try {
-                if (maintenance.status) {
-                    await api.delete(`/maintenance/plan/${maintenance.id}`)
+                const { id, isPlanned } = payload;
+                
+                let endpoint;
+                if (isPlanned) {
+                    endpoint = `/maintenance/plan/${id}`;
                 } else {
-                    await api.delete(`/maintenance/${maintenance.id}`)
+                    endpoint = `/maintenance/${id}`;
                 }
                 
-                this.loadData()
-                this.showDetailsMaintenanceModal = false
-                alert("Обслуживание успешно удалено")
+                await api.delete(endpoint);
+                
+                this.loadData();
+                this.showDetailsMaintenanceModal = false;
+                alert("Обслуживание успешно удалено");
             } catch (err) {
-                console.error(`Failed delete maintenance: ${err}`)
-                alert("Ошибка удаления обслуживания")
+                console.error(`Failed delete maintenance: ${err}`);
+                alert("Ошибка удаления обслуживания");
             }
         },
 
@@ -404,6 +412,7 @@ export default {
         getStatusLabel(status) {
             const labels = {
                 'ok': 'Запланированно',
+                'completed': 'Выполнено',
                 'soon': 'Скоро',
                 'overdue': 'Просрочено',
                 'planned': 'Запланировано'
@@ -603,7 +612,7 @@ export default {
 
 .table-header {
     display: grid;
-    grid-template-columns: 180px 1fr 1fr 80px 90px 100px 40px;
+    grid-template-columns: 180px 0.5fr 0.5fr 110px 110px 130px 80px;
     padding: 12px 16px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     font-size: 13px;
@@ -619,7 +628,7 @@ export default {
 
 .tr {
     display: grid;
-    grid-template-columns: 180px 1fr 1fr 80px 90px 100px 40px;
+    grid-template-columns: 180px 0.5fr 0.5fr 110px 110px 130px 80px;
     padding: 14px 16px;
     align-items: center;
     border-bottom: 1px solid rgba(255,255,255,0.03);
@@ -701,6 +710,7 @@ export default {
 .action-cell {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
     color: #4b4b5e;
     transition: color 0.2s;
 }
