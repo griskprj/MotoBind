@@ -3,7 +3,7 @@
         <div class="wrapper-colmns">
             <div class="left-col">
                 <div class="logo">
-                    <router-link to="/home">
+                    <router-link to="/garage">
                         <img class="logo-img" src="/MotoBindLogo.png" alt="">
                     </router-link>
                 </div>

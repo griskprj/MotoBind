@@ -22,7 +22,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/landing'
+      redirect: () => {
+        if (isAuthenticated()) {
+          return '/garage'
+        }
+        return '/landing'
+      }
     },
     {
       path: '/welcome',
