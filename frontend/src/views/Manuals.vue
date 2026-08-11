@@ -125,7 +125,7 @@
                         class="manual-card"
                     >
                         <img 
-                            :src="manual.image || '/MotoBindLogo.png'" 
+                            :src="manual.image || '/ManualImgDefault.png'" 
                             alt="" 
                             class="manual-img"
                         >

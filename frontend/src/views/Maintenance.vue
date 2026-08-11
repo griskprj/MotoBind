@@ -9,8 +9,9 @@
         <!-- === ACTIONS BUTTONS --- -->
         <section>
             <div class="actions-wrapper">
-                <button @click="showAddMaintenanceModal = true"  class="outline-btn"><i class="fa fa-plus"></i> Добавить запись в историю</button>
-                <button @click="showPlanMaintenanceModal = true" class="outline-btn"><i class="fa fa-calendar"></i> Запланировать обслуживание</button>
+                <button @click="showAddMaintenanceModal = true">
+                    <i class="fa fa-plus"></i> Добавить обслуживание
+                </button>
             </div>
         </section>
 
@@ -205,15 +206,9 @@
     <AddMaintenanceModal
         :isOpen="showAddMaintenanceModal"
         :motorcycles="motorcycles"
-        @submit="addMaintenance"
+        @submitHistory="addMaintenance"
+        @submitPlanned="planMaintenance"
         @close="showAddMaintenanceModal = false"
-    />
-
-    <AddPlanMaintenanceModal
-        :isOpen="showPlanMaintenanceModal"
-        :motorcycles="motorcycles"
-        @submit="planMaintenance"
-        @close="showPlanMaintenanceModal = false"
     />
 
     <MaintenanceDetailsModal
@@ -230,14 +225,12 @@
 import api from '../api/api';
 import formatDate from '../utils/DateFormatter.js';
 import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue'
-import AddPlanMaintenanceModal from '../components/modals/maintenance/AddPlanMaintenanceModal.vue'
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
 import Header from '../components/Header.vue'
 
 export default {
     components: {
         AddMaintenanceModal,
-        AddPlanMaintenanceModal,
         MaintenanceDetailsModal,
         Header
     },
@@ -266,7 +259,6 @@ export default {
 
             // Модалки
             showAddMaintenanceModal: false,
-            showPlanMaintenanceModal: false,
             showDetailsMaintenanceModal: false,
             showDeleteMaintenanceModal: false,
         }
@@ -324,24 +316,24 @@ export default {
         async addMaintenance(formData) {
             try {
                 const { data } = await api.post('/maintenance/history', formData)
-
                 this.historyMaintenances.push(data)
                 this.changeTab('history')
-                this.showAddMaintenanceModal = false
+                this.showAddModal = false
             } catch (err) {
-                consol.error(`Failed create maintenance: ${err}`)
+                console.error(`Failed create maintenance: ${err}`)
+                alert('Ошибка при добавлении обслуживания')
             }
         },
 
         async planMaintenance(formData) {
             try {
                 const { data } = await api.post('/maintenance/plan', formData)
-
                 this.plannedMaintenances.push(data)
                 this.changeTab('planned')
-                this.showPlanMaintenanceModal = false
+                this.showAddModal = false
             } catch (err) {
-                consol.error(`Failed create maintenance: ${err}`)
+                console.error(`Failed create maintenance: ${err}`)
+                alert('Ошибка при планировании обслуживания')
             }
         },
 

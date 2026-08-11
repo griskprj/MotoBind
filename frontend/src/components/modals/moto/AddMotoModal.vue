@@ -6,100 +6,244 @@
         icon="motorcycle"
         bg-icon-color="var(--success-trans)"
         icon-color="var(--success)"
-        @close="$emit('close')"
+        @close="closeModal"
     >
-        <div class="modal-group">
-            <div class="inputs-group">
-                <label>
-                    Название *
-                    <input v-model="form.name" type="text" class="modal-input" required>
-                </label>
-                
-                <div class="inputs-wrapper">
-                    <label>
-                        Объем (см³)
-                        <input v-model="form.volume" type="number" min="49" max="4000" class="modal-input">
-                    </label>
-                    <label>
-                        Пробег (км)
-                        <input v-model="form.mileage" type="number" min="0" max="1000000" class="modal-input">
-                    </label>
-                </div>
-                <div class="inputs-wrapper">
-                    <label>
-                        Год выпуска
-                        <input v-model="form.years" type="number" min="1950" :max="currentYear" class="modal-input">
-                    </label>
-                    <label>
-                        Гос. номер
-                        <input v-model="form.licensePlate" type="text" maxlength="9" class="modal-input">
-                    </label>
-                </div>
-                <label>
-                    VIN (17 символов)
-                    <input v-model="form.vin" type="text" minlength="17" maxlength="17" class="modal-input">
-                </label>
-                <label>
-                    Цвет
-                    <input v-model="form.color" type="color" :style="'background-color:' + form.color">
-                </label>
-                
-                <!-- Блок загрузки фото -->
-                <div class="photo-upload-section">
-                    <label>Фото мотоцикла</label>
-                    <div 
-                        class="drop-zone"
-                        :class="{ 'drag-over': isDragging, 'has-file': form.photoFile }"
-                        @dragover.prevent="isDragging = true"
-                        @dragleave.prevent="isDragging = false"
-                        @drop.prevent="handleDrop"
-                        @click="$refs.fileInput.click()"
-                    >
-                        <!-- Превью загруженного фото -->
-                        <div v-if="form.photoPreview" class="photo-preview">
-                            <img :src="form.photoPreview" alt="Фото мотоцикла" />
-                            <button 
-                                class="remove-photo-btn"
-                                @click.stop="removePhoto"
-                            >
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Иконка загрузки -->
-                        <div v-else class="drop-zone-content">
-                            <i class="fa fa-cloud-upload-alt"></i>
-                            <p>Нажмите или перетащите фото</p>
-                            <span>JPG, PNG, GIF, BMP, WEBP до 10 МБ</span>
-                        </div>
-                        
-                        <input
-                            ref="fileInput"
-                            type="file"
-                            accept="image/*"
-                            @change="handleFileSelect"
-                            style="display: none"
-                        />
-                    </div>
-                </div>
+        <!-- Прогресс-бар -->
+        <div class="progress-section">
+            <div class="step-indicator">{{ currentStep }} из {{ totalSteps }}</div>
+            <div class="progress-bar">
+                <div
+                    class="progress-fill"
+                    :style="{ width: progressPercent + '%' }"
+                ></div>
             </div>
-        </div>
-        
-        <div class="info-block">
-            <div class="block-icon">
-                <i class="fa fa-info"></i>
-            </div>
-            <p class="block-text">
-                Эта информация поможет точнее строить статистику и подбирать мануалы для вашего мотоцикла.
-            </p>
         </div>
 
-        <div class="modal-actions">
-            <button @click="closeModal" class="cancel-btn">Отменить</button>
-            <button @click="submit" class="accept-btn" :disabled="loading">
-                <span v-if="!loading"><i class="fa fa-plus"></i> Добавить</span>
-                <span v-else>Добавление...</span>
-            </button>
+        <!-- Шаг 1: Основная информация -->
+        <div v-if="currentStep === 1" class="step">
+            <h3 class="step-title">Основная информация</h3>
+            <p class="step-subtitle">Расскажите о своем мотоцикле</p>
+
+            <div class="form-group">
+                <label for="motoName">
+                    Название <span class="required">*</span>
+                </label>
+                <input
+                    id="motoName"
+                    v-model="form.name"
+                    type="text"
+                    placeholder="Например: Honda CBR600RR"
+                    required
+                />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="motoYear">Год выпуска</label>
+                    <input
+                        id="motoYear"
+                        v-model.number="form.years"
+                        type="number"
+                        placeholder="2020"
+                        min="1950"
+                        :max="currentYear"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="motoVolume">Объем (см³)</label>
+                    <input
+                        id="motoVolume"
+                        v-model.number="form.volume"
+                        type="number"
+                        placeholder="600"
+                        min="49"
+                        max="4000"
+                    />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="motoMileage">
+                        Пробег (км) <span class="required">*</span>
+                    </label>
+                    <input
+                        id="motoMileage"
+                        v-model.number="form.mileage"
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        max="1000000"
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="motoColor">Цвет</label>
+                    <input
+                        id="motoColor"
+                        v-model="form.color"
+                        type="color"
+                        :style="'background-color:' + form.color"
+                    />
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn btn-secondary" @click="closeModal">
+                    Отменить
+                </button>
+                <button
+                    class="btn btn-primary"
+                    :disabled="!form.name || !form.mileage || form.mileage <= 0"
+                    @click="nextStep"
+                >
+                    Далее
+                </button>
+            </div>
+        </div>
+
+        <!-- Шаг 2: Документы и фото -->
+        <div v-if="currentStep === 2" class="step">
+            <h3 class="step-title">Документы и фото</h3>
+            <p class="step-subtitle">Добавьте дополнительную информацию</p>
+
+            <div class="form-group">
+                <label for="motoPlate">Гос. номер</label>
+                <input
+                    id="motoPlate"
+                    v-model="form.licensePlate"
+                    type="text"
+                    placeholder="A123BC"
+                    maxlength="9"
+                />
+            </div>
+
+            <div class="form-group">
+                <label for="motoVin">VIN (17 символов)</label>
+                <input
+                    id="motoVin"
+                    v-model="form.vin"
+                    type="text"
+                    placeholder="Введите 17 символов"
+                    minlength="17"
+                    maxlength="17"
+                />
+            </div>
+
+            <!-- Блок загрузки фото -->
+            <div class="photo-upload-section">
+                <label>Фото мотоцикла</label>
+                <div 
+                    class="drop-zone"
+                    :class="{ 'drag-over': isDragging, 'has-file': form.photoFile }"
+                    @dragover.prevent="isDragging = true"
+                    @dragleave.prevent="isDragging = false"
+                    @drop.prevent="handleDrop"
+                    @click="$refs.fileInput.click()"
+                >
+                    <!-- Превью загруженного фото -->
+                    <div v-if="form.photoPreview" class="photo-preview">
+                        <img :src="form.photoPreview" alt="Фото мотоцикла" />
+                        <button 
+                            class="remove-photo-btn"
+                            @click.stop="removePhoto"
+                        >
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Иконка загрузки -->
+                    <div v-else class="drop-zone-content">
+                        <i class="fa fa-cloud-upload-alt"></i>
+                        <p>Нажмите или перетащите фото</p>
+                        <span>JPG, PNG, GIF, BMP, WEBP до 10 МБ</span>
+                    </div>
+                    
+                    <input
+                        ref="fileInput"
+                        type="file"
+                        accept="image/*"
+                        @change="handleFileSelect"
+                        style="display: none"
+                    />
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn btn-secondary" @click="prevStep">
+                    Назад
+                </button>
+                <button class="btn btn-primary" @click="nextStep">
+                    Далее
+                </button>
+            </div>
+        </div>
+
+        <!-- Шаг 3: Проверка и отправка -->
+        <div v-if="currentStep === 3" class="step">
+            <h3 class="step-title">Проверьте данные</h3>
+            <p class="step-subtitle">Убедитесь, что все верно</p>
+
+            <div class="summary-card">
+                <div class="summary-item">
+                    <span class="summary-label">Название</span>
+                    <span class="summary-value">{{ form.name || '—' }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Год выпуска</span>
+                    <span class="summary-value">{{ form.years || '—' }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Объем</span>
+                    <span class="summary-value">{{ form.volume ? form.volume + ' см³' : '—' }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Пробег</span>
+                    <span class="summary-value">{{ form.mileage ? form.mileage + ' км' : '—' }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Цвет</span>
+                    <span class="summary-value">
+                        <span class="color-preview" :style="{ background: form.color }"></span>
+                        {{ form.color }}
+                    </span>
+                </div>
+                <div class="summary-item" v-if="form.licensePlate">
+                    <span class="summary-label">Гос. номер</span>
+                    <span class="summary-value">{{ form.licensePlate }}</span>
+                </div>
+                <div class="summary-item" v-if="form.vin">
+                    <span class="summary-label">VIN</span>
+                    <span class="summary-value">{{ form.vin }}</span>
+                </div>
+                <div class="summary-item" v-if="form.photoFile">
+                    <span class="summary-label">Фото</span>
+                    <span class="summary-value">✓ Загружено</span>
+                </div>
+            </div>
+
+            <div class="info-block">
+                <div class="block-icon">
+                    <i class="fa fa-info"></i>
+                </div>
+                <p class="block-text">
+                    Эта информация поможет точнее строить статистику и подбирать мануалы для вашего мотоцикла.
+                </p>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn btn-secondary" @click="prevStep">
+                    Назад
+                </button>
+                <button
+                    class="btn btn-primary"
+                    :disabled="loading"
+                    @click="submit"
+                >
+                    <span v-if="!loading"><i class="fa fa-plus"></i> Добавить</span>
+                    <span v-else>Добавление...</span>
+                </button>
+            </div>
         </div>
     </ModalWrapper>
 </template>
@@ -116,6 +260,8 @@ export default {
 
     data() {
         return {
+            currentStep: 1,
+            totalSteps: 3,
             form: {
                 name: '',
                 volume: null,
@@ -133,6 +279,12 @@ export default {
         }
     },
 
+    computed: {
+        progressPercent() {
+            return ((this.currentStep - 1) / (this.totalSteps - 1)) * 100;
+        }
+    },
+
     watch: {
         isOpen(newVal) {
             if (newVal) {
@@ -145,6 +297,7 @@ export default {
 
     methods: {
         resetForm() {
+            this.currentStep = 1;
             this.form = {
                 name: '',
                 volume: null,
@@ -170,6 +323,18 @@ export default {
             }
         },
 
+        nextStep() {
+            if (this.currentStep < this.totalSteps) {
+                this.currentStep++;
+            }
+        },
+
+        prevStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+            }
+        },
+
         handleFileSelect(event) {
             const file = event.target.files[0]
             if (file) {
@@ -186,8 +351,8 @@ export default {
         },
 
         processFile(file) {
-            if (file.size > 50 * 1024 * 1024) {
-                alert('Файл слишком большой. Максимальный размер 50 МБ.')
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимальный размер 10 МБ.')
                 return
             }
             
@@ -261,19 +426,119 @@ export default {
 </script>
 
 <style scoped>
-.inputs-group {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 8px;
+/* Прогресс-бар */
+.progress-section {
+    margin-bottom: 20px;
 }
 
-.inputs-wrapper {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+.step-indicator {
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
 }
 
-/* Стили для фото */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--accent));
+    transition: width 0.4s ease;
+    border-radius: 10px;
+}
+
+/* Шаги */
+.step {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-primary);
+}
+
+.step-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+}
+
+/* Форма */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.required {
+    color: var(--danger);
+}
+
+.form-group input {
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: border 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(138, 92, 246, 0.15);
+}
+
+.form-group input[type="color"] {
+    padding: 2px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Фото */
 .photo-upload-section {
     margin-top: 4px;
 }
@@ -282,7 +547,7 @@ export default {
     display: block;
     margin-bottom: 4px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
@@ -293,7 +558,7 @@ export default {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-height: 120px;
+    min-height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -324,7 +589,7 @@ export default {
 }
 
 .drop-zone-content i {
-    font-size: 36px;
+    font-size: 32px;
     color: var(--text-muted);
 }
 
@@ -342,7 +607,7 @@ export default {
 .photo-preview {
     position: relative;
     width: 100%;
-    max-height: 200px;
+    max-height: 180px;
     overflow: hidden;
     border-radius: 8px;
 }
@@ -350,7 +615,7 @@ export default {
 .photo-preview img {
     width: 100%;
     height: auto;
-    max-height: 200px;
+    max-height: 180px;
     object-fit: contain;
     border-radius: 8px;
 }
@@ -377,55 +642,196 @@ export default {
     transform: scale(1.1);
 }
 
+/* Сводка */
+.summary-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.summary-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-preview {
+    width: 24px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Инфо-блок */
 .info-block {
     display: flex;
     padding: 12px;
     background-color: var(--success-trans);
     border-radius: 10px;
     border: 1px solid var(--success-light);
+    margin-bottom: 12px;
 }
 
 .block-icon {
     color: var(--success);
-    font-size: 24px;
+    font-size: 20px;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .block-text {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
-    margin-bottom: 0;
+    margin: 0;
 }
 
-.modal-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+/* Действия */
+.step-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
 }
 
-.modal-actions button {
+.step-actions .btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 40px;
     font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
-.accept-btn:disabled {
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
+}
+
+.btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* Адаптивность */
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+
+/* Мобильные устройства */
 @media (max-width: 640px) {
-    .inputs-wrapper {
+    .form-row {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 0;
     }
-    
+
     .drop-zone {
-        min-height: 100px;
+        min-height: 80px;
         padding: 12px;
     }
-    
+
     .drop-zone-content i {
         font-size: 28px;
+    }
+
+    .drop-zone-content p {
+        font-size: 13px;
+    }
+
+    .drop-zone-content span {
+        font-size: 11px;
+    }
+
+    .photo-preview {
+        max-height: 140px;
+    }
+
+    .photo-preview img {
+        max-height: 140px;
+    }
+
+    .step-actions {
+        flex-direction: column;
+    }
+
+    .step-actions .btn {
+        width: 100%;
+        padding: 0.8rem;
+    }
+
+    .summary-card {
+        padding: 12px;
+    }
+
+    .summary-item {
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 0;
+    }
+
+    .info-block {
+        display: none;
+    }
+
+    .block-icon {
+        font-size: 18px;
+        margin-right: 0;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 400px) {
+    .step-title {
+        font-size: 1rem;
+    }
+
+    .step-subtitle {
+        font-size: 0.85rem;
+    }
+
+    .form-group input {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.7rem;
+    }
+
+    .drop-zone {
+        min-height: 70px;
+        padding: 10px;
     }
 }
 </style>
