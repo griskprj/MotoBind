@@ -125,7 +125,7 @@
                         class="manual-card"
                     >
                         <img 
-                            :src="manual.image || '/ManualImgDefault.png'" 
+                            :src="manual.image || '/ManualImgDefault.webp'" 
                             alt="" 
                             class="manual-img"
                         >

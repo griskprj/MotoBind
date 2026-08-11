@@ -62,7 +62,7 @@
         <!-- Hero Image Placeholder -->
         <div class="hero-image-wrapper">
           <div class="hero-image-placeholder">
-            <img src="/16x9Auth-Bg.png" alt="" class="landing-img">
+            <img src="/16x9Auth-Bg.webp" alt="" class="landing-img">
           </div>
         </div>
       </div>
@@ -115,7 +115,7 @@
 
           <div class="catalog-right">
             <div class="screenshot-placeholder">
-              <img src="/MobileUI.png" alt="" class="landing-img">
+              <img src="/MobileUI.webp" alt="" class="landing-img">
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@
           </div>
           <div class="interface-right">
             <div class="screenshot-placeholder big">
-              <img src="/ManualsUI.png" alt="" class="landing-img">
+              <img src="/ManualsUI.webp" alt="" class="landing-img">
             </div>
           </div>
         </div>

@@ -153,7 +153,7 @@ export default {
 .left-side {
   position: relative;
   min-height: 400px;
-  background-image: url('/16x9Auth-Bg.png');
+  background-image: url('/16x9Auth-Bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -413,7 +413,7 @@ export default {
     position: absolute;
     inset: 0;
     min-height: unset;
-    background-image: url('/9x16Auth-Bg.png');
+    background-image: url('/9x16Auth-Bg.webp');
     background-size: cover;
     background-position: center;
     z-index: 0;

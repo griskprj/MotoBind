@@ -22,7 +22,7 @@
                 >
                     <div class="moto-card-icon">
                         <img v-if="moto.photo_url" :src="getPhotoUrl(moto.photo_url)" alt="Фото" class="moto-thumb">
-                        <i v-else class="fa fa-motorcycle"></i>
+                        <img v-else src="/MotoLandingHero.webp" alt="Фото по умолчанию">
                     </div>
                     <div class="moto-card-info">
                         <div class="moto-name">{{ moto.name }}</div>
@@ -59,7 +59,7 @@
                             alt="Фото мотоцикла"
                             @error="handleImageError"
                         >
-                        <img v-else src="/moto_default.jpg" alt="Фото по умолчанию">
+                        <img v-else src="/MotoLandingHero.webp" alt="Фото по умолчанию">
                         <div class="photo-overlay">
                             <i class="fa fa-camera"></i>
                             <span>Изменить фото</span>

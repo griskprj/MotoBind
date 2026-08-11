@@ -77,7 +77,7 @@ export default {
   left: 0;
   width: 50%;
   height: 100%;
-  background-image: url('/16x9Auth-Bg.png');
+  background-image: url('/16x9Auth-Bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -228,7 +228,7 @@ export default {
   .background-image {
     width: 100%;
     height: 100%;
-    background-image: url('/9x16Auth-Bg.png');
+    background-image: url('/9x16Auth-Bg.webp');
   }
 
   /* Оверлей с текстом тоже на весь экран */
