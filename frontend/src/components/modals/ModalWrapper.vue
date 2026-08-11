@@ -116,6 +116,7 @@ export default {
     padding: 20px 24px 16px;
     flex-shrink: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 10px;
 }
 
 .header-wrapper.actions {
@@ -124,7 +125,7 @@ export default {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .header-icon {

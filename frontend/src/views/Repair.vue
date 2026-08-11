@@ -129,7 +129,7 @@
                         </div>
                     </div>
 
-                    <div class="manual-tips" v-if="manual.tips">
+                    <div class="manual-tips" v-if="manual.tip">
                         <i class="fa fa-lightbulb"></i>
                         <p class="tip-text"><strong>Совет:</strong> {{ manual.tip }}</p>
                     </div>

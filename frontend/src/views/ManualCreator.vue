@@ -113,6 +113,17 @@
                                 >
                             </label>
                         </div>
+
+                        <div class="form-group">
+                            <label>
+                                Совет к мануалу
+                                <input
+                                    type="text"
+                                    v-model="form.tip"
+                                    placeholder="Напишите совет по выполнению мануала"    
+                                >
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -161,6 +172,26 @@
                                         ></textarea>
                                     </label>
                                 </div>
+                                <div class="form-group">
+                                    <label>
+                                        Предупреждение
+                                        <input 
+                                            type="text"
+                                            v-model="step.warning"
+                                            placeholder="Предупреждение к шагу"
+                                        >
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        Совет
+                                        <input 
+                                            type="text"
+                                            v-model="step.tip"
+                                            placeholder="Совет к шагу"
+                                        >
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -200,6 +231,7 @@ export default {
                 motorcycle: '',
                 instruments: '',
                 parts: '',
+                tip: '',
                 steps: []
             },
             errors: {},
@@ -278,9 +310,12 @@ export default {
                     motorcycle: this.form.motorcycle.trim(),
                     instruments: this.form.instruments.trim() || null,
                     parts: this.form.parts.trim() || null,
+                    tip: this.form.tip.trim() || null,
                     steps: this.form.steps.map((step, index) => ({
                         order: index + 1,
                         title: step.title.trim(),
+                        warning: step.warning.trim() || null,
+                        tip: step.tip.trim() || null,
                         text: step.text.trim() || null
                     }))
                 };

@@ -195,7 +195,7 @@ export default {
 .modal-header {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .header-top {
