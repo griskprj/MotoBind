@@ -245,6 +245,8 @@ export default {
                 id: ++this.stepIdCounter,
                 title: '',
                 text: '',
+                warning: '',
+                tip: '',
                 errors: {}
             });
         },
