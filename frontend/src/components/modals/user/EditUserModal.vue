@@ -7,6 +7,7 @@
         @close="$emit('close')"
     >   
         <div class="inputs-group">
+            <img :src="getAvatarUrl(user.avatar)" alt="" class="user-img">
             <label>
                 Имя
                 <input type="text" v-model="form.username">
@@ -95,6 +96,17 @@ export default {
         submit() {
             this.$emit('submit', this.form)
             this.resetForm()
+        },
+
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.jpg';
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath;
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || '';
+            return `${baseUrl}/uploads/${avatarPath}`;  // ✅
         }
     }
 }
