@@ -7,7 +7,9 @@
         @close="$emit('close')"
     >   
         <div class="inputs-group">
-            <img :src="getAvatarUrl(user.avatar)" alt="" class="user-img">
+            <div class="profile-avatar-wrapper">
+                <img :src="getAvatarUrl(user.avatar)" alt="" class="profile-avatar">
+            </div>
             <label>
                 Имя
                 <input type="text" v-model="form.username">
@@ -113,6 +115,21 @@ export default {
 </script>
 
 <style scoped>
+.profile-avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 16px;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+}
+
 .modal-actions {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
