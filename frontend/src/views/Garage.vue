@@ -311,11 +311,9 @@ export default {
         // === PHOTO ===
         getPhotoUrl(photoPath) {
             if (!photoPath) return null;
-            // Если путь уже начинается с http, возвращаем как есть
             if (photoPath.startsWith('http')) return photoPath;
-            // Иначе добавляем базовый URL
             const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `/uploads/${photoPath}`;
+            return `${baseUrl}/uploads/${photoPath}`;
         },
 
         handleImageError(event) {

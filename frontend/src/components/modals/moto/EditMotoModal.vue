@@ -245,7 +245,7 @@ export default {
             if (photoPath.startsWith('/uploads/')) {
                 return photoPath
             }
-            return `/uploads/${photoPath}`
+            return `${baseUrl}/uploads/${photoPath}`
         },
 
         loadMotorcycleData() {
