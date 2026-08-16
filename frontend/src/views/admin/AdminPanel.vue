@@ -57,7 +57,7 @@
                         v-for="user in lastRegUserData"    
                     >
                         <div class="user-info">
-                            <img class="user-img" :src="getUserAvatar(user?.avatar)" alt="">
+                            <img class="user-img" :src="getAvatarUrl(user?.avatar)" alt="">
                             <div class="reg-card-body">
                                 <p class="user-name">{{ user.username }}</p>
                                 <p class="user-time">26.08.2008, 12:45</p>
