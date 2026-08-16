@@ -180,7 +180,8 @@ export default {
             if (avatarPath.startsWith('http')) {
                 return avatarPath;
             }
-            return `/uploads/${avatarPath}`;
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`;
         }
     }
 }
