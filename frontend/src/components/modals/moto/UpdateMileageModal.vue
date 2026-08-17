@@ -9,7 +9,7 @@
     >
         <label>
             Новый пробег
-            <input v-model="form.newMileage" type="number" max="1000000" min="0" required>
+            <input v-model="form.mileage" type="number" max="1000000" min="0" required>
         </label>
 
         <div class="info-block">
@@ -49,7 +49,7 @@ export default {
         return {
             form: {
                 id: null,
-                newMileage: null
+                mileage: null
             }
         }
     },
@@ -64,8 +64,8 @@ export default {
 
     methods: {
         submit() {
-            if (!this.form.newMileage || this.form.newMileage < 0 || this.form.newMileage > 1000000) {
-                alert(`Укажите корректный пробег: ${this.form.newMileage}`)
+            if (!this.form.mileage || this.form.mileage < 0 || this.form.mileage > 1000000) {
+                alert(`Укажите корректный пробег: ${this.form.mileage}`)
                 return
             }
 
@@ -78,7 +78,7 @@ export default {
         resetForm() {
             this.form = {
                 id: null,
-                newMileage: null
+                mileage: null
             }
         }
     }
