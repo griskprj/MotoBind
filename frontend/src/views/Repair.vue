@@ -240,7 +240,10 @@ export default {
     computed: {
         filteredMaintenances() {
             if (!this.selectedMoto) return []
-            return this.maintenances.filter(m => m.moto_id === this.selectedMoto)
+            return this.maintenances.filter(m => 
+                m.moto_id === this.selectedMoto &&
+                (m.status === 'planned' || m.status === 'overdue')
+            )
         }
     },
     watch: {
@@ -257,7 +260,7 @@ export default {
                 this.motorcycles = response.data.motorcycles
                 this.maintenances = response.data.maintenances
                 this.overdue_maintenances_count = response.data.overdue
-                this.pending_maintenances_count = response.data.soon
+                this.pending_maintenances_count = response.data.soon || 0
                 this.planned_maintenances_count = response.data.planned
             } catch (err) {
                 console.error('Failed load repair data: ', err)
@@ -271,11 +274,13 @@ export default {
         },
         onMaintenanceChange() {
             if (this.selectedMoto && this.selectedMaintenance) {
-                this.selectedMaintenanceData = this.maintenances.find(m => m.id === this.selectedMaintenance) || null;
+                this.selectedMaintenanceData = this.maintenances.find(
+                    m => m.id === this.selectedMaintenance
+                ) || null
                 this.getManual();
-                this.getLastMaintenanceDate();
             } else {
                 this.manual = null;
+                this.selectedMaintenanceData = null
             }
         },
         async getManual() {
@@ -294,15 +299,33 @@ export default {
             }
         },
         openMarkModal() {
+            if (!this.selectedMaintenanceData) {
+                alert('Выберите обслуживание')
+                return
+            }
             this.showMarkMaintenanceModal = true;
         },
         async markMaintenance(formData) {
             try {
-                await api.post('/maintenance/plan/mark', formData)
+                await api.post(`/maintenance/${formData.id}/complete`, {
+                    completed_mileage: formData.mileage,
+                    completed_date: formData.date,
+                    cost: formData.cost,
+                    is_repeat: formData.isRepeat,
+                    interval: formData.interval
+                })
+                
                 this.showMarkMaintenanceModal = false
-                this.$router.push('/')
+                alert('Обслуживание успешно завершено!')
+
+                await this.loadData()
+
+                this.selectedMaintenance = null
+                this.selectedMaintenanceData = null
+                this.manual = null
             } catch (err) {
                 console.log('Failed mark maintenance: ', err)
+                alert(err.response?.data?.error || 'Ошибка при завершении обслуживания')
             }
         },
         removeRepairData() {

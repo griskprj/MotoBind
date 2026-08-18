@@ -2,14 +2,14 @@
     <div class="container">
         <!-- === HEADER === -->
         <Header
-            title="Ремонт"
-            subtitle="Обслужите свой мотоцикл"
+            title="Обслуживание"
+            subtitle="Управляйте обслуживанием своих мотоциклов"
         />
 
-        <!-- === ACTIONS BUTTONS --- -->
+        <!-- === ACTIONS BUTTONS === -->
         <section>
             <div class="actions-wrapper">
-                <button @click="showAddMaintenanceModal = true">
+                <button @click="showAddMaintenanceModal = true" class="btn-primary">
                     <i class="fa fa-plus"></i> Добавить обслуживание
                 </button>
             </div>
@@ -35,7 +35,7 @@
                     </div>
                     <div class="card-body">
                         <p class="card-title">Выполнено</p>
-                        <p class="card-value">{{ historyMaintenances.length }}</p>
+                        <p class="card-value">{{ completedMaintenances.length }}</p>
                         <p class="card-subtitle">за все время</p>
                     </div>
                 </div>
@@ -45,9 +45,9 @@
                         <i class="fa fa-clock" style="color: var(--warning); background-color: var(--warning-trans);"></i>
                     </div>
                     <div class="card-body">
-                        <p class="card-title">Запланированно</p>
-                        <p class="card-value">{{ plannedMaintenancesCount }}</p>
-                        <p class="card-subtitle">в ближайшее время</p>
+                        <p class="card-title">Запланировано</p>
+                        <p class="card-value">{{ plannedMaintenances.length }}</p>
+                        <p class="card-subtitle">ожидают выполнения</p>
                     </div>
                 </div>
 
@@ -57,7 +57,7 @@
                     </div>
                     <div class="card-body">
                         <p class="card-title">Просрочено</p>
-                        <p class="card-value">{{ overdueMaintenancesCount }}</p>
+                        <p class="card-value">{{ overdueMaintenances.length }}</p>
                         <p class="card-subtitle">требует внимания</p>
                     </div>
                 </div>
@@ -111,9 +111,8 @@
                 <select v-model="filterStatus" class="filter-select">
                     <option value="">Все статусы</option>
                     <option value="completed">Выполнено</option>
-                    <option value="soon">Скоро</option>
-                    <option value="overdue">Просрочено</option>
                     <option value="planned">Запланировано</option>
+                    <option value="overdue">Просрочено</option>
                 </select>
                 <select v-model="sortBy" class="filter-select">
                     <option value="date_desc">По дате (новые)</option>
@@ -126,7 +125,6 @@
             </div>
         </div>
 
-        <!-- Результаты фильтрации -->
         <div class="filter-results" v-if="filteredMaintenances.length > 0">
             <span>Найдено: {{ filteredMaintenances.length }} записей</span>
             <button class="clear-filters" @click="clearFilters" v-if="hasActiveFilters">
@@ -152,29 +150,21 @@
                 >
                     <div class="td date-cell">
                         <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
-                        <span>{{ formatDate(maintenance.date) }}</span>
+                        <span>{{ getMaintenanceDate(maintenance) }}</span>
                     </div>
                     <div class="td service-cell">
                         <div class="s-title">{{ maintenance.title }}</div>
-                        <div class="s-desc">{{ maintenance.description.slice(0, 60) + '...' || '—' }}</div>
+                        <div class="s-desc">{{ maintenance.description ? maintenance.description.slice(0, 60) + '...' : '—' }}</div>
                     </div>
-                    <div class="td moto-name">{{ maintenance.moto_name }}</div>
+                    <div class="td moto-name">{{ maintenance.moto_name || '—' }}</div>
                     <div class="td">
                         <span>
-                            {{ maintenance.planned_mileage || maintenance.mileage || '—' }} км
+                            {{ getMaintenanceMileage(maintenance) }}
                         </span>
                     </div>
                     <div class="td">{{ maintenance.cost || '—' }} ₽</div>
                     <div class="td">
-                        <span v-if="!maintenance.status" class="badge badge-green">
-                            Выполнено
-                        </span>
-                        <span v-else class="badge" :class="{
-                            'badge-green': maintenance.status === 'ok' || maintenance.status === 'completed',
-                            'badge-warning': maintenance.status === 'soon',
-                            'badge-danger': maintenance.status === 'overdue',
-                            'badge-gray': !maintenance.status
-                        }">
+                        <span class="badge" :class="getStatusBadgeClass(maintenance.status)">
                             {{ getStatusLabel(maintenance.status) }}
                         </span>
                     </div>
@@ -197,7 +187,7 @@
                     Начните вести обслуживание своего мотоцикла
                 </p>
                 <p class="empty-text">
-                    Запланировать или добавить запись ТО вы можете на странице <a href="#">"Обслуживание"</a>
+                    Добавьте запись о выполненном или запланируйте ТО
                 </p>
             </div>
         </div>
@@ -206,8 +196,7 @@
     <AddMaintenanceModal
         :isOpen="showAddMaintenanceModal"
         :motorcycles="motorcycles"
-        @submitHistory="addMaintenance"
-        @submitPlanned="planMaintenance"
+        @submit="addMaintenance"
         @close="showAddMaintenanceModal = false"
     />
 
@@ -217,7 +206,7 @@
         :motoName="selectedMaintenanceMotoName"
         :maintenance="selectedMaintenance"
         @delete="deleteMaintenance"
-        @close="showDetailsMaintenanceModal = false"
+        @close="closeDetailsMaintenance"
     />
 </template>
 
@@ -238,10 +227,8 @@ export default {
     data() {
         return {
             motorcycles: [],
-            historyMaintenances: [],
-            plannedMaintenances: [],
-            selectedMaintenances: [],
-
+            allMaintenances: [],
+            
             selectedMaintenance: null,
             selectedMaintenanceMotoName: '',
             
@@ -253,20 +240,27 @@ export default {
             
             // Статистика
             allMaintenancesCount: 0,
-            plannedMaintenancesCount: 0,
-            overdueMaintenancesCount: 0,
             selectedTab: 'all',
 
             // Модалки
             showAddMaintenanceModal: false,
             showDetailsMaintenanceModal: false,
-            showDeleteMaintenanceModal: false,
         }
     },
 
     computed: {
+        completedMaintenances() {
+            return this.allMaintenances.filter(m => m.status === 'completed')
+        },
+        plannedMaintenances() {
+            return this.allMaintenances.filter(m => m.status === 'planned')
+        },
+        overdueMaintenances() {
+            return this.allMaintenances.filter(m => m.status === 'overdue')
+        },
+
         filteredMaintenances() {
-            let items = [...this.selectedMaintenances]
+            let items = [...this.allMaintenances]
             
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
@@ -275,6 +269,12 @@ export default {
                     m.description?.toLowerCase().includes(query) ||
                     m.moto_name?.toLowerCase().includes(query)
                 )
+            }
+
+            if (this.selectedTab === 'planned') {
+                items = items.filter(m => m.status === 'planned' || m.status === 'overdue')
+            } else if (this.selectedTab === 'history') {
+                items = items.filter(m => m.status === 'completed')
             }
             
             if (this.filterMotorcycle) {
@@ -299,75 +299,51 @@ export default {
         async loadData() {
             try {
                 const response = await api.get('/statistic/maintenance')
-
-                this.motorcycles = response.data.motorcycles
-                this.historyMaintenances = response.data.history_maintenances || []
-                this.plannedMaintenances = response.data.planned_maintenances || []
-                this.allMaintenancesCount = response.data.all_maintenances_count || 0
-                this.plannedMaintenancesCount = response.data.planned_maintenances_count || 0
-                this.overdueMaintenancesCount = response.data.overdue_maintenances_count || 0
                 
-                this.changeTab('all')
+                this.motorcycles = response.data.motorcycles || []
+                
+                const history = response.data.history_maintenances || []
+                const planned = response.data.planned_maintenances || []
+                this.allMaintenances = [...history, ...planned]
+                
+                this.allMaintenancesCount = response.data.all_maintenances_count || 0
+                
+                this.changeTab(this.selectedTab || 'all')
             } catch (err) {
-                console.error(`Failed load maintenance data:`, err)
+                console.error('Failed load maintenance data:', err)
+                alert('Ошибка загрузки данных')
             }
         },
 
         async addMaintenance(formData) {
             try {
-                const { data } = await api.post('/maintenance/history', formData)
-                this.historyMaintenances.push(data)
-                this.changeTab('history')
-                this.showAddModal = false
+                const { data } = await api.post('/maintenance/', formData)
+                
+                await this.loadData()
+                this.showAddMaintenanceModal = false
+                
+                alert('Обслуживание успешно добавлено!')
             } catch (err) {
-                console.error(`Failed create maintenance: ${err}`)
-                alert('Ошибка при добавлении обслуживания')
+                console.error('Failed create maintenance:', err)
+                alert(err.response?.data?.error || 'Ошибка при добавлении обслуживания')
             }
         },
 
-        async planMaintenance(formData) {
+        async deleteMaintenance(id) {
             try {
-                const { data } = await api.post('/maintenance/plan', formData)
-                this.plannedMaintenances.push(data)
-                this.changeTab('planned')
-                this.showAddModal = false
+                await api.delete(`/maintenance/${id}`)
+                
+                await this.loadData()
+                this.showDetailsMaintenanceModal = false
+                alert('Обслуживание успешно удалено')
             } catch (err) {
-                console.error(`Failed create maintenance: ${err}`)
-                alert('Ошибка при планировании обслуживания')
-            }
-        },
-
-        async deleteMaintenance(payload) {
-            try {
-                const { id, isPlanned } = payload;
-                
-                let endpoint;
-                if (isPlanned) {
-                    endpoint = `/maintenance/plan/${id}`;
-                } else {
-                    endpoint = `/maintenance/${id}`;
-                }
-                
-                await api.delete(endpoint);
-                
-                this.loadData();
-                this.showDetailsMaintenanceModal = false;
-                alert("Обслуживание успешно удалено");
-            } catch (err) {
-                console.error(`Failed delete maintenance: ${err}`);
-                alert("Ошибка удаления обслуживания");
+                console.error('Failed delete maintenance:', err)
+                alert(err.response?.data?.error || 'Ошибка удаления обслуживания')
             }
         },
 
         changeTab(tabName) {
             this.selectedTab = tabName
-            if (tabName === 'planned') {
-                this.selectedMaintenances = this.plannedMaintenances
-            } else if (tabName === 'history') {
-                this.selectedMaintenances = this.historyMaintenances
-            } else if (tabName === 'all') {
-                this.selectedMaintenances = [...this.plannedMaintenances, ...this.historyMaintenances]
-            }
             this.clearFilters()
         },
 
@@ -378,12 +354,39 @@ export default {
             this.showDetailsMaintenanceModal = true
         },
 
+        closeDetailsMaintenance() {
+            this.selectedMaintenance = null
+            this.showDetailsMaintenanceModal = false
+        },
+
+        getMaintenanceDate(maintenance) {
+            return formatDate(maintenance.completed_date || maintenance.planned_date || maintenance.created_at)
+        },
+
+        getMaintenanceMileage(maintenance) {
+            if (maintenance.completed_mileage) {
+                return `${maintenance.completed_mileage} км`
+            }
+            if (maintenance.planned_mileage) {
+                return `(план) ${maintenance.planned_mileage} км`
+            }
+            return '—'
+        },
+
         sortItems(items) {
             const sortFunctions = {
-                'date_desc': (a, b) => new Date(b.date) - new Date(a.date),
-                'date_asc': (a, b) => new Date(a.date) - new Date(b.date),
-                'mileage_desc': (a, b) => (b.mileage || 0) - (a.mileage || 0),
-                'mileage_asc': (a, b) => (a.mileage || 0) - (b.mileage || 0),
+                'date_desc': (a, b) => {
+                    const dateA = new Date(a.completed_date || a.planned_date || a.created_at)
+                    const dateB = new Date(b.completed_date || b.planned_date || b.created_at)
+                    return dateB - dateA
+                },
+                'date_asc': (a, b) => {
+                    const dateA = new Date(a.completed_date || a.planned_date || a.created_at)
+                    const dateB = new Date(b.completed_date || b.planned_date || b.created_at)
+                    return dateA - dateB
+                },
+                'mileage_desc': (a, b) => (b.completed_mileage || b.planned_mileage || 0) - (a.completed_mileage || a.planned_mileage || 0),
+                'mileage_asc': (a, b) => (a.completed_mileage || a.planned_mileage || 0) - (b.completed_mileage || b.planned_mileage || 0),
                 'cost_desc': (a, b) => (b.cost || 0) - (a.cost || 0),
                 'cost_asc': (a, b) => (a.cost || 0) - (b.cost || 0),
             }
@@ -397,31 +400,27 @@ export default {
             this.sortBy = 'date_desc'
         },
 
-        formatDate(dateString) {
-            return formatDate(dateString)
-        },
-
         getStatusLabel(status) {
             const labels = {
-                'ok': 'Запланированно',
                 'completed': 'Выполнено',
-                'soon': 'Скоро',
-                'overdue': 'Просрочено',
-                'planned': 'Запланировано'
+                'planned': 'Запланировано',
+                'overdue': 'Просрочено'
             }
             return labels[status] || '—'
         },
 
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) { console.error(err) }
-            finally {
-                const { removeTokens } = await import('../api/auth');
-                removeTokens();
-                this.$router.push('/login');
+        getStatusBadgeClass(status) {
+            const classes = {
+                'completed': 'badge-green',
+                'planned': 'badge-warning',
+                'overdue': 'badge-danger'
             }
+            return classes[status] || 'badge-gray'
         },
+
+        formatDate(dateString) {
+            return formatDate(dateString)
+        }
     },
 
     mounted() {

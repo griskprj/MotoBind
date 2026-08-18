@@ -102,6 +102,9 @@
           </div>
 
           <div class="step-actions">
+            <div class="btn btn-secondary" @click="this.$router.push('/welcome')">
+              Отмена
+            </div>
             <button
               class="btn btn-primary"
               :disabled="!formData.role"
@@ -850,9 +853,28 @@ export default {
 
 .completion-step .step-title,
 .completion-step .step-subtitle,
-.completion-step .step-actions {
+.completion-step {
   position: relative;
   z-index: 2;
+}
+
+.step-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 20px;
+  width: 100%;
+}
+
+.step-actions .btn {
+  flex: 1;
+  padding: 0.8rem 1.5rem;
+  border-radius: 40px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .completion-step .step-title {

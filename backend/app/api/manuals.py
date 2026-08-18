@@ -3,7 +3,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import or_
 
 from app.exceptions import ForbiddenError, NotFoundError
-from app.models.maintenance import PlannedMaintenance
+from app.models.maintenance import Maintenance
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
@@ -84,7 +84,7 @@ def get_manual_for_maintenance():
     maintenance_id = request.args.get("maintenance_id", type=int)
     moto_id = request.args.get("moto_id", type=int)
 
-    maintenance = PlannedMaintenance.query.get(maintenance_id)
+    maintenance = Maintenance.query.get(maintenance_id)
     motorcycle = Motorcycle.query.get(moto_id)
     user = User.query.get(get_jwt_identity())
 

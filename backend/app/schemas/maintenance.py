@@ -1,81 +1,67 @@
-from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
+from pydantic import BaseModel, Field, model_validator
 
-from pydantic import BaseModel, Field, field_validator
+from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
 
+class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
+    motorcycle_id: int = Field(..., alias="motorcycleId")
+    category: str = Field(..., min_length=1)
+    title: str = Field(..., min_length=1)
+    description: Optional[str] = Field(None)
+    planned_mileage: Optional[int] = Field(None, ge=0)
+    planned_date: Optional[str] = Field(None)
+    completed_mileage: Optional[int] = Field(None, ge=0)
+    completed_date: Optional[str] = Field(None)
+    cost: Optional[int] = Field(None, ge=0)
 
-class CreateMaintenanceSchema(BaseModel):
-    """Схема для создания записи ТО"""
-    motorcycle_id: int = Field(..., alias="motorcycleId", description="ID мотоцикла")
-    category: str = Field(..., min_length=1, description="Категория ТО")
-    title: str = Field(..., min_length=1, description="Название ТО")
-    description: Optional[str] = Field(None, description="Описание")
-    mileage: Optional[int] = Field(None, ge=0, description="Пробег на момент ТО")
-    cost: Optional[int] = Field(None, ge=0, description="Стоимость")
-    date: Optional[str] = Field(None, description="Дата проведения (ГГГГ-ММ-ДД)")
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def validate_date(cls, v: Any) -> Optional[str]:
-        """Проверяет, что дата соответствует формату ГГГГ-ММ-ДД или равна None."""
-        if v is None or v == "":
-            return None
-        if isinstance(v, str):
-            try:
-                datetime.strptime(v, "%Y-%m-%d")
-                return v
-            except ValueError:
-                raise ValueError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
-        # Если пришёл не строковый тип, можно попробовать конвертировать
-        raise ValueError(f"Неподдерживаемый тип для даты: {type(v)}. Ожидается строка в формате ГГГГ-ММ-ДД")
-
-
-class CreatePlannedMaintenanceSchema(BaseModel):
-    """Схема для создания планового ТО"""
-    motorcycle_id: int = Field(..., alias="motorcycleId", description="ID мотоцикла")
-    category: str = Field(..., min_length=1, description="Категория ТО")
-    title: str = Field(..., min_length=1, description="Название ТО")
-    description: Optional[str] = Field(None, description="Описание")
-    planned_mileage: int = Field(..., ge=0, description="Плановый пробег")
+    @model_validator(mode="after")
+    def validate_exclusive_fields(self) -> "CreateMaintenanceSchema":
+        """Проверяет, что нельзя указать одновременно planned и completed поля"""
+        has_planned = self.planned_mileage is not None or self.planned_date is not None
+        has_completed = self.completed_mileage is not None or self.completed_date is not None
+        
+        if has_planned and has_completed:
+            raise ValueError("Нельзя одновременно указывать плановые и выполненные поля")
+        
+        if has_completed and self.completed_date is None:
+            raise ValueError("При указании completed_mileage требуется completed_date")
+        
+        return self
 
 
-class UpdatePlannedMaintenanceSchema(BaseModel):
-    """Схема для обновления планового ТО"""
-    maintenance_id: int = Field(..., alias="maintenanceId", description="ID записи планового ТО")
-    motorcycle_id: Optional[int] = Field(None, alias="motorcycleId", description="ID мотоцикла")
-    category: Optional[str] = Field(None, min_length=1, description="Категория ТО")
-    title: Optional[str] = Field(None, min_length=1, description="Название ТО")
-    description: Optional[str] = Field(None, description="Описание")
-    planned_mileage: Optional[int] = Field(None, alias="mileage", ge=0, description="Плановый пробег")
+class UpdateMaintenanceSchema(DateValidatorMixin, BaseModel):
+    maintenance_id: int = Field(..., alias="maintenanceId")
+    motorcycle_id: Optional[int] = Field(None, alias="motorcycleId")
+    category: Optional[str] = Field(None, min_length=1)
+    title: Optional[str] = Field(None, min_length=1)
+    description: Optional[str] = Field(None)
+    planned_mileage: Optional[int] = Field(None, ge=0)
+    planned_date: Optional[str] = Field(None)
+    completed_mileage: Optional[int] = Field(None, ge=0)
+    completed_date: Optional[str] = Field(None)
+    cost: Optional[int] = Field(None, ge=0)
+
+    @model_validator(mode="after")
+    def validate_completed_fields(self) -> "UpdateMaintenanceSchema":
+        if self.completed_mileage is not None and self.completed_date is None:
+            raise ValueError("При указании completed_mileage требуется completed_date")
+        return self
 
     def get_updates(self) -> dict:
-        """Возвращает только переданные поля (исключая maintenance_id)"""
-        return {
-            k: v
-            for k, v in self.model_dump(exclude_unset=True, exclude_none=True).items()
-            if k != "maintenance_id" and v is not None
-        }
+        data = self.model_dump(exclude_unset=True)
+        data.pop("maintenance_id", None)
+        return {k: v for k, v in data.items() if v is not None}
 
 
-class MarkPlannedMaintenanceSchema(BaseModel):
-    """Схема для отметки планового ТО как выполненного"""
-    maintenance_id: int = Field(..., alias="id", description="ID планового ТО")
-    mileage: int = Field(..., ge=0, le=1_000_000, description="Пробег при выполнении")
-    date: Optional[str] = Field(None, description="Дата выполнения (ГГГГ-ММ-ДД)")
-    cost: Optional[int] = Field(None, ge=0, description="Стоимость")
-    is_repeat: Optional[bool] = Field(False, description="Повторять ТО?")
-    interval: Optional[int] = Field(None, ge=0, le=1_000_000, description="Интервал повторения")
+class MarkMaintenanceAsCompletedSchema(CompletedDateValidatorMixin, BaseModel):
+    completed_mileage: int = Field(..., ge=0, le=1_000_000)
+    completed_date: Optional[str] = Field(None)
+    cost: Optional[int] = Field(None, ge=0)
+    is_repeat: bool = Field(False)
+    interval: Optional[int] = Field(None, ge=0, le=1_000_000)
 
-    @field_validator("date", mode="before")
-    @classmethod
-    def validate_date(cls, v: Any) -> Optional[str]:
-        """Проверяет, что дата соответствует формату ГГГГ-ММ-ДД или равна None."""
-        if v is None or v == "":
-            return None
-        if isinstance(v, str):
-            try:
-                datetime.strptime(v, "%Y-%m-%d")
-                return v
-            except ValueError:
-                raise ValueError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
-        raise ValueError(f"Неподдерживаемый тип для даты: {type(v)}. Ожидается строка в формате ГГГГ-ММ-ДД")
+    @model_validator(mode="after")
+    def validate_repeat(self) -> "MarkMaintenanceAsCompletedSchema":
+        if self.is_repeat and self.interval is None:
+            raise ValueError("При is_repeat=True необходимо указать interval")
+        return self

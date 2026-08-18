@@ -403,8 +403,8 @@ export default {
     position: absolute;
     bottom: 4px;
     right: 4px;
-    width: 32px;
-    height: 32px;
+    min-width: 38px;
+    min-height: 38px;
     border-radius: 50%;
     background: var(--accent);
     border: none;

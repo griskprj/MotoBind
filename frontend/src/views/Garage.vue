@@ -142,21 +142,25 @@
                     </div>
                     <div class="table-body">
                         <div class="tr"
-                            v-for="maintenance in motorcycle.maintenances.slice(0, 6) || []"
+                            v-for="maintenance in getRecentMaintenances()"
                             :key="maintenance.id"
                             @click="openMaintenanceDetailsModal(maintenance)"
                         >
                             <div class="td date-cell">
                                 <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
-                                <span>{{ formatDate(maintenance.date) }}</span>
+                                <span>{{ formatDate(maintenance.completed_date || maintenance.planned_date) }}</span>
                             </div>
                             <div class="td service-cell">
                                 <div class="s-title">{{ maintenance.title }}</div>
                                 <div class="s-desc">{{ maintenance.description }}</div>
                             </div>
-                            <div class="td">{{ maintenance.mileage }} км</div>
-                            <div class="td">{{ maintenance.cost }} ₽</div>
-                            <div class="td"><span class="badge-green">Выполнено</span></div>
+                            <div class="td">{{ maintenance.completed_mileage || maintenance.planned_mileage || '—' }} км</div>
+                            <div class="td">{{ maintenance.cost || 0 }} ₽</div>
+                            <div class="td">
+                                <span :class="getStatusBadgeClass(maintenance.status)">
+                                    {{ getStatusLabel(maintenance.status) }}
+                                </span>
+                            </div>
                             <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
                         </div>
                     </div>
@@ -289,6 +293,17 @@ export default {
             try {
                 const motorcycleResponse = await api.get('/motorcycle/')
                 this.motorcycles = motorcycleResponse.data
+                
+                for (const moto of this.motorcycles) {
+                    try {
+                        const maintResponse = await api.get(`/maintenance/motorcycle/${moto.id}`)
+                        moto.maintenances = maintResponse.data || []
+                    } catch (err) {
+                        console.error(`Failed load maintenances for moto ${moto.id}:`, err)
+                        moto.maintenances = []
+                    }
+                }
+                
                 if (this.motorcycles.length > 0) {
                     this.motorcycle = this.motorcycles[0]
                 }
@@ -296,6 +311,7 @@ export default {
                 console.error(err)
             }
         },
+
 
         async logout() {
             try {
@@ -504,26 +520,46 @@ export default {
         },
 
 
-        async deleteMaintenance(payload) {
+        async deleteMaintenance(id) {
             try {
-                const { id, isPlanned } = payload;
+                await api.delete(`/maintenance/${id}`);
                 
-                let endpoint;
-                if (isPlanned) {
-                    endpoint = `/maintenance/plan/${id}`;
-                } else {
-                    endpoint = `/maintenance/${id}`;
-                }
-                
-                await api.delete(endpoint);
-                
-                this.loadData();
+                await this.loadData();
                 this.showDetailsMaintenanceModal = false;
                 alert("Обслуживание успешно удалено");
             } catch (err) {
                 console.error(`Failed delete maintenance: ${err}`);
-                alert("Ошибка удаления обслуживания");
+                alert(err.response?.data?.error || "Ошибка удаления обслуживания");
             }
+        },
+
+        getRecentMaintenances() {
+            if (!this.motorcycle || !this.motorcycle.maintenances) return [];
+            return this.motorcycle.maintenances
+                .sort((a, b) => {
+                    const dateA = a.completed_date || a.planned_date || a.created_at;
+                    const dateB = b.completed_date || b.planned_date || b.created_at;
+                    return new Date(dateB) - new Date(dateA);
+                })
+                .slice(0, 6);
+        },
+
+        getStatusBadgeClass(status) {
+            const classes = {
+                'completed': 'badge-green',
+                'planned': 'badge-gray',
+                'overdue': 'badge-danger'
+            };
+            return classes[status] || 'badge-gray';
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                'completed': 'Выполнено',
+                'planned': 'Запланировано',
+                'overdue': 'Просрочено'
+            };
+            return labels[status] || status;
         },
 
         changeMoto(motoId) {
@@ -548,18 +584,18 @@ export default {
 
     computed: {
         nextMaintenance() {
-            if (!this.motorcycle || !this.motorcycle.planned_maintenances || this.motorcycle.planned_maintenances.length === 0) {
+            if (!this.motorcycle || !this.motorcycle.maintenances) {
                 return null;
             }
 
             const currentMileage = this.motorcycle.mileage || 0;
             
-            const upcomingMaintenances = this.motorcycle.planned_maintenances
-                .filter(m => m.planned_mileage && m.planned_mileage > currentMileage)
+            const upcomingMaintenances = this.motorcycle.maintenances
+                .filter(m => m.status === 'planned' && m.planned_mileage && m.planned_mileage > currentMileage)
                 .sort((a, b) => a.planned_mileage - b.planned_mileage);
 
-            const overdueMaintenances = this.motorcycle.planned_maintenances
-                .filter(m => m.planned_mileage && m.planned_mileage <= currentMileage)
+            const overdueMaintenances = this.motorcycle.maintenances
+                .filter(m => m.status === 'planned' && m.planned_mileage && m.planned_mileage <= currentMileage)
                 .sort((a, b) => a.planned_mileage - b.planned_mileage);
 
             if (overdueMaintenances.length > 0) {
@@ -570,7 +606,8 @@ export default {
                     ...overdue,
                     distanceOverdue: distanceOverdue,
                     planned_mileage: overdue.planned_mileage,
-                    isOverdue: true
+                    isOverdue: true,
+                    title: overdue.title
                 };
             }
 
@@ -582,7 +619,8 @@ export default {
                     ...next,
                     distanceToNext: distanceToNext,
                     planned_mileage: next.planned_mileage,
-                    isOverdue: false
+                    isOverdue: false,
+                    title: next.title
                 };
             }
 
@@ -593,10 +631,12 @@ export default {
             if (!this.motorcycle || !this.motorcycle.maintenances) {
                 return 0;
             }
-            return this.motorcycle.maintenances.reduce((sum, item) => sum + (item.cost || 0), 0);
+            return this.motorcycle.maintenances
+                .filter(m => m.status === 'completed')
+                .reduce((sum, item) => sum + (item.cost || 0), 0);
         },
-    },
 
+    },
     mounted() {
         this.loadData()
     }

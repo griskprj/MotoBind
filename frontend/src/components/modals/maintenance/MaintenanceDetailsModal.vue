@@ -11,8 +11,8 @@
                 <span
                     class="badge"
                     :class="{
-                        'badge-green': maintenance?.status === 'ok' || maintenance?.status === 'completed',
-                        'badge-warning': maintenance?.status === 'soon',
+                        'badge-green': maintenance?.status === 'completed',
+                        'badge-warning': maintenance?.status === 'planned' && maintenance?.planned_mileage,
                         'badge-danger': maintenance?.status === 'overdue',
                         'badge-gray': !maintenance?.status || maintenance?.status === 'planned'
                     }"
@@ -20,9 +20,9 @@
                     <span class="badge-dot"></span>
                     {{ getStatusLabel(maintenance?.status) }}
                 </span>
-                <span v-if="maintenance?.date" class="header-date">
+                <span v-if="maintenance?.completed_date || maintenance?.planned_date" class="header-date">
                     <i class="fa fa-calendar"></i>
-                    {{ formatDate(maintenance.date) }}
+                    {{ formatDate(maintenance.completed_date || maintenance.planned_date) }}
                 </span>
             </div>
 
@@ -38,18 +38,18 @@
                 Детали обслуживания
             </p>
             <div class="card-items">
-                <div v-if="maintenance?.date" class="card-item">
+                <div v-if="maintenance?.completed_date || maintenance?.planned_date" class="card-item">
                     <span class="item-title">
                         <i class="fa fa-calendar"></i> Дата
                     </span>
-                    <span class="item-value">{{ formatDate(maintenance.date) }}</span>
+                    <span class="item-value">{{ formatDate(maintenance.completed_date || maintenance.planned_date) }}</span>
                 </div>
 
-                <div v-if="maintenance?.mileage" class="card-item">
+                <div v-if="maintenance?.completed_mileage" class="card-item">
                     <span class="item-title">
                         <i class="fa fa-gauge-high"></i> Пробег выполнения
                     </span>
-                    <span class="item-value">{{ maintenance.mileage }} <span class="unit">км</span></span>
+                    <span class="item-value">{{ maintenance.completed_mileage }} <span class="unit">км</span></span>
                 </div>
                 
                 <div v-if="maintenance?.planned_mileage" class="card-item">
@@ -89,8 +89,7 @@
 
         <DeleteMaintenanceModal
             :isOpen="showDeleteModal"
-            :maintenanceId="maintenance.id"
-            :isPlanned="!maintenance.status || maintenance.status !== 'completed'"
+            :maintenanceId="maintenance?.id"
             @submit="handleDelete"
             @close="showDeleteModal = false"
         />
@@ -152,10 +151,9 @@ export default {
 
         getStatusLabel(status) {
             const labels = {
-                'ok': 'Выполнено',
-                'soon': 'Скоро',
-                'overdue': 'Просрочено',
-                'planned': 'Запланировано'
+                'completed': 'Выполнено',
+                'planned': 'Запланировано',
+                'overdue': 'Просрочено'
             }
             return labels[status] || 'Выполнено'
         },
@@ -178,13 +176,14 @@ export default {
         openDeleteModal() {
             this.showDeleteModal = true
         },
-        handleDelete(payload) {
-            this.$emit('delete', payload)
+
+        handleDelete(id) {
+            this.$emit('delete', id)
             this.showDeleteModal = false
         },
 
         openEditModal() {
-            this.showEditModal = true
+            alert('Редактирование в разработке')
         }
     }
 }
