@@ -18,3 +18,22 @@ class LoginSchema(BaseModel):
 
 class RefreshSchema(BaseModel):
     refresh_token: str = Field(..., min_length=1)
+
+
+class VerifyEmailSchema(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6)
+
+
+class ResendVerificationEmail(BaseModel):
+    email: EmailStr
+
+
+class RequestPasswordResetSchema(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordSchema(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=6, max_length=128)

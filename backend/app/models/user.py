@@ -22,7 +22,20 @@ class User(db.Model):
     refresh_token = db.Column(db.String(512))
     status = db.Column(db.String, default="active")
     is_premium = db.Column(db.Boolean, default=False)
+
+    is_verified = db.Column(db.Boolean, default=False)
+    verification_code = db.Column(db.String(6), nullable=True)
+    verification_code_expires = db.Column(db.DateTime, nullable=True)
+
+    reset_password_code = db.Column(db.String(6), nullable=True)
+    reset_password_expires = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     motorcycles = db.relationship(
         "Motorcycle",
@@ -49,6 +62,7 @@ class User(db.Model):
             "avatar": self.avatar,
             "role": self.role,
             "status": self.status,
+            "is_verified": self.is_verified,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
         if include_moto:

@@ -1,9 +1,10 @@
 from typing import Optional
-
+from datetime import datetime, timezone, timedelta
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.user import User
 from app.utils.files import delete_file, save_user_avatar
+from app.services.email_service import EmailService
 
 
 class UserService:
@@ -18,12 +19,103 @@ class UserService:
         if User.query.filter_by(username=username).first():
             raise ValidationError("Имя пользователя занято")
 
-        user = User(email=email, username=username, role=role, status="active")
+        user = User(
+            email=email, 
+            username=username, 
+            role=role, 
+            status="active", 
+            is_verified=False
+        )
         user.set_password(password)
+
+        code = EmailService.generate_verification_code()
+        user.verification_code = code
+        user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+
 
         db.session.add(user)
         db.session.commit()
 
+        EmailService.send_verification_email(email, code)
+
+        return user
+
+    @staticmethod
+    def verify_email(email: str, code: str) -> User:
+        """Подтверждение email по коду"""
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            raise ValidationError("Пользователь не найден")
+        
+        if user.is_verified:
+            raise ValidationError("Email уже подтвержден")
+        
+        if user.verification_code != code:
+            raise ValidationError("Неверный код подтверждения")
+        
+        if user.verification_code_expires < datetime.now(timezone.utc):
+            raise ValidationError("Код подтверждения истек. Запросите новый")
+        
+        user.is_verified = True
+        user.verification_code = None
+        user.verification_code_expires = None
+        db.session.commit()
+        
+        return user
+    
+    @staticmethod
+    def resend_verification_code(email: str) -> dict:
+        """Отправка нового кода подтверждения"""
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            raise ValidationError("Пользователь не найден")
+        
+        if user.is_verified:
+            raise ValidationError("Email уже подтвержден")
+        
+        code = EmailService.generate_verification_code()
+        user.verification_code = code
+        user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+        db.session.commit()
+        
+        EmailService.send_verification_email(email, code)
+        
+        return {"message": "Новый код отправлен на email"}
+    
+    @staticmethod
+    def request_password_reset(email: str) -> dict:
+        """Запрос на сброс пароля"""
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            raise ValidationError("Пользователь с таким email не найден")
+        
+        code = EmailService.generate_verification_code()
+        user.reset_password_code = code
+        user.reset_password_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+        db.session.commit()
+        
+        EmailService.send_password_reset_email(email, code)
+        
+        return {"message": "Код для сброса пароля отправлен на email"}
+    
+    @staticmethod
+    def reset_password(email: str, code: str, new_password: str) -> User:
+        """Сброс пароля по коду"""
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            raise ValidationError("Пользователь не найден")
+        
+        if user.reset_password_code != code:
+            raise ValidationError("Неверный код")
+        
+        if user.reset_password_expires < datetime.now(timezone.utc):
+            raise ValidationError("Код истек. Запросите новый")
+        
+        user.set_password(new_password)
+        user.reset_password_code = None
+        user.reset_password_expires = None
+        db.session.commit()
+        
         return user
 
     @staticmethod

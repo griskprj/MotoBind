@@ -20,7 +20,7 @@ class Manual(db.Model):
     status = db.Column(db.String(32), default="moderate")
     rejection_reason = db.Column(db.String(32), default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    tip = db.Column(db.String(128))
+    tip = db.Column(db.String(256))
 
     author = db.relationship("User", backref="manuals")
     steps = db.relationship("ManualStep", lazy="select", cascade="all, delete-orphan")
@@ -54,8 +54,8 @@ class ManualStep(db.Model):
     order = db.Column(db.Integer, default=0, nullable=False)
     title = db.Column(db.String(64), nullable=False)
     text = db.Column(db.Text)
-    tip = db.Column(db.String(128))
-    warning = db.Column(db.String(128))
+    tip = db.Column(db.String(256))
+    warning = db.Column(db.String(256))
 
     def to_dict(self):
         return {
