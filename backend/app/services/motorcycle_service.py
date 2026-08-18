@@ -1,10 +1,9 @@
 from typing import List, Optional
-from flask import current_app
 
 from app.exceptions import ValidationError
 from app.extensions import db
-from app.models.maintenance_node import MaintenanceNode
 from app.models.motorcycle import Motorcycle
+from app.models.maintenance import Maintenance
 from app.utils.helpers import get_motorcycle_or_404
 from app.utils.files import save_moto_photo, delete_file
 
@@ -29,16 +28,6 @@ class MotorcycleService:
         """Создает мотоцикл с узлами обслуживания"""
         motorcycle = Motorcycle(owner_id=owner_id, **kwargs)
         db.session.add(motorcycle)
-        db.session.flush()
-
-        for node_data in MotorcycleService.DEFAULT_NODES:
-            node = MaintenanceNode(
-                moto_id=motorcycle.id,
-                title=node_data["title"],
-                category=node_data["category"],
-            )
-            db.session.add(node)
-
         db.session.commit()
         return motorcycle
 

@@ -1,14 +1,14 @@
 <template>
     <ModalWrapper
-    :is-open="isOpen"
-    title="Удаление обслуживания"
-    icon="trash"
-    icon-color="var(--danger)"
-    bg-icon-color="var(--danger-trans)"
-    @close="$emit('close')"
+        :is-open="isOpen"
+        title="Удаление обслуживания"
+        icon="trash"
+        icon-color="var(--danger)"
+        bg-icon-color="var(--danger-trans)"
+        @close="$emit('close')"
     >
         <p class="modal-text">
-            {{ isPlanned ? 'Вы уверены, что хотите удалить плановое обслуживание?' : 'Вы уверены, что хотите удалить запись из истории?' }}
+            Вы уверены, что хотите удалить запись об обслуживании?
             Отменить это действие невозможно.
         </p>
         <div class="modal-actions">
@@ -32,19 +32,12 @@ export default {
         maintenanceId: {
             type: Number,
             default: null
-        },
-        isPlanned: {
-            type: Boolean,
-            default: false
         }
     },
 
     methods: {
         submit() {
-            this.$emit('submit', {
-                id: this.maintenanceId,
-                isPlanned: this.isPlanned
-            })
+            this.$emit('submit', this.maintenanceId)
         }
     }
 }

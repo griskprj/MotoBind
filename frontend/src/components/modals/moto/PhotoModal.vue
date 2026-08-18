@@ -230,6 +230,8 @@ export default {
 }
 
 .current-photo {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 24px;
     text-align: center;
 }

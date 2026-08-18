@@ -434,7 +434,7 @@ export default {
     data() {
         return {
             currentStep: 1,
-            selectedType: null, // 'history' или 'planned'
+            selectedType: null,
             form: {
                 motorcycleId: null,
                 category: '',
@@ -464,7 +464,8 @@ export default {
         getPhotoUrl(photoPath) {
             if (!photoPath) return null
             if (photoPath.startsWith('http')) return photoPath
-            return `/uploads/${photoPath}`
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${photoPath}`
         },
 
         getMotoName(id) {
@@ -542,7 +543,6 @@ export default {
 
         async submit() {
             this.loading = true
-            
             try {
                 let payload = {
                     motorcycleId: this.form.motorcycleId,
@@ -555,18 +555,17 @@ export default {
                     payload = {
                         ...payload,
                         cost: this.form.cost || null,
-                        mileage: this.form.mileage,
-                        date: this.form.date || null,
+                        completed_mileage: this.form.mileage,
+                        completed_date: this.form.date || null,
                     }
-                    await this.$emit('submitHistory', payload)
                 } else {
                     payload = {
                         ...payload,
                         planned_mileage: this.form.planned_mileage,
                     }
-                    await this.$emit('submitPlanned', payload)
                 }
 
+                await this.$emit('submit', payload)
                 this.closeModal()
             } catch (error) {
                 console.error('Submit error:', error)

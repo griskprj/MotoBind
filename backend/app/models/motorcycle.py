@@ -26,14 +26,8 @@ class Motorcycle(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    maintenance_nodes = db.relationship(
-        "MaintenanceNode", lazy="select", cascade="all, delete-orphan"
-    )
     maintenances = db.relationship(
         "Maintenance", lazy="select", cascade="all, delete-orphan"
-    )
-    planned_maintenances = db.relationship(
-        "PlannedMaintenance", lazy="select", cascade="all, delete-orphan"
     )
 
     def to_dict(
@@ -61,13 +55,5 @@ class Motorcycle(db.Model):
 
         if include_maintenance:
             data["maintenances"] = [m.to_dict() for m in self.maintenances]
-
-        if include_planned_maintenance:
-            data["planned_maintenances"] = [
-                m.to_dict() for m in self.planned_maintenances
-            ]
-
-        if include_maintenance_nodes:
-            data["maintenance_nodes"] = [n.to_dict() for n in self.maintenance_nodes]
 
         return data

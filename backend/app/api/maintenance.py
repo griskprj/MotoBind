@@ -1,23 +1,23 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from datetime import datetime
 
 from app.exceptions import ValidationError
-from app.schemas.maintenance import (CreateMaintenanceSchema,
-                                     CreatePlannedMaintenanceSchema,
-                                     MarkPlannedMaintenanceSchema,
-                                     UpdatePlannedMaintenanceSchema)
+from app.schemas.maintenance import (
+    CreateMaintenanceSchema,
+    UpdateMaintenanceSchema,
+    MarkMaintenanceAsCompletedSchema
+)
 from app.services.maintenance_service import MaintenanceService
 from app.utils.helpers import check_motorcycle_owner, get_current_user
 
 maintenance = Blueprint("maintenance", __name__)
 
 
-@maintenance.route("/history", methods=["POST"])
+@maintenance.route("/", methods=["POST"])
 @jwt_required()
 def create_maintenance():
     """
-    Создание записи обслуживания
+    Создание записи обслуживания (плановой или выполненной)
     """
     data = CreateMaintenanceSchema(**request.get_json())
     user = get_current_user()
@@ -29,63 +29,65 @@ def create_maintenance():
         category=data.category,
         title=data.title,
         description=data.description,
-        mileage=data.mileage,
-        cost=data.cost,
-        date=data.date,
-    )
-
-    return jsonify(maintenance), 201
-
-
-@maintenance.route("/plan", methods=["POST"])
-@jwt_required()
-def create_planned_maintenance():
-    """
-    Планирование обслуживания
-    """
-    data = CreatePlannedMaintenanceSchema(**request.get_json())
-
-    planned_maintenance = MaintenanceService.create_planned_maintenance(
-        author_id=int(get_jwt_identity()),
-        moto_id=data.motorcycle_id,
-        title=data.title,
-        description=data.description,
-        category=data.category,
         planned_mileage=data.planned_mileage,
+        planned_date=data.planned_date,
+        completed_mileage=data.completed_mileage,
+        completed_date=data.completed_date,
+        cost=data.cost,
     )
 
-    return jsonify(planned_maintenance), 201
+    return jsonify(maintenance.to_dict()), 201
 
 
-@maintenance.route("/plan", methods=["PUT"])
+@maintenance.route("/<int:maintenance_id>", methods=["PUT"])
 @jwt_required()
-def update_planned_maintenance():
+def update_maintenance(maintenance_id):
     """
-    Редактирование планового обслуживания
+    Редактирование обслуживания
     """
-    data = UpdatePlannedMaintenanceSchema(**request.get_json())
+    data = UpdateMaintenanceSchema(**request.get_json())
     updates = data.get_updates()
+    
     if not updates:
         raise ValidationError("Нет данных для обновления")
 
     user_id = int(get_jwt_identity())
-    planned_maintenance = MaintenanceService.update_planned_maintenance(
-        maintenance_id=data.maintenance_id, user_id=user_id, **updates
+    maintenance = MaintenanceService.update_maintenance(
+        maintenance_id=maintenance_id, 
+        user_id=user_id, 
+        **updates
     )
 
-    return jsonify(planned_maintenance.to_dict()), 200
+    return jsonify(maintenance.to_dict()), 200
 
 
-@maintenance.route("/plan/<int:maintenance_id>", methods=["DELETE"])
+@maintenance.route("/<int:maintenance_id>/complete", methods=["POST"])
 @jwt_required()
-def delete_planned_maintenance(maintenance_id):
+def mark_maintenance_as_completed(maintenance_id):
     """
-    Удаление планового обслуживания
+    Отметка планового ТО как выполненного
     """
-    user_id = int(get_jwt_identity())
-    MaintenanceService.delete_plan_maintenance(maintenance_id, user_id)
+    data = MarkMaintenanceAsCompletedSchema(**request.get_json())
+    current_user_id = int(get_jwt_identity())
+    
+    result = MaintenanceService.mark_planned_as_done(
+        planned_id=maintenance_id,
+        author_id=current_user_id,
+        mileage=data.completed_mileage,
+        date=data.completed_date,
+        cost=data.cost,
+        repeat=data.is_repeat,
+        interval=data.interval,
+    )
 
-    return jsonify({"message": "Запись удалена"}), 200
+    response = {
+        "message": "Обслуживание отмечено как выполненное",
+        "maintenance": result["maintenance"].to_dict() if result["maintenance"] else None,
+    }
+    if result.get("new_planned"):
+        response["new_planned"] = result["new_planned"].to_dict()
+
+    return jsonify(response), 200
 
 
 @maintenance.route("/<int:maintenance_id>", methods=["DELETE"])
@@ -100,42 +102,14 @@ def delete_maintenance(maintenance_id):
     return jsonify({"message": "Запись удалена"}), 200
 
 
-@maintenance.route("/plan/mark", methods=["POST"])
+@maintenance.route("/motorcycle/<int:moto_id>", methods=["GET"])
 @jwt_required()
-def mark_planned_as_done():
+def get_motorcycle_maintenances(moto_id):
     """
-    Отметка о выполнении планового обслуживания
-    """
-
-    data = MarkPlannedMaintenanceSchema(**request.get_json())
-    current_user_id = int(get_jwt_identity())
-    result = MaintenanceService.mark_planned_as_done(
-        planned_id=data.maintenance_id,
-        author_id=current_user_id,
-        mileage=data.mileage,
-        date=data.date,
-        cost=data.cost,
-        repeat=data.is_repeat,
-        interval=data.interval,
-    )
-
-    return (
-        jsonify(
-            {
-                "message": "Обслуживание отмечено как выполненное",
-                "new_maintenance": result["new_planned"],
-            }
-        ),
-        201,
-    )
-
-
-@maintenance.route("/nodes/<int:moto_id>", methods=["GET"])
-@jwt_required()
-def get_maintenance_nodes(moto_id):
-    """
-    Получение узлов обслуживания мотоцикла
+    Получение всех обслуживаний мотоцикла
     """
     user_id = int(get_jwt_identity())
-    nodes = MaintenanceService.get_maintenanc_nodes(user_id, moto_id)
-    return jsonify(nodes), 200
+    check_motorcycle_owner(moto_id, user_id)
+    
+    maintenances = MaintenanceService.get_maintenances_by_motorcycle(user_id, moto_id)
+    return jsonify([m.to_dict() for m in maintenances]), 200
