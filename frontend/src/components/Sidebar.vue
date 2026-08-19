@@ -1,5 +1,5 @@
 <template>
-    <!-- Кнопка-гамбургер для открытия сайдбара -->
+    <!-- Кнопка-гамбургер для открытия/закрытия сайдбара -->
     <button class="sidebar-toggle" @click="toggleSidebar" :class="{ active: isSidebarOpen }">
         <span class="burger-line"></span>
         <span class="burger-line"></span>
@@ -7,14 +7,33 @@
     </button>
 
     <!-- Оверлей -->
-    <div class="sidebar-overlay" v-if="isSidebarOpen" @click="closeSidebar"></div>
+    <div class="sidebar-overlay" v-if="isSidebarOpen && !isDesktop" @click="closeSidebar"></div>
 
     <!-- Сайдбар -->
-    <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
-        <!-- Логотип -->
+    <aside 
+        class="sidebar" 
+        :class="{ 
+            'sidebar-open': isSidebarOpen,
+            'sidebar-collapsed': isCollapsed && isDesktop
+        }"
+    >
+        <!-- Логотип с кнопкой сворачивания -->
         <div class="sidebar-logo">
-            <img src="/icons/favicon-remove-bg.png" alt="">
-            <h1 class="logo-left">Moto</h1><h1 class="logo-right">Bind</h1> <h2 v-if="$route.path.startsWith('/admin')" class="admin-logo">Admin</h2>
+            <img src="/icons/favicon-remove-bg.png" alt="MotoBind">
+            <div class="logo-text" v-if="!isCollapsed || !isDesktop">
+                <span class="logo-left">Moto</span><span class="logo-right">Bind</span>
+                <span v-if="$route.path.startsWith('/admin')" class="admin-logo">Admin</span>
+            </div>
+            
+            <!-- Кнопка сворачивания (только на десктопе) -->
+            <button 
+                v-if="isDesktop" 
+                class="collapse-toggle" 
+                @click.stop="toggleCollapse"
+                :title="isCollapsed ? 'Развернуть' : 'Свернуть'"
+            >
+                <i :class="isCollapsed ? 'fa fa-chevron-right' : 'fa fa-chevron-left'"></i>
+            </button>
         </div>
 
         <!-- Навигация -->
@@ -27,7 +46,7 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-motorcycle"></i>
-                    <span>Гараж</span>
+                    <span v-if="!isCollapsed || !isDesktop">Гараж</span>
                 </router-link>
                 <router-link
                     to="/maintenance"
@@ -36,7 +55,7 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-tools"></i>
-                    <span>Обслуживание</span>
+                    <span v-if="!isCollapsed || !isDesktop">Обслуживание</span>
                 </router-link>
                 <router-link
                     to="/repair"
@@ -45,7 +64,7 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-wrench"></i>
-                    <span>Ремонт</span>
+                    <span v-if="!isCollapsed || !isDesktop">Ремонт</span>
                 </router-link>
                 <router-link
                     to="/manuals"
@@ -54,7 +73,7 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-book"></i>
-                    <span>Мануалы</span>
+                    <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                 </router-link>
                 <router-link
                     to="/profile"
@@ -63,53 +82,56 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-user"></i>
-                    <span>Профиль</span>
+                    <span v-if="!isCollapsed || !isDesktop">Профиль</span>
                 </router-link>
-    
-                <!-- Админ-панель (только для админов) -->
+
+                <!-- Админ-панель -->
                 <router-link
                     v-if="isAdmin"
                     to="/admin/panel"
                     class="nav-link admin-link"
-                    :class="{ active: $route.path === '/admin' }"
+                    :class="{ active: $route.path === '/admin/panel' }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-shield"></i>
-                    <span>Админ-панель</span>
+                    <span v-if="!isCollapsed || !isDesktop">Админ-панель</span>
                 </router-link>
             </div>
 
-            <!-- === ADMIN NAV === -->
+            <!-- ADMIN NAV -->
             <div v-if="$route.path.startsWith('/admin')" class="admin-nav">
                 <div class="admin-nav-group">
-                    <p class="nav-group-title">ГЛАВНАЯ</p>
+                    <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">ГЛАВНАЯ</p>
                     <router-link
                         to="/admin/panel"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/panel'}"
+                        @click="closeSidebar"
                     >
                         <i class="fa fa-sitemap"></i>
-                        Панель управления
+                        <span v-if="!isCollapsed || !isDesktop">Панель управления</span>
                     </router-link>
                 </div>
 
                 <div class="admin-nav-group">
-                    <p class="nav-group-title">УПРАВЛЕНИЕ</p>
+                    <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">УПРАВЛЕНИЕ</p>
                     <router-link
                         to="/admin/users"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/users'}"
+                        @click="closeSidebar"
                     >
                         <i class="fa fa-users"></i>
-                        Пользователи
+                        <span v-if="!isCollapsed || !isDesktop">Пользователи</span>
                     </router-link>
                     <router-link
                         to="/admin/manuals"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/manuals'}"
+                        @click="closeSidebar"
                     >
                         <i class="fa fa-tools"></i>
-                        Мануалы
+                        <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                     </router-link>
                 </div>
 
@@ -120,39 +142,25 @@
                     @click="closeSidebar"
                 >
                     <i class="fa fa-home"></i>
-                    <span>Назад к сервису</span>
+                    <span v-if="!isCollapsed || !isDesktop">Назад к сервису</span>
                 </router-link>
             </div>
         </nav>
 
-        <!-- Сообщение premium -->
-         <div class="premium-wrapper">
-            <div class="premium-icon">
-                <i class="fa fa-star"></i>
-            </div>
-            <div class="premium-body">
-                <p class="premium-title">
-                    Премиум доступ
-                </p>
-                <p class="premium-text">
-                    Расширенная статистика, напоминания, больше места в гараже и другое.
-                </p>
-                <button>Подробнее</button>
-            </div>
-         </div>
-
         <!-- Нижняя часть сайдбара -->
         <div class="sidebar-footer">
-            <!-- Кнопка выхода -->
             <button class="btn-logout-sidebar" @click="logout">
                 <i class="fa fa-sign-out"></i>
-                <span>Выйти</span>
+                <span v-if="!isCollapsed || !isDesktop">Выйти</span>
             </button>
         </div>
     </aside>
 
     <!-- Основной контент -->
-    <div class="main-content" :class="{ 'main-content-shifted': isDesktop }">
+    <div class="main-content" :class="{ 
+        'main-content-shifted': isDesktop && !isCollapsed,
+        'main-content-collapsed': isDesktop && isCollapsed
+    }">
         <slot></slot>
     </div>
 </template>
@@ -166,9 +174,9 @@ export default {
     data() {
         return {
             isSidebarOpen: false,
+            isCollapsed: false,
             isAdmin: false,
             isDesktop: window.innerWidth > 770,
-            userName: 'Grisky' // Можно загружать из localStorage
         }
     },
 
@@ -177,15 +185,9 @@ export default {
         this.handleResize();
         window.addEventListener('resize', this.handleResize);
         
-        // Загружаем имя пользователя
-        const user = localStorage.getItem('user');
-        if (user) {
-            try {
-                const userData = JSON.parse(user);
-                this.userName = userData.name || userData.username || 'Grisky';
-            } catch {
-                this.userName = 'Grisky';
-            }
+        const savedCollapse = localStorage.getItem('sidebarCollapsed');
+        if (savedCollapse !== null) {
+            this.isCollapsed = savedCollapse === 'true';
         }
     },
 
@@ -210,23 +212,39 @@ export default {
         },
 
         toggleSidebar() {
-            this.isSidebarOpen = !this.isSidebarOpen;
-            document.body.style.overflow = this.isSidebarOpen ? 'hidden' : '';
+            if (this.isDesktop) {
+                this.toggleCollapse();
+            } else {
+                this.isSidebarOpen = !this.isSidebarOpen;
+                document.body.style.overflow = this.isSidebarOpen ? 'hidden' : '';
+            }
+        },
+
+        toggleCollapse() {
+            this.isCollapsed = !this.isCollapsed;
+            localStorage.setItem('sidebarCollapsed', String(this.isCollapsed));
         },
 
         closeSidebar() {
-            this.isSidebarOpen = false;
-            document.body.style.overflow = '';
+            if (!this.isDesktop) {
+                this.isSidebarOpen = false;
+                document.body.style.overflow = '';
+            }
         },
 
         handleResize() {
             this.isDesktop = window.innerWidth > 770;
+            
             if (this.isDesktop) {
-                this.isSidebarOpen = true;
+                this.isSidebarOpen = false;
                 document.body.style.overflow = '';
             } else {
                 this.isSidebarOpen = false;
                 document.body.style.overflow = '';
+                if (this.isCollapsed) {
+                    this.isCollapsed = false;
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
             }
         },
 
@@ -257,7 +275,7 @@ export default {
 .sidebar-toggle {
     position: fixed;
     top: 20px;
-    left: 320px;
+    left: 20px;
     z-index: 1001;
     display: none;
     flex-direction: column;
@@ -270,10 +288,16 @@ export default {
     padding: 0;
 }
 
+@media (max-width: 770px) {
+    .sidebar-toggle {
+        display: flex;
+    }
+}
+
 .sidebar-toggle .burger-line {
     width: 100%;
     height: 3px;
-    background-color: var(--text-primary, #333);
+    background-color: var(--text-primary, #fff);
     border-radius: 3px;
     transition: all 0.3s ease;
 }
@@ -318,48 +342,96 @@ export default {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    padding: 24px 20px;
-    transition: transform 0.3s ease;
+    padding: 24px 16px;
+    transition: all 0.3s ease;
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     transform: translateX(0);
 }
 
-/* На мобильных сайдбар скрыт по умолчанию */
+/* Свернутый сайдбар — только иконки */
+.sidebar-collapsed {
+    width: 64px;
+    padding: 24px 10px;
+}
+
+.sidebar-collapsed .nav-link span,
+.sidebar-collapsed .logo-text:not(.logo-collapsed),
+.sidebar-collapsed .nav-group-title,
+.sidebar-collapsed .btn-logout-sidebar span {
+    display: none;
+}
+
+.sidebar-collapsed .nav-link {
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.sidebar-collapsed .nav-link i {
+    font-size: 18px;
+    margin: 0;
+}
+
+.sidebar-collapsed .btn-logout-sidebar {
+    justify-content: center;
+}
+
+/* На мобильных */
 @media (max-width: 770px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 280px;
+        padding: 24px 20px;
     }
 
     .sidebar.sidebar-open {
         transform: translateX(0);
     }
-
-    .sidebar-toggle {
-        display: flex;
+    
+    /* На мобильных сворачивание отключено */
+    .sidebar-collapsed {
+        width: 280px;
+        padding: 24px 20px;
+    }
+    
+    .sidebar-collapsed .nav-link span,
+    .sidebar-collapsed .logo-text,
+    .sidebar-collapsed .btn-logout-sidebar span {
+        display: inline !important;
+    }
+    
+    .sidebar-collapsed .nav-link {
+        justify-content: flex-start;
+        padding: 10px 14px;
+    }
+    
+    .sidebar-collapsed .nav-link i {
+        margin: 0 14px 0 0;
     }
 }
 
-/* ===== Логотип ===== */
+/* ===== Логотип с кнопкой сворачивания ===== */
 .sidebar-logo {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
     align-items: center;
     padding-bottom: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 16px;
-}
-
-.sidebar-logo h1 {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-primary, #fff);
+    gap: 10px;
+    position: relative;
 }
 
 .sidebar-logo img {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex: 1;
 }
 
 .logo-left {
@@ -371,10 +443,64 @@ export default {
 }
 
 .admin-logo {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--accent);
-    margin-left: 8px;
-    margin-bottom: 0;
+    margin-left: 4px;
+}
+
+/* Кнопка сворачивания внутри блока лого */
+.collapse-toggle {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.collapse-toggle:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
+/* В свернутом состоянии логотип по центру, без текста */
+.sidebar-collapsed .sidebar-logo {
+    justify-content: center;
+    padding-bottom: 16px;
+}
+
+.sidebar-collapsed .sidebar-logo img {
+    display: none;
+}
+
+.sidebar-collapsed .logo-text {
+    display: none;
+}
+
+.sidebar-collapsed .collapse-toggle {
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-primary);
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+}
+
+/* На мобильных кнопка сворачивания скрыта */
+@media (max-width: 770px) {
+    .collapse-toggle {
+        display: none !important;
+    }
 }
 
 /* ===== Навигация ===== */
@@ -397,6 +523,7 @@ export default {
     font-weight: 500;
     transition: all 0.2s ease;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .nav-link i {
@@ -405,6 +532,7 @@ export default {
     text-align: center;
     color: var(--text-secondary);
     transition: color 0.2s ease;
+    flex-shrink: 0;
 }
 
 .nav-link:hover {
@@ -430,54 +558,13 @@ export default {
 }
 
 .nav-group-title {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
-    margin-bottom: 8px;
+    margin: 0 0 6px 14px;
+    letter-spacing: 0.5px;
 }
 
-/* === ПРЕМИУМ СООБЩЕНИЕ === */
-.premium-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px;
-    background-color: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 20px;
-    font-size: 14px;
-
-    text-align: center;
-}
-
-.premium-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--accent);
-    min-height: 48px;
-    min-width: 48px;
-    text-align: center;
-    border-radius: 12px;
-    margin-bottom: 12px;
-}
-
-.premium-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.premium-text {
-    color: var(--text-muted);
-    margin-bottom: 10px;
-}
-
-.premium-wrapper button {
-    width: 100%;
-    font-weight: 600;
-}
-
-/* Админ-ссылка */
 .nav-link.admin-link {
     margin-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -497,7 +584,7 @@ export default {
     background: rgba(245, 158, 11, 0.12);
 }
 
-/* ===== Нижняя часть сайдбара ===== */
+/* ===== Футер ===== */
 .sidebar-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 12px;
@@ -526,23 +613,27 @@ export default {
 
 .btn-logout-sidebar i {
     font-size: 16px;
+    flex-shrink: 0;
 }
 
-/* ===== Основной контент ===== */
+/* ===== Контент ===== */
 .main-content {
     transition: margin-left 0.3s ease;
     min-height: 100vh;
 }
 
-/* На десктопе добавляем отступ для сайдбара */
 @media (min-width: 771px) {
-    .main-content {
+    .main-content-shifted {
         margin-left: 260px;
+        padding: 20px 30px;
+    }
+    
+    .main-content-collapsed {
+        margin-left: 64px;
         padding: 20px 30px;
     }
 }
 
-/* На мобильных отступа нет */
 @media (max-width: 770px) {
     .main-content {
         margin-left: 0;
@@ -550,22 +641,19 @@ export default {
     }
 }
 
-/* Для очень маленьких экранов */
 @media (max-width: 480px) {
     .sidebar {
         width: 85%;
-        max-width: 280px;
+        max-width: 300px;
     }
 }
 
-/* Оверлей показываем только на мобильных */
 @media (min-width: 771px) {
     .sidebar-overlay {
         display: none;
     }
 }
 
-/* Стилизация скролла */
 .sidebar-nav::-webkit-scrollbar {
     width: 4px;
 }
