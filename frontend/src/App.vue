@@ -11,6 +11,7 @@ export default {
   data() {
     return {
       user: false,
+      isLoading: false,
     }
   },
 
@@ -31,16 +32,31 @@ export default {
   </div>
   <div class="animated-bg"></div>
 
-  <Sidebar v-if="$route.meta.showHeader">
+  <!-- Страницы с сайдбаром -->
+  <div v-if="$route.meta.showHeader" class="app-with-sidebar">
+    <!-- Сайдбар рендерится сам, без слота, а контент идет после него -->
+    <Sidebar />
+    
+    <!-- Основной контент -->
+    <div class="app-content">
+      <div class="page-content">
+        <router-view />
+      </div>
+      
+      <!-- Футер внутри контента, чтобы учитывать отступы -->
+      <Footer v-if="$route.meta.showFooter" />
+    </div>
+  </div>
+  
+  <!-- Страницы без сайдбара -->
+  <template v-else>
     <router-view />
-  </Sidebar>
-  <router-view v-else />
-
-  <Footer v-if="$route.meta.showFooter" />
+    <Footer v-if="$route.meta.showFooter" />
+  </template>
 </template>
 
-
 <style>
+/* ===== Глобальные стили ===== */
 .animated-bg {
     position: fixed;
     top: 0;
@@ -51,13 +67,61 @@ export default {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
+/* ===== Layout с сайдбаром ===== */
+.app-with-sidebar {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Контентная область справа от сайдбара */
+.app-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Отступы для контента в зависимости от состояния сайдбара */
+/* Эти стили синхронизируются с Sidebar.vue */
+@media (min-width: 771px) {
+    .app-content {
+        margin-left: 280px; /* Ширина развернутого сайдбара */
+        padding: 0;
+    }
+    
+    /* Когда сайдбар свернут — добавляем класс через JS или CSS */
+    .app-content.sidebar-collapsed {
+        margin-left: 72px;
+    }
+}
+
+@media (max-width: 770px) {
+    .app-content {
+        margin-left: 0;
+    }
+}
+
+.page-content {
+    flex: 1;
+    padding: 24px 32px;
+    width: 100%;
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 770px) {
+    .page-content {
+        padding: 80px 16px 20px;
+    }
+}
+
+/* ===== Мобильные таблицы ===== */
 @media (max-width: 768px) {
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Карточный вид для таблиц на мобильных */
   .mobile-card-table {
     border: none;
   }
@@ -102,7 +166,6 @@ export default {
     margin-right: 1rem;
   }
 
-  /* Для ячеек с действиями */
   .mobile-card-table td.col-actions {
     justify-content: flex-end;
     gap: 0.5rem;
@@ -118,7 +181,7 @@ export default {
   }
 }
 
-/* Для планшетов */
+/* ===== Планшеты ===== */
 @media (min-width: 769px) and (max-width: 1024px) {
   .groups-table th,
   .groups-table td {

@@ -616,31 +616,6 @@ export default {
     flex-shrink: 0;
 }
 
-/* ===== Контент ===== */
-.main-content {
-    transition: margin-left 0.3s ease;
-    min-height: 100vh;
-}
-
-@media (min-width: 771px) {
-    .main-content-shifted {
-        margin-left: 260px;
-        padding: 20px 30px;
-    }
-    
-    .main-content-collapsed {
-        margin-left: 64px;
-        padding: 20px 30px;
-    }
-}
-
-@media (max-width: 770px) {
-    .main-content {
-        margin-left: 0;
-        padding: 80px 16px 20px;
-    }
-}
-
 @media (max-width: 480px) {
     .sidebar {
         width: 85%;
