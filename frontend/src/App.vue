@@ -1,29 +1,3 @@
-<script>
-import Sidebar from './components/Sidebar.vue';
-import Footer from './components/Footer.vue';
-
-export default {
-  components: {
-    Sidebar,
-    Footer,
-  },
-
-  data() {
-    return {
-      user: false,
-      isLoading: false,
-    }
-  },
-
-  mounted() {
-      const user = localStorage.getItem('user')
-      if (user) {
-        this.user = true
-      }
-  }
-}
-</script>
-
 <template>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -35,10 +9,10 @@ export default {
   <!-- Страницы с сайдбаром -->
   <div v-if="$route.meta.showHeader" class="app-with-sidebar">
     <!-- Сайдбар рендерится сам, без слота, а контент идет после него -->
-    <Sidebar />
+    <Sidebar ref="sidebar" />
     
     <!-- Основной контент -->
-    <div class="app-content">
+    <div class="app-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <div class="page-content">
         <router-view />
       </div>
@@ -54,6 +28,55 @@ export default {
     <Footer v-if="$route.meta.showFooter" />
   </template>
 </template>
+
+<script>
+import Sidebar from './components/Sidebar.vue';
+import Footer from './components/Footer.vue';
+
+export default {
+  components: {
+    Sidebar,
+    Footer,
+  },
+
+  data() {
+    return {
+      user: false,
+      isLoading: false,
+      isSidebarCollapsed: false, // Добавляем состояние
+    }
+  },
+
+  mounted() {
+      const user = localStorage.getItem('user')
+      if (user) {
+        this.user = true
+      }
+      
+      // Подписываемся на изменения состояния сайдбара
+      this.$nextTick(() => {
+        if (this.$refs.sidebar) {
+          // Слушаем событие изменения состояния
+          this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
+          // Получаем начальное состояние
+          this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
+        }
+      });
+  },
+
+  beforeUnmount() {
+    if (this.$refs.sidebar) {
+      this.$refs.sidebar.$off('toggle-collapse', this.handleSidebarToggle);
+    }
+  },
+
+  methods: {
+    handleSidebarToggle(isCollapsed) {
+      this.isSidebarCollapsed = isCollapsed;
+    }
+  }
+}
+</script>
 
 <style>
 /* ===== Глобальные стили ===== */
@@ -83,16 +106,15 @@ export default {
 }
 
 /* Отступы для контента в зависимости от состояния сайдбара */
-/* Эти стили синхронизируются с Sidebar.vue */
 @media (min-width: 771px) {
     .app-content {
         margin-left: 280px; /* Ширина развернутого сайдбара */
         padding: 0;
     }
     
-    /* Когда сайдбар свернут — добавляем класс через JS или CSS */
+    /* Когда сайдбар свернут */
     .app-content.sidebar-collapsed {
-        margin-left: 72px;
+        margin-left: 64px; /* Ширина свернутого сайдбара */
     }
 }
 

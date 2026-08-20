@@ -24,16 +24,6 @@
                 <span class="logo-left">Moto</span><span class="logo-right">Bind</span>
                 <span v-if="$route.path.startsWith('/admin')" class="admin-logo">Admin</span>
             </div>
-            
-            <!-- Кнопка сворачивания (только на десктопе) -->
-            <button 
-                v-if="isDesktop" 
-                class="collapse-toggle" 
-                @click.stop="toggleCollapse"
-                :title="isCollapsed ? 'Развернуть' : 'Свернуть'"
-            >
-                <i :class="isCollapsed ? 'fa fa-chevron-right' : 'fa fa-chevron-left'"></i>
-            </button>
         </div>
 
         <!-- Навигация -->
@@ -155,14 +145,6 @@
             </button>
         </div>
     </aside>
-
-    <!-- Основной контент -->
-    <div class="main-content" :class="{ 
-        'main-content-shifted': isDesktop && !isCollapsed,
-        'main-content-collapsed': isDesktop && isCollapsed
-    }">
-        <slot></slot>
-    </div>
 </template>
 
 <script>
@@ -182,18 +164,6 @@ export default {
 
     mounted() {
         this.checkAdminStatus();
-        this.handleResize();
-        window.addEventListener('resize', this.handleResize);
-        
-        const savedCollapse = localStorage.getItem('sidebarCollapsed');
-        if (savedCollapse !== null) {
-            this.isCollapsed = savedCollapse === 'true';
-        }
-    },
-
-    beforeUnmount() {
-        document.body.style.overflow = '';
-        window.removeEventListener('resize', this.handleResize);
     },
 
     methods: {
@@ -208,43 +178,6 @@ export default {
                 }
             } catch {
                 this.isAdmin = false;
-            }
-        },
-
-        toggleSidebar() {
-            if (this.isDesktop) {
-                this.toggleCollapse();
-            } else {
-                this.isSidebarOpen = !this.isSidebarOpen;
-                document.body.style.overflow = this.isSidebarOpen ? 'hidden' : '';
-            }
-        },
-
-        toggleCollapse() {
-            this.isCollapsed = !this.isCollapsed;
-            localStorage.setItem('sidebarCollapsed', String(this.isCollapsed));
-        },
-
-        closeSidebar() {
-            if (!this.isDesktop) {
-                this.isSidebarOpen = false;
-                document.body.style.overflow = '';
-            }
-        },
-
-        handleResize() {
-            this.isDesktop = window.innerWidth > 770;
-            
-            if (this.isDesktop) {
-                this.isSidebarOpen = false;
-                document.body.style.overflow = '';
-            } else {
-                this.isSidebarOpen = false;
-                document.body.style.overflow = '';
-                if (this.isCollapsed) {
-                    this.isCollapsed = false;
-                    localStorage.setItem('sidebarCollapsed', 'false');
-                }
             }
         },
 
@@ -263,7 +196,6 @@ export default {
 
     watch: {
         '$route'() {
-            this.closeSidebar();
             this.checkAdminStatus();
         }
     }

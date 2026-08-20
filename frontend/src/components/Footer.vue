@@ -50,13 +50,13 @@
                 </p>
                 
                 <div class="footer-social">
-                    <a href="#" class="social-link" aria-label="Telegram">
+                    <a href="https://t.me/motobind" class="social-link" aria-label="Telegram">
                         <i class="fab fa-telegram"></i>
                     </a>
-                    <a href="#" class="social-link" aria-label="YouTube">
+                    <a href="https://youtube.com/@grisky_y?si=RnyFySM6cVXt_YhE" class="social-link" aria-label="YouTube">
                         <i class="fab fa-youtube"></i>
                     </a>
-                    <a href="#" class="social-link" aria-label="GitHub">
+                    <a href="https://github.com/griskprj/MotoBind" class="social-link" aria-label="GitHub">
                         <i class="fab fa-github"></i>
                     </a>
                 </div>

@@ -724,42 +724,6 @@ export default {
     border-color: #7c3aed;
 }
 
-/* === EMPTY STATE === */
-.empty-state {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 60px 20px;
-    text-align: center;
-}
-
-.empty-header i {
-    font-size: 48px;
-    color: #2d2d3d;
-    margin-bottom: 16px;
-}
-
-.empty-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 8px 0;
-}
-
-.empty-text {
-    color: #8b8b9e;
-    font-size: 14px;
-    margin: 4px 0;
-}
-
-.empty-text a {
-    color: #a78bfa;
-    text-decoration: none;
-}
-
-.empty-text a:hover {
-    text-decoration: underline;
-}
-
 /* === MEDIA QUERIES === */
 @media (max-width: 1200px) {
     .table-header {

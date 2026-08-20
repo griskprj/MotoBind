@@ -185,6 +185,16 @@
                 </div>
             </main>
         </div>
+        <div v-else class="empty-state">
+            <div class="empty-header">
+                <i class="fa fa-motorcycle"></i>
+                <p class="empty-title">Мотоциклов пока нет</p>
+            </div>
+            <div class="empty-body">
+                <p class="empty-text">Добавьте первый мотоцикл</p>
+
+            </div>
+        </div>
     </div>
 
     <!-- === MODALS === -->
