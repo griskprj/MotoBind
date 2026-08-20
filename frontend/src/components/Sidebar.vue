@@ -164,9 +164,37 @@ export default {
 
     mounted() {
         this.checkAdminStatus();
+        window.addEventListener('resize', this.handleResize);
+    },
+
+    beforeDestroy() {
+        window.removeEventListener('resize', this.handleResize);
     },
 
     methods: {
+        handleResize() {
+            this.isDesktop = window.innerWidth > 770;
+            // На десктопе сайдбар всегда открыт
+            if (this.isDesktop) {
+                this.isSidebarOpen = true;
+            } else {
+                // На мобильных закрываем при переходе на десктоп
+                if (!this.isDesktop) {
+                    this.isSidebarOpen = false;
+                }
+            }
+        },
+
+        toggleSidebar() {
+            this.isSidebarOpen = !this.isSidebarOpen;
+        },
+
+        closeSidebar() {
+            if (!this.isDesktop) {
+                this.isSidebarOpen = false;
+            }
+        },
+
         checkAdminStatus() {
             try {
                 const token = localStorage.getItem('access_token');
