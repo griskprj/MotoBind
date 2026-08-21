@@ -70,8 +70,8 @@
                         <div class="spec-item"><span class="label">Двигатель</span><span class="value">{{ motorcycle.volume }} см³</span></div>
                         <div class="spec-item"><span class="label">Пробег</span><span class="value">{{ motorcycle.mileage }} км</span></div>
                         <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" :style="{ 'background': motorcycle.color }"></div></div>
-                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '--' }}</span></div>
-                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '--' }}</span></div>
+                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '—' }}</span></div>
+                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '—' }}</span></div>
                     </div>
                     <div class="notes-block">
                         <div class="notes-header">
@@ -118,7 +118,7 @@
                                     {{ nextMaintenance.distanceToNext }} км
                                 </span>
                                 <small style="font-size: 12px; color: var(--text-muted); display: block; font-weight: 400;">
-                                    ({{ nextMaintenance.title || 'ТО' }})
+                                    ({{ nextMaintenance.title.slice(0, 23) + '...' || 'ТО' }})
                                 </small>
                             </span>
                             <span v-else style="font-size: 18px;">Все ТО выполнены</span>
@@ -155,7 +155,7 @@
                                 <div class="s-desc">{{ maintenance.description }}</div>
                             </div>
                             <div class="td">{{ maintenance.completed_mileage || maintenance.planned_mileage || '—' }} км</div>
-                            <div class="td">{{ maintenance.cost || 0 }} ₽</div>
+                            <div class="td">{{ maintenance.cost || '—' }} ₽</div>
                             <div class="td">
                                 <span :class="getStatusBadgeClass(maintenance.status)">
                                     {{ getStatusLabel(maintenance.status) }}
@@ -557,7 +557,7 @@ export default {
         getStatusBadgeClass(status) {
             const classes = {
                 'completed': 'badge-green',
-                'planned': 'badge-gray',
+                'planned': 'badge-warning',
                 'overdue': 'badge-danger'
             };
             return classes[status] || 'badge-gray';
@@ -1069,7 +1069,7 @@ export default {
     flex-shrink: 0;
 }
 .icon-square.purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
-.icon-square.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.icon-square.green { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .icon-square.blue { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
 .service-cell {
     display: flex;
@@ -1080,8 +1080,17 @@ export default {
 .badge-green {
     display: inline-block;
     padding: 3px 12px;
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
+    background: var(--success-trans);
+    color: var(--success);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.badge-warning {
+    display: inline-block;
+    padding: 3px 12px;
+    background: var(--warning-trans);
+    color: var(--warning);
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
