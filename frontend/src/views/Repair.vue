@@ -214,6 +214,11 @@
     />
 </template>
 
+<head>
+  <title>MotoBind — Ремонт мотоциклов | Инструкции и мануалы</title>
+  <meta name="description" content="Пошаговые инструкции по ремонту мотоциклов. Выбирайте обслуживание и получайте подробные мануалы от сообщества.">
+</head>
+
 <script>
 import api from '../api/api'
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';

@@ -252,6 +252,11 @@
     />
 </template>
 
+<head>
+  <title>MotoBind — Гараж мотоцикла | История обслуживания и ТО</title>
+  <meta name="description" content="Ведите историю обслуживания всех мотоциклов, планируйте ТО, отслеживайте пробег и контролируйте расходы. Удобный гараж для вашего байка.">
+</head>
+
 <script>
 import Header from '../components/Header.vue';
 import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';

@@ -232,6 +232,11 @@
     </div>
 </template>
 
+<head>
+  <title>MotoBind — Правила оформления мануалов | Как создать инструкцию</title>
+  <meta name="description" content="Правила оформления мануалов в MotoBind. Узнайте, как создавать качественные инструкции по ремонту и обслуживанию.">
+</head>
+
 <script>
 import api from '../../api/api'
 

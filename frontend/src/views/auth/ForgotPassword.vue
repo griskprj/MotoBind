@@ -39,6 +39,11 @@
   </div>
 </template>
 
+<head>
+  <title>MotoBind — Восстановление пароля | Забыли пароль?</title>
+  <meta name="description" content="Забыли пароль? Восстановите доступ к аккаунту MotoBind по email. Быстро и безопасно.">
+</head>
+
 <script>
 import api from '../../api/api'
 

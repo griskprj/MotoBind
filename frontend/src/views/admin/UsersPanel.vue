@@ -249,6 +249,11 @@
     />
 </template>
 
+<head>
+  <title>MotoBind — Управление пользователями | Админ-панель</title>
+  <meta name="description" content="Управление пользователями MotoBind. Просмотр, блокировка, редактирование и удаление пользователей.">
+</head>
+
 <script>
 import api from '../../api/api'
 import AddUserModal from '../../components/modals/admin/AddUserModal.vue';

@@ -212,6 +212,11 @@
     />
 </template>
 
+<head>
+  <title>MotoBind — Обслуживание мотоцикла | Учёт ТО и ремонтов</title>
+  <meta name="description" content="Добавляйте и планируйте обслуживание мотоцикла. Следите за состоянием байка, получайте напоминания о ТО и контролируйте расходы.">
+</head>
+
 <script>
 import api from '../api/api';
 import formatDate from '../utils/DateFormatter.js';

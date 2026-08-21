@@ -58,6 +58,11 @@
   </div>
 </template>
 
+<head>
+  <title>MotoBind — Сброс пароля</title>
+  <meta name="description" content="Установите новый пароль для своего аккаунта в MotoBind.">
+</head>
+
 <script>
 import api from '../../api/api'
 import { setTokens, setUser } from '../../api/auth'

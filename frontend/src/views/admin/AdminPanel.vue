@@ -126,6 +126,11 @@
     />
 </template>
 
+<head>
+  <title>MotoBind — Админ-панель | Управление сервисом</title>
+  <meta name="description" content="Административная панель MotoBind. Управление пользователями, мануалами и контентом.">
+</head>
+
 <script>
 import api from '../../api/api'
 import UserRegistrationsChart from '../../components/charts/UserRegistrationsChart.vue';

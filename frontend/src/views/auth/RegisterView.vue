@@ -359,6 +359,11 @@
   />
 </template>
 
+<head>
+  <title>MotoBind — Регистрация | Создайте аккаунт</title>
+  <meta name="description" content="Создайте аккаунт в MotoBind и начните вести учёт обслуживания мотоцикла. Регистрация бесплатная и занимает минуту.">
+</head>
+
 <script>
 import api from '../../api/api';
 import { setTokens, setUser } from '../../api/auth';

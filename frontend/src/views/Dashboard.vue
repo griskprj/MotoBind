@@ -226,6 +226,7 @@ export default {
 }
 </script>
 
+
 <style scoped>
 /*  === WELCOME SECTION ===  */
 .welcome-section {

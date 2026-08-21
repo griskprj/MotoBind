@@ -129,6 +129,11 @@
   </div>
 </template>
 
+<head>
+  <title>MotoBind — Правила использования | Условия сервиса</title>
+  <meta name="description" content="Правила использования сервиса MotoBind. Ознакомьтесь с условиями перед началом работы.">
+</head>
+
 <script>
 export default {
   name: 'Rules',

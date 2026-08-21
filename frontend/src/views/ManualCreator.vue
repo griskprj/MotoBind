@@ -215,6 +215,11 @@
     </div>
 </template>
 
+<head>
+  <title>MotoBind — Конструктор мануалов | Создай инструкцию</title>
+  <meta name="description" content="Создавайте пошаговые мануалы по ремонту и обслуживанию мотоциклов. Делитесь своим опытом с сообществом.">
+</head>
+
 <script>
 import api from '../api/api';
 import Header from '../components/Header.vue';
