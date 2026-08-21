@@ -477,7 +477,7 @@ export default {
         };
 
         const registerResponse = await api.post('/auth/register', registerPayload);
-        const { access_token, refresh_token, user } = registerResponse.data;
+        const { access_token, refresh_token, user, requires_verification } = registerResponse.data;
 
         if (!access_token || !refresh_token || !user) {
           throw new Error('Сервер не вернул токены авторизации');
