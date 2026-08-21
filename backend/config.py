@@ -1,70 +1,42 @@
 import os
+from dotenv import load_dotenv
 
-from pydantic import Field, field_validator, validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+load_dotenv()
 
+class Config:
+    """Класс для настроек"""
 
-class Settings(BaseSettings):
-    """Базовые настройки приложения с валидацией через pydantic"""
+    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    # База данных
+    DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # JWT
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')
+    JWT_ACCESS_TOKEN_EXPIRES = 3600
+    JWT_REFRESH_TOKEN_EXPIRES = 2592000
+    
+    # Email настройки
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.yandex.ru')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 465))
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'True').lower() == 'true'
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'False').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'motobind@yandex.ru')
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    
+    # Другие настройки
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    UPLOAD_FOLDER = 'uploads'
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
-    SECRET_KEY: str = Field(..., min_length=32, description="Секретный ключ Flask")
-    DEBUG: bool = False
-    ENV: str = "development"  # development, production, testing
-
-    DATABASE_URL: str = Field(..., description="URL подключение к БД")
-    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
-
-    JWT_SECRET_KEY: str = Field(..., min_length=32, description="Секрет для JWT")
-    JWT_ACCESS_TOKEN_EXPIRES: int = 3600  # 60 мин
-    JWT_REFRESH_TOKEN_EXPIRES: int = 2592000  # 30 дн
-    JWT_REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
-    JWT_COOKIE_SECURE: bool = False
-    JWT_COOKIE_CSRF_PROTECT: bool = True
-    JWT_TOKEN_LOCATION: list = ["headers", "cookies"]
-
-    UPLOAD_FOLDER: str = "uploads"
-    MAX_CONTENT_LENGTH: int = 500 * 1024 * 1024  # 50 MB
-    BASE_URL: str = "http://localhost:5000"
-
-    CORS_ORIGINS: str = "*"
-
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
-    )
-
-    @field_validator("DATABASE_URL")
-    def validate_database_url(cls, v):
-        if not v.startswith(("postgresql://", "sqlite://", "mysql://")):
-            raise ValueError(
-                "DATABASE_URL должен начинаться с postgresql://, sqlite:// или mysql://"
-            )
-        return v
-
-    @field_validator("SECRET_KEY", "JWT_SECRET_KEY")
-    def validate_secret_keys(cls, v):
-        if len(v) < 32:
-            raise ValueError("Длина секретного ключа должна быть не меньше 32 символов")
-        return v
-
-    def get_cors_origins(self):
-        """Возвращает список разрешенных CORS-источников"""
-        if self.CORS_ORIGINS == "*":
-            return ["*"]
-        return [
-            origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()
-        ]
+    @staticmethod
+    def get_cors_origins():
+        """Возвращает разрешенные CORS-источники"""
+        origins = os.environ.get('CORS_ORIGINS', 'http://localhost:5173')
+        return [origin.strip() for origin in origins.split(',')]
 
 
-def get_settings() -> Settings:
-    """Возвращает экземпляр настроек с учетом переменной ENV"""
-    env = os.getenv("ENV", "development")
-    settings = Settings()
-
-    if env == "testing":
-        if not os.getenv("DATABASE_URL"):
-            settings.DATABASE_URL = "sqlite:///test.db"
-        settings.DEBUG = False
-    return settings
-
-
-settings = get_settings()
+settings = Config()

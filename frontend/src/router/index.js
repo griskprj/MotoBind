@@ -205,7 +205,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Политика конфиденциальности',
-        showFooter: false,
+        showFooter: true,
         showHeader: false
       }
     },
@@ -216,7 +216,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Пользовательское соглашение',
-        showFooter: false,
+        showFooter: true,
         showHeader: false
       }
     },
@@ -227,7 +227,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Согласие на обработку персональных данных',
-        showFooter: false,
+        showFooter: true,
         showHeader: false
       }
     },
@@ -238,7 +238,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Правила использования',
-        showFooter: false,
+        showFooter: true,
         showHeader: false
       }
     },

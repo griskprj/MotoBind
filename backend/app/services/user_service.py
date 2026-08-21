@@ -1,5 +1,5 @@
 from typing import Optional
-
+from datetime import datetime, timezone, timedelta
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.user import User
@@ -18,7 +18,12 @@ class UserService:
         if User.query.filter_by(username=username).first():
             raise ValidationError("Имя пользователя занято")
 
-        user = User(email=email, username=username, role=role, status="active")
+        user = User(
+            email=email, 
+            username=username, 
+            role=role, 
+            status="active", 
+        )
         user.set_password(password)
 
         db.session.add(user)
@@ -54,11 +59,9 @@ class UserService:
         """Обновляет аватар пользователя"""
         user = UserService.get_user_by_id(user_id)
         
-        # Удаляем старый аватар, если есть
         if user.avatar:
             delete_file(user.avatar)
         
-        # Сохраняем новый аватар
         avatar_path = save_user_avatar(file, user_id)
         if not avatar_path:
             raise ValidationError("Недопустимый формат файла. Разрешены: jpg, jpeg, png, gif, bmp, webp")

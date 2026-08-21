@@ -24,6 +24,11 @@ class User(db.Model):
     is_premium = db.Column(db.Boolean, default=False)
     is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     verification_code = db.Column(db.String(6), nullable=True)
     verification_code_expires = db.Column(db.DateTime, nullable=True)

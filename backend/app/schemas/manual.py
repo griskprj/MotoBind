@@ -9,8 +9,8 @@ class ManualStepSchema(BaseModel):
 
     order: int = Field(..., ge=1)
     title: str = Field(..., min_length=1, max_length=200)
-    tip: Optional[str] = Field(None, max_width=128)
-    warning: Optional[str] = Field(None, max_width=128)
+    tip: Optional[str] = Field(None, max_width=256)
+    warning: Optional[str] = Field(None, max_width=256)
     text: Optional[str] = Field(None, max_length=5000)
 
     @field_validator("order")
@@ -30,7 +30,7 @@ class CreateManualSchema(BaseModel):
     instruments: Optional[str] = Field(None, max_length=500, alias="instruments")
     parts: Optional[str] = Field(None, max_length=500)
     motorcycle: str = Field(..., min_length=1, max_length=100)
-    tip: Optional[str] = Field(None, max_length=128)
+    tip: Optional[str] = Field(None, max_length=256)
 
     steps: List[ManualStepSchema] = Field(..., min_length=1)
 
@@ -72,7 +72,7 @@ class UpdateManualSchema(BaseModel):
     instruments: Optional[str] = Field(None, max_length=500, alias="instruments")
     parts: Optional[str] = Field(None, max_length=500)
     motorcycle: Optional[str] = Field(..., min_length=1, max_length=100)
-    tip: Optional[str] = Field(None, max_length=128)
+    tip: Optional[str] = Field(None, max_length=256)
 
     steps: List[ManualStepSchema] = Field(..., min_length=1)
 

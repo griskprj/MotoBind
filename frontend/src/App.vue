@@ -1,3 +1,34 @@
+<template>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <div v-if="isLoading" class="loading-overlay">
+      <div class="spinner"></div>
+  </div>
+  <div class="animated-bg"></div>
+
+  <!-- Страницы с сайдбаром -->
+  <div v-if="$route.meta.showHeader" class="app-with-sidebar">
+    <!-- Сайдбар рендерится сам, без слота, а контент идет после него -->
+    <Sidebar ref="sidebar" />
+    
+    <!-- Основной контент -->
+    <div class="app-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
+      <div class="page-content">
+        <router-view />
+      </div>
+      
+      <!-- Футер внутри контента, чтобы учитывать отступы -->
+      <Footer v-if="$route.meta.showFooter" />
+    </div>
+  </div>
+  
+  <!-- Страницы без сайдбара -->
+  <template v-else>
+    <router-view />
+    <Footer v-if="$route.meta.showFooter" />
+  </template>
+</template>
+
 <script>
 import Sidebar from './components/Sidebar.vue';
 import Footer from './components/Footer.vue';
@@ -11,6 +42,8 @@ export default {
   data() {
     return {
       user: false,
+      isLoading: false,
+      isSidebarCollapsed: false, // Добавляем состояние
     }
   },
 
@@ -19,28 +52,34 @@ export default {
       if (user) {
         this.user = true
       }
+      
+      // Подписываемся на изменения состояния сайдбара
+      this.$nextTick(() => {
+        if (this.$refs.sidebar) {
+          // Слушаем событие изменения состояния
+          this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
+          // Получаем начальное состояние
+          this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
+        }
+      });
+  },
+
+  beforeUnmount() {
+    if (this.$refs.sidebar) {
+      this.$refs.sidebar.$off('toggle-collapse', this.handleSidebarToggle);
+    }
+  },
+
+  methods: {
+    handleSidebarToggle(isCollapsed) {
+      this.isSidebarCollapsed = isCollapsed;
+    }
   }
 }
 </script>
 
-<template>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <div v-if="isLoading" class="loading-overlay">
-      <div class="spinner"></div>
-  </div>
-  <div class="animated-bg"></div>
-
-  <Sidebar v-if="$route.meta.showHeader">
-    <router-view />
-  </Sidebar>
-  <router-view v-else />
-
-  <Footer v-if="$route.meta.showFooter" />
-</template>
-
-
 <style>
+/* ===== Глобальные стили ===== */
 .animated-bg {
     position: fixed;
     top: 0;
@@ -51,13 +90,60 @@ export default {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
+/* ===== Layout с сайдбаром ===== */
+.app-with-sidebar {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Контентная область справа от сайдбара */
+.app-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Отступы для контента в зависимости от состояния сайдбара */
+@media (min-width: 771px) {
+    .app-content {
+        margin-left: 280px; /* Ширина развернутого сайдбара */
+        padding: 0;
+    }
+    
+    /* Когда сайдбар свернут */
+    .app-content.sidebar-collapsed {
+        margin-left: 64px; /* Ширина свернутого сайдбара */
+    }
+}
+
+@media (max-width: 770px) {
+    .app-content {
+        margin-left: 0;
+    }
+}
+
+.page-content {
+    flex: 1;
+    padding: 24px 32px;
+    width: 100%;
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 770px) {
+    .page-content {
+        padding: 80px 16px 20px;
+    }
+}
+
+/* ===== Мобильные таблицы ===== */
 @media (max-width: 768px) {
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Карточный вид для таблиц на мобильных */
   .mobile-card-table {
     border: none;
   }
@@ -102,7 +188,6 @@ export default {
     margin-right: 1rem;
   }
 
-  /* Для ячеек с действиями */
   .mobile-card-table td.col-actions {
     justify-content: flex-end;
     gap: 0.5rem;
@@ -118,7 +203,7 @@ export default {
   }
 }
 
-/* Для планшетов */
+/* ===== Планшеты ===== */
 @media (min-width: 769px) and (max-width: 1024px) {
   .groups-table th,
   .groups-table td {

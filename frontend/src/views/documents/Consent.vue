@@ -127,20 +127,6 @@
         </p>
       </div>
     </div>
-
-    <!-- Футер с ссылками -->
-    <div class="consent-footer">
-      <div class="footer-links">
-        <router-link to="/home">Главная</router-link>
-        <span class="divider">|</span>
-        <router-link to="/privacy">Политика конфиденциальности</router-link>
-        <span class="divider">|</span>
-        <router-link to="/terms">Пользовательское соглашение</router-link>
-        <span class="divider">|</span>
-        <a href="mailto:griskyy@yandex.ru">Поддержка</a>
-      </div>
-      <p class="copyright">© 2026 MotoBind. Все права защищены.</p>
-    </div>
   </div>
 </template>
 

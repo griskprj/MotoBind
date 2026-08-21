@@ -6,92 +6,144 @@
         icon="book"
         @close="$emit('close')"
     >
-        <div class="modal-scroll">
+        <div class="modal-content">
+            <!-- Хедер с компактной информацией -->
             <div class="modal-header">
-                <div class="header-top">
-                    <span
-                        class="badge"
-                        :class="{
-                            'badge-green': manual?.status === 'approved',
-                            'badge-warning': manual?.status === 'moderate',
-                            'badge-danger': manual?.status === 'rejected'
-                        }"
-                    >
-                        {{ getStatusLabel(manual?.status) }}
-                    </span>
-                    <span v-if="manual?.created_at" class="header-date">
-                        <i class="fa fa-clock-o"></i> {{ formatDate(manual.created_at) }}
-                    </span>
+                <div class="header-row">
+                    <div class="header-left">
+                        <span
+                            class="badge"
+                            :class="{
+                                'badge-success': manual?.status === 'approved',
+                                'badge-warning': manual?.status === 'moderate',
+                                'badge-danger': manual?.status === 'rejected',
+                                'badge-info': manual?.status === 'draft'
+                            }"
+                        >
+                            <i class="fa" :class="{
+                                'fa-check-circle': manual?.status === 'approved',
+                                'fa-hourglass-half': manual?.status === 'moderate',
+                                'fa-times-circle': manual?.status === 'rejected',
+                                'fa-pencil': manual?.status === 'draft'
+                            }"></i>
+                            {{ getStatusLabel(manual?.status) }}
+                        </span>
+                        <span v-if="manual?.created_at" class="header-date">
+                            <i class="fa fa-calendar"></i> {{ formatDate(manual.created_at) }}
+                        </span>
+                    </div>
                 </div>
 
-                <p v-if="manual?.description" class="header-subtitle">
+                <p v-if="manual?.description" class="header-description">
                     {{ manual.description }}
                 </p>
             </div>
 
-            <div class="modal-card">
-                <p class="modal-card-title">Информация о мануале</p>
-                <div class="card-items">
-                    <div v-if="manual?.category" class="card-item">
-                        <span class="item-title">
-                            <i class="fa fa-tags"></i> Категория
-                        </span>
-                        <span class="item-value">{{ getCategory(manual.category) }}</span>
+            <!-- Основная информация - карточки в сетке -->
+            <div class="info-grid">
+                <div class="info-card" v-if="manual?.category">
+                    <div class="info-icon">
+                        <i class="fa fa-tags"></i>
                     </div>
-
-                    <div v-if="manual?.difficult" class="card-item">
-                        <span class="item-title">
-                            <i class="fa fa-signal"></i> Сложность
-                        </span>
-                        <span class="item-value">{{ getDifficulty(manual.difficult) }}</span>
+                    <div class="info-content">
+                        <span class="info-label">Категория</span>
+                        <span class="info-value">{{ getCategory(manual.category) }}</span>
                     </div>
+                </div>
 
-                    <div v-if="manual?.instruments" class="card-item">
-                        <span class="item-title">
-                            <i class="fa fa-wrench"></i> Инструменты
-                        </span>
-                        <span class="item-value">{{ manual.instruments }}</span>
+                <div class="info-card" v-if="manual?.difficult">
+                    <div class="info-icon">
+                        <i class="fa fa-signal"></i>
                     </div>
-
-                    <div v-if="manual?.parts" class="card-item">
-                        <span class="item-title">
-                            <i class="fa fa-cogs"></i> Запчасти
+                    <div class="info-content">
+                        <span class="info-label">Сложность</span>
+                        <span class="info-value">
+                            <span class="difficulty-dots">
+                                <span class="dot" :class="{ filled: manual.difficult === 'easy' || manual.difficult === 'medium' || manual.difficult === 'hard' }"></span>
+                                <span class="dot" :class="{ filled: manual.difficult === 'medium' || manual.difficult === 'hard' }"></span>
+                                <span class="dot" :class="{ filled: manual.difficult === 'hard' }"></span>
+                            </span>
+                            {{ getDifficulty(manual.difficult) }}
                         </span>
-                        <span class="item-value">{{ manual.parts }}</span>
                     </div>
+                </div>
 
-                    <div v-if="manual?.author" class="card-item">
-                        <span class="item-title">
-                            <i class="fa fa-user"></i> Автор
-                        </span>
-                        <span class="item-value">{{ manual.author?.username || '—' }}</span>
+                <div class="info-card" v-if="manual?.author">
+                    <div class="info-icon">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="info-content">
+                        <span class="info-label">Автор</span>
+                        <span class="info-value">{{ manual.author?.username || '—' }}</span>
+                    </div>
+                </div>
+
+                <div class="info-card" v-if="manual?.instruments">
+                    <div class="info-icon">
+                        <i class="fa fa-wrench"></i>
+                    </div>
+                    <div class="info-content">
+                        <span class="info-label">Инструменты</span>
+                        <span class="info-value">{{ manual.instruments }}</span>
+                    </div>
+                </div>
+
+                <div class="info-card" v-if="manual?.parts">
+                    <div class="info-icon">
+                        <i class="fa fa-cogs"></i>
+                    </div>
+                    <div class="info-content">
+                        <span class="info-label">Запчасти</span>
+                        <span class="info-value">{{ manual.parts }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Steps -->
-            <div v-if="manual?.steps && manual.steps.length > 0" class="modal-card steps-card">
-                <p class="modal-card-title">
-                    <i class="fa fa-list-ol"></i> Шаги выполнения
-                </p>
+            <!-- Шаги -->
+            <div v-if="manual?.steps && manual.steps.length > 0" class="steps-section">
+                <div class="steps-header">
+                    <h4 class="steps-title">
+                        <i class="fa fa-list-ol"></i> Шаги выполнения
+                    </h4>
+                    <span class="steps-count">{{ manual.steps.length }} шаг{{ manual.steps.length > 1 ? 'а' : '' }}</span>
+                </div>
+
                 <div class="steps-list">
                     <div 
                         v-for="(step, index) in manual.steps" 
                         :key="index"
                         class="step-item"
+                        :class="{ 'step-completed': step.completed }"
                     >
-                        <div class="step-number">{{ step.order || index + 1 }}</div>
-                        <div class="step-content">
-                            <p class="step-title">{{ step.title }}</p>
+                        <div class="step-marker">
+                            <span class="step-number">{{ step.order || index + 1 }}</span>
+                            <div class="step-line" v-if="index < manual.steps.length - 1"></div>
+                        </div>
+                        <div class="step-body">
+                            <div class="step-header">
+                                <span class="step-title">{{ step.title }}</span>
+                            </div>
                             <p v-if="step.text" class="step-text">{{ step.text }}</p>
+                            <div v-if="step.image" class="step-image">
+                                <img :src="step.image" :alt="step.title" loading="lazy" />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Пустое состояние для шагов -->
+            <div v-else class="empty-steps">
+                <i class="fa fa-file-text-o"></i>
+                <p>Нет шагов для отображения</p>
+            </div>
         </div>
 
-        <div class="modal-actions">
-            <button @click="$emit('close')" class="btn-close">Закрыть</button>
+        <!-- Действия -->
+        <div class="modal-footer">
+            <button @click="$emit('close')" class="btn-outline">
+                <i class="fa fa-times"></i> Закрыть
+            </button>
         </div>
     </ModalWrapper>
 </template>
@@ -115,9 +167,13 @@ export default {
             required: true,
             default: null
         },
+        canEdit: {
+            type: Boolean,
+            default: false
+        }
     },
 
-    emits: ['close'],
+    emits: ['close', 'edit'],
 
     methods: {
         formatDate(dateString) {
@@ -129,7 +185,7 @@ export default {
                 
                 return date.toLocaleDateString('ru-RU', {
                     day: '2-digit',
-                    month: 'short',
+                    month: 'long',
                     year: 'numeric'
                 })
             } catch {
@@ -175,297 +231,515 @@ export default {
 </script>
 
 <style scoped>
-/* Контейнер с прокруткой */
-.modal-scroll {
-    max-height: 60vh;
+/* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+.modal-content {
+    padding: 0 4px;
+    max-height: 62vh;
     overflow-y: auto;
-    padding-right: 4px;
+    scroll-behavior: smooth;
 }
 
 /* Стилизация скроллбара */
-.modal-scroll::-webkit-scrollbar {
-    width: 4px;
+.modal-content::-webkit-scrollbar {
+    width: 5px;
 }
 
-.modal-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 4px;
+.modal-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 10px;
 }
 
-.modal-scroll::-webkit-scrollbar-thumb {
-    background: #7c3aed;
-    border-radius: 4px;
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+    transition: background 0.3s;
 }
 
-.modal-scroll::-webkit-scrollbar-thumb:hover {
-    background: #6d28d9;
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
 }
 
-/* Firefox */
-.modal-scroll {
+.modal-content {
     scrollbar-width: thin;
-    scrollbar-color: #7c3aed rgba(255, 255, 255, 0.03);
+    scrollbar-color: var(--accent) var(--bg-secondary);
 }
 
+/* ===== ХЕДЕР ===== */
 .modal-header {
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.header-top {
+.header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
     flex-wrap: wrap;
-    gap: 8px;
-}
-
-.badge {
-    display: inline-block;
-    padding: 3px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-}
-
-.badge-green {
-    background: rgba(74, 222, 128, 0.12);
-    color: #4ade80;
-}
-
-.badge-warning {
-    background: rgba(251, 191, 36, 0.12);
-    color: #fbbf24;
-}
-
-.badge-danger {
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
-}
-
-.badge-gray {
-    background: rgba(107, 114, 128, 0.12);
-    color: #9ca3af;
-}
-
-.header-date {
-    font-size: 13px;
-    color: #8b8b9e;
-}
-
-.header-date i {
-    margin-right: 4px;
-}
-
-.header-subtitle {
-    font-size: 14px;
-    color: #8b8b9e;
-    margin: 0;
-    line-height: 1.5;
-}
-
-.modal-card {
-    background: #0f0f1a;
-    border-radius: 12px;
-    padding: 16px 18px;
+    gap: 12px;
     margin-bottom: 12px;
 }
 
-.steps-card {
-    margin-bottom: 16px;
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.modal-card-title {
-    font-size: 13px;
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
-    color: #8b8b9e;
-    margin: 0 0 14px 0;
     letter-spacing: 0.3px;
     text-transform: uppercase;
 }
 
-.modal-card-title i {
-    margin-right: 6px;
+.badge i {
+    font-size: 13px;
 }
 
-.card-items {
+.badge-success {
+    background: var(--success-trans);
+    color: var(--success);
+}
+
+.badge-warning {
+    background: var(--warning-trans);
+    color: var(--warning);
+}
+
+.badge-danger {
+    background: var(--danger-trans);
+    color: var(--danger);
+}
+
+.badge-info {
+    background: var(--accent-trans);
+    color: var(--accent);
+}
+
+.header-date {
+    font-size: 13px;
+    color: var(--text-muted);
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.header-date i {
+    font-size: 13px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
     gap: 8px;
 }
 
-.card-item {
+.view-count {
+    font-size: 13px;
+    color: var(--text-muted);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    background: #181824;
-    border-radius: 8px;
-    transition: background 0.2s;
+    gap: 4px;
 }
 
-.card-item:hover {
-    background: #1e1e2e;
-}
-
-.item-title {
-    font-size: 13px;
-    color: #8b8b9e;
-}
-
-.item-title i {
-    margin-right: 6px;
-    font-size: 13px;
-    color: #7c3aed;
-    width: 16px;
-    text-align: center;
-}
-
-.item-value {
+.header-description {
+    width: 100%;
     font-size: 14px;
-    font-weight: 500;
-    color: #e0e0e0;
-    text-align: right;
-    max-width: 60%;
-    word-break: break-word;
-}
-
-/* Steps */
-.steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.step-item {
-    display: flex;
-    gap: 14px;
-    padding: 12px 14px;
-    background: #181824;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+    padding: 8px 12px;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    transition: background 0.2s;
+    border-left: 3px solid var(--accent);
 }
 
-.step-item:hover {
-    background: #1e1e2e;
+/* ===== ИНФО-СЕТКА ===== */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
 }
 
-.step-number {
+.info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.info-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.info-icon {
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #7c3aed;
-    border-radius: 50%;
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
+    background: var(--accent-trans);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 16px;
 }
 
-.step-content {
+.info-content {
     flex: 1;
     min-width: 0;
 }
 
-.step-title {
+.info-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.info-value {
     font-size: 14px;
     font-weight: 500;
-    color: #e0e0e0;
-    margin: 0 0 4px 0;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+/* Индикатор сложности */
+.difficulty-dots {
+    display: inline-flex;
+    gap: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-color);
+    transition: background 0.3s;
+}
+
+.dot.filled {
+    background: var(--warning);
+}
+
+/* ===== ШАГИ ===== */
+.steps-section {
+    margin-top: 4px;
+}
+
+.steps-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.steps-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.steps-title i {
+    color: var(--accent);
+}
+
+.steps-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    padding: 2px 12px;
+    border-radius: 12px;
+}
+
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.step-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 18px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.step-item:hover {
+    border-color: var(--accent);
+    background: var(--bg-card-hover);
+}
+
+.step-item.step-completed {
+    border-color: var(--success);
+}
+
+.step-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+
+.step-item:hover .step-number {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--accent-trans);
+}
+
+.step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 20px;
+    background: var(--border-color);
+    margin: 6px 0;
+    position: relative;
+}
+
+.step-item:last-child .step-line {
+    display: none;
+}
+
+.step-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .step-text {
-    font-size: 13px;
-    color: #8b8b9e;
-    margin: 0;
-    line-height: 1.5;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
+    line-height: 1.6;
 }
 
-/* Actions */
-.modal-actions {
+.step-image {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.step-image img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+.empty-steps {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px dashed var(--border-color);
+    text-align: center;
 }
 
-.btn-close {
-    padding: 8px 24px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: #b0b0c8;
-    cursor: pointer;
-    transition: 0.2s;
+.empty-steps i {
+    font-size: 32px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-steps p {
+    color: var(--text-muted);
     font-size: 14px;
+    margin: 0;
 }
 
-.btn-close:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #e0e0e0;
+/* ===== ФУТЕР ===== */
+.modal-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
 }
 
-.btn-edit {
-    padding: 8px 24px;
-    background: #7c3aed;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 14px;
+.modal-footer btn {
+    width: 100%;
 }
 
-.btn-edit:hover {
-    background: #6d28d9;
-}
-
-.btn-edit i {
-    margin-right: 6px;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-    .modal-scroll {
-        max-height: 50vh;
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 640px) {
+    .modal-content {
+        max-height: 55vh;
+        padding-right: 2px;
     }
 
-    .header-top {
+    .header-row {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .card-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+    .header-left {
+        width: 100%;
+        flex-wrap: wrap;
     }
 
-    .item-value {
-        text-align: left;
-        max-width: 100%;
+    .header-right {
+        width: 100%;
+        justify-content: flex-start;
     }
 
-    .step-item {
-        flex-direction: column;
-        align-items: flex-start;
+    .info-grid {
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
 
-    .modal-actions {
+    .info-card {
+        padding: 10px 12px;
+    }
+
+    .info-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+
+    .info-value {
+        font-size: 13px;
+    }
+
+    .step-item {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .footer-actions {
         flex-direction: column;
     }
 
-    .btn-close,
-    .btn-edit {
+    .btn {
         width: 100%;
-        text-align: center;
+        justify-content: center;
+        padding: 12px;
     }
 }
+
+@media (max-width: 420px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-description {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    .step-title {
+        font-size: 13px;
+    }
+
+    .step-text {
+        font-size: 12.5px;
+    }
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ АНИМАЦИИ ===== */
+.step-item {
+    animation: fadeInUp 0.3s ease forwards;
+    opacity: 0;
+}
+
+.step-item:nth-child(1) { animation-delay: 0.05s; }
+.step-item:nth-child(2) { animation-delay: 0.10s; }
+.step-item:nth-child(3) { animation-delay: 0.15s; }
+.step-item:nth-child(4) { animation-delay: 0.20s; }
+.step-item:nth-child(5) { animation-delay: 0.25s; }
+.step-item:nth-child(6) { animation-delay: 0.30s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.info-card {
+    animation: fadeInUp 0.3s ease forwards;
+    opacity: 0;
+}
+
+.info-card:nth-child(1) { animation-delay: 0.05s; }
+.info-card:nth-child(2) { animation-delay: 0.10s; }
+.info-card:nth-child(3) { animation-delay: 0.15s; }
+.info-card:nth-child(4) { animation-delay: 0.20s; }
+.info-card:nth-child(5) { animation-delay: 0.25s; }
 </style>
