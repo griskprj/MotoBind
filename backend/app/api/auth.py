@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (create_access_token, create_refresh_token,
-                                jwt_required)
+                                jwt_required, get_jwt_identity)
 
 from app.exceptions import UnauthorizedError, ValidationError
 from app.extensions import db
@@ -8,6 +8,7 @@ from app.models.user import User
 from app.schemas.auth import LoginSchema, RefreshSchema, RegisterSchema
 from app.services.user_service import UserService
 from app.utils.helpers import get_current_user
+from app.utils.email import send_verification_email, verify_token
 
 auth = Blueprint("auth", __name__)
 
@@ -23,6 +24,8 @@ def register():
         email=data.email, password=data.password, username=data.username, role=data.role
     )
 
+    send_verification_email(user)
+
     access_token = create_access_token(
         identity=str(user.id), additional_claims={"role": user.role}
     )
@@ -31,10 +34,11 @@ def register():
     db.session.commit()
 
     return jsonify({
-        "message": "Регистрация успешна",
+        "message": "Регистрация успешна! Подтвердите email.",
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "user": user.to_dict()
+        "user": user.to_dict(),
+        "requires_verification": True
     }), 201
 
 
@@ -125,3 +129,85 @@ def logout():
     UserService.clear_refresh_token(user)
 
     return jsonify({"message": "Успешно вышли из системы"}), 200
+
+
+@auth.route('/send-verification', methods=['POST'])
+@jwt_required()
+def send_verification():
+    """Отправить письмо с подтверждением"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'Пользователь не найден'}), 404
+    
+    if user.is_verified:
+        return jsonify({'message': 'Email уже подтвержден'}), 200
+    
+    send_verification_email(user)
+    
+    return jsonify({'message': 'Письмо отправлено'}), 200
+
+
+@auth.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    """Подтверждение email по токену"""
+    email = verify_token(token)
+    
+    if not email:
+        return jsonify({'error': 'Ссылка недействительна или истекла'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        return jsonify({'error': 'Пользователь не найден'}), 404
+    
+    if user.is_verified:
+        return jsonify({'message': 'Email уже подтвержден'}), 200
+    
+    user.is_verified = True
+    db.session.commit()
+    
+    # Генерируем токены для автоматического входа
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
+    
+    return jsonify({
+        'message': 'Email подтвержден!',
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'user': user.to_dict()
+    }), 200
+
+
+@auth.route('/resend-verification', methods=['POST'])
+@jwt_required()
+def resend_verification():
+    """Отправить письмо повторно"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'Пользователь не найден'}), 404
+    
+    if user.is_verified:
+        return jsonify({'message': 'Email уже подтвержден'}), 200
+    
+    send_verification_email(user)
+    
+    return jsonify({'message': 'Письмо отправлено повторно'}), 200
+
+
+@auth.route('/check-verification', methods=['GET'])
+@jwt_required()
+def check_verification():
+    """Проверить, подтвержден ли email"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'Пользователь не найден'}), 404
+    
+    return jsonify({
+        'is_verified': user.is_verified
+    }), 200

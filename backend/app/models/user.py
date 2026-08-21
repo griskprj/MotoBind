@@ -22,13 +22,16 @@ class User(db.Model):
     refresh_token = db.Column(db.String(512))
     status = db.Column(db.String, default="active")
     is_premium = db.Column(db.Boolean, default=False)
-
+    is_verified = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+    verification_code = db.Column(db.String(6), nullable=True)
+    verification_code_expires = db.Column(db.DateTime, nullable=True)
 
     motorcycles = db.relationship(
         "Motorcycle",
