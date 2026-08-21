@@ -73,6 +73,26 @@ const router = createRouter({
       }
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('../views/auth/ForgotPassword.vue'),
+      meta: {
+        title: 'MotoBind - Восстановление пароля',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'reset-password',
+      component: () => import('../views/auth/ResetPassword.vue'),
+      meta: {
+        title: 'MotoBind - Сброс пароля',
+        showFooter: false,
+        showHeader: false
+      }
+    },
+    {
       path: '/garage',
       name: 'garage',
       component: () => import('../views/Garage.vue'),

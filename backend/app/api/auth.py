@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (create_access_token, create_refresh_token,
                                 jwt_required, get_jwt_identity)
+from datetime import datetime, timedelta
+import secrets
 
 from app.exceptions import UnauthorizedError, ValidationError, ForbiddenError
 from app.extensions import db
@@ -8,7 +10,7 @@ from app.models.user import User
 from app.schemas.auth import LoginSchema, RefreshSchema, RegisterSchema
 from app.services.user_service import UserService
 from app.utils.helpers import get_current_user
-from app.utils.email import send_verification_email, verify_token
+from app.utils.email import send_verification_email, verify_token, verify_reset_token, send_reset_email
 
 auth = Blueprint("auth", __name__)
 
@@ -214,3 +216,62 @@ def check_verification():
     return jsonify({
         'is_verified': user.is_verified
     }), 200
+
+
+@auth.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Запрос на сброс пароля"""
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'error': 'Email обязателен'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        return jsonify({'message': 'Если такой email существует, письмо отправлено'}), 200
+    
+    send_reset_email(user)
+    
+    return jsonify({'message': 'Если такой email существует, письмо отправлено'}), 200
+
+
+@auth.route('/reset-password', methods=['POST'])
+def reset_password():
+    """Смена пароля по токену"""
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('new_password')
+    
+    if not token or not new_password:
+        return jsonify({'error': 'Токен и новый пароль обязательны'}), 400
+    
+    if len(new_password) < 6:
+        return jsonify({'error': 'Пароль должен быть минимум 6 символов'}), 400
+    
+    email = verify_reset_token(token)
+    
+    if not email:
+        return jsonify({'error': 'Ссылка недействительна или истекла'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        return jsonify({'error': 'Пользователь не найден'}), 404
+    
+    user.set_password(new_password)
+    db.session.commit()
+    
+    return jsonify({'message': 'Пароль успешно изменён!'}), 200
+
+
+@auth.route('/check-reset-token/<token>', methods=['GET'])
+def check_reset_token(token):
+    """Проверка валидности токена"""
+    email = verify_reset_token(token)
+    
+    if not email:
+        return jsonify({'valid': False, 'error': 'Ссылка недействительна или истекла'}), 400
+    
+    return jsonify({'valid': True, 'email': email}), 200

@@ -33,6 +33,9 @@ class User(db.Model):
     verification_code = db.Column(db.String(6), nullable=True)
     verification_code_expires = db.Column(db.DateTime, nullable=True)
 
+    reset_password_token = db.Column(db.String(256), nullable=True)
+    reset_password_expires = db.Column(db.DateTime, nullable=True)
+
     motorcycles = db.relationship(
         "Motorcycle",
         backref="motorcycle_owner",
