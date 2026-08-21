@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (create_access_token, create_refresh_token,
                                 jwt_required, get_jwt_identity)
 
-from app.exceptions import UnauthorizedError, ValidationError
+from app.exceptions import UnauthorizedError, ValidationError, ForbiddenError
 from app.extensions import db
 from app.models.user import User
 from app.schemas.auth import LoginSchema, RefreshSchema, RegisterSchema
@@ -50,6 +50,9 @@ def login():
 
     data = LoginSchema(**request.get_json())
     user = UserService.authenticate_user(email=data.email, password=data.password)
+
+    if not(user.is_verified):
+        raise ForbiddenError("Email не подтвержден. Проверьте почту")
 
     access_token = create_access_token(
         identity=str(user.id), additional_claims={"role": user.role}
