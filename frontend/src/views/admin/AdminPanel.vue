@@ -166,6 +166,8 @@ export default {
                 this.lastRegUserData = response.data.last_reg
             } catch (err) {
                 console.error('Failed load registrations data:', err)
+            } finally {
+                this.loading = false
             }
         },
 
