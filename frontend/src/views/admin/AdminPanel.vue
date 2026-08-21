@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка панели администратора..."/>
+
         <!-- === HEADER === -->
         <Header
             title="Панель администратора"
@@ -128,16 +130,20 @@
 import api from '../../api/api'
 import UserRegistrationsChart from '../../components/charts/UserRegistrationsChart.vue';
 import Header from '../../components/Header.vue';
+import LoadingOverlay from '../../components/LoadingOverlay.vue';
 import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
 
 export default {
     components: {
         UserRegistrationsChart,
         AddUserModal,
-        Header
+        Header,
+        LoadingOverlay
     },
     data() {
         return {
+            loading: false,
+
             registrationsChartData: [],
             usersCount: 0,
             motosCount: 0,
@@ -151,6 +157,7 @@ export default {
     methods: {
         async getRegChartData() {
             try {
+                this.loading = true
                 const response = await api.get('statistic/registrations-chart')
                 this.registrationsChartData = response.data.registrations || []
                 this.usersCount = response.data.users_count

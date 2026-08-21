@@ -1,4 +1,6 @@
 <template>
+    <LoadingOverlay :isLoading="loading" text="Загрузка пользователей..."/>
+
     <!-- === HEADER === -->
     <Header
         title="Пользователи"
@@ -253,13 +255,15 @@ import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
 import EditUserModal from '../../components/modals/admin/EditUserModal.vue';
 import DeleteUserModal from '../../components/modals/admin/DeleteUserModal.vue';
 import Header from '../../components/Header.vue';
+import LoadingOverlay from '../../components/LoadingOverlay.vue';
 
 export default {
     components: {
         AddUserModal,
         EditUserModal,
         DeleteUserModal,
-        Header
+        Header,
+        LoadingOverlay
     },
     
     data() {

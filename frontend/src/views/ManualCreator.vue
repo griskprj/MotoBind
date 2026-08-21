@@ -1,5 +1,6 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="isSubmitting" text="Создание мануала..."/>
         <!-- === HEADER === -->
         <Header
             title="Конструктор мануалов"
@@ -217,10 +218,11 @@
 <script>
 import api from '../api/api';
 import Header from '../components/Header.vue';
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 export default {
     name: 'ManualCreator',
-    components: { Header },
+    components: { Header, LoadingOverlay },
     data() {
         return {
             form: {

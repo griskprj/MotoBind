@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading || uploadingAvatar" text="Загрузка профиля"/>
+
         <!-- === HEADER === -->
         <Header
             title="Профиль"
@@ -144,6 +146,7 @@ import EditUserModal from '../components/modals/user/EditUserModal.vue';
 import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue';
 import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue';
 import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 export default {
     name: 'ProfilePage',
@@ -152,7 +155,8 @@ export default {
         EditUserModal,
         ChangePasswordModal,
         DeleteAccountModal,
-        Header
+        Header,
+        LoadingOverlay
     },
 
     data() {

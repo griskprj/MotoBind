@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка данных ремонта..."/>
+
         <!-- === HEADER === -->
         <Header
             title="Ремонт"
@@ -216,11 +218,13 @@
 import api from '../api/api'
 import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue';
 import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 export default {
-    components: { MarkPlanMaintenanceModal, Header },
+    components: { MarkPlanMaintenanceModal, Header, LoadingOverlay },
     data() {
         return {
+            loading: false,
             overdue_maintenances_count: 0,
             pending_maintenances_count: 0,
             planned_maintenances_count: 0,
@@ -256,6 +260,7 @@ export default {
     methods: {
         async loadData() {
             try {
+                this.loading = true
                 const response = await api.get('/statistic/repair')
                 this.motorcycles = response.data.motorcycles
                 this.maintenances = response.data.maintenances
@@ -264,6 +269,8 @@ export default {
                 this.planned_maintenances_count = response.data.planned
             } catch (err) {
                 console.error('Failed load repair data: ', err)
+            } finally {
+                this.loading = false
             }
         },
         onMotoChange() {

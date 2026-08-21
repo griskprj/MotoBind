@@ -1,5 +1,6 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка данных..."/>
         <!-- === WELCOME SECTION === -->
         <Header
             v-if="user"

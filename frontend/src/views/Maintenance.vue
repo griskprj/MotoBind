@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка обслуживаний..."/>
+
         <!-- === HEADER === -->
         <Header
             title="Обслуживание"
@@ -216,12 +218,14 @@ import formatDate from '../utils/DateFormatter.js';
 import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue'
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
 import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 export default {
     components: {
         AddMaintenanceModal,
         MaintenanceDetailsModal,
-        Header
+        Header,
+        LoadingOverlay
     },
 
     data() {
@@ -245,6 +249,8 @@ export default {
             // Модалки
             showAddMaintenanceModal: false,
             showDetailsMaintenanceModal: false,
+
+            loading: false,
         }
     },
 
@@ -298,6 +304,8 @@ export default {
     methods: {
         async loadData() {
             try {
+                this.loading = true
+
                 const response = await api.get('/statistic/maintenance')
                 
                 this.motorcycles = response.data.motorcycles || []
@@ -312,6 +320,8 @@ export default {
             } catch (err) {
                 console.error('Failed load maintenance data:', err)
                 alert('Ошибка загрузки данных')
+            } finally {
+                this.loading = false
             }
         },
 

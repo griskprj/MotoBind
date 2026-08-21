@@ -1,5 +1,6 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка гаража..."/>
         <!-- === HEADER === -->
         <Header
             title="Гараж"
@@ -260,6 +261,7 @@ import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue
 import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
 import PhotoModal from '../components/modals/moto/PhotoModal.vue';
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 import api from '../api/api.js'
 import formatDate from '../utils/DateFormatter.js'
@@ -273,7 +275,8 @@ export default {
         EditMotoNoteModal,
         MaintenanceDetailsModal,
         PhotoModal,
-        Header
+        Header,
+        LoadingOverlay
     },
 
     data() {
@@ -295,12 +298,16 @@ export default {
             showEditMotoNoteModal: false,
             showDetailsMaintenanceModal: false,
             showPhotoModal: false,
+
+            loading: false,
         }
     },
 
     methods: {
         async loadData() {
             try {
+                this.loading = true
+
                 const motorcycleResponse = await api.get('/motorcycle/')
                 this.motorcycles = motorcycleResponse.data
                 
@@ -319,6 +326,8 @@ export default {
                 }
             } catch (err) {
                 console.error(err)
+            } finally {
+                this.loading = false
             }
         },
 

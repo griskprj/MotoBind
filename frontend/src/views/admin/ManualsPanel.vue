@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка мануалов..."/>
+
         <!-- === HEADER === -->
         <Header
             title="Мануалы"
@@ -168,16 +170,20 @@
 <script>
 import api from '../../api/api';
 import Header from '../../components/Header.vue';
+import LoadingOverlay from '../../components/LoadingOverlay.vue';
 import ManualDetailsAdminModal from '../../components/modals/admin/ManualDetailsAdminModal.vue';
+
 export default {
     name: 'AdminManuals',
     components: {
         ManualDetailsAdminModal,
-        Header
+        Header,
+        LoadingOverlay
     },
 
     data() {
         return {
+            loading: false,
             manuals: [],
             motorcycles: [],
             
@@ -197,7 +203,6 @@ export default {
         filteredManuals() {
             let items = [...this.manuals]
             
-            // Фильтрация по табам (статус)
             if (this.selectedTab === 'moderate') {
                 items = items.filter(m => m.status === 'moderate')
             } else if (this.selectedTab === 'approved') {
@@ -205,9 +210,7 @@ export default {
             } else if (this.selectedTab === 'rejected') {
                 items = items.filter(m => m.status === 'rejected')
             }
-            // 'all' ничего не фильтрует
             
-            // Поиск
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
                 items = items.filter(m => 
@@ -217,17 +220,14 @@ export default {
                 )
             }
             
-            // Категория
             if (this.filterCategory) {
                 items = items.filter(m => m.category === this.filterCategory)
             }
             
-            // Мотоцикл
             if (this.filterMotorcycle) {
                 items = items.filter(m => m.motorcycle === this.filterMotorcycle)
             }
             
-            // Сортировка
             items = this.sortItems(items)
             
             return items
@@ -241,21 +241,22 @@ export default {
     methods: {
         async loadData() {
             try {
-                // Загрузка мануалов с пагинацией (без пагинации для простоты, но можно добавить)
+                this.loading = true
                 const manualsRes = await api.get('/manual/list?per_page=100')
                 this.manuals = manualsRes.data.manuals
 
-                // Загрузка списка мотоциклов для фильтра
                 const motoRes = await api.get('/motorcycle/')
                 this.motorcycles = motoRes.data
             } catch (err) {
                 console.error('Failed load admin manuals data:', err)
+            } finally {
+                this.loading = false
             }
         },
 
         changeTab(tabName) {
             this.selectedTab = tabName
-            this.clearFilters() // Очищаем фильтры при смене таба (опционально)
+            this.clearFilters()
         },
 
         openDetailsModal(manual) {

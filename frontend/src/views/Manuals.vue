@@ -1,5 +1,7 @@
 <template>
     <div class="container">
+        <LoadingOverlay :isLoading="loading" text="Загрузка мануалов..."/>
+
         <!-- === HEADER === -->
         <Header
             title="Мануалы"
@@ -210,11 +212,13 @@
 import api from '../api/api'
 import ManualDetailsModal from '../components/modals/manual/ManualDetailsModal.vue';
 import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 export default {
     components: {
         ManualDetailsModal,
-        Header
+        Header,
+        LoadingOverlay
     },
     data() {
         return {
