@@ -21,6 +21,13 @@ def create_app():
         UPLOAD_FOLDER=settings.UPLOAD_FOLDER,
         MAX_CONTENT_LENGTH=settings.MAX_CONTENT_LENGTH,
         CORS_ORIGINS=settings.get_cors_origins(),
+        MAIL_SERVER=settings.MAIL_SERVER,
+        MAIL_PORT=settings.MAIL_PORT,
+        MAIL_USE_SSL=settings.MAIL_USE_SSL,
+        MAIL_USE_TLS=settings.MAIL_USE_TLS,
+        MAIL_USERNAME=settings.MAIL_USERNAME,
+        MAIL_PASSWORD=settings.MAIL_PASSWORD,
+        MAIL_DEFAULT_SENDER=settings.MAIL_DEFAULT_SENDER,
     )
 
     cors.init_app(
