@@ -167,11 +167,6 @@
     />
 </template>
 
-<head>
-  <title>MotoBind — Управление мануалами | Админ-панель</title>
-  <meta name="description" content="Модерация и управление мануалами MotoBind. Просмотр, одобрение, отклонение и удаление инструкций.">
-</head>
-
 <script>
 import api from '../../api/api';
 import Header from '../../components/Header.vue';

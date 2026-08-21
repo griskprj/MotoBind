@@ -33,11 +33,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Добро пожаловать в сервис для мотоциклистов</title>
-  <meta name="description" content="MotoBind — сервис для учёта обслуживания мотоциклов. Планируйте ТО, храните историю, получайте мануалы от сообщества.">
-</head>
-
 <script>
 export default {
   name: 'WelcomeScreen',

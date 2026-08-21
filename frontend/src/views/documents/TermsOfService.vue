@@ -100,11 +100,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Пользовательское соглашение | Условия использования</title>
-  <meta name="description" content="Пользовательское соглашение MotoBind. Условия использования сервиса, права и обязанности сторон.">
-</head>
-
 <script>
 export default {
   name: 'TermsOfService',

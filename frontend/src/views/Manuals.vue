@@ -208,11 +208,6 @@
     />
 </template>
 
-<head>
-  <title>MotoBind — Мануалы по ремонту мотоциклов | База инструкций</title>
-  <meta name="description" content="База инструкций по ремонту и обслуживанию мотоциклов от сообщества. Находите мануалы для своего мотоцикла и делитесь своим опытом.">
-</head>
-
 <script>
 import api from '../api/api'
 import ManualDetailsModal from '../components/modals/manual/ManualDetailsModal.vue';

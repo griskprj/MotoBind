@@ -99,11 +99,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Политика конфиденциальности | Защита данных</title>
-  <meta name="description" content="Политика конфиденциальности MotoBind. Узнайте, как мы собираем, используем и защищаем ваши персональные данные.">
-</head>
-
 <script>
 export default {
   name: 'PrivacyPolicy',

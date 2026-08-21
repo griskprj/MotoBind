@@ -77,11 +77,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Вход в аккаунт | Войдите в свой профиль</title>
-  <meta name="description" content="Войдите в свой аккаунт MotoBind, чтобы управлять мотоциклами, планировать ТО и пользоваться сервисом.">
-</head>
-
 <script>
 import api from '../../api/api';
 import { setTokens, setUser } from '../../api/auth';

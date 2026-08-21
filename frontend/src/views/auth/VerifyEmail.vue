@@ -28,11 +28,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Подтверждение email | Подтвердите аккаунт</title>
-  <meta name="description" content="Подтвердите свой email, чтобы активировать аккаунт MotoBind и начать пользоваться всеми функциями сервиса.">
-</head>
-
 <script>
 import api from '../../api/api'
 import { setTokens, setUser } from '../../api/auth'

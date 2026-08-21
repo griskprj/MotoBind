@@ -139,11 +139,6 @@
     />
 </template>
 
-<head>
-  <title>MotoBind — Профиль пользователя | Личные настройки</title>
-  <meta name="description" content="Управляйте личными данными, настройками аккаунта и безопасностью. Меняйте аватар и пароль в один клик.">
-</head>
-
 <script>
 import api from '../api/api'
 import { removeTokens } from '../api/auth'

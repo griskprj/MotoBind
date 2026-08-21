@@ -130,11 +130,6 @@
   </div>
 </template>
 
-<head>
-  <title>MotoBind — Согласие на обработку персональных данных</title>
-  <meta name="description" content="Согласие на обработку персональных данных в MotoBind. Подробная информация о защите и использовании ваших данных.">
-</head>
-
 <script>
 export default {
   name: 'Consent',

@@ -53,15 +53,14 @@ export default {
         this.user = true
       }
       
-      // Подписываемся на изменения состояния сайдбара
       this.$nextTick(() => {
         if (this.$refs.sidebar) {
-          // Слушаем событие изменения состояния
           this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
-          // Получаем начальное состояние
           this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
         }
       });
+
+      this.updateMeta()
   },
 
   beforeUnmount() {
@@ -73,6 +72,43 @@ export default {
   methods: {
     handleSidebarToggle(isCollapsed) {
       this.isSidebarCollapsed = isCollapsed;
+    },
+
+
+    updateMeta(route) {
+      if (route.meta?.title) {
+        document.title = route.meta.title
+      }
+      
+      if (route.meta?.description) {
+        let metaDescription = document.querySelector('meta[name="description"]')
+        if (!metaDescription) {
+          metaDescription = document.createElement('meta')
+          metaDescription.name = 'description'
+          document.head.appendChild(metaDescription)
+        }
+        metaDescription.content = route.meta.description
+      }
+      
+      if (route.meta?.title) {
+        let ogTitle = document.querySelector('meta[property="og:title"]')
+        if (!ogTitle) {
+          ogTitle = document.createElement('meta')
+          ogTitle.setAttribute('property', 'og:title')
+          document.head.appendChild(ogTitle)
+        }
+        ogTitle.content = route.meta.title
+      }
+      
+      if (route.meta?.description) {
+        let ogDescription = document.querySelector('meta[property="og:description"]')
+        if (!ogDescription) {
+          ogDescription = document.createElement('meta')
+          ogDescription.setAttribute('property', 'og:description')
+          document.head.appendChild(ogDescription)
+        }
+        ogDescription.content = route.meta.description
+      }
     }
   }
 }

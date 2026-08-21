@@ -20,6 +20,7 @@ function isAdmin() {
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // ===== ГЛАВНАЯ =====
     {
       path: '/',
       redirect: () => {
@@ -29,6 +30,8 @@ const router = createRouter({
         return '/landing'
       }
     },
+
+    // ===== АУТЕНТИФИКАЦИЯ =====
     {
       path: '/welcome',
       name: 'welcome screen',
@@ -36,6 +39,7 @@ const router = createRouter({
       meta: {
         requiresGuest: true,
         title: 'MotoBind - Начало',
+        description: 'Добро пожаловать в MotoBind — сервис для учёта обслуживания мотоциклов. Начните вести историю ТО и получайте мануалы от сообщества.',
         showFooter: false,
         showHeader: false
       }
@@ -47,6 +51,7 @@ const router = createRouter({
       meta: {
         requiresGuest: true,
         title: 'MotoBind - Вход',
+        description: 'Войдите в свой аккаунт MotoBind, чтобы управлять мотоциклами, планировать ТО и пользоваться сервисом.',
         showFooter: false,
         showHeader: false
       }
@@ -58,6 +63,7 @@ const router = createRouter({
       meta: {
         requiresGuest: true,
         title: 'MotoBind - Регистрация',
+        description: 'Создайте аккаунт в MotoBind и начните вести учёт обслуживания мотоцикла. Регистрация бесплатная и занимает минуту.',
         showFooter: false,
         showHeader: false
       }
@@ -68,6 +74,7 @@ const router = createRouter({
       component: () => import('../views/auth/VerifyEmail.vue'),
       meta: {
         title: 'MotoBind - Подтверждение email',
+        description: 'Подтвердите свой email, чтобы активировать аккаунт MotoBind и начать пользоваться всеми функциями сервиса.',
         showFooter: false,
         showHeader: false
       }
@@ -78,6 +85,7 @@ const router = createRouter({
       component: () => import('../views/auth/ForgotPassword.vue'),
       meta: {
         title: 'MotoBind - Восстановление пароля',
+        description: 'Забыли пароль? Восстановите доступ к аккаунту MotoBind по email. Быстро и безопасно.',
         showFooter: false,
         showHeader: false
       }
@@ -88,7 +96,22 @@ const router = createRouter({
       component: () => import('../views/auth/ResetPassword.vue'),
       meta: {
         title: 'MotoBind - Сброс пароля',
+        description: 'Установите новый пароль для аккаунта MotoBind. Введите новый пароль и подтвердите его.',
         showFooter: false,
+        showHeader: false
+      }
+    },
+
+    // ===== ОСНОВНЫЕ СТРАНИЦЫ =====
+    {
+      path: '/landing',
+      name: 'landing',
+      component: () => import('../views/Landing.vue'),
+      meta: {
+        requiresAuth: false,
+        title: 'MotoBind - Учёт обслуживания мотоциклов',
+        description: 'Сервис для мотоциклистов: планируйте ТО, ведите историю обслуживания, считайте расходы и получайте мануалы от сообщества. Бесплатно.',
+        showFooter: true,
         showHeader: false
       }
     },
@@ -98,10 +121,11 @@ const router = createRouter({
       component: () => import('../views/Garage.vue'),
       meta: {
         requiresAuth: true,
-        title: 'MotoBind - Гараж',
+        title: 'MotoBind - Гараж мотоцикла',
+        description: 'Ведите историю обслуживания всех мотоциклов, планируйте ТО, отслеживайте пробег и контролируйте расходы. Удобный гараж для вашего байка.',
         showFooter: true,
         showHeader: true
-       }
+      }
     },
     {
       path: '/repair',
@@ -109,7 +133,8 @@ const router = createRouter({
       component: () => import('../views/Repair.vue'),
       meta: {
         requiresAuth: true,
-        title: 'MotoBind - Ремонт',
+        title: 'MotoBind - Ремонт мотоциклов',
+        description: 'Пошаговые инструкции по ремонту мотоциклов. Выбирайте обслуживание и получайте подробные мануалы от сообщества.',
         showFooter: true,
         showHeader: true
       }
@@ -120,7 +145,8 @@ const router = createRouter({
       component: () => import('../views/Maintenance.vue'),
       meta: {
         requiresAuth: true,
-        title: 'MotoBind - Обслуживание',
+        title: 'MotoBind - Обслуживание мотоцикла',
+        description: 'Добавляйте и планируйте обслуживание мотоцикла. Следите за состоянием байка, получайте напоминания о ТО и контролируйте расходы.',
         showFooter: true,
         showHeader: true
       }
@@ -131,7 +157,8 @@ const router = createRouter({
       component: () => import('../views/Manuals.vue'),
       meta: {
         requiresAuth: true,
-        title: 'MotoBind - Мануалы',
+        title: 'MotoBind - Мануалы по ремонту',
+        description: 'База инструкций по ремонту и обслуживанию мотоциклов от сообщества. Находите мануалы для своего мотоцикла и делитесь своим опытом.',
         showFooter: true,
         showHeader: true
       }
@@ -143,17 +170,7 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         title: 'MotoBind - Конструктор мануалов',
-        showFooter: true,
-        showHeader: true
-      }
-    },
-    {
-      path: '/manual/rules',
-      name: 'manual rules',
-      component: () => import('../views/documents/ManualRules.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'MotoBind - Правила оформления мануалов',
+        description: 'Создавайте пошаговые мануалы по ремонту и обслуживанию мотоциклов. Делитесь своим опытом с сообществом.',
         showFooter: true,
         showHeader: true
       }
@@ -165,59 +182,25 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         title: 'MotoBind - Профиль пользователя',
-        showFooter: true,
-        showHeader: true
-      }
-    },
-    {
-      path: '/admin/panel',
-      name: 'admin panel',
-      component: () => import('../views/admin/AdminPanel.vue'),
-      meta: {
-        requiresAuth: true,
-        requiresAdmin: true,
-        title: 'MotoBind - Админ-панель',
-        showFooter: true,
-        showHeader: true
-      }
-    },
-    {
-      path: '/admin/users',
-      name: 'users',
-      component: () => import('../views/admin/UsersPanel.vue'),
-      meta: {
-        requiresAuth: true,
-        requiresAdmin: true,
-        title: 'MotoBind - Пользователи',
-        showFooter: true,
-        showHeader: true
-      }
-    },
-    {
-      path: '/admin/manuals',
-      name: 'admin manuals',
-      component: () => import('../views/admin/ManualsPanel.vue'),
-      meta: {
-        requiresAuth: true,
-        requiresAdmin: true,
-        title: 'MotoBind - Мануалы',
+        description: 'Управляйте личными данными, настройками аккаунта и безопасностью. Меняйте аватар и пароль в один клик.',
         showFooter: true,
         showHeader: true
       }
     },
 
+    // ===== ДОКУМЕНТЫ =====
     {
-      path: '/landing',
-      name: 'landing',
-      component: () => import('../views/Landing.vue'),
+      path: '/manual/rules',
+      name: 'manual rules',
+      component: () => import('../views/documents/ManualRules.vue'),
       meta: {
-        requiresAuth: false,
-        title: 'MotoBind',
+        requiresAuth: true,
+        title: 'MotoBind - Правила оформления мануалов',
+        description: 'Правила оформления мануалов в MotoBind. Узнайте, как создавать качественные инструкции по ремонту и обслуживанию мотоциклов.',
         showFooter: true,
-        showHeader: false
+        showHeader: true
       }
     },
-
     {
       path: '/privacy',
       name: 'privacy',
@@ -225,6 +208,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Политика конфиденциальности',
+        description: 'Политика конфиденциальности MotoBind. Узнайте, как мы собираем, используем и защищаем ваши персональные данные.',
         showFooter: true,
         showHeader: false
       }
@@ -236,6 +220,7 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Пользовательское соглашение',
+        description: 'Пользовательское соглашение MotoBind. Условия использования сервиса, права и обязанности сторон.',
         showFooter: true,
         showHeader: false
       }
@@ -246,7 +231,8 @@ const router = createRouter({
       component: () => import('../views/documents/Consent.vue'),
       meta: {
         requiresAuth: false,
-        title: 'MotoBind - Согласие на обработку персональных данных',
+        title: 'MotoBind - Согласие на обработку данных',
+        description: 'Согласие на обработку персональных данных в MotoBind. Подробная информация о защите и использовании ваших данных.',
         showFooter: true,
         showHeader: false
       }
@@ -258,13 +244,56 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: 'MotoBind - Правила использования',
+        description: 'Правила использования сервиса MotoBind. Ознакомьтесь с условиями перед началом работы.',
         showFooter: true,
         showHeader: false
+      }
+    },
+
+    // ===== АДМИН-ПАНЕЛЬ =====
+    {
+      path: '/admin/panel',
+      name: 'admin panel',
+      component: () => import('../views/admin/AdminPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'MotoBind - Админ-панель',
+        description: 'Административная панель MotoBind. Управление пользователями, мануалами и контентом.',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
+      path: '/admin/users',
+      name: 'users',
+      component: () => import('../views/admin/UsersPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'MotoBind - Управление пользователями',
+        description: 'Управление пользователями MotoBind. Просмотр, блокировка, редактирование и удаление пользователей.',
+        showFooter: true,
+        showHeader: true
+      }
+    },
+    {
+      path: '/admin/manuals',
+      name: 'admin manuals',
+      component: () => import('../views/admin/ManualsPanel.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'MotoBind - Управление мануалами',
+        description: 'Модерация и управление мануалами MotoBind. Просмотр, одобрение, отклонение и удаление инструкций.',
+        showFooter: true,
+        showHeader: true
       }
     },
   ]
 })
 
+// ===== НАВИГАЦИОННЫЙ ХУК =====
 router.beforeEach((to, from, next) => {
   const authenticated = isAuthenticated()
   const admin = isAdmin()
@@ -280,6 +309,11 @@ router.beforeEach((to, from, next) => {
     } else {
       next('/welcome')
     }
+    return
+  }
+
+  if (to.meta.requiresGuest && authenticated) {
+    next('/garage')
     return
   }
 
