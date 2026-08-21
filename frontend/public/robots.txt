@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /uploads/
+Disallow: /verify-email/
+Disallow: /reset-password/
+Disallow: /forgot-password/
+
+Disallow: /profile/
+Disallow: /garage/
+Disallow: /repair/
+Disallow: /maintenance/
+
+Allow: /landing
+Allow: /pricing
+Allow: /manuals
+Allow: /manual-creator
+Allow: /privacy
+Allow: /terms
+Allow: /consent
+Allow: /rules
+Allow: /offer
+
+Sitemap: https://motobind.ru/sitemap.xml
+
+Crawl-delay: 5
