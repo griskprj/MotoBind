@@ -350,14 +350,23 @@
       </div>
     </div>
   </div>
+
+  <VerificationModal
+    :isOpen="showVerificationModal"
+    :email="formData.email"
+    @verified="onVerified"
+    @close="onVerificationClosed"
+  />
 </template>
 
 <script>
 import api from '../../api/api';
 import { setTokens, setUser } from '../../api/auth';
+import VerificationModal from '../../components/modals/VerificationModal.vue';
 
 export default {
   name: 'RegisterWizard',
+  components: {VerificationModal},
   data() {
     return {
       currentStep: 1,
@@ -381,7 +390,10 @@ export default {
       },
       error: null,
       loading: false,
-      skipMotorcycleMode: false, // Флаг для режима пропуска
+      skipMotorcycleMode: false,
+      
+      showVerificationModal: false,
+      pendingUser: null,
     };
   },
   computed: {
@@ -457,7 +469,6 @@ export default {
       this.loading = true;
 
       try {
-        // 1. Регистрация пользователя
         const registerPayload = {
           email: this.formData.email,
           username: this.formData.username,
@@ -475,7 +486,13 @@ export default {
         setTokens(access_token, refresh_token);
         setUser(user);
 
-        // 2. Создаём мотоцикл только если не в режиме пропуска
+        if (requires_verification) {
+          this.showVerificationModal = true
+          this.pendingUser = user
+        } else {
+          this.$router.push('/garage')
+        }
+
         let motoId = null;
         if (!this.skipMotorcycleMode && this.formData.motorcycle.name) {
           const motoPayload = {
@@ -495,7 +512,6 @@ export default {
           
           motoId = motoResponse.data.id;
 
-          // 3. Загружаем фото, если есть
           if (this.formData.motorcycle.photo) {
             try {
               const response = await fetch(this.formData.motorcycle.photo);
@@ -517,7 +533,6 @@ export default {
           }
         }
 
-        // 4. Перенаправление
         const role = user.role || this.formData.role;
         const targetRoute = role === 'admin' ? '/admin/panel' : '/garage';
         this.$router.push(targetRoute);

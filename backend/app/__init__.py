@@ -3,7 +3,7 @@ import os
 import mimetypes
 
 from app.exceptions import register_error_handlers
-from app.extensions import cors, db, jwt, migrate, swagger
+from app.extensions import cors, db, jwt, migrate, swagger, mail
 from config import settings
 
 
@@ -32,6 +32,7 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     swagger.init_app(app)
+    mail.init_app(app)
     register_error_handlers(app)
 
     @app.route('/uploads/<path:filename>')
