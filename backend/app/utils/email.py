@@ -1,4 +1,4 @@
-from flask import current_app, url_for
+from flask import current_app
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
 from app.extensions import mail
@@ -24,7 +24,7 @@ def verify_token(token, expiration=3600):
 def send_verification_email(user):
     """Отправка письма с подтверждением"""
     token = generate_verification_token(user.email)
-    verification_url = url_for('auth.verify_email', token=token, _external=True)
+    verification_url = f"https://motobind.ru/verify-email/{token}"
     
     html = f"""
     <html>

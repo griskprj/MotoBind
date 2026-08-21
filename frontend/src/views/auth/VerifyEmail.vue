@@ -1,17 +1,29 @@
 <template>
   <div class="verify-container">
     <div class="verify-card">
-      <div class="icon" :class="status">
-        <i :class="iconClass"></i>
+      <div v-if="status === 'loading'" class="status-loading">
+        <div class="spinner"></div>
+        <h2>Подтверждение email...</h2>
+        <p>Пожалуйста, подождите</p>
       </div>
-      <h2>{{ title }}</h2>
-      <p>{{ message }}</p>
-      <button v-if="status === 'success'" class="btn btn-primary" @click="goToApp">
-        Войти в приложение
-      </button>
-      <button v-else class="btn btn-outline" @click="resend">
-        Отправить повторно
-      </button>
+
+      <div v-else-if="status === 'success'" class="status-success">
+        <div class="icon success">
+          <i class="fa fa-check-circle"></i>
+        </div>
+        <h2>Email подтверждён! 🎉</h2>
+        <p>Добро пожаловать в MotoBind!</p>
+        <button class="btn btn-primary" @click="goToApp">Перейти в приложение</button>
+      </div>
+
+      <div v-else-if="status === 'error'" class="status-error">
+        <div class="icon error">
+          <i class="fa fa-exclamation-circle"></i>
+        </div>
+        <h2>Ошибка подтверждения</h2>
+        <p>{{ errorMessage }}</p>
+        <button class="btn btn-outline" @click="resend">Отправить повторно</button>
+      </div>
     </div>
   </div>
 </template>
@@ -25,18 +37,8 @@ export default {
   data() {
     return {
       status: 'loading', // loading | success | error
-      title: 'Подтверждение email...',
-      message: 'Пожалуйста, подождите...',
+      errorMessage: '',
       token: null
-    }
-  },
-  computed: {
-    iconClass() {
-      return {
-        'loading': 'fa fa-spinner fa-spin',
-        'success': 'fa fa-check-circle',
-        'error': 'fa fa-exclamation-circle'
-      }[this.status]
     }
   },
   methods: {
@@ -45,8 +47,7 @@ export default {
       
       if (!this.token) {
         this.status = 'error'
-        this.title = 'Ошибка'
-        this.message = 'Неверная ссылка подтверждения.'
+        this.errorMessage = 'Неверная ссылка подтверждения.'
         return
       }
       
@@ -54,24 +55,22 @@ export default {
         const response = await api.get(`/auth/verify-email/${this.token}`)
         const { access_token, refresh_token, user } = response.data
         
+        // Сохраняем токены
         setTokens(access_token, refresh_token)
         setUser(user)
         
         this.status = 'success'
-        this.title = 'Email подтвержден!'
-        this.message = 'Добро пожаловать в MotoBind!'
       } catch (err) {
         this.status = 'error'
-        this.title = 'Ошибка подтверждения'
-        this.message = err.response?.data?.error || 'Ссылка недействительна или истекла.'
+        this.errorMessage = err.response?.data?.error || 'Ссылка недействительна или истекла.'
       }
     },
     async resend() {
       try {
         await api.post('/auth/resend-verification')
-        alert('Письмо отправлено повторно!')
+        alert('Письмо отправлено повторно! Проверьте почту.')
       } catch (err) {
-        alert('Ошибка отправки письма. Попробуйте позже.')
+        alert('Ошибка отправки. Попробуйте позже.')
       }
     },
     goToApp() {
@@ -95,7 +94,7 @@ export default {
 }
 
 .verify-card {
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   background: #181824;
   border: 1px solid rgba(255,255,255,0.05);
@@ -117,8 +116,19 @@ export default {
   color: #ef4444;
 }
 
-.icon.loading {
-  color: #8B5CF6;
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #2d2d3d;
+  border-top: 4px solid #8B5CF6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .verify-card h2 {
