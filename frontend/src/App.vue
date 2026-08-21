@@ -79,6 +79,46 @@ export default {
 </script>
 
 <style>
+/* ===== МОБИЛЬНЫЕ УЛУЧШЕНИЯ ===== */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  touch-action: manipulation;
+}
+
+button, 
+a, 
+input, 
+select, 
+textarea {
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+    margin-top: auto !important;
+  }
+}
+
 /* ===== Глобальные стили ===== */
 .animated-bg {
     position: fixed;
