@@ -102,13 +102,13 @@
         </section>
 
         <!-- === MANUAL INSTRUCTION === -->
-        <section class="section-block" v-if="manual">
+        <section class="section-block" v-if="manual && manual.steps && manual.steps.length">
             <div class="manual-wrapper">
                 <div class="manual">
                     <p class="manual-title">Инструкция по ремонту</p>
 
                     <div class="steps-list">
-                        <div class="step" v-for="step in manual.steps" :key="step.order">
+                        <div class="step" v-for="step in manual.steps" :key="step.order || step.id">
                             <div class="step-left">
                                 <div class="step-number">{{ step.order }}</div>
                                 <div class="step-img" v-if="step.image">
@@ -284,6 +284,7 @@ export default {
                 this.selectedMaintenanceData = this.maintenances.find(
                     m => m.id === this.selectedMaintenance
                 ) || null
+                this.manual == null
                 this.getManual();
             } else {
                 this.manual = null;
@@ -342,7 +343,10 @@ export default {
         },
         splitList(str) {
             if (!str || typeof str !== 'string') return [];
-            return str.split(/[,;]\s*/).filter(s => s.trim() !== '');
+            if (typeof str === 'string') {
+                return str.split(/[,;]\s*/).filter(s => s.trim() !== '');
+            }
+            return []
         },
         async logout() {
             try {
