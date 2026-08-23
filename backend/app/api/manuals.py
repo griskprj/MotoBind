@@ -149,10 +149,10 @@ def get_manual_for_maintenance():
         "description": manual.description,
         "category": manual.category,
         "difficult": manual.difficult,
-        "instruments": manual.instruments,
-        "parts": manual.parts,
+        "instruments": manual.instruments or "",
+        "parts": manual.parts or "",
         "motorcycle": manual.motorcycle,
-        "tip": manual.tip,
+        "tip": manual.tip or "",
         "steps": [
             {"order": step.order, "title": step.title, "text": step.text, "tip": step.tip, "warning": step.warning}
             for step in sorted(manual.steps, key=lambda s: s.order)

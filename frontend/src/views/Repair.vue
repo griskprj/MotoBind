@@ -341,7 +341,7 @@ export default {
             this.manual = null
         },
         splitList(str) {
-            if (!str) return [];
+            if (!str || typeof str !== 'string') return [];
             return str.split(/[,;]\s*/).filter(s => s.trim() !== '');
         },
         async logout() {
