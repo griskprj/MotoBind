@@ -23,7 +23,7 @@
 
         <div class="stat-card">
           <div class="stat-icon info">
-            <i class="fa fa-clock-o"></i>
+            <i class="fa fa-clock"></i>
           </div>
           <div class="stat-info">
             <span class="stat-value">{{ pendingCount }}</span>
@@ -33,7 +33,7 @@
 
         <div class="stat-card">
           <div class="stat-icon success">
-            <i class="fa fa-calendar-check-o"></i>
+            <i class="fa fa-calendar-check"></i>
           </div>
           <div class="stat-info">
             <span class="stat-value">{{ plannedCount }}</span>
@@ -50,7 +50,6 @@
         <div class="selection-step">
           <div class="step-indicator">
             <span class="step-number">1</span>
-            <span class="step-line" v-if="!selectedMoto"></span>
           </div>
           <div class="step-content">
             <label class="step-label">Выберите мотоцикл</label>
@@ -83,7 +82,6 @@
         <div class="selection-step" :class="{ disabled: !selectedMoto }">
           <div class="step-indicator">
             <span class="step-number">2</span>
-            <span class="step-line" v-if="!selectedMaintenance"></span>
           </div>
           <div class="step-content">
             <label class="step-label">Выберите обслуживание</label>
@@ -312,6 +310,9 @@
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
         <button @click="openCreateManual" class="btn btn-primary">
           <i class="fa fa-plus"></i> Создать мануал
+        </button>
+        <button @click="openCompleteModal" class="btn btn-primary">
+          <i class="fa fa-plus"></i> Завершить обслуживание
         </button>
       </div>
     </section>
