@@ -308,10 +308,10 @@
         </div>
         <h3>Мануал не найден</h3>
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
-        <button @click="openCreateManual" class="btn btn-primary">
+        <button @click="openCreateManual">
           <i class="fa fa-plus"></i> Создать мануал
         </button>
-        <button @click="openCompleteModal" class="btn btn-primary">
+        <button @click="openCompleteModal">
           <i class="fa fa-plus"></i> Завершить обслуживание
         </button>
       </div>
