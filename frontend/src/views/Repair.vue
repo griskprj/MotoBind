@@ -910,24 +910,6 @@ export default {
   gap: 8px;
 }
 
-.btn-sm {
-  padding: 6px 14px;
-  font-size: 13px;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.btn-success {
-  background: var(--success);
-  color: white;
-}
-
-.btn-success:hover {
-  background: var(--success-hover);
-}
-
 /* ===== MANUAL SECTION ===== */
 .manual-section {
   margin-top: 8px;
@@ -1260,8 +1242,12 @@ export default {
 }
 
 .empty-icon.warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--warning-trans);
+  color: var(--warning);
+}
+
+.empty-icon.warning i {
+  color: var(--warning);
 }
 
 .empty-actions {
