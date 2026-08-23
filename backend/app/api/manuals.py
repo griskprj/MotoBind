@@ -146,7 +146,7 @@ def get_manual_for_maintenance():
     result = {
         "id": manual.id,
         "title": manual.title,
-        "description": manual.description,
+        "description": manual.description[:200],
         "category": manual.category,
         "difficult": manual.difficult,
         "instruments": manual.instruments or "",
