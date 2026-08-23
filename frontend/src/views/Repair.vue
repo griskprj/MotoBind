@@ -50,13 +50,13 @@
 
         <!-- === SELECT SECTION === -->
         <section class="section-block">
-            <div class="select-cards">
+            <div class="select-cards" @touchstart="handleTouchStart">
                 <div class="select-card">
                     <div class="select-header">
                         <div class="step-badge">1</div>
                         <p>Выберите мотоцикл</p>
                     </div>
-                    <select class="styled-select" v-model="selectedMoto" @change="onMotoChange">
+                    <select class="styled-select" v-model="selectedMoto" @change="onMotoChange" @blur="onMotoChange">
                         <option value="">Выберите мотоцикл</option>
                         <option v-for="moto in motorcycles" :key="moto.id" :value="moto.id">
                             {{ moto.name }}
@@ -69,7 +69,7 @@
                         <div class="step-badge">2</div>
                         <p>Выберите обслуживание</p>
                     </div>
-                    <select class="styled-select" v-model="selectedMaintenance" @change="onMaintenanceChange" :disabled="!selectedMoto">
+                    <select class="styled-select" v-model="selectedMaintenance" @change="onMaintenanceChange" :disabled="!selectedMoto" @blur="onMotoChange">
                         <option value="">Выберите обслуживание</option>
                         <option v-for="m in filteredMaintenances" :key="m.id" :value="m.id">
                             {{ m.title }}
@@ -274,12 +274,21 @@ export default {
             }
         },
         onMotoChange() {
+            if (document.activeElement) {
+                document.activeElement.blur()
+            }
+
             this.selectedMaintenance = '';
             this.manual = null;
             this.selectedMaintenanceData = null;
+            this.selectedMotoData = this.motorcycles.find(m => m.id === this.selectedMoto) || null
             this.lastMaintenanceDate = null;
         },
         onMaintenanceChange() {
+            if (document.activeElement) {
+                document.activeElement.blur()
+            }
+            
             if (this.selectedMoto && this.selectedMaintenance) {
                 this.selectedMaintenanceData = this.maintenances.find(
                     m => m.id === this.selectedMaintenance
@@ -344,16 +353,11 @@ export default {
             if (!str) return [];
             return str.split(/[,;]\s*/).filter(s => s.trim() !== '');
         },
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) { console.error(err) }
-            finally {
-                const { removeTokens } = await import('../api/auth');
-                removeTokens();
-                this.$router.push('/login');
+        handleTouchStart() {
+            if (document.activeElement && document.activeElement.tagName === 'SELECT') {
+                document.activeElement.blur()
             }
-        },
+        }
     },
     mounted() {
         this.loadData()
