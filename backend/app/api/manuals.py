@@ -146,7 +146,7 @@ def get_manual_for_maintenance():
     result = {
         "id": manual.id,
         "title": manual.title,
-        "description": manual.description[:200],
+        "description": manual.description[:200] if manual.description else "",
         "category": manual.category,
         "difficult": manual.difficult,
         "instruments": manual.instruments or "",
@@ -154,7 +154,13 @@ def get_manual_for_maintenance():
         "motorcycle": manual.motorcycle,
         "tip": manual.tip or "",
         "steps": [
-            {"order": step.order, "title": step.title, "text": step.text, "tip": step.tip, "warning": step.warning}
+            {
+                "order": step.order,
+                "title": step.title or "",
+                "text": step.text or "",
+                "tip": step.tip or "",      # ✅ null → ""
+                "warning": step.warning or ""  # ✅ null → ""
+            }
             for step in sorted(manual.steps, key=lambda s: s.order)
         ],
     }
