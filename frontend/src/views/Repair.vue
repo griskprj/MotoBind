@@ -144,7 +144,7 @@
                 <div class="manual-meta">
                     <div class="meta-card">
                         <p class="meta-title">Необходимые инструменты</p>
-                        <ul class="meta-items" v-if="manual.instruments">
+                        <ul class="meta-items" v-if="manual.instruments  && manual.instruments.length > 0">
                             <li class="meta-item" v-for="item in splitList(manual.instruments)" :key="item">
                                 <i class="fa fa-wrench"></i> {{ item }}
                             </li>
@@ -154,7 +154,7 @@
 
                     <div class="meta-card">
                         <p class="meta-title">Материалы</p>
-                        <ul class="meta-items" v-if="manual.parts">
+                        <ul class="meta-items" v-if="manual.parts && manual.parts.length > 0">
                             <li class="meta-item" v-for="part in splitList(manual.parts)" :key="part">
                                 <i class="fa fa-gear"></i> {{ part }}
                             </li>
