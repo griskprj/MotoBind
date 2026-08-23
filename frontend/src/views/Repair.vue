@@ -304,16 +304,18 @@
     <section v-else-if="selectedMoto && selectedMaintenance && !manual" class="empty-section">
       <div class="empty-state">
         <div class="empty-icon warning">
-          <i class="fa fa-file-text-o"></i>
+          <i class="fa fa-file-text"></i>
         </div>
         <h3>Мануал не найден</h3>
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
-        <button @click="openCreateManual">
-          <i class="fa fa-plus"></i> Создать мануал
-        </button>
-        <button @click="openCompleteModal">
-          <i class="fa fa-plus"></i> Завершить обслуживание
-        </button>
+        <div class="empty-actions">
+          <button @click="openCreateManual">
+            <i class="fa fa-plus"></i> Создать мануал
+          </button>
+          <button @click="openCompleteModal">
+            <i class="fa fa-plus"></i> Завершить обслуживание
+          </button>
+        </div>
       </div>
     </section>
 
@@ -1260,6 +1262,12 @@ export default {
 .empty-icon.warning {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
+}
+
+.empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .empty-state h3 {
