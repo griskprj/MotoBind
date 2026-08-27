@@ -1,102 +1,140 @@
 <template>
     <ModalWrapper
-        :is-open="isOpen"
-        title="Отметить обслуживание"
-        subtitle="Вы уверены, что хотите завершить это обслуживание?"
+        :isOpen="isOpen"
+        title="Завершить обслуживание"
+        subtitle="Подтвердите завершение обслуживания"
         icon="check"
-        bgIconColor="var(--success-trans)"
-        iconColor="var(--success)"
+        bg-icon-color="var(--success-trans)"
+        icon-color="var(--success-text)"
+        size="md"
         @close="$emit('close')"
-    >   
-        <div class="moto-card">
-            <div class="card-info">
-                <p class="card-title">{{ motorcycle?.name || 'Мотоцикл' }}</p>
-
-                <div class="maintenance-card">
-                    <i class="fa fa-wrench"></i>
-                    <p class="maintenance-title">{{ maintenance?.title || 'Обслуживание' }}</p>
-                </div>
-                
-                <!-- Показываем плановый пробег -->
-                <div v-if="maintenance?.planned_mileage" class="planned-info">
-                    <i class="fa fa-clock"></i>
-                    <span>Плановый пробег: {{ maintenance.planned_mileage }} км</span>
-                </div>
+    >
+        <!-- Информация о мотоцикле и обслуживании -->
+        <div class="info-card">
+            <div class="info-card-row">
+                <span class="info-label">Мотоцикл</span>
+                <span class="info-value">{{ motorcycle?.name || '—' }}</span>
+            </div>
+            <div class="info-card-row">
+                <span class="info-label">Обслуживание</span>
+                <span class="info-value">
+                    <span class="maintenance-tag">
+                        <i class="fa fa-wrench"></i>
+                        {{ maintenance?.title || '—' }}
+                    </span>
+                </span>
+            </div>
+            <div v-if="maintenance?.planned_mileage" class="info-card-row">
+                <span class="info-label">Плановый пробег</span>
+                <span class="info-value">
+                    <span class="planned-badge">
+                        <i class="fa fa-clock"></i>
+                        {{ maintenance.planned_mileage }} км
+                    </span>
+                </span>
             </div>
         </div>
 
-        <div class="inputs-group">
+        <!-- Форма -->
+        <div class="modal-form-group">
             <label>
                 Пробег выполнения <span class="required">*</span>
-                <input 
-                    v-model.number="form.mileage" 
-                    type="number" 
+                <input
+                    v-model.number="form.mileage"
+                    type="number"
                     min="0"
                     max="1000000"
                     placeholder="Введите пробег"
                     required
-                >
-            </label>
-            <label>
-                Дата выполнения
-                <input 
-                    v-model="form.date" 
-                    type="date" 
-                    :max="today"
-                >
+                />
             </label>
         </div>
-        
-        <label class="cost-label">
-            <i class="fa fa-ruble"></i>
-            Стоимость
-            <input 
-                v-model.number="form.cost" 
-                type="number" 
-                min="0"
-                placeholder="0"
-            >
-        </label>
-        
+
+        <div class="modal-form-row">
+            <div class="modal-form-group">
+                <label>
+                    Дата выполнения
+                    <input
+                        v-model="form.date"
+                        type="date"
+                        :max="today"
+                    />
+                </label>
+            </div>
+
+            <div class="modal-form-group">
+                <label>
+                    Стоимость (₽)
+                    <input
+                        v-model.number="form.cost"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                    />
+                </label>
+            </div>
+        </div>
+
+        <!-- Чекбокс: следующее обслуживание -->
         <label class="checkbox-group">
-            <input v-model="form.isRepeat" type="checkbox">
+            <input v-model="form.isRepeat" type="checkbox" />
             <span>Запланировать следующее обслуживание</span>
         </label>
-        
-        <label v-if="form.isRepeat" class="interval-label">
-            Интервал (км)
-            <input 
-                v-model.number="form.interval" 
-                type="number" 
-                min="1"
-                max="100000"
-                placeholder="Например: 5000"
-                required
-            >
-        </label>
 
-        <div class="info-block">
-            <div class="info-icon"><i class="fa fa-info-circle"></i></div>
-            <p class="info-text">
-                Это действие нельзя отменить. Вы всегда сможете посмотреть записи в истории обслуживания.
-            </p>
+        <!-- Интервал (показывается если isRepeat = true) -->
+        <div v-if="form.isRepeat" class="modal-form-group">
+            <label>
+                Интервал (км)
+                <input
+                    v-model.number="form.interval"
+                    type="number"
+                    min="1"
+                    max="100000"
+                    placeholder="Например: 5000"
+                />
+            </label>
         </div>
 
-        <div class="modal-actions">
-            <button @click="$emit('close')" class="cancel-btn">Отменить</button>
-            <button 
-                @click="submit" 
-                class="accept-btn"
-                :disabled="!form.mileage || form.mileage < 0"
-            >
-                <i class="fa fa-check"></i> Завершить обслуживание
-            </button>
+        <!-- Инфо-блок -->
+        <div class="modal-info-block warning">
+            <div class="modal-info-icon">
+                <i class="fa fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <p class="modal-info-text" style="font-weight: 600; color: var(--warning-text);">
+                    Это действие нельзя отменить!
+                </p>
+                <p class="modal-info-text">
+                    Запись будет добавлена в историю обслуживания. Вы всегда сможете её просмотреть.
+                </p>
+            </div>
         </div>
+
+        <!-- Действия -->
+        <template #actions>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @click="$emit('close')">
+                    Отменить
+                </button>
+                <button
+                    class="btn btn-success"
+                    :disabled="!form.mileage || form.mileage < 0 || loading"
+                    @click="submit"
+                >
+                    <span v-if="!loading">
+                        <i class="fa fa-check"></i> Завершить
+                    </span>
+                    <span v-else>
+                        <i class="fa fa-spinner fa-spin"></i> Завершение...
+                    </span>
+                </button>
+            </div>
+        </template>
     </ModalWrapper>
 </template>
 
 <script>
-import ModalWrapper from '../ModalWrapper.vue';
+import ModalWrapper from '../ModalWrapper.vue'
 
 export default {
     components: { ModalWrapper },
@@ -126,7 +164,8 @@ export default {
                 cost: null,
                 isRepeat: false,
                 interval: null
-            }
+            },
+            loading: false
         }
     },
 
@@ -139,54 +178,61 @@ export default {
     watch: {
         isOpen(newVal) {
             if (newVal && this.maintenance) {
-                this.form = {
-                    id: this.maintenance.id,
-                    moto_id: this.motorcycle.id,
-                    mileage: null,
-                    date: this.today,
-                    cost: null,
-                    isRepeat: false,
-                    interval: null
-                }
+                this.resetForm()
             }
         }
     },
 
     methods: {
-        submit() {
-            if (!this.maintenance) {
-                console.error('No maintenance data')
-                return
-            }
-            
-            if (!this.form.mileage || this.form.mileage < 0) {
-                alert('Укажите пробег выполнения')
-                return
-            }
-            
-            const submitData = {
-                id: this.maintenance.id,
-                moto_id: this.motorcycle.id,
-                mileage: this.form.mileage,
-                date: this.form.date || this.today,
-                cost: this.form.cost || 0,
-                isRepeat: this.form.isRepeat,
-                interval: this.form.interval
-            }
-            
-            this.$emit('submit', submitData)
-            this.resetForm()
-        },
-
         resetForm() {
             this.form = {
-                id: null,
-                moto_id: null,
+                id: this.maintenance?.id || null,
+                moto_id: this.motorcycle?.id || null,
                 mileage: null,
                 date: this.today,
                 cost: null,
                 isRepeat: false,
                 interval: null
+            }
+            this.loading = false
+        },
+
+        async submit() {
+            if (!this.maintenance) {
+                console.error('No maintenance data')
+                return
+            }
+
+            if (!this.form.mileage || this.form.mileage < 0) {
+                alert('Укажите пробег выполнения')
+                return
+            }
+
+            if (this.form.isRepeat && (!this.form.interval || this.form.interval <= 0)) {
+                alert('Укажите интервал для следующего обслуживания')
+                return
+            }
+
+            this.loading = true
+
+            try {
+                const submitData = {
+                    id: this.maintenance.id,
+                    moto_id: this.motorcycle.id,
+                    mileage: this.form.mileage,
+                    date: this.form.date || this.today,
+                    cost: this.form.cost || 0,
+                    isRepeat: this.form.isRepeat,
+                    interval: this.form.interval
+                }
+
+                await this.$emit('submit', submitData)
+                this.$emit('close')
+            } catch (error) {
+                console.error('Submit error:', error)
+                alert('Ошибка при завершении обслуживания')
+            } finally {
+                this.loading = false
             }
         }
     }
@@ -194,114 +240,119 @@ export default {
 </script>
 
 <style scoped>
-.inputs-group {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+/* ===== ИНФО-КАРТОЧКА ===== */
+.info-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-light);
 }
 
-.moto-card {
+.info-card-row {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 12px;
-    border-radius: 14px;
+    justify-content: space-between;
     align-items: center;
-    text-align: center;
-    background-color: var(--bg-card);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-light);
 }
 
-.card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 14px;
+.info-card-row:last-child {
+    border-bottom: none;
 }
 
-.maintenance-card {
-    background-color: var(--accent-trans);
-    border-radius: 10px;
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    color: var(--accent);
+.info-label {
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
-.modal-actions {
-    display: flex;
-    flex-direction: row;
-}
-
-.modal-actions button {
-    width: 100%;
-}
-
-.info-block {
-    display: flex;
-    padding: 12px;
-    background-color: var(--accent-trans);
-    border-radius: 10px;
-    border: 1px solid var(--accent-light);
-}
-
-.info-icon {
-    color: var(--accent);
-    font-size: 24px;
-    margin-right: 12px;
-}
-
-.info-text {
+.info-value {
     font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 0;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
-.planned-info {
-    display: flex;
+.maintenance-tag {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: rgba(251, 191, 36, 0.08);
-    border-radius: 8px;
-    color: #fbbf24;
+    gap: 6px;
+    padding: 2px 12px;
+    background: var(--accent-trans);
+    border-radius: 12px;
+    color: var(--accent-text);
     font-size: 13px;
 }
 
-.required {
-    color: var(--danger);
-    margin-left: 4px;
-}
-
-.inputs-group {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.cost-label {
-    display: flex;
+.planned-badge {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
+    gap: 6px;
+    padding: 2px 12px;
+    background: var(--warning-trans);
+    border-radius: 12px;
+    color: var(--warning-text);
+    font-size: 13px;
 }
 
-.cost-label input {
-    flex: 1;
+/* ===== ФОРМА ===== */
+.modal-form-group {
+    margin-bottom: 14px;
 }
 
+.modal-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.modal-form-group label .required {
+    color: var(--danger-text);
+    font-weight: 700;
+}
+
+.modal-form-group input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.modal-form-group input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-trans);
+}
+
+.modal-form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ===== ЧЕКБОКС ===== */
 .checkbox-group {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    margin: 4px 0 10px 0;
     cursor: pointer;
     font-size: 14px;
+    color: var(--text-secondary);
 }
 
 .checkbox-group input[type="checkbox"] {
@@ -309,87 +360,143 @@ export default {
     height: 18px;
     accent-color: var(--accent);
     cursor: pointer;
-}
-
-.interval-label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-}
-
-/* Остальные стили остаются без изменений */
-.moto-card {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 12px;
-    border-radius: 14px;
-    align-items: center;
-    text-align: center;
-    background-color: var(--bg-card);
-    margin-bottom: 16px;
-}
-
-.card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 14px;
-}
-
-.maintenance-card {
-    background-color: var(--accent-trans);
-    border-radius: 10px;
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    color: var(--accent);
-}
-
-.modal-actions {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.modal-actions button {
-    flex: 1;
-}
-
-.info-block {
-    display: flex;
-    padding: 12px;
-    background-color: var(--accent-trans);
-    border-radius: 10px;
-    border: 1px solid var(--accent-light);
-    margin-top: 12px;
-}
-
-.info-icon {
-    color: var(--accent);
-    font-size: 20px;
-    margin-right: 12px;
     flex-shrink: 0;
 }
 
-.info-text {
+.checkbox-group span {
+    user-select: none;
+}
+
+/* ===== ИНФО-БЛОК ===== */
+.modal-info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+}
+
+.modal-info-block.warning {
+    background: var(--warning-trans);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.modal-info-icon {
+    font-size: 18px;
+    color: var(--warning-text);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.modal-info-text {
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
-.accept-btn:disabled {
+/* ===== КНОПКИ ===== */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-actions .btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-actions .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-@media (max-width: 480px) {
-    .inputs-group {
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--border-color);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success), var(--success-hover));
+    color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================ */
+/* ===== АДАПТИВНОСТЬ ===== */
+/* ============================================ */
+
+@media (max-width: 640px) {
+    .modal-form-row {
         grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .info-card-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        padding: 8px 0;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        padding: 0.8rem;
+    }
+
+    .modal-info-block {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .modal-info-icon {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .info-card {
+        padding: 12px 14px;
+    }
+
+    .info-value {
+        font-size: 13px;
+    }
+
+    .modal-form-group input {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.7rem;
+    }
+
+    .maintenance-tag,
+    .planned-badge {
+        font-size: 12px;
+        padding: 2px 10px;
     }
 }
 </style>

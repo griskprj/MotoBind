@@ -1,130 +1,143 @@
 <template>
     <ModalWrapper
-        :is-open="isOpen"
+        :isOpen="isOpen"
         title="Редактировать мотоцикл"
-        subtitle="Измените информацию о вашем мотоцикле"
+        subtitle="Измените информацию о мотоцикле"
         icon="pen"
         bg-icon-color="var(--accent-trans)"
-        icon-color="var(--accent)"
+        icon-color="var(--accent-text)"
+        size="md"
         @close="closeModal"
-    >   
-        <!-- Основной контент -->
-        <div class="form-group">
-            <label for="editMotoName">
-                Название <span class="required">*</span>
-            </label>
-            <input
-                id="editMotoName"
-                v-model="form.name"
-                type="text"
-                placeholder="Например: Honda CBR600RR"
-                required
-            />
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="editMotoYear">Год выпуска</label>
-                <input
-                    id="editMotoYear"
-                    v-model.number="form.years"
-                    type="number"
-                    placeholder="2020"
-                    min="1950"
-                    :max="currentYear"
-                />
+    >
+        <!-- Блок 1: Основная информация -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fa fa-info-circle"></i>
+                Основная информация
             </div>
-            <div class="form-group">
-                <label for="editMotoVolume">Объем (см³)</label>
-                <input
-                    id="editMotoVolume"
-                    v-model.number="form.volume"
-                    type="number"
-                    placeholder="600"
-                    min="49"
-                    max="4000"
-                />
-            </div>
-        </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="editMotoMileage">
-                    Пробег (км)
+            <div class="modal-form-group">
+                <label>
+                    Название <span class="required">*</span>
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        placeholder="Например: Honda CBR600RR"
+                        required
+                    />
                 </label>
-                <input
-                    id="editMotoMileage"
-                    v-model.number="form.mileage"
-                    type="number"
-                    placeholder="0"
-                    min="0"
-                    max="1000000"
-                />
             </div>
-            <div class="form-group">
-                <label for="editMotoColor">Цвет</label>
-                <input
-                    id="editMotoColor"
-                    v-model="form.color"
-                    type="color"
-                    :style="'background-color:' + form.color"
-                />
+
+            <div class="modal-form-row">
+                <div class="modal-form-group">
+                    <label>Год выпуска</label>
+                    <input
+                        v-model.number="form.years"
+                        type="number"
+                        placeholder="2020"
+                        min="1950"
+                        :max="currentYear"
+                    />
+                </div>
+                <div class="modal-form-group">
+                    <label>Объем (см³)</label>
+                    <input
+                        v-model.number="form.volume"
+                        type="number"
+                        placeholder="600"
+                        min="49"
+                        max="4000"
+                    />
+                </div>
+            </div>
+
+            <div class="modal-form-row">
+                <div class="modal-form-group">
+                    <label>Пробег (км)</label>
+                    <input
+                        v-model.number="form.mileage"
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        max="1000000"
+                    />
+                </div>
+                <div class="modal-form-group">
+                    <label>Цвет</label>
+                    <div class="color-picker-wrapper">
+                        <input
+                            v-model="form.color"
+                            type="color"
+                            class="color-input"
+                        />
+                        <span class="color-hex">{{ form.color }}</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="editMotoPlate">Гос. номер</label>
-                <input
-                    id="editMotoPlate"
-                    v-model="form.licensePlate"
-                    type="text"
-                    placeholder="A123BC"
-                    maxlength="9"
-                />
+        <!-- Блок 2: Документы -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fa fa-file-text"></i>
+                Документы
             </div>
-            <div class="form-group">
-                <label for="editMotoVin">VIN (17 символов)</label>
-                <input
-                    id="editMotoVin"
-                    v-model="form.vin"
-                    type="text"
-                    placeholder="Введите 17 символов"
-                    minlength="17"
-                    maxlength="17"
-                />
+
+            <div class="modal-form-row">
+                <div class="modal-form-group">
+                    <label>Гос. номер</label>
+                    <input
+                        v-model="form.licensePlate"
+                        type="text"
+                        placeholder="A123BC"
+                        maxlength="9"
+                    />
+                </div>
+                <div class="modal-form-group">
+                    <label>VIN (17 символов)</label>
+                    <input
+                        v-model="form.vin"
+                        type="text"
+                        placeholder="Введите 17 символов"
+                        minlength="17"
+                        maxlength="17"
+                    />
+                </div>
             </div>
         </div>
 
-        <!-- Блок фото -->
-        <div class="photo-upload-section">
-            <label>Фото мотоцикла</label>
-            
+        <!-- Блок 3: Фото -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fa fa-image"></i>
+                Фото мотоцикла
+            </div>
+
             <!-- Текущее фото -->
             <div v-if="form.existingPhotoUrl && !form.deleteExistingPhoto" class="current-photo">
                 <img :src="getPhotoUrl(form.existingPhotoUrl)" alt="Текущее фото" />
-                <button 
-                    class="remove-existing-btn"
-                    @click="removeExistingPhoto"
-                >
-                    <i class="fa fa-trash"></i> Удалить фото
-                </button>
+                <div class="current-photo-info">
+                    <span class="current-photo-label">Текущее фото</span>
+                    <button class="remove-existing-btn" @click="removeExistingPhoto">
+                        <i class="fa fa-trash"></i> Удалить фото
+                    </button>
+                </div>
             </div>
-            
+
             <!-- Сообщение об удалении -->
             <div v-else-if="form.deleteExistingPhoto" class="photo-deleted-message">
                 <i class="fa fa-check-circle"></i>
                 <span>Фото будет удалено при сохранении</span>
                 <button class="undo-delete-btn" @click="undoDeletePhoto">
-                    Отменить
+                    <i class="fa fa-undo"></i> Отменить
                 </button>
             </div>
-            
+
             <!-- Загрузка нового фото -->
-            <div 
+            <div
                 class="drop-zone"
-                :class="{ 
-                    'drag-over': isDragging, 
+                :class="{
+                    'drag-over': isDragging,
                     'has-file': form.newPhotoFile,
                     'has-existing': form.existingPhotoUrl && !form.deleteExistingPhoto
                 }"
@@ -136,26 +149,23 @@
                 <!-- Превью нового фото -->
                 <div v-if="form.newPhotoPreview" class="photo-preview">
                     <img :src="form.newPhotoPreview" alt="Новое фото" />
-                    <button 
-                        class="remove-photo-btn"
-                        @click.stop="removeNewPhoto"
-                    >
+                    <button class="remove-photo-btn" @click.stop="removeNewPhoto">
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
-                
-                <!-- Иконка загрузки -->
+
+                <!-- Плейсхолдер -->
                 <div v-else class="drop-zone-content">
                     <i class="fa fa-cloud-upload-alt"></i>
                     <p>
-                        {{ form.existingPhotoUrl && !form.deleteExistingPhoto 
-                            ? 'Нажмите чтобы заменить фото' 
-                            : 'Нажмите или перетащите фото' 
+                        {{ form.existingPhotoUrl && !form.deleteExistingPhoto
+                            ? 'Нажмите чтобы заменить фото'
+                            : 'Нажмите или перетащите фото'
                         }}
                     </p>
                     <span>JPG, PNG, GIF, BMP, WEBP до 10 МБ</span>
                 </div>
-                
+
                 <input
                     ref="fileInput"
                     type="file"
@@ -166,29 +176,36 @@
             </div>
         </div>
 
-        <input v-model="form.id" type="hidden">
-
-        <!-- Действия в футере -->
-        <div class="modal-actions">
-            <button @click="closeModal" class="btn btn-secondary">
-                Отменить
-            </button>
-            <button @click="submit" class="btn btn-primary" :disabled="loading">
-                <span v-if="!loading"><i class="fa fa-save"></i> Сохранить</span>
-                <span v-else>Сохранение...</span>
-            </button>
-        </div class="modal-actions">
+        <!-- Действия -->
+        <template #actions>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @click="closeModal">
+                    Отменить
+                </button>
+                <button class="btn btn-primary" :disabled="loading || !form.name" @click="submit">
+                    <span v-if="!loading">
+                        <i class="fa fa-save"></i> Сохранить
+                    </span>
+                    <span v-else>
+                        <i class="fa fa-spinner fa-spin"></i> Сохранение...
+                    </span>
+                </button>
+            </div>
+        </template>
     </ModalWrapper>
 </template>
 
 <script>
-import ModalWrapper from '../ModalWrapper.vue';
+import ModalWrapper from '../ModalWrapper.vue'
 
 export default {
     components: { ModalWrapper },
 
     props: {
-        isOpen: Boolean,
+        isOpen: {
+            type: Boolean,
+            default: false
+        },
         motorcycle: {
             type: Object,
             default: null
@@ -209,11 +226,11 @@ export default {
                 existingPhotoUrl: null,
                 newPhotoFile: null,
                 newPhotoPreview: null,
-                deleteExistingPhoto: false,
+                deleteExistingPhoto: false
             },
             currentYear: new Date().getFullYear(),
             isDragging: false,
-            loading: false,
+            loading: false
         }
     },
 
@@ -226,7 +243,6 @@ export default {
                 this.cleanupPreview()
             }
         },
-
         motorcycle: {
             handler(newVal) {
                 if (this.isOpen && newVal) {
@@ -250,7 +266,7 @@ export default {
 
         loadMotorcycleData() {
             if (!this.motorcycle) return
-            
+
             this.form = {
                 id: this.motorcycle.id,
                 name: this.motorcycle.name || '',
@@ -263,14 +279,14 @@ export default {
                 existingPhotoUrl: this.motorcycle.photo_url || null,
                 newPhotoFile: null,
                 newPhotoPreview: null,
-                deleteExistingPhoto: false,
+                deleteExistingPhoto: false
             }
             this.isDragging = false
             this.loading = false
         },
 
         cleanupPreview() {
-            if (this.form.newPhotoPreview && this.form.newPhotoPreview.startsWith('blob:')) {
+            if (this.form.newPhotoPreview?.startsWith('blob:')) {
                 URL.revokeObjectURL(this.form.newPhotoPreview)
             }
         },
@@ -295,7 +311,7 @@ export default {
                 alert('Файл слишком большой. Максимальный размер 10 МБ.')
                 return
             }
-            
+
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
             if (!allowedTypes.includes(file.type)) {
                 alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
@@ -303,7 +319,6 @@ export default {
             }
 
             this.cleanupPreview()
-            
             this.form.newPhotoFile = file
             this.form.newPhotoPreview = URL.createObjectURL(file)
             this.form.deleteExistingPhoto = false
@@ -337,8 +352,8 @@ export default {
         },
 
         async submit() {
-            if (!this.form.name) {
-                alert('Введите название мотоцикла')
+            if (!this.form.name || this.form.name.trim().length < 2) {
+                alert('Введите название мотоцикла (минимум 2 символа)')
                 return
             }
 
@@ -348,11 +363,11 @@ export default {
             }
 
             this.loading = true
-            
+
             try {
                 const submitData = {
                     id: this.form.id,
-                    name: this.form.name,
+                    name: this.form.name.trim(),
                     volume: this.form.volume || null,
                     years: this.form.years || null,
                     mileage: this.form.mileage || null,
@@ -360,13 +375,14 @@ export default {
                     vin: this.form.vin || null,
                     color: this.form.color || '#8B5CF6',
                     newPhotoFile: this.form.newPhotoFile,
-                    deleteExistingPhoto: this.form.deleteExistingPhoto,
+                    deleteExistingPhoto: this.form.deleteExistingPhoto
                 }
-                
+
                 await this.$emit('submit', submitData)
                 this.closeModal()
             } catch (error) {
                 console.error('Submit error:', error)
+                alert('Ошибка при сохранении')
             } finally {
                 this.loading = false
             }
@@ -376,108 +392,159 @@ export default {
 </script>
 
 <style scoped>
-/* ===== ФОРМА ===== */
-.form-group {
+/* ===== СЕКЦИИ ФОРМЫ ===== */
+.form-section {
+    margin-bottom: 18px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-section-title {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.form-section-title i {
+    color: var(--accent-text);
+    font-size: 14px;
+}
+
+/* ===== ПОЛЯ ВВОДА ===== */
+.modal-form-group {
     margin-bottom: 12px;
 }
 
-.form-group label {
+.modal-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-form-group label {
+    display: block;
     font-weight: 600;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    margin-bottom: 4px;
 }
 
-.required {
-    color: var(--danger);
+.modal-form-group label .required {
+    color: var(--danger-text);
+    font-weight: 700;
 }
 
-.form-group input {
+.modal-form-group input {
+    width: 100%;
     padding: 0.6rem 0.8rem;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 2px solid var(--border-color);
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-input);
     color: var(--text-primary);
     font-size: 0.95rem;
-    transition: border 0.2s;
-    width: 100%;
+    transition: all 0.2s;
     box-sizing: border-box;
 }
 
-.form-group input:focus {
+.modal-form-group input:focus {
     border-color: var(--accent);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(138, 92, 246, 0.15);
+    box-shadow: 0 0 0 3px var(--accent-trans);
 }
 
-.form-group input[type="color"] {
-    padding: 2px;
-    height: 40px;
-    cursor: pointer;
-}
-
-.form-group input::placeholder {
+.modal-form-group input::placeholder {
     color: var(--text-muted);
 }
 
-.form-row {
+.modal-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
-/* ===== ФОТО ===== */
-.photo-upload-section {
-    margin-top: 4px;
+/* ===== ВЫБОР ЦВЕТА ===== */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.photo-upload-section > label {
-    display: block;
-    margin-bottom: 4px;
-    font-weight: 600;
-    font-size: 0.85rem;
+.color-input {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+}
+
+.color-hex {
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text-secondary);
+    font-family: monospace;
 }
 
+/* ===== ФОТО ===== */
 .current-photo {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 12px 16px;
+    background: var(--bg-secondary);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
     margin-bottom: 12px;
 }
 
 .current-photo img {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 8px;
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.current-photo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.current-photo-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
 }
 
 .remove-existing-btn {
-    padding: 6px 14px;
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 8px;
-    color: #ef4444;
+    padding: 4px 14px;
+    background: var(--danger-trans);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    color: var(--danger-text);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
     transition: all 0.2s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    width: fit-content;
 }
 
 .remove-existing-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
+    background: var(--danger-trans);
     border-color: rgba(239, 68, 68, 0.4);
 }
 
@@ -486,11 +553,11 @@ export default {
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: var(--warning-trans);
+    border: 1px solid rgba(245, 158, 11, 0.2);
     border-radius: 8px;
     margin-bottom: 12px;
-    color: #ef4444;
+    color: var(--warning-text);
     font-size: 14px;
 }
 
@@ -501,23 +568,27 @@ export default {
 .undo-delete-btn {
     margin-left: auto;
     padding: 4px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 12px;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .undo-delete-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--border-color);
 }
 
+/* ===== DROP ZONE ===== */
 .drop-zone {
-    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border: 2px dashed var(--border-color);
     border-radius: 12px;
-    padding: 16px;
+    padding: 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -526,26 +597,27 @@ export default {
     align-items: center;
     justify-content: center;
     position: relative;
+    background: var(--bg-secondary);
 }
 
 .drop-zone:hover {
-    border-color: rgba(124, 58, 237, 0.5);
-    background: rgba(124, 58, 237, 0.05);
+    border-color: var(--accent);
+    background: var(--accent-trans);
 }
 
 .drop-zone.drag-over {
-    border-color: #7c3aed;
-    background: rgba(124, 58, 237, 0.1);
+    border-color: var(--accent);
+    background: var(--accent-trans);
 }
 
 .drop-zone.has-file {
-    border-color: var(--success);
-    background: rgba(34, 197, 94, 0.05);
+    border-color: var(--success-text);
+    background: var(--success-trans);
     padding: 8px;
 }
 
 .drop-zone.has-existing {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-color);
 }
 
 .drop-zone-content {
@@ -596,7 +668,7 @@ export default {
     border-radius: 50%;
     background: rgba(239, 68, 68, 0.9);
     border: none;
-    color: white;
+    color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -605,19 +677,18 @@ export default {
 }
 
 .remove-photo-btn:hover {
-    background: #ef4444;
+    background: var(--danger);
     transform: scale(1.1);
 }
 
-/* ===== КНОПКИ ДЕЙСТВИЙ ===== */
+/* ===== КНОПКИ ===== */
 .modal-actions {
     display: flex;
     gap: 10px;
-    margin-top: 4px;
 }
 
 .modal-actions .btn {
-    width: 100%;
+    flex: 1;
     padding: 0.7rem 1rem;
     border-radius: 40px;
     font-weight: 600;
@@ -628,22 +699,22 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
+}
+
+.modal-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .btn-primary {
     background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    color: white;
+    color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--accent-trans);
 }
 
 .btn-secondary {
@@ -652,7 +723,7 @@ export default {
     border: 1px solid var(--border-color);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
     background: var(--border-color);
 }
 
@@ -661,25 +732,28 @@ export default {
 /* ============================================ */
 
 @media (max-width: 640px) {
-    .form-row {
+    .modal-form-row {
         grid-template-columns: 1fr;
         gap: 0;
     }
 
     .current-photo {
         flex-direction: column;
-        align-items: stretch;
         text-align: center;
+        padding: 14px;
     }
 
     .current-photo img {
-        width: 100%;
-        height: auto;
-        max-height: 120px;
-        object-fit: contain;
+        width: 80px;
+        height: 80px;
+    }
+
+    .current-photo-info {
+        align-items: center;
     }
 
     .remove-existing-btn {
+        width: 100%;
         justify-content: center;
     }
 
@@ -692,12 +766,12 @@ export default {
     .undo-delete-btn {
         margin: 0;
         width: 100%;
-        padding: 6px;
+        justify-content: center;
     }
 
     .drop-zone {
         min-height: 80px;
-        padding: 12px;
+        padding: 14px;
     }
 
     .drop-zone-content i {
@@ -728,10 +802,22 @@ export default {
         width: 100%;
         padding: 0.8rem;
     }
+
+    .color-picker-wrapper {
+        justify-content: center;
+    }
+
+    .form-section-title {
+        font-size: 12px;
+    }
 }
 
 @media (max-width: 400px) {
-    .form-group input {
+    .form-section-title {
+        font-size: 11px;
+    }
+
+    .modal-form-group input {
         font-size: 0.9rem;
         padding: 0.5rem 0.7rem;
     }
@@ -740,11 +826,19 @@ export default {
         min-height: 70px;
         padding: 10px;
     }
-}
 
-@media (min-width: 641px) and (max-width: 1024px) {
-    .form-row {
-        gap: 10px;
+    .color-input {
+        width: 38px;
+        height: 38px;
+    }
+
+    .color-hex {
+        font-size: 12px;
+    }
+
+    .current-photo img {
+        width: 64px;
+        height: 64px;
     }
 }
 </style>

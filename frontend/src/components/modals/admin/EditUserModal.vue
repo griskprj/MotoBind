@@ -2,74 +2,89 @@
     <ModalWrapper
         :is-open="isOpen"
         title="Редактирование пользователя"
-        subtitle="Отредактируйте данные пользователя"
-        icon="pen"
-        @close="$emit('close')"
+        subtitle="Измените данные пользователя. Роль определяет доступ к функциям."
+        icon="user-cog"
+        bg-icon-color="var(--accent-trans)"
+        icon-color="var(--accent-text)"
+        @close="handleClose"
     >
-        <div v-if="user" class="user-card">
-            <img :src="getAvatarUrl(user.avatar)" alt="" class="user-img">
-
-            <div class="user-card-body">
-                <div class="user-top">
-                    <p class="user-name">{{ user.username }}</p>
-                    <p class="user-id">ID: {{ user.id }}</p>
-                </div>
-                <div class="user-bottom">
-                    <p class="user-date">Пользователь с {{ formatDate(user.created_at) }}</p>
+        <!-- Информация о пользователе -->
+        <div class="user-info-card">
+            <img :src="getAvatarUrl(user?.avatar)" alt="Аватар" class="user-avatar" />
+            <div class="user-info">
+                <div class="user-name">{{ user?.username || 'Пользователь' }}</div>
+                <div class="user-meta">
+                    <span class="user-id">ID: #{{ user?.id }}</span>
+                    <span class="user-date">{{ formatDate(user?.created_at) }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="input-groups">
-            <div class="inputs-wrapper">
-                <label>
-                    Имя пользователя
-                    <input v-model="form.username" type="text">
-                </label>
-                <label>
-                    Email
-                    <input v-model="form.email" type="email">
-                </label>
-            </div>
-            
-            <div class="inputs-wrapper">
-                <label>
-                    Роль
-                    <select v-model="form.role">
-                        <option value="motorcyclist">Мотоциклист</option>
-                        <option value="clubMember">Член мотоклуба</option>
-                        <option value="admin">Админ</option>
-                    </select>
-                </label>
+        <!-- Форма -->
+        <div class="modal-form-group">
+            <label>
+                Имя пользователя <span class="required">*</span>
+                <input 
+                    v-model="form.username" 
+                    type="text" 
+                    placeholder="Введите имя пользователя"
+                    required
+                />
+            </label>
+        </div>
 
-                <label>
-                    Статус
-                    <select v-model="form.status">
-                        <option value="active">Активен</option>
-                        <option value="banned">Заблокирован</option>
-                    </select>
-                </label>
+        <div class="modal-form-group">
+            <label>
+                Email <span class="required">*</span>
+                <input 
+                    v-model="form.email" 
+                    type="email" 
+                    placeholder="user@example.com"
+                    required
+                />
+            </label>
+        </div>
+
+        <div class="modal-form-row">
+            <div class="modal-form-group">
+                <label>Роль</label>
+                <select v-model="form.role">
+                    <option value="motorcyclist">Мотоциклист</option>
+                    <option value="club_member">Член клуба</option>
+                    <option value="admin">Администратор</option>
+                </select>
+            </div>
+
+            <div class="modal-form-group">
+                <label>Статус</label>
+                <select v-model="form.status">
+                    <option value="active">Активен</option>
+                    <option value="banned">Заблокирован</option>
+                    <option value="pending">Ожидает</option>
+                </select>
             </div>
         </div>
 
-        <div class="info-block">
-            <div class="block-icon">
-                <i class="fa fa-info"></i>
+        <template #actions>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @click="handleClose">
+                    Отменить
+                </button>
+                <button class="btn btn-primary" @click="submit" :disabled="loading">
+                    <span v-if="!loading">
+                        <i class="fa fa-save"></i> Сохранить
+                    </span>
+                    <span v-else>
+                        <i class="fa fa-spinner fa-spin"></i> Сохранение...
+                    </span>
+                </button>
             </div>
-            <p class="block-text">
-                Данные пользователя будут обновлены.
-            </p>
-        </div>
-
-        <div class="modal-actions">
-            <button @click="$emit('close')" class="cancel-btn">Отменить</button>
-            <button @click="$emit('submit', this.form)"><i class="fa fa-check"></i> Сохранить изменения</button>
-        </div>
+        </template>
     </ModalWrapper>
 </template>
 
 <script>
-import ModalWrapper from '../ModalWrapper.vue';
+import ModalWrapper from '../ModalWrapper.vue'
 
 export default {
     components: { ModalWrapper },
@@ -77,13 +92,11 @@ export default {
     props: {
         isOpen: {
             type: Boolean,
-            required: true,
-            default: false
+            default: false,
+            required: true
         },
-
         user: {
             type: Object,
-            required: true,
             default: null
         }
     },
@@ -92,37 +105,28 @@ export default {
         return {
             form: {
                 id: null,
-                username: null,
-                email: null,
-                role: null,
-                status: null
-            }
+                username: '',
+                email: '',
+                role: 'motorcyclist',
+                status: 'active'
+            },
+            loading: false
         }
     },
 
     watch: {
         isOpen(newVal) {
             if (newVal && this.user) {
-                this.form = {
-                    id: this.user.id,
-                    username: this.user.username,
-                    email: this.user.email,
-                    role: this.user.role,
-                    status: this.user.status
-                }
+                this.loadFormData()
+            }
+            if (!newVal) {
+                this.loading = false
             }
         },
-
         user: {
             handler(newVal) {
                 if (this.isOpen && newVal) {
-                    this.form = {
-                        id: newVal.id,
-                        username: newVal.username,
-                        email: newVal.email,
-                        role: newVal.role,
-                        status: newVal.status
-                    }
+                    this.loadFormData()
                 }
             },
             deep: true
@@ -130,145 +134,355 @@ export default {
     },
 
     methods: {
-        resetForm() {
+        loadFormData() {
+            if (!this.user) return
             this.form = {
-                id: null,
-                username: null,
-                email: null,
-                role: null,
-                status: null
+                id: this.user.id || null,
+                username: this.user.username || '',
+                email: this.user.email || '',
+                role: this.user.role || 'motorcyclist',
+                status: this.user.status || 'active'
             }
         },
 
-        submit(id) {
-            this.$emit('submit', this.form)
+        resetForm() {
+            this.form = {
+                id: null,
+                username: '',
+                email: '',
+                role: 'motorcyclist',
+                status: 'active'
+            }
+            this.loading = false
+        },
+
+        handleClose() {
             this.resetForm()
+            this.$emit('close')
+        },
+
+        async submit() {
+            // Валидация
+            if (!this.form.username || this.form.username.trim().length < 2) {
+                alert('Имя пользователя должно содержать минимум 2 символа')
+                return
+            }
+
+            if (!this.form.email || !this.form.email.includes('@')) {
+                alert('Введите корректный email адрес')
+                return
+            }
+
+            this.loading = true
+            try {
+                await this.$emit('submit', this.form)
+                this.resetForm()
+                this.$emit('close')
+            } catch (error) {
+                console.error('Submit error:', error)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.jpg'
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`
         },
 
         formatDate(dateString) {
-            if (!dateString) return '--'
-            
+            if (!dateString) return '—'
             try {
-                if (dateString instanceof Date) {
-                    return dateString.toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                    })
-                }
-                
                 const date = new Date(dateString)
-                
-                if (isNaN(date.getTime())) {
-                    return '--'
-                }
-                
+                if (isNaN(date.getTime())) return '—'
                 return date.toLocaleDateString('ru-RU', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
                 })
-            } catch (error) {
-                console.error('Error formatting date:', dateString, error)
-                return '--'
+            } catch {
+                return '—'
             }
-        },
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg';
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath;
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${avatarPath}`;
+        }
+    },
+
+    mounted() {
+        if (this.isOpen && this.user) {
+            this.loadFormData()
         }
     }
 }
 </script>
 
 <style scoped>
-.inputs-group {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 8px;
-}
-
-.inputs-wrapper {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(1, 1fr);
-    gap: 8px;
-}
-
-.modal-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(1, 1fr);
-    gap: 8px;
-}
-
-.modal-actions button {
-    font-weight: 600;
-}
-
-.user-card {
+/* ===== ИНФО О ПОЛЬЗОВАТЕЛЕ ===== */
+.user-info-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 18px;
 }
 
-.user-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.user-name {
-    font-weight: 600;
-    font-size: 18px;
-}
-
-.user-id {
-    padding: 2px 10px;
-    font-size: 14px;
-    font-weight: 600;
-    background-color: var(--accent-trans);
-    color: var(--accent);
-    border-radius: 8px;
-}
-
-.user-date {
-    font-size: 14px;
-    color: var(--text-muted);
-}
-
-.user-img {
+.user-avatar {
     width: 52px;
     height: 52px;
     border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    flex-shrink: 0;
 }
 
-.info-block {
+.user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.user-meta {
     display: flex;
-    align-items: center;
-    padding: 12px;
-    background-color: var(--accent-trans);
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.user-id {
+    background: var(--accent-trans);
+    padding: 1px 10px;
+    border-radius: 12px;
+    color: var(--accent-text);
+}
+
+/* ===== ПОЛЯ ВВОДА ===== */
+.modal-form-group {
+    margin-bottom: 14px;
+}
+
+.modal-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.modal-form-group label .required {
+    color: var(--danger-text);
+    font-weight: 700;
+}
+
+.modal-form-group input,
+.modal-form-group select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
     border-radius: 10px;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    font-family: inherit;
+    appearance: auto;
+}
+
+.modal-form-group input:focus,
+.modal-form-group select:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-trans);
+}
+
+.modal-form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ===== ИНФО-БЛОК ===== */
+.modal-info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+}
+
+.modal-info-block.info {
+    background: var(--accent-trans);
     border: 1px solid var(--accent-light);
 }
 
-.block-icon {
-    color: var(--accent);
-    font-size: 24px;
-    margin-right: 12px;
+.modal-info-icon {
+    font-size: 18px;
+    color: var(--accent-text);
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
-.block-text {
+.modal-info-text {
     font-size: 14px;
     color: var(--text-secondary);
-    margin-bottom: 0;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.role-tag {
+    display: inline-block;
+    padding: 0 6px;
+    font-weight: 500;
+    color: var(--accent-text);
+    background: var(--accent-trans);
+    border-radius: 4px;
+}
+
+.status-tag {
+    display: inline-block;
+    padding: 0 6px;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+.status-tag.active {
+    color: var(--success-text);
+    background: var(--success-trans);
+}
+
+.status-tag.banned {
+    color: var(--danger-text);
+    background: var(--danger-trans);
+}
+
+/* ===== КНОПКИ ===== */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-actions .btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-actions .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff;
+}
+
+.modal-actions .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
+}
+
+.modal-actions .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-actions .btn-secondary:hover:not(:disabled) {
+    background: var(--border-color);
+}
+
+/* ============================================ */
+/* ===== АДАПТИВНОСТЬ ===== */
+/* ============================================ */
+
+@media (max-width: 640px) {
+    .user-info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    .user-meta {
+        justify-content: center;
+    }
+
+    .modal-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        padding: 0.8rem;
+    }
+
+    .modal-info-block {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .modal-info-icon {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+    }
+
+    .user-name {
+        font-size: 14px;
+    }
+
+    .modal-form-group input,
+    .modal-form-group select {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.7rem;
+    }
 }
 </style>
