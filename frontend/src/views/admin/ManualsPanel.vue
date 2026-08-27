@@ -392,20 +392,20 @@ export default {
 .tabs {
     display: flex;
     gap: 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-light);
     padding-bottom: 12px;
 }
 .tab {
     font-size: 14px;
     font-weight: 500;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
     position: relative;
     padding-bottom: 12px;
     transition: 0.2s;
 }
-.tab:hover { color: #fff; }
-.tab.active { color: #a78bfa; }
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--accent-text); }
 .tab.active::after {
     content: '';
     position: absolute;
@@ -413,7 +413,7 @@ export default {
     left: 0;
     right: 0;
     height: 2px;
-    background: #7c3aed;
+    background: var(--accent);
     border-radius: 2px;
 }
 
@@ -430,58 +430,61 @@ export default {
 .search-input {
     width: 100%;
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     transition: border 0.2s;
 }
-.search-input:focus { border-color: #7c3aed; }
-.search-input::placeholder { color: #5a5a72; }
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
 
 .filter-select {
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
     transition: border 0.2s;
     min-width: 140px;
     appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 14px;
     padding-right: 36px;
 }
-.filter-select:focus { border-color: #7c3aed; }
-.filter-select option { background: #0f0f1a; }
+.filter-select:focus { border-color: var(--accent); }
+.filter-select option { 
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
 
 .filter-results {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: rgba(124, 58, 237, 0.05);
+    background: var(--accent-trans);
     border-radius: 8px;
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     margin-bottom: 16px;
 }
 .clear-filters {
     background: transparent;
     border: none;
-    color: #a78bfa;
+    color: var(--accent-text);
     cursor: pointer;
     font-size: 13px;
     transition: color 0.2s;
 }
-.clear-filters:hover { color: #7c3aed; }
+.clear-filters:hover { color: var(--accent); }
 
 /* ===== GRID ===== */
 .manuals-grid {
@@ -491,8 +494,8 @@ export default {
 }
 
 .manual-card {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
     border-radius: 14px;
     padding: 18px 20px;
     cursor: pointer;
@@ -501,7 +504,7 @@ export default {
     flex-direction: column;
 }
 .manual-card:hover {
-    border-color: #7c3aed;
+    border-color: var(--accent);
     transform: translateY(-2px);
 }
 
@@ -517,6 +520,7 @@ export default {
     font-weight: 600;
     line-height: 1.3;
     flex: 1;
+    color: var(--text-primary);
 }
 .status-badge {
     display: inline-block;
@@ -527,9 +531,18 @@ export default {
     white-space: nowrap;
     flex-shrink: 0;
 }
-.badge-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-.badge-warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-.badge-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.badge-green { 
+    background: var(--success-trans); 
+    color: var(--success-text); 
+}
+.badge-warning { 
+    background: var(--warning-trans); 
+    color: var(--warning-text); 
+}
+.badge-danger { 
+    background: var(--danger-trans); 
+    color: var(--danger-text); 
+}
 
 .card-body {
     flex: 1;
@@ -542,7 +555,7 @@ export default {
 }
 .meta-item {
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -550,7 +563,7 @@ export default {
 .meta-item i {
     width: 16px;
     text-align: center;
-    color: #5a5a72;
+    color: var(--text-muted);
 }
 
 .card-footer {
@@ -558,43 +571,44 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding-top: 12px;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid var(--border-light);
 }
 .steps-count {
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
 }
 .steps-count i { margin-right: 6px; }
 .click-hint {
     font-size: 13px;
-    color: #5a5a72;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 4px;
     transition: color 0.2s;
 }
-.manual-card:hover .click-hint { color: #a78bfa; }
+.manual-card:hover .click-hint { color: var(--accent-text); }
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 60px 20px;
     text-align: center;
 }
 .empty-header i {
     font-size: 48px;
-    color: #2d2d3d;
+    color: var(--border-color);
     margin-bottom: 16px;
 }
 .empty-title {
     font-size: 20px;
     font-weight: 600;
     margin: 0 0 8px 0;
+    color: var(--text-primary);
 }
 .empty-text {
-    color: #8b8b9e;
+    color: var(--text-muted);
     font-size: 14px;
     margin: 4px 0;
 }

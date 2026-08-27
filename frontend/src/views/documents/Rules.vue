@@ -1,13 +1,8 @@
 <template>
   <div class="rules-page">
-    <!-- Хлебные крошки -->
-    <div class="breadcrumbs">
-      <router-link to="/home" class="breadcrumb-link">
-        <i class="fas fa-home"></i> Главная
-      </router-link>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-current">Правила использования</span>
-    </div>
+    <Header
+      title="Правила использования сервиса"
+    />
 
     <!-- Заголовок страницы -->
     <div class="page-header">
@@ -130,8 +125,12 @@
 </template>
 
 <script>
+import Header from '../../components/Header.vue';
+
 export default {
   name: 'Rules',
+
+  components: { Header },
 
   data() {
     return {
@@ -468,6 +467,7 @@ export default {
 .page-header-content h1 {
   margin-bottom: 4px;
   font-size: 28px;
+  color: var(--text-primary);
 }
 
 .page-subtitle {
@@ -477,7 +477,7 @@ export default {
 }
 
 .domain {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .welcome-message {
@@ -487,7 +487,7 @@ export default {
   padding: 6px 16px;
   background: var(--success-trans);
   border-radius: 20px;
-  color: var(--success);
+  color: var(--success-text);
   font-weight: 600;
   font-size: 15px;
   margin-bottom: 10px;
@@ -511,7 +511,7 @@ export default {
   padding: 8px 16px;
   background: var(--accent-trans);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 14px;
   font-weight: 500;
 }
@@ -590,10 +590,11 @@ export default {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 2px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .section-number {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 700;
 }
 
@@ -622,7 +623,7 @@ export default {
 }
 
 .section-content a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: none;
 }
 
@@ -708,7 +709,7 @@ export default {
 }
 
 .text-danger {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 /* --- Highlight Boxes --- */
@@ -736,7 +737,7 @@ export default {
 }
 
 .highlight-box.warning i {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .highlight-box.info {
@@ -761,7 +762,7 @@ export default {
   padding: 10px 20px;
   background: var(--accent-trans);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 16px;
   font-weight: 500;
   text-decoration: none;
@@ -770,7 +771,7 @@ export default {
 
 .contact-email a:hover {
   background: var(--accent);
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -789,7 +790,7 @@ export default {
 .thanks-icon {
   flex-shrink: 0;
   font-size: 48px;
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 .thanks-text h3 {
@@ -819,7 +820,7 @@ export default {
   padding: 10px 20px;
   background: var(--accent-trans);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 16px;
   font-weight: 500;
   text-decoration: none;
@@ -828,7 +829,7 @@ export default {
 
 .thanks-contact a:hover {
   background: var(--accent);
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -837,7 +838,7 @@ export default {
   background: var(--bg-secondary);
   padding: 12px 16px;
   border-radius: 8px;
-  border-left: 3px solid var(--warning);
+  border-left: 3px solid var(--warning-text);
   color: var(--text-secondary);
   font-size: 14px;
   margin-top: 12px;
@@ -852,7 +853,7 @@ export default {
   height: 48px;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: #fff;
   border: none;
   font-size: 20px;
   cursor: pointer;
@@ -929,7 +930,7 @@ export default {
 }
 
 .legal-footer a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: none;
 }
 
@@ -1086,7 +1087,7 @@ export default {
 
   .section-card {
     break-inside: avoid;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
     background: white !important;
     color: black !important;
   }
@@ -1099,12 +1100,16 @@ export default {
 
   .page-header {
     background: white !important;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
+  }
+
+  .page-header-content h1 {
+    color: black !important;
   }
 
   .toc {
     background: white !important;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
   }
 
   .highlight-box {
@@ -1138,6 +1143,12 @@ export default {
   .thanks-contact a {
     background: #f5f5f5 !important;
     color: #333 !important;
+  }
+
+  .toc a,
+  .section-content a,
+  .legal-footer a {
+    color: #1a73e8 !important;
   }
 }
 </style>

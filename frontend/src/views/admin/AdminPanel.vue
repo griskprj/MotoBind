@@ -224,10 +224,12 @@ export default {
     padding: 12px 14px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
     transition: all 0.3s ease;
 }
 .stat-card:hover {
     background-color: var(--accent-trans);
+    border-color: var(--accent);
 }
 
 .card-icon {
@@ -249,6 +251,7 @@ export default {
 .card-value {
     font-size: 21px;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 @media (max-width: 1000px) {
@@ -288,6 +291,12 @@ export default {
     padding: 12px 14px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
+}
+
+.chart-wrapper h3 {
+    color: var(--text-primary);
+    margin-bottom: 12px;
 }
 
 /* --- last reg */
@@ -295,6 +304,12 @@ export default {
     padding: 12px 14px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
+}
+
+.last-reg-wrapper h3 {
+    color: var(--text-primary);
+    margin-bottom: 12px;
 }
 
 .last-reg-cards {
@@ -306,26 +321,46 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+    padding: 8px 0;
+    margin-bottom: 4px;
+}
+
+.last-reg-card:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .user-info {
     display: flex;
     gap: 14px;
     align-items: center;
-    margin-bottom: 8px;
 }
 
 .user-img {
     width: 38px;
     height: 38px;
     border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+.reg-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+    color: var(--text-primary);
 }
 
 .user-time {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-muted);
+    margin: 0;
 }
 
 .user-status {
@@ -333,19 +368,35 @@ export default {
     background-color: var(--bg-secondary);
     border-radius: 6px;
     color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.user-status p {
+    margin: 0;
 }
 
 .user-status.admin {
-    color: var(--accent);
-    font-weight: 600;
-}
-.user-status.club_member {
-    color: var(--success);
+    color: var(--accent-text);
+    background-color: var(--accent-trans);
     font-weight: 600;
 }
 
-.last-reg-wrapper button {
+.user-status.club_member {
+    color: var(--success-text);
+    background-color: var(--success-trans);
+    font-weight: 600;
+}
+
+.user-status.motorcyclist {
+    color: var(--text-secondary);
+    background-color: var(--border-light);
+}
+
+.last-reg-wrapper .btn {
     width: 100%;
+    margin-top: 12px;
+    text-decoration: none;
 }
 
 @media (max-width: 1300px) {
@@ -361,6 +412,12 @@ export default {
     padding: 14px 14px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
+}
+
+.fast-section-wrapper h3 {
+    color: var(--text-primary);
+    margin-bottom: 16px;
 }
 
 .fast-action-card-wrapper {
@@ -375,16 +432,20 @@ export default {
     justify-content: center;
     align-items: center;
     gap: 14px;
-    padding: 12px 14px;
-    background-color: var(--bg-card);
+    padding: 16px 20px;
+    background-color: var(--bg-secondary);
     border-radius: 10px;
     border: 2px solid var(--border-color);
     transition: all 0.3s ease;
     cursor: pointer;
+    text-decoration: none;
+    min-height: 72px;
 }
+
 .fast-action-card:hover {
     background-color: var(--accent-trans);
     border-color: var(--accent);
+    transform: translateY(-2px);
 }
 
 .fast-action-card.link {
@@ -394,10 +455,15 @@ export default {
 .action-card-icon {
     font-size: 24px;
     color: var(--accent);
+    flex-shrink: 0;
 }
 
 .fast-action-text {
     color: var(--text-secondary);
+    font-weight: 500;
+    margin: 0;
+    font-size: 14px;
+    text-align: center;
 }
 
 @media (max-width: 800px) {
@@ -411,6 +477,10 @@ export default {
     .fast-action-card-wrapper {
         grid-template-columns: repeat(1, 1fr);
         grid-template-rows: repeat(4, 1fr);
+    }
+    
+    .fast-action-card {
+        min-height: 60px;
     }
 }
 

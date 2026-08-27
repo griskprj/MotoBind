@@ -577,10 +577,12 @@ export default {
     padding: 12px 14px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
     transition: all 0.3s ease;
 }
 .stat-card:hover {
     background-color: var(--accent-trans);
+    border-color: var(--accent);
 }
 
 .card-icon {
@@ -596,11 +598,11 @@ export default {
 }
 .card-icon.success {
     background-color: var(--success-trans);
-    color: var(--success);
+    color: var(--success-text);
 }
 .card-icon.danger {
     background-color: var(--danger-trans);
-    color: var(--danger);
+    color: var(--danger-text);
 }
 
 .card-title {
@@ -611,6 +613,7 @@ export default {
 .card-value {
     font-size: 21px;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 @media (max-width: 1000px) {
@@ -646,6 +649,7 @@ export default {
     padding: 14px 16px;
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
 }
 
 /* filters */
@@ -670,6 +674,52 @@ export default {
     gap: 14px;
 }
 
+.inputs-wrapper label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.inputs-wrapper input,
+.inputs-wrapper select {
+    padding: 8px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+    min-width: 150px;
+}
+
+.inputs-wrapper input:focus,
+.inputs-wrapper select:focus {
+    border-color: var(--accent);
+}
+
+.inputs-wrapper input::placeholder {
+    color: var(--text-muted);
+}
+
+.inputs-wrapper select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.inputs-wrapper select option {
+    background: var(--bg-input);
+    color: var(--text-primary);
+}
+
 .filters-actions {
     display: flex;
     gap: 8px;
@@ -689,6 +739,7 @@ export default {
     .inputs-group {
         flex-direction: column;
         align-items: normal;
+        width: 100%;
     }
     .inputs-wrapper {
         display: grid;
@@ -714,8 +765,8 @@ export default {
 
 /* table */
 .users-table-wrapper {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     overflow-x: auto;
     margin-bottom: 16px;
@@ -726,9 +777,9 @@ export default {
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-light);
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     font-weight: 500;
     min-width: 700px;
 }
@@ -744,18 +795,19 @@ export default {
     gap: 8px;
     padding: 14px 16px;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-light);
     transition: background 0.2s;
     cursor: pointer;
     min-width: 700px;
 }
 
 .tr:hover {
-    background: rgba(255,255,255,0.02);
+    background: var(--border-light);
 }
 
 .td {
     font-size: 14px;
+    color: var(--text-primary);
 }
 
 .last-reg-cards {
@@ -778,6 +830,7 @@ export default {
 
 .user-name {
     font-weight: 600;
+    color: var(--text-primary);
 }
 .user-email {
     font-size: 14px;
@@ -788,6 +841,8 @@ export default {
     width: 38px;
     height: 38px;
     border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
 }
 
 .table-actions-wrapper {
@@ -806,7 +861,7 @@ export default {
     flex-shrink: 0;
 }
 
-.tr:hover .action-cell { color: #a78bfa; }
+.tr:hover .action-cell { color: var(--accent-text); }
 
 .table-footer {
     padding: 16px;
@@ -815,11 +870,50 @@ export default {
 
 .btn-small.danger {
     background-color: var(--danger-trans);
-    color: var(--danger);
+    color: var(--danger-text);
 }
-.btn-small.success{ 
+.btn-small.danger:hover {
+    background-color: var(--danger-trans);
+    opacity: 0.8;
+}
+.btn-small.success {
     background-color: var(--success-trans);
-    color: var(--success);
+    color: var(--success-text);
+}
+.btn-small.success:hover {
+    background-color: var(--success-trans);
+    opacity: 0.8;
+}
+
+/* Status badges */
+.status-active {
+    display: inline-block;
+    padding: 2px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--success-trans);
+    color: var(--success-text);
+}
+
+.status-banned {
+    display: inline-block;
+    padding: 2px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--danger-trans);
+    color: var(--danger-text);
+}
+
+.status-pending {
+    display: inline-block;
+    padding: 2px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
 /* paginate */
@@ -827,10 +921,13 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .paginate-show {
     color: var(--text-secondary);
+    font-size: 14px;
 }
 
 .paginate-ui {
@@ -842,19 +939,64 @@ export default {
 .paginate-btns {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 .outline-btn.paginate {
     border: none;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
 }
 
 .outline-btn.paginate.active {
     background-color: var(--accent-trans);
+    color: var(--accent-text);
+}
+
+.outline-btn.paginate:hover:not(.active) {
+    background-color: var(--border-light);
+}
+
+.paginate-ui button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .show-per-page {
     display: flex;
     gap: 16px;
+}
+
+.show-per-page select {
+    padding: 8px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.2s;
+}
+
+.show-per-page select:focus {
+    border-color: var(--accent);
+}
+
+/* Loading state */
+.loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+    color: var(--text-secondary);
+    gap: 12px;
+}
+
+.loading-state .fa-spinner {
+    font-size: 24px;
+    color: var(--accent);
 }
 
 /* === ANIMATIONS === */
@@ -866,6 +1008,66 @@ export default {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Responsive table adjustments */
+@media (max-width: 820px) {
+    .table-header {
+        display: none;
+    }
+    .tr {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 16px;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: var(--bg-primary);
+        position: relative;
+        min-width: unset;
+    }
+    .tr:hover {
+        background: var(--bg-primary);
+    }
+    .user-cell {
+        order: 1;
+        margin-bottom: 4px;
+    }
+    .td:nth-child(2) {
+        order: 2;
+        padding-left: 50px;
+        font-size: 13px;
+    }
+    .td:nth-child(3) {
+        order: 3;
+        padding-left: 50px;
+        font-size: 13px;
+    }
+    .td:nth-child(4) {
+        order: 4;
+        padding-left: 50px;
+        font-size: 13px;
+    }
+    .td:nth-child(5) {
+        order: 5;
+        padding-left: 50px;
+        font-size: 13px;
+    }
+    .td:not(.user-cell):not(.table-actions-wrapper)::before {
+        content: attr(data-label);
+        color: var(--text-muted);
+        font-weight: 400;
+        margin-right: 8px;
+    }
+    .td:nth-child(2)::before {
+        content: "Роль: ";
+    }
+    .td:nth-child(3)::before {
+        content: "Статус: ";
+    }
+    .td:nth-child(4)::before {
+        content: "Дата регистрации: ";
     }
 }
 </style>

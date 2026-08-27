@@ -1,13 +1,8 @@
 <template>
   <div class="privacy-policy-page">
-    <!-- Хлебные крошки -->
-    <div class="breadcrumbs">
-      <router-link to="/home" class="breadcrumb-link">
-        <i class="fas fa-home"></i> Главная
-      </router-link>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-current">Политика конфиденциальности</span>
-    </div>
+    <Header
+      title="Политика конфиденциальности"
+    />
 
     <!-- Заголовок страницы -->
     <div class="page-header">
@@ -100,8 +95,12 @@
 </template>
 
 <script>
+import Header from '../../components/Header.vue';
+
 export default {
   name: 'PrivacyPolicy',
+
+  components: { Header },
 
   data() {
     return {
@@ -524,6 +523,7 @@ export default {
 .page-header-content h1 {
   margin-bottom: 4px;
   font-size: 28px;
+  color: var(--text-primary);
 }
 
 .page-subtitle {
@@ -533,7 +533,7 @@ export default {
 }
 
 .domain {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .page-description {
@@ -549,7 +549,7 @@ export default {
   padding: 8px 16px;
   background: var(--accent-trans);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 14px;
   font-weight: 500;
 }
@@ -628,10 +628,11 @@ export default {
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 2px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .section-number {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 700;
 }
 
@@ -731,7 +732,7 @@ export default {
 }
 
 .contact-value a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: none;
 }
 
@@ -764,7 +765,7 @@ export default {
 }
 
 .highlight-box.success i {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .highlight-box.warning {
@@ -774,7 +775,7 @@ export default {
 }
 
 .highlight-box.warning i {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .highlight-box.info {
@@ -801,7 +802,7 @@ export default {
 }
 
 .text-danger {
-  color: var(--danger);
+  color: var(--danger-text);
 }
 
 /* --- Сетка прав --- */
@@ -851,7 +852,7 @@ export default {
   padding: 10px 20px;
   background: var(--accent-trans);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 16px;
   font-weight: 500;
   text-decoration: none;
@@ -860,7 +861,7 @@ export default {
 
 .contact-email a:hover {
   background: var(--accent);
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -875,7 +876,7 @@ export default {
   padding: 10px 20px;
   background: var(--bg-secondary);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 15px;
   text-decoration: none;
   border: 1px solid var(--border-color);
@@ -892,7 +893,7 @@ export default {
   background: var(--bg-secondary);
   padding: 12px 16px;
   border-radius: 8px;
-  border-left: 3px solid var(--warning);
+  border-left: 3px solid var(--warning-text);
   color: var(--text-secondary);
   font-size: 14px;
   margin-top: 12px;
@@ -907,7 +908,7 @@ export default {
   height: 48px;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: #fff;
   border: none;
   font-size: 20px;
   cursor: pointer;
@@ -984,7 +985,7 @@ export default {
 }
 
 .legal-footer a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: none;
 }
 
@@ -1139,7 +1140,7 @@ export default {
 
   .section-card {
     break-inside: avoid;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
     background: white !important;
     color: black !important;
   }
@@ -1152,12 +1153,16 @@ export default {
 
   .page-header {
     background: white !important;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
+  }
+
+  .page-header-content h1 {
+    color: black !important;
   }
 
   .toc {
     background: white !important;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
   }
 
   .contact-card {
@@ -1179,6 +1184,11 @@ export default {
 
   .legal-footer {
     background: white !important;
+  }
+
+  .toc a,
+  .section-content a {
+    color: #1a73e8 !important;
   }
 }
 </style>

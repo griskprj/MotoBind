@@ -80,7 +80,6 @@
         <div class="modal-actions">
             <div class="actions-wrapper">
                 <button @click="openDeleteModal" class="btn-close danger"><i class="fa fa-trash"></i> Удалить</button>
-                <button @click="openEditModal" class="btn-close edit" disabled><i class="fa fa-pen"></i> Редактировать</button>
             </div>
             <button @click="$emit('close')" class="btn-close">
                 <i class="fa fa-xmark"></i> Закрыть
@@ -384,9 +383,10 @@ export default {
 }
 
 .actions-wrapper {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 8px;
+    width: 100%;
 }
 
 .btn-danger {

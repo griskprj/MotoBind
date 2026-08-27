@@ -29,7 +29,7 @@
                         <div class="moto-name">{{ moto.name }}</div>
                         <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
                     </div>
-                    <div v-if="motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
+                    <div v-if="motorcycle && motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
                 </div>
                 
                 <div @click="showAddMotoModal = true" class="moto-card add-card">
@@ -48,10 +48,10 @@
                         <span class="big-title">{{ motorcycle.name }}</span>
                     </div>
                     <div class="big-card-header-actions">
-                        <button @click="showEditMotoModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
-                        <button @click="showDeleteMotoModal = true" class="icon-btn"><i class="fa fa-trash"></i></button>
-                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn"><i class="fa fa-tachometer"></i></button>
-                        <button @click="showPhotoModal = true" class="icon-btn"><i class="fa fa-camera"></i></button>
+                        <button @click="showEditMotoModal = true" class="icon-btn" title="Редактировать мотоцикл"><i class="fa fa-pen"></i></button>
+                        <button @click="showDeleteMotoModal = true" class="icon-btn" title="Удалить мотоцикл"><i class="fa fa-trash"></i></button>
+                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег мотоцикла"><i class="fa fa-tachometer"></i></button>
+                        <button @click="showPhotoModal = true" class="icon-btn" title="Изменить фото мотоцикла"><i class="fa fa-camera"></i></button>
                     </div>
                     <div class="big-card-img" @click="showPhotoModal = true" style="cursor: pointer;">
                         <img 
@@ -663,7 +663,6 @@ export default {
 </script>
 
 <style scoped>
-/* Добавляем стили для фото */
 .moto-thumb {
     width: 36px;
     height: 36px;
@@ -675,8 +674,8 @@ export default {
     width: 36px;
     height: 36px;
     border-radius: 8px;
-    background: rgba(124, 58, 237, 0.15);
-    color: #a78bfa;
+    background: var(--accent-trans);
+    color: var(--accent-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -688,7 +687,6 @@ export default {
     font-size: 18px;
 }
 
-/* Стили для фото на большой карточке */
 .big-card-img {
     position: relative;
     border-radius: 12px;
@@ -741,24 +739,24 @@ export default {
 .tab-btn {
     padding: 8px 20px;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--border-light);
     background: transparent;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
     transition: 0.2s;
 }
 .tab-btn.active {
-    background: rgba(124, 58, 237, 0.2);
-    border-color: #7c3aed;
-    color: #a78bfa;
+    background: var(--accent-trans);
+    border-color: var(--accent);
+    color: var(--accent-text);
 }
 .tab-btn.disable {
     cursor: default;
 }
 .tab-btn.outline:hover {
-    background: rgba(124, 58, 237, 0.1);
+    background: var(--accent-trans);
 }
 .header-right {
     display: flex;
@@ -767,7 +765,7 @@ export default {
 }
 .notification-icon {
     font-size: 20px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
 }
 .profile-wrapper {
@@ -780,12 +778,12 @@ export default {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 2px solid #7c3aed;
+    border: 2px solid var(--accent);
 }
 .dropdown-trigger {
     background: transparent;
     border: none;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
 }
 .dropdown-list {
@@ -793,11 +791,11 @@ export default {
     top: 48px;
     right: 0;
     background: var(--bg-primary);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 8px;
     min-width: 140px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    box-shadow: var(--shadow-modal);
     z-index: 100;
     animation: slideInUp 0.2s ease;
 }
@@ -811,14 +809,14 @@ export default {
     padding: 8px 12px;
     background: transparent;
     border: none;
-    color: #ccc;
+    color: var(--text-secondary);
     text-align: left;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
 }
 .dropdown-item:hover {
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
 }
 
 /* ===== MOTORCYCLE SELECTOR ===== */
@@ -831,19 +829,19 @@ export default {
     overflow-x: auto;
     padding: 4px 0 8px 0;
     scrollbar-width: thin;
-    scrollbar-color: #2d2d3d transparent;
+    scrollbar-color: var(--border-color) transparent;
 }
 .moto-scroll-container::-webkit-scrollbar {
     height: 4px;
 }
 .moto-scroll-container::-webkit-scrollbar-thumb {
-    background: #2d2d3d;
+    background: var(--border-color);
     border-radius: 4px;
 }
 .moto-card {
     flex: 0 0 220px;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 14px 16px;
     display: flex;
@@ -853,17 +851,17 @@ export default {
     transition: 0.2s;
 }
 .moto-card:hover {
-    background: #202036;
+    background: var(--bg-card-hover);
 }
 .moto-card.active {
-    border-color: #7c3aed;
-    background: rgba(124, 58, 237, 0.1);
+    border-color: var(--accent);
+    background: var(--accent-trans);
 }
 .moto-card.add-card {
-    border: 2px dashed rgba(255,255,255,0.1);
+    border: 2px dashed var(--border-color);
     background: transparent;
     justify-content: center;
-    color: #7c3aed;
+    color: var(--accent);
 }
 .moto-card-info {
     flex: 1;
@@ -878,13 +876,13 @@ export default {
 }
 .moto-meta {
     font-size: 12px;
-    color: #8b8b9e;
+    color: var(--text-muted);
 }
 .moto-active-badge {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #7c3aed;
+    background: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -902,8 +900,8 @@ export default {
 
 /* LEFT COLUMN */
 .big-moto-card {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 20px;
 }
@@ -919,13 +917,17 @@ export default {
 }
 .big-card-header-actions {
     display: flex;
+    justify-content: space-between;
     gap: 4px;
     margin-bottom: 16px;
 }
+.big-card-header-actions button {
+    width: 100%;
+}
 .icon-btn {
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
     border: none;
-    color: #8b8b9e;
+    color: var(--text-muted);
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -933,8 +935,8 @@ export default {
     transition: 0.2s;
 }
 .icon-btn:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: var(--border-color);
+    color: var(--text-primary);
 }
 .big-card-img {
     border-radius: 12px;
@@ -963,7 +965,7 @@ export default {
 }
 .spec-item .label {
     font-size: 12px;
-    color: #8b8b9e;
+    color: var(--text-muted);
 }
 .spec-item .value {
     font-size: 14px;
@@ -975,7 +977,7 @@ export default {
     border-radius: 4px;
 }
 .notes-block {
-    background: rgba(255,255,255,0.03);
+    background: var(--border-light);
     border-radius: 12px;
     padding: 14px;
 }
@@ -989,7 +991,7 @@ export default {
 }
 .notes-text {
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -1004,15 +1006,15 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 16px;
     text-align: center;
 }
 .stat-head {
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1020,7 +1022,7 @@ export default {
 }
 .stat-head i {
     font-size: 16px;
-    color: #a78bfa;
+    color: var(--accent-text);
 }
 .stat-val {
     font-size: 22px;
@@ -1029,8 +1031,8 @@ export default {
 
 /* ===== TABLE (Fully Responsive) ===== */
 .maintenance-table-wrapper {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     overflow: hidden;
 }
@@ -1038,9 +1040,9 @@ export default {
     display: grid;
     grid-template-columns: 160px 1fr 90px 100px 120px 40px;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-light);
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     font-weight: 500;
 }
 .table-body {
@@ -1052,12 +1054,12 @@ export default {
     grid-template-columns: 160px 1fr 90px 100px 120px 40px;
     padding: 14px 16px;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-light);
     transition: background-color 0.2s;
     cursor: pointer;
 }
 .tr:hover {
-    background-color: rgba(255,255,255,0.02);
+    background-color: var(--border-light);
 }
 .td {
     font-size: 14px;
@@ -1077,20 +1079,20 @@ export default {
     font-size: 14px;
     flex-shrink: 0;
 }
-.icon-square.purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
-.icon-square.green { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.icon-square.purple { background: var(--accent-trans); color: var(--accent-text); }
+.icon-square.green { background: var(--success-trans); color: var(--success-text); }
 .icon-square.blue { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
 .service-cell {
     display: flex;
     flex-direction: column;
 }
 .s-title { font-weight: 500; }
-.s-desc { font-size: 13px; color: #8b8b9e; }
+.s-desc { font-size: 13px; color: var(--text-muted); }
 .badge-green {
     display: inline-block;
     padding: 3px 12px;
     background: var(--success-trans);
-    color: var(--success);
+    color: var(--success-text);
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
@@ -1099,7 +1101,16 @@ export default {
     display: inline-block;
     padding: 3px 12px;
     background: var(--warning-trans);
-    color: var(--warning);
+    color: var(--warning-text);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.badge-danger {
+    display: inline-block;
+    padding: 3px 12px;
+    background: var(--danger-trans);
+    color: var(--danger-text);
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
@@ -1107,10 +1118,10 @@ export default {
 .action-cell {
     display: flex;
     justify-content: flex-end;
-    color: #4b4b5e;
+    color: var(--text-muted);
     transition: color 0.2s;
 }
-.tr:hover .action-cell { color: #a78bfa; }
+.tr:hover .action-cell { color: var(--accent-text); }
 .table-footer {
     padding: 16px;
     text-align: center;
@@ -1118,7 +1129,7 @@ export default {
 .show-more {
     background: transparent;
     border: none;
-    color: #7c3aed;
+    color: var(--accent);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -1229,13 +1240,13 @@ export default {
         grid-template-columns: 1fr;
         gap: 4px;
         padding: 16px;
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         margin-bottom: 8px;
-        background: #0f0f1a;
+        background: var(--bg-primary);
         position: relative;
     }
-    .tr:hover { background: #0f0f1a; }
+    .tr:hover { background: var(--bg-primary); }
     .date-cell {
         order: 1;
         margin-bottom: 4px;
@@ -1251,7 +1262,7 @@ export default {
     }
     .td:not(.date-cell):not(.service-cell):not(.action-cell)::before {
         content: attr(data-label);
-        color: #8b8b9e;
+        color: var(--text-muted);
         font-weight: 400;
         margin-right: 4px;
     }
