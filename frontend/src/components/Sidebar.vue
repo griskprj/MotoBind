@@ -115,6 +115,15 @@
                         <span v-if="!isCollapsed || !isDesktop">Пользователи</span>
                     </router-link>
                     <router-link
+                        to="/admin/motorcycles"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/motorcycles'}"
+                        @click="closeSidebar"
+                    >
+                        <i class="fa fa-motorcycle"></i>
+                        <span v-if="!isCollapsed || !isDesktop">Мотоциклы</span>
+                    </router-link>
+                    <router-link
                         to="/admin/manuals"
                         class="nav-link"
                         :class="{ active: $route.path === '/admin/manuals'}"
