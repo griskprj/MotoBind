@@ -441,7 +441,306 @@ label {
   padding-right: 16px;
 }
 
-/* Modals */
+/* ===== ОБЩИЕ СТИЛИ ДЛЯ ФОРМ В МОДАЛКАХ ===== */
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.modal-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-form-group label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modal-form-group label .required {
+    color: var(--danger-text);
+    font-weight: 700;
+}
+
+.modal-form-group input {
+  margin-left: 4px;
+}
+
+.modal-form-group input,
+.modal-form-group select,
+.modal-form-group textarea {
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.modal-form-group input:focus,
+.modal-form-group select:focus,
+.modal-form-group textarea:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-trans);
+}
+
+.modal-form-group input::placeholder,
+.modal-form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.modal-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+/* ===== КНОПКИ В МОДАЛКАХ ===== */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.modal-actions .btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modal-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-actions .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff;
+}
+
+.modal-actions .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
+}
+
+.modal-actions .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-actions .btn-secondary:hover:not(:disabled) {
+    background: var(--border-color);
+}
+
+.modal-actions .btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.modal-actions .btn-danger:hover:not(:disabled) {
+    background: var(--danger-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.modal-actions .btn-success {
+    background: var(--success);
+    color: #fff;
+}
+
+.modal-actions .btn-success:hover:not(:disabled) {
+    background: var(--success-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.modal-actions .btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.modal-actions .btn-outline:hover:not(:disabled) {
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+
+/* ===== ИНФО-БЛОКИ ===== */
+.modal-info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+}
+
+.modal-info-block.info {
+    background: var(--accent-trans);
+    border: 1px solid var(--accent-light);
+}
+
+.modal-info-block.info .modal-info-icon {
+    color: var(--accent-text);
+}
+
+.modal-info-block.success {
+    background: var(--success-trans);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.modal-info-block.success .modal-info-icon {
+    color: var(--success-text);
+}
+
+.modal-info-block.warning {
+    background: var(--warning-trans);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.modal-info-block.warning .modal-info-icon {
+    color: var(--warning-text);
+}
+
+.modal-info-block.danger {
+    background: var(--danger-trans);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.modal-info-block.danger .modal-info-icon {
+    color: var(--danger-text);
+}
+
+.modal-info-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.modal-info-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ===== КАРТОЧКИ ДАННЫХ ===== */
+.modal-data-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-light);
+}
+
+.modal-data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-data-item:last-child {
+    border-bottom: none;
+}
+
+.modal-data-label {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.modal-data-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+.modal-data-value .color-dot {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 6px;
+    border: 1px solid var(--border-color);
+}
+
+/* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+@media (max-width: 640px) {
+    .modal-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        padding: 0.8rem;
+    }
+
+    .modal-data-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        padding: 8px 0;
+    }
+
+    .modal-data-value {
+        text-align: left;
+        width: 100%;
+    }
+
+    .modal-info-block {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .modal-info-icon {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .modal-form-group input,
+    .modal-form-group select,
+    .modal-form-group textarea {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.7rem;
+    }
+}
+
 .modal-wrapper {
 position: fixed;
   top: 0;

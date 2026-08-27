@@ -330,9 +330,6 @@ export default {
                 const { data } = await api.post('/maintenance/', formData)
                 
                 await this.loadData()
-                this.showAddMaintenanceModal = false
-                
-                alert('Обслуживание успешно добавлено!')
             } catch (err) {
                 console.error('Failed create maintenance:', err)
                 alert(err.response?.data?.error || 'Ошибка при добавлении обслуживания')
