@@ -14,6 +14,11 @@ class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
     completed_date: Optional[str] = Field(None)
     cost: Optional[int] = Field(None, ge=0)
 
+    model_config = {
+        "populate_by_name": True,
+        "str_strip_whitespace": True,
+    }
+
     @model_validator(mode="after")
     def validate_exclusive_fields(self) -> "CreateMaintenanceSchema":
         """Проверяет, что нельзя указать одновременно planned и completed поля"""

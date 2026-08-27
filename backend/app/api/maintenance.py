@@ -78,6 +78,7 @@ def mark_maintenance_as_completed(maintenance_id):
         cost=data.cost,
         repeat=data.is_repeat,
         interval=data.interval,
+        interval_days=data.interval_days,
     )
 
     response = {

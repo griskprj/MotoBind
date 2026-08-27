@@ -119,21 +119,15 @@
             </div>
 
             <!-- Описание -->
-            <div class="modal-form-group"">
-                <label v-if="selectedType === 'history'">
+            <div class="modal-form-group">
+                <label>
                     Описание работы
                     <textarea 
                         v-model="form.description"
                         rows="2"
-                        placeholder="Опишите, что было сделано..."
-                    ></textarea>
-                </label>
-                <label v-else>
-                    Описание работы
-                    <textarea 
-                        v-model="form.description"
-                        rows="2"
-                        placeholder="Опишите, что необходимо сделать..."
+                        :placeholder="selectedType === 'history' 
+                            ? 'Опишите, что было сделано...' 
+                            : 'Опишите, что необходимо сделать...'"
                     ></textarea>
                 </label>
             </div>
@@ -192,17 +186,53 @@
             </template>
 
             <template v-if="selectedType === 'planned'">
+                <div class="modal-info-block info" style="margin-bottom: 14px;">
+                    <div class="modal-info-icon">
+                        <i class="fa fa-info-circle"></i>
+                    </div>
+                    <p class="modal-info-text">
+                        Вы можете запланировать обслуживание по <strong>пробегу</strong> или по <strong>дате</strong>.
+                        Заполните хотя бы одно поле.
+                    </p>
+                </div>
+
+                <!-- Планирование по пробегу -->
                 <div class="modal-form-group">
                     <label>
-                        Плановый пробег (км) <span class="required">*</span>
+                        Плановый пробег (км)
                         <input
                             v-model.number="form.planned_mileage"
                             type="number"
-                            placeholder="0"
+                            placeholder="Например: 15000"
                             min="0"
-                            required
                         />
                     </label>
+                </div>
+
+                <!-- ИЛИ -->
+                <div class="or-divider">
+                    <span>или</span>
+                </div>
+
+                <!-- Планирование по дате -->
+                <div class="modal-form-group">
+                    <label>
+                        Плановая дата
+                        <input
+                            v-model="form.planned_date"
+                            type="date"
+                            :min="today"
+                        />
+                    </label>
+                </div>
+
+                <div v-if="!form.planned_mileage && !form.planned_date" class="modal-info-block warning">
+                    <div class="modal-info-icon">
+                        <i class="fa fa-exclamation-triangle"></i>
+                    </div>
+                    <p class="modal-info-text">
+                        Укажите хотя бы один параметр: пробег или дату.
+                    </p>
                 </div>
 
                 <div class="modal-info-block info">
@@ -210,7 +240,7 @@
                         <i class="fa fa-bell"></i>
                     </div>
                     <p class="modal-info-text">
-                        Вы получите уведомление, когда мотоцикл достигнет указанного пробега
+                        Вы получите уведомление, когда наступит указанная дата или мотоцикл достигнет указанного пробега.
                     </p>
                 </div>
             </template>
@@ -255,6 +285,10 @@
                         <span class="summary-label">Плановый пробег</span>
                         <span class="summary-value">{{ form.planned_mileage }} км</span>
                     </div>
+                    <div v-if="selectedType === 'planned' && form.planned_date" class="summary-item">
+                        <span class="summary-label">Плановая дата</span>
+                        <span class="summary-value">{{ formatDate(form.planned_date) }}</span>
+                    </div>
                 </div>
             </div>
         </template>
@@ -294,7 +328,7 @@
                 <button 
                     v-if="currentStep === 2"
                     class="btn btn-primary" 
-                    :disabled="!isFormValid"
+                    :disabled="!isFormValid || loading"
                     @click="submit"
                 >
                     <span v-if="!loading">
@@ -349,7 +383,8 @@ export default {
                 cost: null,
                 mileage: null,
                 date: null,
-                planned_mileage: null
+                planned_mileage: null,
+                planned_date: null
             },
             templates: [],
             currentDate: new Date().toISOString().split('T')[0],
@@ -358,6 +393,10 @@ export default {
     },
 
     computed: {
+        today() {
+            return new Date().toISOString().split('T')[0]
+        },
+
         currentStepTitle() {
             const titles = {
                 1: 'Добавить обслуживание',
@@ -411,7 +450,10 @@ export default {
             }
 
             if (this.selectedType === 'planned') {
-                return baseValid && this.form.planned_mileage && this.form.planned_mileage > 0
+                // Хотя бы одно поле заполнено: пробег или дата
+                const hasPlanned = (this.form.planned_mileage && this.form.planned_mileage > 0) ||
+                                   this.form.planned_date
+                return baseValid && hasPlanned
             }
 
             return false
@@ -427,11 +469,19 @@ export default {
     },
 
     methods: {
-        getPhotoUrl(photoPath) {
-            if (!photoPath) return null
-            if (photoPath.startsWith('http')) return photoPath
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${photoPath}`
+        formatDate(dateString) {
+            if (!dateString) return '—'
+            try {
+                const date = new Date(dateString)
+                if (isNaN(date.getTime())) return '—'
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                })
+            } catch {
+                return '—'
+            }
         },
 
         getMotoName(id) {
@@ -482,7 +532,8 @@ export default {
                 cost: null,
                 mileage: null,
                 date: null,
-                planned_mileage: null
+                planned_mileage: null,
+                planned_date: null
             }
             this.templates = []
             this.loading = false
@@ -508,12 +559,13 @@ export default {
                 } else {
                     payload = {
                         ...payload,
-                        planned_mileage: this.form.planned_mileage
+                        planned_mileage: this.form.planned_mileage || null,
+                        planned_date: this.form.planned_date || null
                     }
                 }
 
                 await this.$emit('submit', payload)
-                this.nextStep() // Переход на шаг 3 (успех)
+                this.nextStep()
             } catch (error) {
                 console.error('Submit error:', error)
                 alert('Ошибка при сохранении')
@@ -590,6 +642,30 @@ export default {
 .choice-arrow {
     color: var(--text-muted);
     font-size: 16px;
+}
+
+/* ===== РАЗДЕЛИТЕЛЬ "ИЛИ" ===== */
+.or-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0 12px;
+    color: var(--text-muted);
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.or-divider span {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 8px;
+    color: var(--text-muted);
 }
 
 /* ===== ФОРМА ===== */
@@ -679,6 +755,11 @@ export default {
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+.modal-info-block.warning {
+    background: var(--warning-trans);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
 .modal-info-block .modal-info-icon {
     font-size: 18px;
     flex-shrink: 0;
@@ -691,6 +772,10 @@ export default {
 
 .modal-info-block.success .modal-info-icon {
     color: var(--success-text);
+}
+
+.modal-info-block.warning .modal-info-icon {
+    color: var(--warning-text);
 }
 
 .modal-info-text {

@@ -43,6 +43,8 @@ class User(db.Model):
         cascade="all, delete-orphan",
     )
 
+    maintenances = db.relationship('Maintenance', back_populates='author', lazy='dynamic')  
+
     def set_password(self, password):
         """Set hash password"""
         self.password = generate_password_hash(password)

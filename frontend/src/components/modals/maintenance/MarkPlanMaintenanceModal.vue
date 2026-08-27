@@ -33,6 +33,15 @@
                     </span>
                 </span>
             </div>
+            <div v-if="maintenance?.planned_date" class="info-card-row">
+                <span class="info-label">Плановая дата</span>
+                <span class="info-value">
+                    <span class="planned-badge">
+                        <i class="fa fa-calendar"></i>
+                        {{ formatDate(maintenance.planned_date) }}
+                    </span>
+                </span>
+            </div>
         </div>
 
         <!-- Форма -->
@@ -82,17 +91,58 @@
         </label>
 
         <!-- Интервал (показывается если isRepeat = true) -->
-        <div v-if="form.isRepeat" class="modal-form-group">
-            <label>
-                Интервал (км)
-                <input
-                    v-model.number="form.interval"
-                    type="number"
-                    min="1"
-                    max="100000"
-                    placeholder="Например: 5000"
-                />
-            </label>
+        <div v-if="form.isRepeat">
+            <div class="modal-info-block info" style="margin-bottom: 12px;">
+                <div class="modal-info-icon">
+                    <i class="fa fa-info-circle"></i>
+                </div>
+                <p class="modal-info-text">
+                    Вы можете запланировать следующее обслуживание по <strong>пробегу</strong> или по <strong>дате</strong>.
+                    Заполните только одно поле.
+                </p>
+            </div>
+
+            <!-- Интервал по пробегу -->
+            <div class="modal-form-group">
+                <label>
+                    Интервал (км)
+                    <input
+                        v-model.number="form.interval"
+                        type="number"
+                        min="1"
+                        max="100000"
+                        placeholder="Например: 5000"
+                    />
+                </label>
+            </div>
+
+            <!-- ИЛИ -->
+            <div class="or-divider">
+                <span>или</span>
+            </div>
+
+            <!-- Интервал по дням -->
+            <div class="modal-form-group">
+                <label>
+                    Интервал (дни)
+                    <input
+                        v-model.number="form.interval_days"
+                        type="number"
+                        min="1"
+                        max="1095"
+                        placeholder="Например: 365 (1 год)"
+                    />
+                </label>
+            </div>
+
+            <div v-if="form.interval && form.interval_days" class="modal-info-block warning">
+                <div class="modal-info-icon">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <p class="modal-info-text">
+                    Укажите только один тип интервала: пробег или дни.
+                </p>
+            </div>
         </div>
 
         <!-- Инфо-блок -->
@@ -118,7 +168,7 @@
                 </button>
                 <button
                     class="btn btn-success"
-                    :disabled="!form.mileage || form.mileage < 0 || loading"
+                    :disabled="!isFormValid || loading"
                     @click="submit"
                 >
                     <span v-if="!loading">
@@ -163,7 +213,8 @@ export default {
                 date: null,
                 cost: null,
                 isRepeat: false,
-                interval: null
+                interval: null,
+                interval_days: null
             },
             loading: false
         }
@@ -172,6 +223,24 @@ export default {
     computed: {
         today() {
             return new Date().toISOString().split('T')[0]
+        },
+
+        isFormValid() {
+            // Проверка пробега
+            if (!this.form.mileage || this.form.mileage < 0) return false
+
+            // Если выбрано повторение, проверяем интервал
+            if (this.form.isRepeat) {
+                // Должен быть заполнен ровно один тип интервала
+                const hasInterval = this.form.interval && this.form.interval > 0
+                const hasDays = this.form.interval_days && this.form.interval_days > 0
+                
+                // Если оба заполнены или оба пусты — невалидно
+                if (hasInterval && hasDays) return false
+                if (!hasInterval && !hasDays) return false
+            }
+
+            return true
         }
     },
 
@@ -184,6 +253,21 @@ export default {
     },
 
     methods: {
+        formatDate(dateString) {
+            if (!dateString) return '—'
+            try {
+                const date = new Date(dateString)
+                if (isNaN(date.getTime())) return '—'
+                return date.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                })
+            } catch {
+                return '—'
+            }
+        },
+
         resetForm() {
             this.form = {
                 id: this.maintenance?.id || null,
@@ -192,7 +276,8 @@ export default {
                 date: this.today,
                 cost: null,
                 isRepeat: false,
-                interval: null
+                interval: null,
+                interval_days: null
             }
             this.loading = false
         },
@@ -208,9 +293,19 @@ export default {
                 return
             }
 
-            if (this.form.isRepeat && (!this.form.interval || this.form.interval <= 0)) {
-                alert('Укажите интервал для следующего обслуживания')
-                return
+            if (this.form.isRepeat) {
+                const hasInterval = this.form.interval && this.form.interval > 0
+                const hasDays = this.form.interval_days && this.form.interval_days > 0
+
+                if (!hasInterval && !hasDays) {
+                    alert('Укажите интервал (пробег или дни) для следующего обслуживания')
+                    return
+                }
+
+                if (hasInterval && hasDays) {
+                    alert('Укажите только один тип интервала: пробег или дни')
+                    return
+                }
             }
 
             this.loading = true
@@ -223,7 +318,8 @@ export default {
                     date: this.form.date || this.today,
                     cost: this.form.cost || 0,
                     isRepeat: this.form.isRepeat,
-                    interval: this.form.interval
+                    interval: this.form.interval,
+                    interval_days: this.form.interval_days
                 }
 
                 await this.$emit('submit', submitData)
@@ -292,6 +388,30 @@ export default {
     border-radius: 12px;
     color: var(--warning-text);
     font-size: 13px;
+}
+
+/* ===== РАЗДЕЛИТЕЛЬ "ИЛИ" ===== */
+.or-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0 12px;
+    color: var(--text-muted);
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.or-divider span {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 8px;
+    color: var(--text-muted);
 }
 
 /* ===== ФОРМА ===== */
@@ -377,6 +497,11 @@ export default {
     margin: 12px 0;
 }
 
+.modal-info-block.info {
+    background: var(--accent-trans);
+    border: 1px solid var(--accent-light);
+}
+
 .modal-info-block.warning {
     background: var(--warning-trans);
     border: 1px solid rgba(245, 158, 11, 0.2);
@@ -384,9 +509,16 @@ export default {
 
 .modal-info-icon {
     font-size: 18px;
-    color: var(--warning-text);
     flex-shrink: 0;
     margin-top: 2px;
+}
+
+.modal-info-block.info .modal-info-icon {
+    color: var(--accent-text);
+}
+
+.modal-info-block.warning .modal-info-icon {
+    color: var(--warning-text);
 }
 
 .modal-info-text {
