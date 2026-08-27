@@ -1,5 +1,7 @@
+# services/maintenance_service.py
+
 from enum import Enum
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Any, Dict, Optional, List
 
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
@@ -9,11 +11,11 @@ from app.models.motorcycle import Motorcycle
 from app.services.motorcycle_service import MotorcycleService
 
 
-class MaintenanceStatus (Enum):
+class MaintenanceStatus(Enum):
     COMPLETED = "completed"
     PLANNED = "planned"
-    SOON = "soon"
     OVERDUE = "overdue"
+
 
 class MaintenanceService:
     """Сервис для работы с обслуживанием"""
@@ -53,7 +55,7 @@ class MaintenanceService:
             except ValueError:
                 raise ValidationError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
 
-        if completed_mileage is not None and completed_date_obj is not None:
+        if completed_mileage is not None:
             status = MaintenanceStatus.COMPLETED.value
         elif planned_mileage is not None or planned_date_obj is not None:
             status = MaintenanceStatus.PLANNED.value
@@ -78,16 +80,16 @@ class MaintenanceService:
         db.session.commit()
         return maintenance
 
-
     @staticmethod
     def mark_planned_as_done(
         planned_id: int,
         author_id: int,
         mileage: int,
-        date: str,
+        date: Optional[str] = None,
         cost: Optional[int] = None,
         repeat: bool = False,
         interval: Optional[int] = None,
+        interval_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Отмечает плановое обслуживание как выполненное"""
         planned = Maintenance.query.get(planned_id)
@@ -99,8 +101,7 @@ class MaintenanceService:
 
         if planned.status == 'completed':
             raise ValidationError("Обслуживание уже выполнено")
-        
-        # Преобразуем дату
+
         completed_date_obj = None
         if date:
             try:
@@ -119,16 +120,26 @@ class MaintenanceService:
             moto.mileage = mileage
 
         new_planned = None
-        if repeat and interval:
-            new_planned = Maintenance(
-                author_id=author_id,
-                moto_id=moto.id,
-                category=planned.category,
-                title=planned.title,
-                description=planned.description,
-                planned_mileage=moto.mileage + interval,
-                status='planned',
-            )
+        if repeat:
+            new_planned_data = {
+                'author_id': author_id,
+                'moto_id': moto.id,
+                'category': planned.category,
+                'title': planned.title,
+                'description': planned.description,
+                'status': 'planned',
+            }
+
+            if interval:
+                new_planned_data['planned_mileage'] = moto.mileage + interval
+
+            elif interval_days:
+                today = date.today()
+                new_planned_data['planned_date'] = today + timedelta(days=interval_days)
+            else:
+                raise ValidationError("Укажите интервал (пробег или дни)")
+
+            new_planned = Maintenance(**new_planned_data)
             db.session.add(new_planned)
 
         db.session.commit()
@@ -157,6 +168,12 @@ class MaintenanceService:
             if moto and kwargs["planned_mileage"] < moto.mileage:
                 raise ValidationError("Указан пробег меньше пробега мотоцикла")
 
+        if "planned_date" in kwargs and kwargs["planned_date"] is not None:
+            try:
+                kwargs["planned_date"] = datetime.strptime(kwargs["planned_date"], "%Y-%m-%d").date()
+            except ValueError:
+                raise ValidationError("Неверный формат даты")
+
         for key, value in kwargs.items():
             if hasattr(maintenance, key) and value is not None:
                 setattr(maintenance, key, value)
@@ -173,7 +190,6 @@ class MaintenanceService:
         db.session.delete(maintenance)
         db.session.commit()
 
-
     @staticmethod
     def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
         """Получить обслуживание по ID"""
@@ -187,20 +203,7 @@ class MaintenanceService:
         return maintenance
 
     @staticmethod
-    def get_last_maintenance_by_category(user_id: int, category: str) -> Maintenance:
-        """Получить обслуживание по категории"""
-        maintenances = Maintenance.query.filter(
-            category=category, author_id=user_id
-        ).all()
-        last_maintenance = None
-        for m in maintenances:
-            if m.mileage and m.mileage > last_maintenance.mileage:
-                last_maintenance = m
-
-        return m.to_dict()
-
-    @staticmethod
     def get_maintenances_by_motorcycle(user_id: int, moto_id: int) -> List[Maintenance]:
         """Получает обслуживания мотоцикла"""
-        moto = MotorcycleService.get_motorcycle_by_id(moto_id)
-        return [m for m in moto.maintenances]
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        return moto.maintenances or []

@@ -1,7 +1,5 @@
 from datetime import datetime, timezone
-
 from app.extensions import db
-from app.services.user_service import UserService
 
 class Motorcycle(db.Model):
     """Motorcycle model"""
@@ -29,6 +27,7 @@ class Motorcycle(db.Model):
     maintenances = db.relationship(
         "Maintenance", lazy="select", cascade="all, delete-orphan"
     )
+    owner = db.relationship('User', back_populates='motorcycles')
 
     def to_dict(
         self,
@@ -55,11 +54,10 @@ class Motorcycle(db.Model):
         }
 
         if include_owner and self.owner_id:
-            owner = UserService.get_user_by_id(self.owner_id)
             data['owner'] = {
-                'id': owner.id,
-                'username': owner.username,
-                'email': owner.email,
+                'id': self.owner.id,
+                'username': self.owner.username,
+                'email': self.owner.email,
             }
 
         if include_maintenance:
