@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.extensions import db
-
+from app.services.user_service import UserService
 
 class Motorcycle(db.Model):
     """Motorcycle model"""
@@ -33,6 +33,7 @@ class Motorcycle(db.Model):
     def to_dict(
         self,
         include_maintenance: bool = False,
+        include_owner: bool = False,
         include_planned_maintenance: bool = False,
         include_maintenance_nodes: bool = False,
     ):
@@ -52,6 +53,14 @@ class Motorcycle(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+        if include_owner and self.owner_id:
+            owner = UserService.get_user_by_id(self.owner_id)
+            data['owner'] = {
+                'id': owner.id,
+                'username': owner.username,
+                'email': owner.email,
+            }
 
         if include_maintenance:
             data["maintenances"] = [m.to_dict() for m in self.maintenances]

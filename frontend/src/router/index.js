@@ -290,6 +290,19 @@ const router = createRouter({
         showHeader: true
       }
     },
+    {
+      path: '/admin/motorcycles',
+      name: 'AdminMotorcycles',
+      component: () => import('../views/admin/AdminMotorcyclesPanel.vue'),
+      meta: { 
+        requiresAuth: true, 
+        requiresAdmin: true,
+        title: 'MotoBind - Управление мотоциклами',
+        description: 'Управление мотоциклами MotoBind. Просмотр и удаление мотоциклов пользователей',
+        showFooter: true,
+        showHeader: true
+      }
+    },
   ]
 })
 
