@@ -382,7 +382,7 @@ export default {
 
 .profile-card {
     background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     padding: 24px;
     text-align: center;
@@ -421,7 +421,7 @@ export default {
 }
 
 .avatar-edit-btn:hover {
-    background: #6d28d9;
+    background: var(--accent-hover);
     transform: scale(1.05);
 }
 
@@ -443,7 +443,7 @@ export default {
 }
 
 .avatar-edit-btn:hover {
-    background: #6d28d9;
+    background: var(--accent-hover);
     transform: scale(1.05);
 }
 
@@ -461,8 +461,10 @@ export default {
 }
 
 .btn-danger {
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
+    background: var(--danger-trans);
+    color: var(--danger);
+    border: 1px solid transparent;
+    padding: 10px 16px;
 }
 
 .btn-danger:hover {
@@ -473,6 +475,7 @@ export default {
     font-size: 20px;
     font-weight: 600;
     margin: 0 0 4px 0;
+    color: var(--text-primary);
 }
 
 .profile-email {
@@ -494,8 +497,8 @@ export default {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    background: rgba(74, 222, 128, 0.12);
-    color: #4ade80;
+    background: var(--success-trans);
+    color: var(--success-text);
 }
 
 .status-banned {
@@ -504,8 +507,8 @@ export default {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .status-pending {
@@ -514,8 +517,8 @@ export default {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    background: rgba(251, 191, 36, 0.12);
-    color: #fbbf24;
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
 .role-badge {
@@ -524,8 +527,8 @@ export default {
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    background: rgba(124, 58, 237, 0.12);
-    color: var(--accent);
+    background: var(--accent-trans);
+    color: var(--accent-text);
 }
 
 .profile-bio {
@@ -540,8 +543,8 @@ export default {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     padding: 16px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
     margin-bottom: 16px;
 }
 
@@ -574,7 +577,7 @@ export default {
 /* ===== SETTINGS ===== */
 .settings-card {
     background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     overflow: hidden;
     margin-bottom: 16px;
@@ -589,8 +592,8 @@ export default {
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--border-light);
 }
 
 .settings-card-header i {
@@ -602,13 +605,14 @@ export default {
     font-size: 16px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
 .sessions-count {
     margin-left: auto;
     font-size: 13px;
     color: var(--text-secondary);
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
     padding: 2px 12px;
     border-radius: 20px;
 }
@@ -625,7 +629,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .info-row:last-child {
@@ -640,6 +644,7 @@ export default {
 .info-value {
     font-size: 14px;
     font-weight: 500;
+    color: var(--text-primary);
 }
 
 .settings-card-body .btn {
@@ -658,7 +663,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .session-item:last-child {
@@ -682,6 +687,7 @@ export default {
     font-size: 14px;
     font-weight: 500;
     margin: 0;
+    color: var(--text-primary);
 }
 
 .session-meta {
@@ -701,14 +707,14 @@ export default {
 }
 
 .btn-remove-session:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--danger-trans);
     color: var(--danger);
 }
 
 .current-badge {
     font-size: 12px;
-    color: #4ade80;
-    background: rgba(74, 222, 128, 0.12);
+    color: var(--success-text);
+    background: var(--success-trans);
     padding: 2px 12px;
     border-radius: 20px;
 }
@@ -734,22 +740,22 @@ export default {
 }
 
 .btn-primary:hover {
-    background: #6d28d9;
+    background: var(--accent-hover);
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     background: transparent;
     color: var(--text-secondary);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border-input);
 }
 
 .btn-secondary:hover {
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
 }
 
 .btn-danger {
-    background: rgba(239, 68, 68, 0.12);
+    background: var(--danger-trans);
     color: var(--danger);
     border: 1px solid transparent;
     padding: 10px 16px;
@@ -867,8 +873,8 @@ export default {
     .profile-stats {
         grid-column: auto;
         grid-template-columns: repeat(3, 1fr);
-        border-top: 1px solid rgba(255,255,255,0.05);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
         padding: 16px 0;
         margin: 0 0 16px 0;
     }

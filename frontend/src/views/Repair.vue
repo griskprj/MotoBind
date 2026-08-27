@@ -123,9 +123,6 @@
           found: manual,
           notfound: !manual && selectedMoto && selectedMaintenance
         }">
-          <div class="step-indicator">
-            <span class="step-number">3</span>
-          </div>
           <div class="step-content">
             <div class="result-status">
               <div class="result-icon" v-if="manual">
@@ -309,11 +306,11 @@
         <h3>Мануал не найден</h3>
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
         <div class="empty-actions">
-          <button @click="openCreateManual">
-            <i class="fa fa-plus"></i> Создать мануал
+          <button @click="openCreateManual" class="outline-btn">
+            Создать мануал
           </button>
-          <button @click="openCompleteModal">
-            <i class="fa fa-plus"></i> Завершить обслуживание
+          <button @click="openCompleteModal" class="outline-btn">
+            Завершить обслуживание
           </button>
         </div>
       </div>
@@ -650,8 +647,8 @@ export default {
 }
 
 .stat-icon.warning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: var(--warning-trans);
+  color: var(--warning-text);
 }
 
 .stat-icon.info {
@@ -660,8 +657,8 @@ export default {
 }
 
 .stat-icon.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: var(--success-trans);
+  color: var(--success-text);
 }
 
 .stat-info {
@@ -673,6 +670,7 @@ export default {
   font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
+  color: var(--text-primary);
 }
 
 .stat-label {
@@ -737,7 +735,7 @@ export default {
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: white;
+  color: #fff;
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
@@ -775,8 +773,8 @@ export default {
 .styled-select {
   width: 100%;
   padding: 10px 36px 10px 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
   border-radius: 10px;
   color: var(--text-primary);
   font-size: 14px;
@@ -832,8 +830,8 @@ export default {
 }
 
 .status-overdue {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: var(--danger-trans);
+  color: var(--danger-text);
 }
 
 .status-planned {
@@ -850,8 +848,8 @@ export default {
 }
 
 .badge-overdue {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background: var(--danger-trans);
+  color: var(--danger-text);
   font-size: 10px;
   font-weight: 600;
   padding: 1px 8px;
@@ -879,24 +877,25 @@ export default {
 }
 
 .result-icon {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: var(--success-trans);
+  color: var(--success-text);
 }
 
 .result-icon.empty {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: var(--warning-trans);
+  color: var(--warning-text);
 }
 
 .result-icon.waiting {
   background: rgba(100, 116, 139, 0.15);
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .result-text h4 {
   margin: 0 0 4px 0;
   font-size: 15px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .result-text p {
@@ -938,6 +937,7 @@ export default {
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 700;
+  color: var(--text-primary);
 }
 
 .manual-description {
@@ -980,6 +980,7 @@ export default {
   margin: 0 0 16px 0;
   font-size: 17px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .steps-count {
@@ -1025,7 +1026,7 @@ export default {
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: white;
+  color: #fff;
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
@@ -1052,6 +1053,7 @@ export default {
   margin: 0 0 4px 0;
   font-size: 15px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .step-text {
@@ -1077,8 +1079,8 @@ export default {
 }
 
 .step-tip.warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--warning-trans);
+  color: var(--warning-text);
 }
 
 .step-tip i {
@@ -1102,14 +1104,14 @@ export default {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: rgba(245, 158, 11, 0.08);
+  background: var(--warning-trans);
   border-radius: 12px;
   border: 1px solid rgba(245, 158, 11, 0.15);
   margin-top: 20px;
 }
 
 .manual-tip i {
-  color: #f59e0b;
+  color: var(--warning-text);
   font-size: 20px;
   flex-shrink: 0;
   margin-top: 2px;
@@ -1146,6 +1148,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--text-primary);
 }
 
 .items-list {
@@ -1166,7 +1169,7 @@ export default {
 }
 
 .items-list li i {
-  color: var(--success);
+  color: var(--success-text);
   font-size: 14px;
 }
 
@@ -1178,12 +1181,12 @@ export default {
 }
 
 .complete-card {
-  background: rgba(16, 185, 129, 0.05);
+  background: var(--success-trans);
   border-color: rgba(16, 185, 129, 0.2);
 }
 
 .complete-card h4 {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .complete-text {
@@ -1208,7 +1211,7 @@ export default {
 }
 
 .complete-benefits li i {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 /* Empty states */
@@ -1243,23 +1246,30 @@ export default {
 
 .empty-icon.warning {
   background: var(--warning-trans);
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .empty-icon.warning i {
-  color: var(--warning);
+  color: var(--warning-text);
 }
 
 .empty-actions {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
+}
+
+.empty-actions button {
+  width: 100%;
 }
 
 .empty-state h3 {
   margin: 0 0 8px 0;
   font-size: 20px;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .empty-state p {
@@ -1374,6 +1384,11 @@ export default {
 
   .selection-flow {
     padding: 16px;
+  }
+
+  .empty-actions .btn {
+    min-width: unset;
+    width: 100%;
   }
 }
 

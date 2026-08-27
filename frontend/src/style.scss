@@ -21,57 +21,109 @@ body {
 
 /* ===== ТЕМНАЯ ТЕМА (по умолчанию) ===== */
 :root {
+  /* Основные цвета фона */
   --bg-primary: #0A0A0F;
   --bg-secondary: #111118;
   --bg-card: #1A1A24;
   --bg-card-hover: #202036;
+  --bg-input: #0f0f1a;
+  --bg-dropdown: #0f0f1a;
   
+  /* Цвета текста */
   --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
   --text-muted: #64748B;
+  --text-inverse: #0A0A0F;
   
+  /* Цвета границ */
   --border-color: #2D2D3A;
+  --border-light: rgba(255,255,255,0.05);
+  --border-input: rgba(255,255,255,0.08);
+  
+  /* Акцентные цвета */
   --accent: #8B5CF6;
   --accent-hover: #7C3AED;
   --accent-light: #2D2A3E;
   --accent-trans: rgba(138, 92, 246, 0.2);
+  --accent-text: #a78bfa;
   
+  /* Цвета статусов */
   --danger: #EF4444;
   --danger-trans: rgba(240, 69, 69, 0.2);
   --danger-hover: #DC2626;
+  --danger-text: #ef4444;
+  
   --success: #10B981;
   --success-trans: rgba(16, 185, 129, 0.2);
   --success-hover: #10cb8d;
+  --success-text: #4ade80;
+  
   --warning: #F59E0B;
   --warning-hover: #c97704;
   --warning-trans: rgba(245, 159, 11, 0.1);
-
+  --warning-text: #fbbf24;
+  
+  /* Тени */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
+  --shadow-modal: 0 8px 24px rgba(0,0,0,0.5);
+  
+  /* Скругления */
   --radius: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 }
 
 /* ===== СВЕТЛАЯ ТЕМА ===== */
 [data-theme="light"] {
+  /* Основные цвета фона */
   --bg-primary: #F8FAFC;
   --bg-secondary: #F1F5F9;
   --bg-card: #FFFFFF;
   --bg-card-hover: #F8FAFC;
+  --bg-input: #FFFFFF;
+  --bg-dropdown: #FFFFFF;
   
+  /* Цвета текста */
   --text-primary: #0F172A;
   --text-secondary: #334155;
   --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
   
+  /* Цвета границ */
   --border-color: #E2E8F0;
+  --border-light: rgba(0,0,0,0.05);
+  --border-input: #E2E8F0;
+  
+  /* Акцентные цвета */
   --accent: #7C3AED;
   --accent-hover: #6D28D9;
   --accent-light: #EDE9FE;
   --accent-trans: rgba(124, 58, 237, 0.1);
+  --accent-text: #7C3AED;
   
+  /* Цвета статусов */
+  --danger: #EF4444;
+  --danger-trans: rgba(239, 68, 68, 0.1);
+  --danger-hover: #DC2626;
+  --danger-text: #DC2626;
+  
+  --success: #10B981;
+  --success-trans: rgba(16, 185, 129, 0.1);
+  --success-hover: #059669;
+  --success-text: #059669;
+  
+  --warning: #F59E0B;
+  --warning-hover: #D97706;
+  --warning-trans: rgba(245, 159, 11, 0.1);
+  --warning-text: #D97706;
+  
+  /* Тени */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-modal: 0 8px 24px rgba(0,0,0,0.15);
 }
 
 body {
@@ -155,14 +207,14 @@ button,
     background: transparent;
     border: 1px solid rgba(124, 58, 237, 0.3);
     border-radius: 10px;
-    color: #a78bfa;
+    color: var(--accent-text);
     font-weight: 500;
     cursor: pointer;
     transition: 0.2s;
 }
 .btn-outline:hover {
-    background: rgba(124, 58, 237, 0.1);
-    border-color: #7c3aed;
+    background: var(--accent-trans);
+    border-color: var(--accent);
 }
 .btn-outline:disabled {
     opacity: 0.5;
@@ -233,8 +285,8 @@ select {
   padding: 0.625rem 0.75rem;
   font-size: 0.875rem;
   font-family: inherit;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius);
   color: var(--text-primary);
   transition: border 0.2s, box-shadow 0.2s;
@@ -485,7 +537,7 @@ position: fixed;
 }
 
 .empty-text {
-    color: #5a5a72;
+    color: var(--text-muted);
     font-size: 14px;
     font-style: italic;
     margin: 0;

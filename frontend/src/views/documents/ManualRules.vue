@@ -1,30 +1,10 @@
 <template>
     <div class="container">
         <!-- === HEADER === -->
-        <header class="page-header">
-            <div class="header-left">
-                <h2>📋 Правила оформления мануалов</h2>
-                <p class="header-subtitle">
-                    Соблюдение этих правил поможет создавать качественные и понятные инструкции для всех пользователей
-                </p>
-            </div>
-
-            <div class="header-right">
-                <i class="fa fa-bell notification-icon"></i>
-                <div class="profile-wrapper">
-                    <img src="/BaseAvatar.jpg" alt="avatar" class="profile-img">
-                    <button class="dropdown-trigger" @click="welcomeDropdownActive = !welcomeDropdownActive">
-                        <i class="fa" :class="welcomeDropdownActive ? 'fa-angle-up' : 'fa-angle-down'"></i>
-                    </button>
-                    <div v-if="welcomeDropdownActive" class="dropdown-list">
-                        <ul>
-                            <li><button class="dropdown-item">Профиль</button></li>
-                            <li><button @click="logout" class="dropdown-item">Выйти</button></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <Header
+            title="Правила оформления мануалов"
+            subtitle="Соблюдение этих правил поможет создавать качественные и понятные инструкции для всех пользователей "
+        />
 
         <!-- === MAIN CONTENT === -->
         <div class="rules-content">
@@ -234,9 +214,11 @@
 
 <script>
 import api from '../../api/api'
+import Header from '../../components/Header.vue';
 
 export default {
     name: 'ManualRules',
+    components: { Header },
     data() {
         return {
             welcomeDropdownActive: false,
@@ -305,6 +287,7 @@ export default {
 .header-left h2 {
     margin: 0 0 8px 0;
     font-size: 26px;
+    color: var(--text-primary);
 }
 
 .header-subtitle {
@@ -321,7 +304,7 @@ export default {
 
 .notification-icon {
     font-size: 20px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
 }
 
@@ -336,13 +319,13 @@ export default {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 2px solid #7c3aed;
+    border: 2px solid var(--accent);
 }
 
 .dropdown-trigger {
     background: transparent;
     border: none;
-    color: #8b8b9e;
+    color: var(--text-muted);
     cursor: pointer;
 }
 
@@ -419,6 +402,7 @@ export default {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
 /* ===== RULES LIST ===== */
@@ -445,7 +429,7 @@ export default {
     align-items: center;
     justify-content: center;
     background: var(--accent-trans);
-    color: var(--accent);
+    color: var(--accent-text);
     border-radius: 50%;
     font-weight: 700;
     font-size: 14px;
@@ -511,7 +495,7 @@ export default {
     padding: 16px;
     background: var(--bg-secondary);
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
 }
 
 .rule-card-header {
@@ -530,6 +514,7 @@ export default {
     font-size: 15px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
 .rule-card ul {
@@ -557,7 +542,7 @@ export default {
     background: var(--accent-trans);
     border: 1px solid var(--accent);
     border-radius: 8px;
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -595,7 +580,7 @@ export default {
     padding: 20px;
     background: var(--bg-secondary);
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
 }
 
 .example-header {
@@ -611,6 +596,7 @@ export default {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
 .difficulty-badge {
@@ -621,18 +607,18 @@ export default {
 }
 
 .difficulty-badge.easy {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--success);
+    background: var(--success-trans);
+    color: var(--success-text);
 }
 
 .difficulty-badge.medium {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--warning);
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
 .difficulty-badge.hard {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--danger);
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .example-section {
@@ -646,7 +632,7 @@ export default {
 .example-section h5 {
     font-size: 14px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     margin: 0 0 8px 0;
 }
 
@@ -684,7 +670,7 @@ export default {
     flex-shrink: 0;
     padding: 2px 12px;
     background: var(--accent-trans);
-    color: var(--accent);
+    color: var(--accent-text);
     border-radius: 20px;
     font-size: 13px;
     font-weight: 600;
@@ -713,7 +699,7 @@ export default {
     align-items: center;
     gap: 10px;
     padding: 8px 14px;
-    background: rgba(245, 158, 11, 0.05);
+    background: var(--warning-trans);
     border-radius: 8px;
     margin-bottom: 6px;
 }

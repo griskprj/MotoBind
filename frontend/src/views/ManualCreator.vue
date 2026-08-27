@@ -392,7 +392,7 @@ export default {
 /* ===== FORM CARD ===== */
 .form-card {
     background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     overflow: hidden;
     margin-bottom: 16px;
@@ -403,8 +403,8 @@ export default {
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--border-light);
 }
 
 .form-card-header i {
@@ -416,13 +416,14 @@ export default {
     font-size: 16px;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
 .steps-count {
     margin-left: auto;
     font-size: 13px;
     color: var(--text-secondary);
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
     padding: 2px 12px;
     border-radius: 20px;
 }
@@ -461,8 +462,8 @@ export default {
     padding: 10px 14px;
     font-size: 14px;
     font-family: inherit;
-    background: var(--bg-secondary);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
     color: var(--text-primary);
     transition: all 0.2s;
@@ -473,7 +474,7 @@ export default {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    box-shadow: 0 0 0 3px var(--accent-trans);
 }
 
 .form-group input::placeholder,
@@ -488,7 +489,7 @@ export default {
 
 .form-group input.error:focus,
 .form-group textarea.error:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    box-shadow: 0 0 0 3px var(--danger-trans);
 }
 
 .form-group textarea {
@@ -511,7 +512,7 @@ export default {
     padding: 40px;
     background: var(--bg-secondary);
     border-radius: 12px;
-    border: 2px dashed rgba(255,255,255,0.06);
+    border: 2px dashed var(--border-color);
     text-align: center;
     margin-bottom: 16px;
 }
@@ -530,7 +531,7 @@ export default {
 
 .step-card {
     background: var(--bg-secondary);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
@@ -538,7 +539,7 @@ export default {
 }
 
 .step-card:hover {
-    border-color: rgba(124, 58, 237, 0.3);
+    border-color: var(--accent-trans);
 }
 
 .step-header {
@@ -551,8 +552,8 @@ export default {
 .step-number {
     font-weight: 600;
     font-size: 14px;
-    color: var(--accent);
-    background: rgba(124, 58, 237, 0.12);
+    color: var(--accent-text);
+    background: var(--accent-trans);
     padding: 2px 14px;
     border-radius: 20px;
 }
@@ -569,7 +570,7 @@ export default {
 }
 
 .btn-remove-step:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--danger-trans);
     color: var(--danger);
 }
 
@@ -590,9 +591,9 @@ export default {
     font-size: 14px;
     font-weight: 500;
     border-radius: 10px;
-    border: 1px dashed rgba(124, 58, 237, 0.4);
+    border: 1px dashed var(--accent-trans);
     background: transparent;
-    color: var(--accent);
+    color: var(--accent-text);
     cursor: pointer;
     transition: all 0.2s;
     width: 100%;
@@ -600,7 +601,7 @@ export default {
 }
 
 .btn-add-step:hover {
-    background: rgba(124, 58, 237, 0.08);
+    background: var(--accent-trans);
     border-color: var(--accent);
 }
 
@@ -629,18 +630,18 @@ export default {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #6d28d9;
+    background: var(--accent-hover);
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     background: transparent;
     color: var(--text-secondary);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border-input);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: rgba(255,255,255,0.05);
+    background: var(--border-light);
 }
 
 /* ===== FORM ACTIONS ===== */
@@ -649,7 +650,7 @@ export default {
     justify-content: flex-end;
     gap: 12px;
     padding-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid var(--border-light);
 }
 
 /* ===== ANIMATIONS ===== */

@@ -459,8 +459,8 @@ export default {
     display: flex;
     gap: 14px;
     padding: 12px;
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 14px;
 }
 
@@ -473,7 +473,7 @@ export default {
 
 .card-title {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -485,7 +485,7 @@ export default {
 
 .card-subtitle {
     font-size: 14px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     margin: 0;
 }
 
@@ -512,29 +512,29 @@ export default {
 .search-input {
     width: 100%;
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     transition: border 0.2s;
 }
 
 .search-input:focus {
-    border-color: #7c3aed;
+    border-color: var(--accent);
 }
 
 .search-input::placeholder {
-    color: #5a5a72;
+    color: var(--text-muted);
 }
 
 .filter-select {
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
@@ -543,17 +543,17 @@ export default {
 }
 
 .filter-select:focus {
-    border-color: #7c3aed;
+    border-color: var(--accent);
 }
 
 .filter-select option {
-    background: #0f0f1a;
+    background: var(--bg-input);
 }
 
 .tabs {
     display: flex;
     gap: 16px;
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .tab {
@@ -584,29 +584,29 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: rgba(124, 58, 237, 0.05);
+    background: var(--accent-trans);
     border-radius: 8px;
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
 }
 
 .clear-filters {
     background: transparent;
     border: none;
-    color: #a78bfa;
+    color: var(--accent-text);
     cursor: pointer;
     font-size: 13px;
     transition: color 0.2s;
 }
 
 .clear-filters:hover {
-    color: #7c3aed;
+    color: var(--accent);
 }
 
 /* ===== TABLE ===== */
 .maintenance-table-wrapper {
-    background: #181824;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
     border-radius: 16px;
     overflow-x: auto;
 }
@@ -615,9 +615,9 @@ export default {
     display: grid;
     grid-template-columns: 180px 0.5fr 0.5fr 110px 110px 130px 80px;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-light);
     font-size: 13px;
-    color: #8b8b9e;
+    color: var(--text-muted);
     font-weight: 500;
     min-width: 700px;
 }
@@ -632,14 +632,14 @@ export default {
     grid-template-columns: 180px 0.5fr 0.5fr 110px 110px 130px 80px;
     padding: 14px 16px;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-light);
     transition: background 0.2s;
     cursor: pointer;
     min-width: 700px;
 }
 
 .tr:hover {
-    background: rgba(255,255,255,0.02);
+    background: var(--border-light);
 }
 
 .td {
@@ -647,7 +647,7 @@ export default {
 }
 
 .moto-name {
-    color: #a78bfa;
+    color: var(--accent-text);
     font-weight: 500;
 }
 
@@ -668,8 +668,8 @@ export default {
     flex-shrink: 0;
 }
 
-.icon-square.purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
-.icon-square.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.icon-square.purple { background: var(--accent-trans); color: var(--accent-text); }
+.icon-square.green { background: var(--success-trans); color: var(--success-text); }
 .icon-square.blue { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
 
 .service-cell {
@@ -678,7 +678,7 @@ export default {
 }
 
 .s-title { font-weight: 500; }
-.s-desc { font-size: 13px; color: #8b8b9e; }
+.s-desc { font-size: 13px; color: var(--text-muted); }
 
 .badge {
     display: inline-block;
@@ -689,18 +689,18 @@ export default {
 }
 
 .badge-green {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
+    background: var(--success-trans);
+    color: var(--success-text);
 }
 
 .badge-warning {
-    background: rgba(251, 191, 36, 0.15);
-    color: #fbbf24;
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
 .badge-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .badge-gray {
@@ -712,26 +712,26 @@ export default {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    color: #4b4b5e;
+    color: var(--text-muted);
     transition: color 0.2s;
 }
 
-.tr:hover .action-cell { color: #a78bfa; }
+.tr:hover .action-cell { color: var(--accent-text); }
 
 .outline-btn {
     padding: 10px 20px;
     background: transparent;
     border: 1px solid rgba(124, 58, 237, 0.3);
     border-radius: 10px;
-    color: #a78bfa;
+    color: var(--accent-text);
     font-weight: 500;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .outline-btn:hover {
-    background: rgba(124, 58, 237, 0.1);
-    border-color: #7c3aed;
+    background: var(--accent-trans);
+    border-color: var(--accent);
 }
 
 /* === MEDIA QUERIES === */
@@ -774,14 +774,14 @@ export default {
         grid-template-columns: 1fr;
         gap: 4px;
         padding: 16px;
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         margin-bottom: 8px;
-        background: #0f0f1a;
+        background: var(--bg-primary);
         position: relative;
         min-width: unset;
     }
-    .tr:hover { background: #0f0f1a; }
+    .tr:hover { background: var(--bg-primary); }
     
     .date-cell {
         order: 1;
@@ -820,7 +820,7 @@ export default {
     
     .td:not(.date-cell):not(.service-cell):not(.action-cell)::before {
         content: attr(data-label);
-        color: #8b8b9e;
+        color: var(--text-muted);
         font-weight: 400;
         margin-right: 8px;
     }

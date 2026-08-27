@@ -25,17 +25,16 @@
                     </div>
 
                     <div class="nav-section">
-                        <h4 class="nav-title">Информация</h4>
-                        <router-link class="nav-link" to="/landing">О сервисе</router-link>
+                        <h4 class="nav-title">Документы</h4>
+                        <router-link class="nav-link" to="/consent">Согласие на обработку ПД</router-link>
                         <router-link class="nav-link" to="/privacy">Политика конфиденциальности</router-link>
                         <router-link class="nav-link" to="/terms">Пользовательское соглашение</router-link>
                         <router-link class="nav-link" to="/rules">Правила сервиса</router-link>
                     </div>
 
                     <div class="nav-section">
-                        <h4 class="nav-title">Документы</h4>
-                        <router-link class="nav-link" to="/consent">Согласие на обработку ПД</router-link>
-                        <router-link class="nav-link" to="/privacy">Конфиденциальность</router-link>
+                        <h4 class="nav-title">Информация</h4>
+                        <router-link class="nav-link" to="/landing">О сервисе</router-link>
                     </div>
                 </div>
             </div>

@@ -465,29 +465,29 @@ export default {
 .search-input {
     width: 100%;
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     transition: border 0.2s;
 }
 
 .search-input:focus {
-    border-color: #7c3aed;
+    border-color: var(--accent);
 }
 
 .search-input::placeholder {
-    color: #5a5a72;
+    color: var(--text-muted);
 }
 
 .filter-select {
     padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     border-radius: 10px;
-    color: #e0e0e0;
+    color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
@@ -496,11 +496,11 @@ export default {
 }
 
 .filter-select:focus {
-    border-color: #7c3aed;
+    border-color: var(--accent);
 }
 
 .filter-select option {
-    background: #0f0f1a;
+    background: var(--bg-input);
 }
 
 @media (max-width: 1200px) {
@@ -518,6 +518,7 @@ export default {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(2, 1fr);
+        width: 100%;
     }
 }
 
@@ -542,6 +543,13 @@ export default {
 .manual-card {
     background-color: var(--bg-card);
     border-radius: 10px;
+    border: 1px solid var(--border-light);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.manual-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
 }
 
 .manual-img {
@@ -561,14 +569,16 @@ export default {
     font-weight: 600;
     text-align: center;
     background-color: var(--accent-trans);
-    color: var(--accent);
+    color: var(--accent-text);
     margin-bottom: 8px;
+    padding: 4px 0;
 }
 
 .manual-title {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 4px;
+    color: var(--text-primary);
 }
 
 .manual-moto {
@@ -600,10 +610,14 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .paginate-show {
     color: var(--text-secondary);
+    font-size: 14px;
 }
 
 .paginate-ui {
@@ -616,6 +630,7 @@ export default {
     display: flex;
     gap: 8px;
     text-align: center;
+    align-items: center;
 }
 
 .paginate-btns button {
@@ -624,15 +639,44 @@ export default {
 
 .outline-btn.paginate {
     border: none;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
 }
 
 .outline-btn.paginate.active {
     background-color: var(--accent-trans);
+    color: var(--accent-text);
+}
+
+.outline-btn.paginate:hover:not(.active) {
+    background-color: var(--border-light);
+}
+
+.paginate-ui button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .show-per-page {
     display: flex;
     gap: 16px;
+}
+
+.show-per-page select {
+    padding: 8px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.2s;
+}
+
+.show-per-page select:focus {
+    border-color: var(--accent);
 }
 
 .loading-state {
@@ -663,89 +707,8 @@ export default {
     font-size: 18px;
 }
 
-/* Пагинация */
-.paginate {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.paginate-show {
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.paginate-ui {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.paginate-btns {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.outline-btn.paginate {
-    border: none;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 8px;
-}
-
-.outline-btn.paginate.active {
-    background-color: var(--accent-trans);
-    color: var(--accent);
-}
-
-.outline-btn.paginate:hover:not(.active) {
-    background-color: rgba(255,255,255,0.05);
-}
-
-.paginate-ui button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.show-per-page select {
-    padding: 8px 14px;
-    background: #0f0f1a;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    color: #e0e0e0;
-    font-size: 14px;
-    outline: none;
-    cursor: pointer;
-    transition: border 0.2s;
-}
-
-.show-per-page select:focus {
-    border-color: #7c3aed;
-}
-
-@media (max-width: 768px) {
-    .paginate {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-    
-    .paginate-ui {
-        justify-content: center;
-    }
-    
-    .paginate-show {
-        text-align: center;
-    }
-    
-    .show-per-page {
-        display: flex;
-        justify-content: center;
-    }
+.empty-state i {
+    color: var(--text-muted);
 }
 
 /* Анимация */
@@ -756,5 +719,33 @@ export default {
 
 .fa-spin {
     animation: spin 1s linear infinite;
+}
+
+/* Дополнительные улучшения для мобильных */
+@media (max-width: 768px) {
+    .table-paginate {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .paginate-ui {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .paginate-show {
+        text-align: center;
+    }
+    
+    .show-per-page {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .paginate-btns {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 }
 </style>
