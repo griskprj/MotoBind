@@ -331,3 +331,95 @@ def delete_user(user_id):
     db.session.commit()
 
     return jsonify({"message": f"Пользователь {user.username} удален"}), 200
+
+
+@admin.route("/motorcycles", methods=["GET"])
+@jwt_required()
+@admin_required
+def get_motorcycles():
+    """
+    Получение списка всех мотоциклов для администратора
+    """
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    search = request.args.get("search", "")
+    filter_status = request.args.get("status", "")
+    owner_id = request.args.get("owner_id", type=int)
+    sort_by = request.args.get("sort_by", "created_at")
+    sort_order = request.args.get("sort_order", "desc")
+
+    query = Motorcycle.query
+
+    # Поиск
+    if search:
+        query = query.filter(
+            or_(
+                Motorcycle.name.ilike(f"%{search}"),
+                Motorcycle.vin.ilike(f"%{search}"),
+                Motorcycle.license_plate.ilike(f"%{search}"),
+            )
+        )
+
+    if owner_id:
+        query = query.filter(Motorcycle.owner_id == owner_id)
+
+    if filter_status:
+        if filter_status == "has_maintenance":
+            query = query.filter(Motorcycle.maintenances.any())
+        elif filter_status == "no_maintenance":
+            query = query.filter(~Motorcycle.maintenances.any())
+
+    if sort_order == "desc":
+        query = query.order_by(desc(getattr(Motorcycle, sort_by, Motorcycle.created_at)))
+    else:
+        query = query.order_by(getattr(Motorcycle, sort_by, Motorcycle.created_at))
+
+    paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    total_motorcycles = Motorcycle.query.count()
+    with_maintenance = Motorcycle.query.filter(Motorcycle.maintenances.any()).count()
+    without_maintenance = total_motorcycles - with_maintenance
+
+    return jsonify(
+        {
+            "motorcycles": [
+                moto.to_dict(
+                    include_owner=True,
+                    include_maintenance=True
+                ) for moto in paginated.items
+            ],
+            "total": paginated.total,
+            "pages": paginated.pages,
+            "current_page": paginated.page,
+            "per_page": paginated.per_page,
+            "has_prev": paginated.has_prev,
+            "has_next": paginated.has_next,
+            "stats": {
+                "total": total_motorcycles,
+                "with_maintenance": with_maintenance,
+                "without_maintenance": without_maintenance,
+            }
+        }
+    ), 200
+
+
+@admin.route("/motorcycle/<int:moto_id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def admin_delete_motorcycle(moto_id):
+    """
+    Удаление мотоцикла администратором
+    """
+    moto = Motorcycle.query.get(moto_id)
+    if not moto:
+        raise NotFoundError("Мотоцикл не найден")
+
+    # Удаляем фото
+    if moto.photo_url:
+        from app.utils.files import delete_file
+        delete_file(moto.photo_url)
+
+    db.session.delete(moto)
+    db.session.commit()
+
+    return jsonify({"message": "Мотоцикл успешно удален"}), 200
