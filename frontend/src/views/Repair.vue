@@ -175,113 +175,244 @@
       </div>
     </section>
 
-    <!-- МАНУАЛ -->
+    <!-- ===== МАНУАЛ ===== -->
     <section v-if="manual" class="manual-section">
-      <div class="manual-container">
-        <!-- Левая колонка: Инструкция -->
-        <div class="manual-content">
-          <div class="manual-header">
-            <h2 class="manual-title">{{ manual.title }}</h2>
-            <p class="manual-description">{{ manual.description || 'Инструкция по выполнению обслуживания' }}</p>
-            <div class="manual-meta-tags">
-              <span class="tag" v-if="manual.category">
-                <i class="fa fa-tag"></i> {{ getCategoryName(manual.category) }}
-              </span>
-              <span class="tag" v-if="manual.difficult">
-                <i class="fa fa-signal"></i> {{ getDifficultyName(manual.difficult) }}
-              </span>
-              <span class="tag">
-                <i class="fa fa-motorcycle"></i> {{ manual.motorcycle }}
-              </span>
-            </div>
+      <!-- О МАНУАЛЕ -->
+      <div class="manual-header-card">
+        <div class="manual-header-left">
+          <h2 class="manual-title">{{ manual.title }}</h2>
+          <p class="manual-description">{{ manual.description || 'Инструкция по выполнению обслуживания' }}</p>
+          
+          <div class="manual-meta-tags">
+            <span class="tag" v-if="manual.category">
+              <i class="fa fa-tag"></i> {{ getCategoryName(manual.category) }}
+            </span>
+            <span class="tag" v-if="manual.difficult">
+              <i class="fa fa-signal"></i> {{ getDifficultyName(manual.difficult) }}
+            </span>
+            <span class="tag">
+              <i class="fa fa-motorcycle"></i> {{ manual.motorcycle }}
+            </span>
+            <span class="tag" v-if="manual.time_estimate">
+              <i class="fa fa-clock"></i> {{ manual.time_estimate }}
+            </span>
+            <span class="tag" v-if="manual.interval">
+              <i class="fa fa-repeat"></i> {{ manual.interval }}
+            </span>
           </div>
+        </div>
+      </div>
 
-          <!-- Шаги -->
-          <div class="steps-wrapper">
-            <h3 class="steps-title">
-              <i class="fa fa-list-ol"></i> 
-              Инструкция по шагам
-              <span class="steps-count">{{ manualSteps.length }} шаг{{ manualSteps.length > 1 ? 'а' : '' }}</span>
-            </h3>
+      <!-- БЕЗОПАСНОСТЬ -->
+      <div v-if="manual.safety_tip || manual.warnings || manual.conditions" class="block block-safety">
+        <h4 class="block-title">
+          <i class="fa fa-shield"></i> Безопасность и подготовка
+        </h4>
+        
+        <div v-if="manual.safety_tip" class="safety-item safety-tip">
+          <i class="fa fa-lightbulb"></i>
+          <span>{{ manual.safety_tip }}</span>
+        </div>
+        
+        <div v-if="manual.warnings" class="safety-item safety-warning">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>{{ manual.warnings }}</span>
+        </div>
+        
+        <div v-if="manual.conditions" class="safety-item safety-condition">
+          <i class="fa fa-check-circle"></i>
+          <span>{{ manual.conditions }}</span>
+        </div>
+      </div>
 
-            <div class="steps-list">
-              <div 
-                v-for="(step, index) in manualSteps" 
-                :key="step.order || index"
-                class="step-item"
-              >
-                <div class="step-marker">
-                  <span class="step-number">{{ step.order || index + 1 }}</span>
-                  <div class="step-connector" v-if="index < manualSteps.length - 1"></div>
-                </div>
+      <!-- ССЫЛКИ НА ДОКУМЕНТАЦИЮ -->
+      <div v-if="manual.docs_links && manual.docs_links.length > 0" class="block block-docs">
+        <h4 class="block-title">
+          <i class="fa fa-link"></i> Ссылки на документацию
+        </h4>
+        
+        <div class="docs-list">
+          <a 
+            v-for="(link, index) in manual.docs_links" 
+            :key="index"
+            :href="link"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="docs-link"
+          >
+            <i class="fa fa-file-pdf-o"></i>
+            <span>Документация {{ index + 1 }}</span>
+            <i class="fa fa-external-link"></i>
+          </a>
+        </div>
+      </div>
 
-                <div class="step-body">
-                  <h4 class="step-title">{{ step.title || `Шаг ${index + 1}` }}</h4>
-                  <p v-if="step.text" class="step-text">{{ step.text }}</p>
-                  
-                  <div v-if="step.tip" class="step-tip info">
-                    <i class="fa fa-info-circle"></i>
-                    <span>{{ step.tip }}</span>
-                  </div>
-                  
-                  <div v-if="step.warning" class="step-tip warning">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    <span>{{ step.warning }}</span>
-                  </div>
+      <!-- ТЕХНИЧЕСКИЕ ДАННЫЕ -->
+      <div v-if="manual.specs && hasSpecs(manual.specs)" class="block block-specs">
+        <h4 class="block-title">
+          <i class="fa fa-table"></i> Технические данные
+        </h4>
 
-                  <div v-if="step.image" class="step-image">
-                    <img :src="step.image" :alt="step.title || 'Шаг'" loading="lazy" />
-                  </div>
-                </div>
-              </div>
+        <!-- Моменты затяжки -->
+        <div v-if="manual.specs.torque && manual.specs.torque.length > 0" class="specs-section">
+          <h5 class="specs-subtitle">Моменты затяжки</h5>
+          <div class="torque-table">
+            <div class="torque-header">
+              <span>Название</span>
+              <span>Момент (Н·м)</span>
+              <span>Примечание</span>
             </div>
-
-            <div v-if="manual.tip" class="manual-tip">
-              <i class="fa fa-lightbulb-o"></i>
-              <div>
-                <strong>Совет:</strong>
-                <span>{{ manual.tip }}</span>
-              </div>
+            <div 
+              v-for="(item, index) in manual.specs.torque" 
+              :key="index"
+              class="torque-row"
+            >
+              <span>{{ item.name || '—' }}</span>
+              <span>{{ item.nm || '—' }}</span>
+              <span>{{ item.note || '—' }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Правая колонка: Инструменты и завершение -->
-        <div class="manual-sidebar">
-          <!-- Инструменты -->
-          <div class="sidebar-card">
-            <h4><i class="fa fa-wrench"></i> Инструменты</h4>
-            <ul v-if="instrumentsList.length" class="items-list">
-              <li v-for="item in instrumentsList" :key="item">
-                <i class="fa fa-check-circle"></i> {{ item }}
-              </li>
-            </ul>
-            <p v-else class="empty-text">Не указаны</p>
+        <!-- Объёмы жидкостей -->
+        <div v-if="manual.specs.fluids" class="specs-section">
+          <h5 class="specs-subtitle">Объёмы жидкостей</h5>
+          <div class="fluids-grid">
+            <div 
+              v-for="(value, key) in manual.specs.fluids" 
+              :key="key"
+              class="fluid-item"
+            >
+              <span class="fluid-label">{{ getFluidLabel(key) }}</span>
+              <span class="fluid-value">{{ value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Допуски и зазоры -->
+        <div v-if="manual.specs.tolerances" class="specs-section">
+          <h5 class="specs-subtitle">Допуски и зазоры</h5>
+          <div class="tolerances-grid">
+            <div 
+              v-for="(value, key) in manual.specs.tolerances" 
+              :key="key"
+              class="tolerance-item"
+            >
+              <span class="tolerance-label">{{ getToleranceLabel(key) }}</span>
+              <span class="tolerance-value">{{ value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ШАГИ -->
+      <div class="manual-content">
+        <div class="steps-wrapper">
+          <h3 class="steps-title">
+            <i class="fa fa-list-ol"></i> 
+            Инструкция по шагам
+            <span class="steps-count">{{ manualSteps.length }} шаг{{ manualSteps.length > 1 ? 'а' : '' }}</span>
+          </h3>
+
+          <div class="steps-list">
+            <div 
+              v-for="(step, index) in manualSteps" 
+              :key="step.order || index"
+              class="step-item"
+            >
+              <div class="step-marker">
+                <span class="step-number">{{ step.order || index + 1 }}</span>
+                <div class="step-connector" v-if="index < manualSteps.length - 1"></div>
+              </div>
+
+              <div class="step-body">
+                <h4 class="step-title">{{ step.title || `Шаг ${index + 1}` }}</h4>
+                <p v-if="step.text" class="step-text">{{ step.text }}</p>
+                
+                <!-- Изображение шага -->
+                <div v-if="step.image" class="step-image">
+                  <img :src="step.image" :alt="step.title || 'Шаг'" loading="lazy" />
+                </div>
+                
+                <!-- Результат шага -->
+                <div v-if="step.result" class="step-result">
+                  <i class="fa fa-check-circle"></i>
+                  <span>{{ step.result }}</span>
+                </div>
+                
+                <!-- Предупреждение -->
+                <div v-if="step.warning" class="step-tip warning">
+                  <i class="fa fa-exclamation-triangle"></i>
+                  <span>{{ step.warning }}</span>
+                </div>
+                
+                <!-- Совет -->
+                <div v-if="step.tip" class="step-tip info">
+                  <i class="fa fa-lightbulb"></i>
+                  <span>{{ step.tip }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Материалы -->
-          <div class="sidebar-card">
-            <h4><i class="fa fa-cogs"></i> Материалы</h4>
-            <ul v-if="partsList.length" class="items-list">
-              <li v-for="item in partsList" :key="item">
-                <i class="fa fa-check-circle"></i> {{ item }}
-              </li>
-            </ul>
-            <p v-else class="empty-text">Не указаны</p>
+          <!-- Общий совет -->
+          <div v-if="manual.tip" class="manual-tip">
+            <i class="fa fa-lightbulb-o"></i>
+            <div>
+              <strong>Совет:</strong>
+              <span>{{ manual.tip }}</span>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Завершение -->
-          <div class="sidebar-card complete-card">
-            <h4><i class="fa fa-flag-checkered"></i> Завершить обслуживание</h4>
-            <p class="complete-text">После завершения вы сможете:</p>
-            <ul class="complete-benefits">
-              <li><i class="fa fa-check"></i> Записать в историю</li>
-              <li><i class="fa fa-check"></i> Создать следующее ТО</li>
-            </ul>
-            <button @click="openCompleteModal" class="btn btn-success btn-block">
-              <i class="fa fa-check"></i> Завершить обслуживание
-            </button>
-          </div>
+      <!-- ПОСЛЕ ЗАВЕРШЕНИЯ -->
+      <div v-if="manual.aftercare" class="block block-aftercare">
+        <h4 class="block-title">
+          <i class="fa fa-check-circle"></i> После завершения
+        </h4>
+        
+        <div class="aftercare-content">
+          <i class="fa fa-info-circle"></i>
+          <span>{{ manual.aftercare }}</span>
+        </div>
+      </div>
+
+      <!-- САЙДБАР: ИНСТРУМЕНТЫ И МАТЕРИАЛЫ -->
+      <div class="manual-sidebar">
+        <!-- Инструменты -->
+        <div class="sidebar-card">
+          <h4><i class="fa fa-wrench"></i> Инструменты</h4>
+          <ul v-if="instrumentsList.length" class="items-list">
+            <li v-for="item in instrumentsList" :key="item">
+              <i class="fa fa-check-circle"></i> {{ item }}
+            </li>
+          </ul>
+          <p v-else class="empty-text">Не указаны</p>
+        </div>
+
+        <!-- Материалы -->
+        <div class="sidebar-card">
+          <h4><i class="fa fa-cogs"></i> Материалы</h4>
+          <ul v-if="partsList.length" class="items-list">
+            <li v-for="item in partsList" :key="item">
+              <i class="fa fa-check-circle"></i> {{ item }}
+            </li>
+          </ul>
+          <p v-else class="empty-text">Не указаны</p>
+        </div>
+
+        <!-- Завершение -->
+        <div class="sidebar-card complete-card">
+          <h4><i class="fa fa-flag-checkered"></i> Завершить обслуживание</h4>
+          <p class="complete-text">После завершения вы сможете:</p>
+          <ul class="complete-benefits">
+            <li><i class="fa fa-check"></i> Записать в историю</li>
+            <li><i class="fa fa-check"></i> Создать следующее ТО</li>
+          </ul>
+          <button @click="openCompleteModal" class="btn btn-success btn-block">
+            <i class="fa fa-check"></i> Завершить обслуживание
+          </button>
         </div>
       </div>
     </section>
@@ -301,7 +432,7 @@
     <section v-else-if="selectedMoto && selectedMaintenance && !manual" class="empty-section">
       <div class="empty-state">
         <div class="empty-icon warning">
-          <i class="fa fa-file-text"></i>
+          <i class="fa fa-file-text-o"></i>
         </div>
         <h3>Мануал не найден</h3>
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
@@ -482,7 +613,6 @@ export default {
         m => m.id === this.selectedMaintenance
       ) || null
 
-      // Сбрасываем мануал перед загрузкой
       this.manual = null
       
       if (this.selectedMoto && this.selectedMaintenance) {
@@ -499,7 +629,6 @@ export default {
           }
         })
 
-        // Обработка ответа
         if (response.data) {
           if (Array.isArray(response.data)) {
             this.manual = response.data.length > 0 ? response.data[0] : null
@@ -512,7 +641,6 @@ export default {
           this.manual = null
         }
 
-        // Валидация данных мануала
         if (this.manual) {
           if (!this.manual.steps) {
             this.manual.steps = []
@@ -556,10 +684,8 @@ export default {
         this.showCompleteModal = false
         this.$toast?.success('Обслуживание успешно завершено!')
         
-        // Обновляем данные
         await this.loadData()
         
-        // Сбрасываем выбор
         this.selectedMaintenance = null
         this.selectedMaintenanceData = null
         this.manual = null
@@ -570,7 +696,6 @@ export default {
     },
 
     openCreateManual() {
-      // TODO: Открыть страницу создания мануала с предзаполненными данными
       this.$router.push('/manual-creator')
     },
 
@@ -596,6 +721,35 @@ export default {
         hard: 'Сложная'
       }
       return map[difficult] || difficult || 'Средняя'
+    },
+
+    // ===== НОВЫЕ МЕТОДЫ ДЛЯ ТЕХДАННЫХ =====
+    hasSpecs(specs) {
+      if (!specs) return false
+      return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances)
+    },
+
+    getFluidLabel(key) {
+      const labels = {
+        oil: 'Моторное масло',
+        coolant: 'Охлаждающая жидкость',
+        brake: 'Тормозная жидкость',
+        fork: 'Масло в вилке',
+        gear: 'Масло в КПП',
+        chain: 'Смазка цепи'
+      }
+      return labels[key] || key
+    },
+
+    getToleranceLabel(key) {
+      const labels = {
+        chain: 'Зазор цепи',
+        valve: 'Зазор клапанов',
+        spark: 'Зазор свечи',
+        brake: 'Толщина колодок',
+        tire: 'Давление в шинах'
+      }
+      return labels[key] || key
     }
   }
 }
@@ -678,7 +832,7 @@ export default {
   color: var(--text-muted);
 }
 
-/* ===== SELECTION FLOW ===== */
+/* ===== SELECTION ===== */
 .selection-section {
   margin-bottom: 32px;
 }
@@ -702,11 +856,6 @@ export default {
 .selection-step.disabled {
   opacity: 0.5;
   pointer-events: none;
-}
-
-.selection-step.result-step {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .selection-step.result-step.found {
@@ -739,18 +888,6 @@ export default {
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
-}
-
-.step-line {
-  width: 2px;
-  flex: 1;
-  min-height: 20px;
-  background: var(--border-color);
-  margin: 4px 0;
-}
-
-.selection-step:last-child .step-line {
-  display: none;
 }
 
 .step-content {
@@ -857,7 +994,6 @@ export default {
   margin-left: 6px;
 }
 
-/* Result step */
 .result-status {
   display: flex;
   align-items: flex-start;
@@ -909,28 +1045,18 @@ export default {
   gap: 8px;
 }
 
-/* ===== MANUAL SECTION ===== */
+/* ===== MANUAL ===== */
 .manual-section {
-  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.manual-container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-}
-
-.manual-content {
+.manual-header-card {
   background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   padding: 24px;
-}
-
-.manual-header {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .manual-title {
@@ -968,9 +1094,228 @@ export default {
   font-size: 12px;
 }
 
+/* ===== BLOCKS ===== */
+.block {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 20px 24px;
+}
+
+.block-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.block-title i {
+  color: var(--accent-text);
+}
+
+/* Safety */
+.safety-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.safety-item:last-child {
+  margin-bottom: 0;
+}
+
+.safety-item i {
+  font-size: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.safety-tip {
+  background: var(--warning-trans);
+  border-left: 3px solid var(--warning);
+}
+
+.safety-tip i {
+  color: var(--warning);
+}
+
+.safety-warning {
+  background: var(--danger-trans);
+  border-left: 3px solid var(--danger);
+}
+
+.safety-warning i {
+  color: var(--danger);
+}
+
+.safety-condition {
+  background: var(--success-trans);
+  border-left: 3px solid var(--success);
+}
+
+.safety-condition i {
+  color: var(--success);
+}
+
+/* Docs */
+.docs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docs-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--accent-text);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.docs-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-trans);
+}
+
+.docs-link i:first-child {
+  font-size: 20px;
+  color: var(--danger);
+}
+
+.docs-link span {
+  flex: 1;
+  font-size: 14px;
+}
+
+.docs-link i:last-child {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Specs */
+.specs-section {
+  margin-top: 12px;
+}
+
+.specs-section:first-child {
+  margin-top: 0;
+}
+
+.specs-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.torque-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.torque-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.torque-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.torque-row:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.fluids-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.fluid-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.fluid-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.fluid-value {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.tolerances-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.tolerance-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.tolerance-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tolerance-value {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
 /* Steps */
+.manual-content {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+}
+
 .steps-wrapper {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .steps-title {
@@ -1008,7 +1353,6 @@ export default {
 
 .step-item:hover {
   border-color: var(--accent);
-  background: var(--bg-card-hover);
 }
 
 .step-marker {
@@ -1063,6 +1407,36 @@ export default {
   line-height: 1.6;
 }
 
+.step-image {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.step-image img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.step-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  background: var(--success-trans);
+  color: var(--success-text);
+}
+
+.step-result i {
+  color: var(--success);
+  margin-top: 2px;
+}
+
 .step-tip {
   display: flex;
   align-items: flex-start;
@@ -1085,19 +1459,6 @@ export default {
 
 .step-tip i {
   margin-top: 2px;
-}
-
-.step-image {
-  margin-top: 12px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.step-image img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
 }
 
 .manual-tip {
@@ -1127,10 +1488,30 @@ export default {
   color: var(--text-primary);
 }
 
+/* Aftercare */
+.aftercare-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.aftercare-content i {
+  font-size: 18px;
+  color: var(--accent-text);
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
 /* Sidebar */
 .manual-sidebar {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
 }
 
@@ -1249,15 +1630,10 @@ export default {
   color: var(--warning-text);
 }
 
-.empty-icon.warning i {
-  color: var(--warning-text);
-}
-
 .empty-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 8px;
 }
 
@@ -1279,16 +1655,88 @@ export default {
   max-width: 400px;
 }
 
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent-text);
+  border: 1px solid var(--accent);
+}
+
+.btn-outline:hover {
+  background: var(--accent-trans);
+}
+
+.btn-success {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: var(--success-hover);
+  transform: translateY(-1px);
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.outline-btn {
+  padding: 10px 24px;
+  border: 2px solid var(--accent);
+  border-radius: 40px;
+  background: transparent;
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.outline-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
-  .manual-container {
-    grid-template-columns: 1fr;
-  }
-
   .manual-sidebar {
-    display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
   }
 }
 
@@ -1298,10 +1746,6 @@ export default {
     gap: 20px;
   }
 
-  .selection-step {
-    padding-left: 0;
-  }
-
   .selection-step.result-step {
     border-left: none;
     padding-left: 0;
@@ -1309,7 +1753,7 @@ export default {
     padding-top: 20px;
   }
 
-  .step-line {
+  .step-connector {
     display: none !important;
   }
 
@@ -1340,6 +1784,10 @@ export default {
   }
 
   .manual-content {
+    padding: 16px;
+  }
+
+  .manual-header-card {
     padding: 16px;
   }
 
@@ -1390,6 +1838,21 @@ export default {
     min-width: unset;
     width: 100%;
   }
+
+  .torque-header,
+  .torque-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    font-size: 12px;
+  }
+
+  .torque-row span {
+    font-size: 12px;
+  }
+
+  .fluids-grid,
+  .tolerances-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1429,6 +1892,21 @@ export default {
   .complete-card .btn {
     font-size: 14px;
     padding: 12px;
+  }
+
+  .block {
+    padding: 14px 16px;
+  }
+
+  .torque-header,
+  .torque-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .torque-row span {
+    font-size: 11px;
   }
 }
 </style>

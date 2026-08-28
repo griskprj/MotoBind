@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
-
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -9,9 +8,12 @@ class ManualStepSchema(BaseModel):
 
     order: int = Field(..., ge=1)
     title: str = Field(..., min_length=1, max_length=200)
-    tip: Optional[str] = Field(None, max_width=256)
-    warning: Optional[str] = Field(None, max_width=256)
+    tip: Optional[str] = Field(None, max_length=256)
+    warning: Optional[str] = Field(None, max_length=256)
     text: Optional[str] = Field(None, max_length=5000)
+    
+    image: Optional[str] = Field(None)
+    result: Optional[str] = Field(None, max_length=500)
 
     @field_validator("order")
     def validate_order(cls, v):
@@ -23,13 +25,28 @@ class ManualStepSchema(BaseModel):
 class CreateManualSchema(BaseModel):
     """Схема для создания мануала"""
 
+    # Основная информация
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
     category: str = Field(..., min_length=1, max_length=100)
     difficult: str = Field(default="easy")
-    instruments: Optional[str] = Field(None, max_length=500, alias="instruments")
-    parts: Optional[str] = Field(None, max_length=500)
     motorcycle: str = Field(..., min_length=1, max_length=100)
+    
+    time_estimate: Optional[str] = Field(None, max_length=64)
+    interval: Optional[str] = Field(None, max_length=64)
+    
+    safety_tip: Optional[str] = Field(None, max_length=1000)
+    warnings: Optional[str] = Field(None, max_length=1000)
+    conditions: Optional[str] = Field(None, max_length=1000)
+    
+    instruments: Optional[str] = Field(None, max_length=500)
+    parts: Optional[str] = Field(None, max_length=500)
+
+    docs_links: Optional[List[str]] = Field(None, max_length=10)
+    
+    specs: Optional[Dict[str, Any]] = Field(None)
+    
+    aftercare: Optional[str] = Field(None, max_length=2000)
     tip: Optional[str] = Field(None, max_length=256)
 
     steps: List[ManualStepSchema] = Field(..., min_length=1)
@@ -39,7 +56,6 @@ class CreateManualSchema(BaseModel):
         allowed = ["easy", "medium", "hard"]
         if v not in allowed:
             raise ValueError(f'Сложность должна быть одной из: {", ".join(allowed)}')
-
         return v
 
     @field_validator("steps")
@@ -55,7 +71,16 @@ class CreateManualSchema(BaseModel):
                 raise ValueError(
                     f"Порядок шагов должен быть последовательным. Ожидается {i}, получено {step.order}"
                 )
+        return v
 
+    @field_validator("docs_links")
+    def validate_docs_links(cls, v):
+        """Проверяет, что все ссылки валидны"""
+        if v is None:
+            return v
+        for url in v:
+            if not url.startswith(("http://", "https://")):
+                raise ValueError(f"Некорректный URL: {url}")
         return v
 
     class Config:
@@ -65,30 +90,53 @@ class CreateManualSchema(BaseModel):
 class UpdateManualSchema(BaseModel):
     """Схема для обновления мануала"""
 
-    title: Optional[str] = Field(..., min_length=1, max_length=200)
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
-    category: Optional[str] = Field(..., min_length=1, max_length=100)
-    difficult: Optional[str] = Field(default="easy")
-    instruments: Optional[str] = Field(None, max_length=500, alias="instruments")
+    category: Optional[str] = Field(None, min_length=1, max_length=100)
+    difficult: Optional[str] = Field(None)
+    motorcycle: Optional[str] = Field(None, min_length=1, max_length=100)
+    
+    time_estimate: Optional[str] = Field(None, max_length=64)
+    interval: Optional[str] = Field(None, max_length=64)
+    
+    safety_tip: Optional[str] = Field(None, max_length=1000)
+    warnings: Optional[str] = Field(None, max_length=1000)
+    conditions: Optional[str] = Field(None, max_length=1000)
+    
+    instruments: Optional[str] = Field(None, max_length=500)
     parts: Optional[str] = Field(None, max_length=500)
-    motorcycle: Optional[str] = Field(..., min_length=1, max_length=100)
+    
+    docs_links: Optional[List[str]] = Field(None, max_length=10)
+    specs: Optional[Dict[str, Any]] = Field(None)
+    aftercare: Optional[str] = Field(None, max_length=2000)
+    
     tip: Optional[str] = Field(None, max_length=256)
 
-    steps: List[ManualStepSchema] = Field(..., min_length=1)
+    steps: Optional[List[ManualStepSchema]] = Field(None, min_length=1)
 
     @field_validator("difficult")
     def validate_difficult(cls, v):
+        if v is None:
+            return v
         allowed = ["easy", "medium", "hard"]
         if v not in allowed:
             raise ValueError(f'Сложность должна быть одной из: {", ".join(allowed)}')
-
         return v
 
-    def get_updates(slef) -> dict:
+    @field_validator("docs_links")
+    def validate_docs_links(cls, v):
+        if v is None:
+            return v
+        for url in v:
+            if not url.startswith(("http://", "https://")):
+                raise ValueError(f"Некорректный URL: {url}")
+        return v
+
+    def get_updates(self) -> dict:
         """Возвращает только переданные поля"""
         return {
             k: v
-            for k, v in slef.model_dump(exclude_unset=True, exclude_none=True).items()
+            for k, v in self.model_dump(exclude_unset=True, exclude_none=True).items()
             if v is not None
         }
 
@@ -104,15 +152,27 @@ class ManualResponseSchema(BaseModel):
     description: Optional[str]
     category: str
     difficult: str
+    motorcycle: str
+    
+    # Новые поля
+    time_estimate: Optional[str]
+    interval: Optional[str]
+    safety_tip: Optional[str]
+    warnings: Optional[str]
+    conditions: Optional[str]
+    docs_links: Optional[List[str]]
+    specs: Optional[Dict[str, Any]]
+    aftercare: Optional[str]
+    
+    # Старые поля
     instruments: Optional[str]
     parts: Optional[str]
-    motorcycle: str
     tip: Optional[str]
+    
     status: str
     author_id: int
     created_at: datetime
-    updated_at: Optional[datetime]
     steps: List[ManualStepSchema]
 
     class Config:
-        from_attrubutes = True
+        from_attributes = True

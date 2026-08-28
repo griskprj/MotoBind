@@ -127,15 +127,24 @@
                         class="manual-card"
                     >
                         <img 
-                            :src="manual.image || '/ManualImgDefault.webp'" 
-                            alt="" 
+                            :src="getManualImage(manual)" 
+                            alt=""
                             class="manual-img"
+                            @error="handleImageError($event)"
                         >
                         
                         <div class="manual-body">
                             <p class="manual-category">{{ getCategoryName(manual.category) }}</p>
                             <p class="manual-title">{{ manual.title }}</p>
                             <p class="manual-moto"><i class="fa fa-motorcycle"></i> {{ manual.motorcycle }}</p>
+                            <div class="manual-meta-info">
+                                <span v-if="manual.time_estimate" class="meta-tag">
+                                    <i class="fa fa-clock"></i> {{ manual.time_estimate }}
+                                </span>
+                                <span v-if="manual.difficult" class="meta-tag">
+                                    <i class="fa fa-signal"></i> {{ getDifficultyName(manual.difficult) }}
+                                </span>
+                            </div>
                             <button class="outline-btn" @click="viewManual(manual)">
                                 Подробнее <i class="fa fa-angle-right"></i>
                             </button>
@@ -386,6 +395,15 @@ export default {
             return categories[category] || category.toUpperCase()
         },
         
+        getDifficultyName(difficult) {
+            const difficulties = {
+                'easy': 'Легко',
+                'medium': 'Средне',
+                'hard': 'Сложно'
+            }
+            return difficulties[difficult] || difficult
+        },
+        
         getStatusClass(status) {
             const classes = {
                 'moderate': 'status-moderate',
@@ -395,18 +413,40 @@ export default {
             return classes[status] || ''
         },
         
+        // ===== ИЗОБРАЖЕНИЯ =====
+        getManualImage(manual) {
+            // Если есть обложка у мануала
+            if (manual.image) {
+                return manual.image
+            }
+            
+            // Если есть шаги с изображением — берём первое
+            if (manual.steps && manual.steps.length > 0) {
+                const stepWithImage = manual.steps.find(step => step.image)
+                if (stepWithImage) {
+                    return stepWithImage.image
+                }
+            }
+            
+            // Дефолтное изображение
+            return '/ManualImgDefault.webp'
+        },
+        
+        handleImageError(event) {
+            // Если изображение не загрузилось — ставим дефолтное
+            event.target.src = '/ManualImgDefault.webp'
+        },
+        
         viewManual(manual) {
             this.selectedManual = manual
             this.showManualDetailsModal = true
         },
         
         openCreateModal() {
-            // TODO: Открыть модалку создания
             console.log('Open create manual modal')
         },
         
         logout() {
-            // TODO: Реализовать выход
             console.log('Logout')
         }
     }
@@ -558,6 +598,7 @@ export default {
     object-fit: cover;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+    background-color: var(--bg-secondary);
 }
 
 .manual-body {
@@ -572,6 +613,8 @@ export default {
     color: var(--accent-text);
     margin-bottom: 8px;
     padding: 4px 0;
+    font-size: 12px;
+    letter-spacing: 0.5px;
 }
 
 .manual-title {
@@ -579,12 +622,39 @@ export default {
     font-weight: 600;
     margin-bottom: 4px;
     color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .manual-moto {
     font-size: 14px;
     color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.manual-meta-info {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
     margin-bottom: 12px;
+}
+
+.meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.meta-tag i {
+    font-size: 11px;
 }
 
 .manual-body button {

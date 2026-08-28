@@ -164,6 +164,18 @@ const router = createRouter({
       }
     },
     {
+        path: '/manual/:id',
+        name: 'ManualView',
+        component: () => import('../views/ManualView.vue'),
+        meta: { 
+          requiresAuth: false,
+          title: 'MotoBind - Мануал по ремонту мотоцикла',
+          description: 'Подробная страница с инструкцией по ремонту мотоцикла',
+          showFooter: true,
+          showHeader: true
+        }
+    },
+    {
       path: '/manual-creator',
       name: 'manual creator',
       component: () => import('../views/ManualCreator.vue'),
