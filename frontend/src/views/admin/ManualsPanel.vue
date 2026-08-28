@@ -16,28 +16,28 @@
                     class="tab"
                     :class="selectedTab === 'all' ? 'active' : ''"
                 >   
-                    <p>Все</p>
+                    <p>Все <span class="tab-count">{{ getTabCount('all') }}</span></p>
                 </div>
                 <div
                     @click="changeTab('moderate')"
                     class="tab" 
                     :class="selectedTab === 'moderate' ? 'active' : ''"
                 >
-                    <p>На проверке</p>
+                    <p>На проверке <span class="tab-count">{{ getTabCount('moderate') }}</span></p>
                 </div>
                 <div 
                     @click="changeTab('approved')" 
                     class="tab"
                     :class="selectedTab === 'approved' ? 'active' : ''"
                 >
-                    <p>Одобренные</p>
+                    <p>Одобренные <span class="tab-count">{{ getTabCount('approved') }}</span></p>
                 </div>
                 <div 
                     @click="changeTab('rejected')" 
                     class="tab"
                     :class="selectedTab === 'rejected' ? 'active' : ''"
                 >
-                    <p>Отклонённые</p>
+                    <p>Отклонённые <span class="tab-count">{{ getTabCount('rejected') }}</span></p>
                 </div>
             </div>
 
@@ -48,10 +48,11 @@
                         v-model="searchQuery" 
                         placeholder="Поиск по названию, автору..."
                         class="search-input"
+                        @input="debouncedSearch"
                     >
                 </div>
                 
-                <select v-model="filterCategory" class="filter-select">
+                <select v-model="filterCategory" class="filter-select" @change="applyFilters">
                     <option value="">Все категории</option>
                     <option value="engine">Двигатель</option>
                     <option value="drive">Привод</option>
@@ -64,14 +65,21 @@
                     <option value="cooling">Система охлаждения</option>
                 </select>
 
-                <select v-model="filterMotorcycle" class="filter-select">
+                <select v-model="filterMotorcycle" class="filter-select" @change="applyFilters">
                     <option value="">Все мотоциклы</option>
                     <option v-for="moto in motorcycles" :key="moto.id" :value="moto.name">
                         {{ moto.name }}
                     </option>
                 </select>
 
-                <select v-model="sortBy" class="filter-select">
+                <select v-model="filterDifficulty" class="filter-select" @change="applyFilters">
+                    <option value="">Все сложности</option>
+                    <option value="easy">Легко</option>
+                    <option value="medium">Средне</option>
+                    <option value="hard">Сложно</option>
+                </select>
+
+                <select v-model="sortBy" class="filter-select" @change="applyFilters">
                     <option value="created_at_desc">По дате (новые)</option>
                     <option value="created_at_asc">По дате (старые)</option>
                     <option value="title_asc">По названию (А-Я)</option>
@@ -119,7 +127,16 @@
                             <i class="fa fa-tags"></i> {{ getCategory(manual.category) }}
                         </div>
                         <div class="meta-item">
+                            <i class="fa fa-signal"></i> {{ getDifficulty(manual.difficult) }}
+                        </div>
+                        <div class="meta-item">
                             <i class="fa fa-user"></i> {{ manual.author?.username || 'Неизвестно' }}
+                        </div>
+                        <div class="meta-item" v-if="manual.time_estimate">
+                            <i class="fa fa-clock-o"></i> {{ manual.time_estimate }}
+                        </div>
+                        <div class="meta-item" v-if="manual.interval">
+                            <i class="fa fa-repeat"></i> {{ manual.interval }}
                         </div>
                         <div class="meta-item">
                             <i class="fa fa-calendar"></i> {{ formatDate(manual.created_at) }}
@@ -160,9 +177,10 @@
         v-if="selectedManual"
         :isOpen="showDetailsModal"
         :manual="selectedManual"
-        @close="showDetailsModal = false"
+        @close="closeDetailsModal"
         @approve="handleApprove"
         @reject="handleReject"
+        @reconsider="handleReconsider"
         @delete="handleDelete"
     />
 </template>
@@ -194,8 +212,11 @@ export default {
             searchQuery: '',
             filterCategory: '',
             filterMotorcycle: '',
+            filterDifficulty: '',
             sortBy: 'created_at_desc',
-            selectedTab: 'moderate', // По умолчанию показываем "На проверке"
+            selectedTab: 'moderate',
+            
+            searchTimeout: null
         }
     },
 
@@ -203,6 +224,7 @@ export default {
         filteredManuals() {
             let items = [...this.manuals]
             
+            // Таб фильтр
             if (this.selectedTab === 'moderate') {
                 items = items.filter(m => m.status === 'moderate')
             } else if (this.selectedTab === 'approved') {
@@ -211,30 +233,44 @@ export default {
                 items = items.filter(m => m.status === 'rejected')
             }
             
+            // Поиск
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
                 items = items.filter(m => 
                     m.title?.toLowerCase().includes(query) ||
                     m.motorcycle?.toLowerCase().includes(query) ||
-                    m.author?.username?.toLowerCase().includes(query)
+                    m.author?.username?.toLowerCase().includes(query) ||
+                    m.description?.toLowerCase().includes(query)
                 )
             }
             
+            // Категория
             if (this.filterCategory) {
                 items = items.filter(m => m.category === this.filterCategory)
             }
             
+            // Мотоцикл
             if (this.filterMotorcycle) {
                 items = items.filter(m => m.motorcycle === this.filterMotorcycle)
             }
             
+            // Сложность
+            if (this.filterDifficulty) {
+                items = items.filter(m => m.difficult === this.filterDifficulty)
+            }
+            
+            // Сортировка
             items = this.sortItems(items)
             
             return items
         },
         
         hasActiveFilters() {
-            return this.searchQuery || this.filterCategory || this.filterMotorcycle || this.sortBy !== 'created_at_desc'
+            return this.searchQuery || 
+                   this.filterCategory || 
+                   this.filterMotorcycle || 
+                   this.filterDifficulty ||
+                   this.sortBy !== 'created_at_desc'
         }
     },
 
@@ -242,21 +278,43 @@ export default {
         async loadData() {
             try {
                 this.loading = true
-                const manualsRes = await api.get('/manual/list?per_page=100')
-                this.manuals = manualsRes.data.manuals
+                
+                // Загружаем все мануалы (без пагинации для админки)
+                const manualsRes = await api.get('/manual/list?per_page=1000')
+                this.manuals = manualsRes.data.manuals || []
 
+                // Загружаем мотоциклы
                 const motoRes = await api.get('/motorcycle/')
-                this.motorcycles = motoRes.data
+                this.motorcycles = motoRes.data || []
             } catch (err) {
                 console.error('Failed load admin manuals data:', err)
+                if (err.response?.status === 401) {
+                    this.$router.push('/login')
+                }
             } finally {
                 this.loading = false
             }
         },
 
+        getTabCount(status) {
+            if (status === 'all') return this.manuals.length
+            return this.manuals.filter(m => m.status === status).length
+        },
+
         changeTab(tabName) {
             this.selectedTab = tabName
-            this.clearFilters()
+            // Не очищаем фильтры при смене таба
+        },
+
+        applyFilters() {
+            // Применяем фильтры (пересчёт computed)
+        },
+
+        debouncedSearch() {
+            clearTimeout(this.searchTimeout)
+            this.searchTimeout = setTimeout(() => {
+                // Применяем поиск (пересчёт computed)
+            }, 400)
         },
 
         openDetailsModal(manual) {
@@ -264,17 +322,25 @@ export default {
             this.showDetailsModal = true
         },
 
+        closeDetailsModal() {
+            this.showDetailsModal = false
+            this.selectedManual = null
+        },
+
         async handleApprove(manualId) {
             try {
                 await api.post(`/admin/manual/${manualId}/approve`)
                 const manual = this.manuals.find(m => m.id === manualId)
-                if (manual) manual.status = 'approved'
-                this.showDetailsModal = false
-                this.selectedManual = null
-                alert('Мануал успешно одобрен!')
+                if (manual) {
+                    manual.status = 'approved'
+                    manual.rejection_reason = null
+                }
+                this.closeDetailsModal()
+                this.$emit('manual-updated')
+                this.showToast('Мануал успешно одобрен!', 'success')
             } catch (err) {
                 console.error('Failed approve manual:', err)
-                alert('Ошибка при одобрении мануала')
+                this.showToast('Ошибка при одобрении мануала', 'error')
             }
         },
 
@@ -282,13 +348,31 @@ export default {
             try {
                 await api.post(`/admin/manual/${data.id}/reject`, { reason: data.reason })
                 const manual = this.manuals.find(m => m.id === data.id)
-                if (manual) manual.status = 'rejected'
-                this.showDetailsModal = false
-                this.selectedManual = null
-                alert('Мануал отклонён')
+                if (manual) {
+                    manual.status = 'rejected'
+                    manual.rejection_reason = data.reason
+                }
+                this.closeDetailsModal()
+                this.showToast('Мануал отклонён', 'warning')
             } catch (err) {
                 console.error('Failed reject manual:', err)
-                alert('Ошибка при отклонении мануала')
+                this.showToast('Ошибка при отклонении мануала', 'error')
+            }
+        },
+
+        async handleReconsider(manualId) {
+            try {
+                await api.post(`/admin/manual/${manualId}/reconsider`)
+                const manual = this.manuals.find(m => m.id === manualId)
+                if (manual) {
+                    manual.status = 'moderate'
+                    manual.rejection_reason = null
+                }
+                this.closeDetailsModal()
+                this.showToast('Мануал возвращён на проверку', 'info')
+            } catch (err) {
+                console.error('Failed reconsider manual:', err)
+                this.showToast('Ошибка при возврате мануала на проверку', 'error')
             }
         },
 
@@ -298,12 +382,11 @@ export default {
             try {
                 await api.delete(`/admin/manual/${manualId}`)
                 this.manuals = this.manuals.filter(m => m.id !== manualId)
-                this.showDetailsModal = false
-                this.selectedManual = null
-                alert('Мануал удалён')
+                this.closeDetailsModal()
+                this.showToast('Мануал удалён', 'success')
             } catch (err) {
                 console.error('Failed delete manual:', err)
-                alert('Ошибка при удалении мануала')
+                this.showToast('Ошибка при удалении мануала', 'error')
             }
         },
 
@@ -321,6 +404,7 @@ export default {
             this.searchQuery = ''
             this.filterCategory = ''
             this.filterMotorcycle = ''
+            this.filterDifficulty = ''
             this.sortBy = 'created_at_desc'
         },
 
@@ -361,6 +445,20 @@ export default {
             return categories[category] || category
         },
 
+        getDifficulty(difficult) {
+            const difficulties = {
+                'easy': 'Легко',
+                'medium': 'Средне',
+                'hard': 'Сложно'
+            }
+            return difficulties[difficult] || difficult
+        },
+
+        showToast(message, type = 'info') {
+            // TODO: Реализовать систему уведомлений
+            alert(message)
+        },
+
         async logout() {
             try {
                 await api.post('/auth/logout');
@@ -383,6 +481,7 @@ export default {
 .controls-wrapper {
     margin-bottom: 16px;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
@@ -394,7 +493,9 @@ export default {
     gap: 24px;
     border-bottom: 1px solid var(--border-light);
     padding-bottom: 12px;
+    flex-wrap: wrap;
 }
+
 .tab {
     font-size: 14px;
     font-weight: 500;
@@ -404,8 +505,15 @@ export default {
     padding-bottom: 12px;
     transition: 0.2s;
 }
-.tab:hover { color: var(--text-primary); }
-.tab.active { color: var(--accent-text); }
+
+.tab:hover { 
+    color: var(--text-primary); 
+}
+
+.tab.active { 
+    color: var(--accent-text); 
+}
+
 .tab.active::after {
     content: '';
     position: absolute;
@@ -417,16 +525,35 @@ export default {
     border-radius: 2px;
 }
 
+.tab-count {
+    display: inline-block;
+    background: var(--bg-secondary);
+    padding: 0 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.tab.active .tab-count {
+    background: var(--accent-trans);
+    color: var(--accent-text);
+}
+
 .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+    flex: 1;
 }
+
 .filter-group {
     flex: 1;
     min-width: 160px;
 }
+
 .search-input {
     width: 100%;
     padding: 8px 14px;
@@ -438,8 +565,14 @@ export default {
     outline: none;
     transition: border 0.2s;
 }
-.search-input:focus { border-color: var(--accent); }
-.search-input::placeholder { color: var(--text-muted); }
+
+.search-input:focus { 
+    border-color: var(--accent); 
+}
+
+.search-input::placeholder { 
+    color: var(--text-muted); 
+}
 
 .filter-select {
     padding: 8px 14px;
@@ -459,7 +592,11 @@ export default {
     background-size: 14px;
     padding-right: 36px;
 }
-.filter-select:focus { border-color: var(--accent); }
+
+.filter-select:focus { 
+    border-color: var(--accent); 
+}
+
 .filter-select option { 
     background: var(--bg-input);
     color: var(--text-primary);
@@ -476,6 +613,7 @@ export default {
     color: var(--text-muted);
     margin-bottom: 16px;
 }
+
 .clear-filters {
     background: transparent;
     border: none;
@@ -484,12 +622,15 @@ export default {
     font-size: 13px;
     transition: color 0.2s;
 }
-.clear-filters:hover { color: var(--accent); }
+
+.clear-filters:hover { 
+    color: var(--accent); 
+}
 
 /* ===== GRID ===== */
 .manuals-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 16px;
 }
 
@@ -503,9 +644,11 @@ export default {
     display: flex;
     flex-direction: column;
 }
+
 .manual-card:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .card-header {
@@ -515,6 +658,7 @@ export default {
     gap: 12px;
     margin-bottom: 12px;
 }
+
 .card-title {
     font-size: 16px;
     font-weight: 600;
@@ -522,6 +666,7 @@ export default {
     flex: 1;
     color: var(--text-primary);
 }
+
 .status-badge {
     display: inline-block;
     padding: 3px 12px;
@@ -531,14 +676,17 @@ export default {
     white-space: nowrap;
     flex-shrink: 0;
 }
+
 .badge-green { 
     background: var(--success-trans); 
     color: var(--success-text); 
 }
+
 .badge-warning { 
     background: var(--warning-trans); 
     color: var(--warning-text); 
 }
+
 .badge-danger { 
     background: var(--danger-trans); 
     color: var(--danger-text); 
@@ -548,11 +696,13 @@ export default {
     flex: 1;
     margin-bottom: 12px;
 }
+
 .card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
 }
+
 .meta-item {
     font-size: 13px;
     color: var(--text-muted);
@@ -560,10 +710,12 @@ export default {
     align-items: center;
     gap: 8px;
 }
+
 .meta-item i {
     width: 16px;
     text-align: center;
     color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 .card-footer {
@@ -573,11 +725,16 @@ export default {
     padding-top: 12px;
     border-top: 1px solid var(--border-light);
 }
+
 .steps-count {
     font-size: 13px;
     color: var(--text-muted);
 }
-.steps-count i { margin-right: 6px; }
+
+.steps-count i { 
+    margin-right: 6px; 
+}
+
 .click-hint {
     font-size: 13px;
     color: var(--text-muted);
@@ -586,7 +743,10 @@ export default {
     gap: 4px;
     transition: color 0.2s;
 }
-.manual-card:hover .click-hint { color: var(--accent-text); }
+
+.manual-card:hover .click-hint { 
+    color: var(--accent-text); 
+}
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
@@ -596,17 +756,20 @@ export default {
     padding: 60px 20px;
     text-align: center;
 }
+
 .empty-header i {
     font-size: 48px;
     color: var(--border-color);
     margin-bottom: 16px;
 }
+
 .empty-title {
     font-size: 20px;
     font-weight: 600;
     margin: 0 0 8px 0;
     color: var(--text-primary);
 }
+
 .empty-text {
     color: var(--text-muted);
     font-size: 14px;
@@ -619,17 +782,22 @@ export default {
         flex-direction: column;
         align-items: stretch;
     }
+    
     .filters {
         flex-wrap: wrap;
     }
+    
     .filter-select {
         flex: 1;
         min-width: 120px;
     }
 }
+
 @media (max-width: 820px) {
-    .admin-manuals-container { padding: 16px; }
-    .header-right { display: none; }
+    .container { 
+        padding: 16px; 
+    }
+    
     .tabs {
         overflow-x: auto;
         gap: 16px;
@@ -637,15 +805,32 @@ export default {
         white-space: nowrap;
         scrollbar-width: none;
     }
-    .tabs::-webkit-scrollbar { display: none; }
+    
+    .tabs::-webkit-scrollbar { 
+        display: none; 
+    }
+    
+    .card-meta {
+        grid-template-columns: 1fr;
+    }
 }
+
 @media (max-width: 480px) {
     .filters {
         flex-direction: column;
     }
-    .filter-select { width: 100%; }
+    
+    .filter-select {
+        width: 100%;
+        min-width: unset;
+    }
+    
     .manuals-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .manual-card {
+        padding: 14px 16px;
     }
 }
 </style>

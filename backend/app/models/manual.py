@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-
 from app.extensions import db
 
 
@@ -10,17 +9,34 @@ class Manual(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    
     title = db.Column(db.String(64), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(32), nullable=False)
     difficult = db.Column(db.String(32), default="easy")
-    instruments = db.Column(db.Text)
-    parts = db.Column(db.Text)
     motorcycle = db.Column(db.String(64), nullable=False)
+    
+    time_estimate = db.Column(db.String(64), nullable=True)
+    interval = db.Column(db.String(64), nullable=True)
+    
+    safety_tip = db.Column(db.Text, nullable=True)
+    warnings = db.Column(db.Text, nullable=True)
+    conditions = db.Column(db.Text, nullable=True)
+    
+    instruments = db.Column(db.Text, nullable=True)
+    parts = db.Column(db.Text, nullable=True)
+    
+    docs_links = db.Column(db.JSON, nullable=True)
+    
+    specs = db.Column(db.JSON, nullable=True)
+    
+    aftercare = db.Column(db.Text, nullable=True)
+    
     status = db.Column(db.String(32), default="moderate")
     rejection_reason = db.Column(db.String(32), default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    tip = db.Column(db.String(256))
+    
+    tip = db.Column(db.String(256), nullable=True)
 
     author = db.relationship("User", backref="manuals")
     steps = db.relationship("ManualStep", lazy="select", cascade="all, delete-orphan")
@@ -35,11 +51,22 @@ class Manual(db.Model):
             "description": self.description,
             "category": self.category,
             "difficult": self.difficult,
+            "motorcycle": self.motorcycle,
+            
+            "time_estimate": self.time_estimate,
+            "interval": self.interval,
+            "safety_tip": self.safety_tip,
+            "warnings": self.warnings,
+            "conditions": self.conditions,
+            "docs_links": self.docs_links,
+            "specs": self.specs,
+            "aftercare": self.aftercare,
+            
             "instruments": self.instruments,
             "parts": self.parts,
-            "motorcycle": self.motorcycle,
-            "status": self.status,
             "tip": self.tip,
+            
+            "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "steps": [s.to_dict() for s in self.steps],
         }
@@ -53,9 +80,12 @@ class ManualStep(db.Model):
     manual_id = db.Column(db.Integer, db.ForeignKey("manuals.id"), nullable=False)
     order = db.Column(db.Integer, default=0, nullable=False)
     title = db.Column(db.String(64), nullable=False)
-    text = db.Column(db.Text)
-    tip = db.Column(db.String(256))
-    warning = db.Column(db.String(256))
+    text = db.Column(db.Text, nullable=True)
+    tip = db.Column(db.String(256), nullable=True)
+    warning = db.Column(db.String(256), nullable=True)
+    result = db.Column(db.String(256), nullable=True)
+
+    image = db.Column(db.Text, nullable=True)
 
     def to_dict(self):
         return {
@@ -66,4 +96,6 @@ class ManualStep(db.Model):
             "text": self.text,
             "tip": self.tip,
             "warning": self.warning,
+            "image": self.image,
+            "result": self.result,
         }
