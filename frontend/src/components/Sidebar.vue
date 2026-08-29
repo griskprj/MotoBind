@@ -148,6 +148,14 @@
 
         <!-- Нижняя часть сайдбара -->
         <div class="sidebar-footer">
+            <button
+                v-if="!isDesktop"
+                class="theme-toggle" 
+                @click="toggleTheme"
+                :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
+            >
+                <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
+            </button>
             <button class="btn-logout-sidebar" @click="logout">
                 <i class="fa fa-sign-out"></i>
                 <span v-if="!isCollapsed || !isDesktop">Выйти</span>
@@ -168,12 +176,23 @@ export default {
             isCollapsed: false,
             isAdmin: false,
             isDesktop: window.innerWidth > 770,
+            isDark: true
         }
     },
 
     mounted() {
         this.checkAdminStatus();
         window.addEventListener('resize', this.handleResize);
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            this.isDark = savedTheme === 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.isDark = prefersDark;
+            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        }
     },
 
     beforeDestroy() {
@@ -215,6 +234,18 @@ export default {
                 }
             } catch {
                 this.isAdmin = false;
+            }
+        },
+
+        toggleTheme() {
+            this.isDark = !this.isDark;
+            const theme = this.isDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            const icon = this.$el.querySelector('.theme-toggle i');
+            if (icon) {
+                icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';
             }
         },
 
@@ -583,6 +614,33 @@ export default {
 .btn-logout-sidebar i {
     font-size: 16px;
     flex-shrink: 0;
+}
+
+/* ===== КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ===== */
+.theme-toggle {
+    width: 100%;
+    padding: 0;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.theme-toggle:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.theme-toggle i {
+    transition: transform 0.3s ease;
 }
 
 @media (max-width: 480px) {
