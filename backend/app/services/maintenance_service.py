@@ -1,5 +1,3 @@
-# services/maintenance_service.py
-
 from enum import Enum
 from datetime import datetime, date, timedelta
 from typing import Any, Dict, Optional, List
@@ -85,7 +83,7 @@ class MaintenanceService:
         planned_id: int,
         author_id: int,
         mileage: int,
-        date: Optional[str] = None,
+        completed_date: Optional[str] = None,
         cost: Optional[int] = None,
         repeat: bool = False,
         interval: Optional[int] = None,
@@ -103,9 +101,9 @@ class MaintenanceService:
             raise ValidationError("Обслуживание уже выполнено")
 
         completed_date_obj = None
-        if date:
+        if completed_date:
             try:
-                completed_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+                completed_date_obj = datetime.strptime(completed_date, "%Y-%m-%d").date()
             except ValueError:
                 raise ValidationError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
 
@@ -132,7 +130,6 @@ class MaintenanceService:
 
             if interval:
                 new_planned_data['planned_mileage'] = moto.mileage + interval
-
             elif interval_days:
                 today = date.today()
                 new_planned_data['planned_date'] = today + timedelta(days=interval_days)
@@ -150,7 +147,9 @@ class MaintenanceService:
     def update_maintenance(
         maintenance_id: int, user_id: int, **kwargs
     ) -> Maintenance:
-        """Обновляет данные обслуживания"""
+        """
+        Обновляет данные обслуживания
+        """
         maintenance = MaintenanceService.get_maintenance_by_id(
             user_id, maintenance_id
         )
@@ -172,11 +171,23 @@ class MaintenanceService:
             try:
                 kwargs["planned_date"] = datetime.strptime(kwargs["planned_date"], "%Y-%m-%d").date()
             except ValueError:
-                raise ValidationError("Неверный формат даты")
+                raise ValidationError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
+
+        if "completed_date" in kwargs and kwargs["completed_date"] is not None:
+            try:
+                kwargs["completed_date"] = datetime.strptime(kwargs["completed_date"], "%Y-%m-%d").date()
+            except ValueError:
+                raise ValidationError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
 
         for key, value in kwargs.items():
             if hasattr(maintenance, key) and value is not None:
                 setattr(maintenance, key, value)
+
+        if "completed_date" in kwargs or "completed_mileage" in kwargs:
+            if maintenance.completed_mileage is not None or maintenance.completed_date is not None:
+                maintenance.status = 'completed'
+            elif maintenance.planned_mileage is not None or maintenance.planned_date is not None:
+                maintenance.status = 'planned'
 
         db.session.commit()
         return maintenance

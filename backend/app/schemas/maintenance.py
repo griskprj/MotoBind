@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
 
+
 class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
     motorcycle_id: int = Field(..., alias="motorcycleId")
     category: str = Field(..., min_length=1)
@@ -63,10 +64,20 @@ class MarkMaintenanceAsCompletedSchema(CompletedDateValidatorMixin, BaseModel):
     completed_date: Optional[str] = Field(None)
     cost: Optional[int] = Field(None, ge=0)
     is_repeat: bool = Field(False)
-    interval: Optional[int] = Field(None, ge=0, le=1_000_000)
+    
+    interval: Optional[int] = Field(None, ge=0, le=1_000_000, description="Интервал по пробегу")
+    interval_days: Optional[int] = Field(None, ge=1, le=10_000, description="Интервал по дням")
 
     @model_validator(mode="after")
     def validate_repeat(self) -> "MarkMaintenanceAsCompletedSchema":
-        if self.is_repeat and self.interval is None:
-            raise ValueError("При is_repeat=True необходимо указать interval")
+        if self.is_repeat:
+            if self.interval is None and self.interval_days is None:
+                raise ValueError("При is_repeat=True необходимо указать interval или interval_days")
+        return self
+
+    @model_validator(mode="after")
+    def validate_interval(self) -> "MarkMaintenanceAsCompletedSchema":
+        """Проверяет, что нельзя указать оба интервала одновременно"""
+        if self.interval is not None and self.interval_days is not None:
+            raise ValueError("Укажите только один тип интервала: interval (по пробегу) или interval_days (по дням)")
         return self

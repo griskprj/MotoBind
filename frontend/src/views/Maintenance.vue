@@ -104,26 +104,28 @@
                         class="search-input"
                     >
                 </div>
-                <select v-model="filterMotorcycle" class="filter-select">
-                    <option value="">Все мотоциклы</option>
-                    <option v-for="motorcycle in motorcycles" :key="motorcycle.id" :value="motorcycle.id">
-                        {{ motorcycle.name }}
-                    </option>
-                </select>
-                <select v-model="filterStatus" class="filter-select">
-                    <option value="">Все статусы</option>
-                    <option value="completed">Выполнено</option>
-                    <option value="planned">Запланировано</option>
-                    <option value="overdue">Просрочено</option>
-                </select>
-                <select v-model="sortBy" class="filter-select">
-                    <option value="date_desc">По дате (новые)</option>
-                    <option value="date_asc">По дате (старые)</option>
-                    <option value="mileage_desc">По пробегу (макс)</option>
-                    <option value="mileage_asc">По пробегу (мин)</option>
-                    <option value="cost_desc">По стоимости (макс)</option>
-                    <option value="cost_asc">По стоимости (мин)</option>
-                </select>
+                <div class="filter-group">
+                    <select v-model="filterMotorcycle" class="filter-select">
+                        <option value="">Все мотоциклы</option>
+                        <option v-for="motorcycle in motorcycles" :key="motorcycle.id" :value="motorcycle.id">
+                            {{ motorcycle.name }}
+                        </option>
+                    </select>
+                    <select v-model="filterStatus" class="filter-select">
+                        <option value="">Все статусы</option>
+                        <option value="completed">Выполнено</option>
+                        <option value="planned">Запланировано</option>
+                        <option value="overdue">Просрочено</option>
+                    </select>
+                    <select v-model="sortBy" class="filter-select">
+                        <option value="date_desc">По дате (новые)</option>
+                        <option value="date_asc">По дате (старые)</option>
+                        <option value="mileage_desc">По пробегу (макс)</option>
+                        <option value="mileage_asc">По пробегу (мин)</option>
+                        <option value="cost_desc">По стоимости (макс)</option>
+                        <option value="cost_asc">По стоимости (мин)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -205,9 +207,13 @@
     <MaintenanceDetailsModal
         v-if="selectedMaintenance"
         :isOpen="showDetailsMaintenanceModal"
-        :motoName="selectedMaintenanceMotoName"
+        :motoName="selectedMotorcycle.name"
+        :motorcycle="selectedMotorcycle"
+        :motorcycles="motorcycles"
         :maintenance="selectedMaintenance"
         @delete="deleteMaintenance"
+        @mark="markMaintenance"
+        @updateMaintenance="updateMaintenance"
         @close="closeDetailsMaintenance"
     />
 </template>
@@ -234,6 +240,7 @@ export default {
             allMaintenances: [],
             
             selectedMaintenance: null,
+            selectedMotorcycle: null,
             selectedMaintenanceMotoName: '',
             
             // Фильтры
@@ -349,6 +356,34 @@ export default {
             }
         },
 
+        async markMaintenance(formData) {
+            try {
+                await api.post(`/maintenance/${formData.id}/complete`, {
+                    completed_mileage: formData.mileage,
+                    completed_date: formData.date,
+                    cost: formData.cost,
+                    is_repeat: formData.isRepeat,
+                    interval: formData.interval
+                })
+                
+                this.showCompleteModal = false
+                this.$toast?.success('Обслуживание успешно завершено!')
+                
+                await this.loadData()
+                
+                this.selectedMaintenance = null
+                this.selectedMaintenanceData = null
+                this.manual = null
+            } catch (err) {
+                console.error('Failed to complete maintenance:', err)
+                this.$toast?.error(err.response?.data?.error || 'Ошибка при завершении обслуживания')
+            }
+        },
+
+        updateMaintenance() {
+            this.loadData()
+        },
+
         changeTab(tabName) {
             this.selectedTab = tabName
             this.clearFilters()
@@ -356,8 +391,7 @@ export default {
 
         openDetailsMaintenance(maintenance) {
             this.selectedMaintenance = maintenance
-            const moto = this.motorcycles.find(m => m.id === maintenance.moto_id)
-            this.selectedMaintenanceMotoName = moto ? moto.name : maintenance.moto_name || 'Мотоцикл'
+            this.selectedMotorcycle = this.motorcycles.find(m => m.id === maintenance.moto_id)
             this.showDetailsMaintenanceModal = true
         },
 
@@ -496,14 +530,19 @@ export default {
 
 .filters {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
     gap: 12px;
     align-items: center;
 }
 
 .filter-group {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-width: 200px;
+    width: 100%;
 }
 
 .search-input {

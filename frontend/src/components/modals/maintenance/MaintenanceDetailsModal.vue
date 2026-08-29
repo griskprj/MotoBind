@@ -83,11 +83,17 @@
         <!-- Действия -->
         <template #actions>
             <div class="modal-actions">
-                <button class="btn btn-secondary" @click="$emit('close')">
-                    <i class="fa fa-times"></i> Закрыть
+                <button v-if="maintenance.status !== 'completed'" class="btn btn-success" @click="openMarkModal">
+                    <i class="fa fa-check"></i> Завершить
+                </button>
+                <button class="btn btn-warning" @click="openEditModal">
+                    <i class="fa fa-pen"></i> Редактировать
                 </button>
                 <button class="btn btn-danger" @click="openDeleteModal">
                     <i class="fa fa-trash"></i> Удалить
+                </button>
+                <button class="btn btn-secondary" @click="$emit('close')">
+                    <i class="fa fa-times"></i> Закрыть
                 </button>
             </div>
         </template>
@@ -99,17 +105,40 @@
             @submit="handleDelete"
             @close="showDeleteModal = false"
         />
+
+        <!-- Модалка завершения обслуживания -->
+        <MarkPlanMaintenanceModal
+            :isOpen="showMarkModal"
+            :maintenance="maintenance"
+            :motorcycle="motorcycle"
+            @submit="handleMark"
+            @close="showMarkModal = false"
+        />
+
+        <!-- Модалка редактирования обслуживания -->
+        <EditMaintenanceModal
+            :isOpen="showEditModal"
+            :maintenance="maintenance"
+            :motorcycles="motorcycles"
+            :motorcycleId="motorcycle.id"
+            @saved="handleSave"
+            @close="showEditModal = false"
+        />
     </ModalWrapper>
 </template>
 
 <script>
 import ModalWrapper from '../ModalWrapper.vue'
 import DeleteMaintenanceModal from './DeleteMaintenanceModal.vue'
+import EditMaintenanceModal from './EditMaintenanceModal.vue';
+import MarkPlanMaintenanceModal from './MarkPlanMaintenanceModal.vue';
 
 export default {
     components: {
         ModalWrapper,
-        DeleteMaintenanceModal
+        DeleteMaintenanceModal,
+        MarkPlanMaintenanceModal,
+        EditMaintenanceModal
     },
 
     props: {
@@ -123,6 +152,14 @@ export default {
             required: true,
             default: 'Мотоцикл'
         },
+        motorcycle: {
+            type: Object,
+            default: null
+        },
+        motorcycles: {
+            type: Array,
+            default: () => []
+        },
         maintenance: {
             type: Object,
             required: true,
@@ -132,7 +169,9 @@ export default {
 
     data() {
         return {
-            showDeleteModal: false
+            showDeleteModal: false,
+            showMarkModal: false,
+            showEditModal: false
         }
     },
 
@@ -171,7 +210,8 @@ export default {
                 'wheel': 'Колеса / Шины',
                 'brakes': 'Тормозная система',
                 'fuel': 'Топливная система',
-                'cooling': 'Система охлаждения'
+                'cooling': 'Система охлаждения',
+                'other': 'Другое',
             }
             return categories[category] || category
         },
@@ -180,10 +220,30 @@ export default {
             this.showDeleteModal = true
         },
 
+        openEditModal() {
+            this.showEditModal = true
+        },
+
         handleDelete(id) {
             this.$emit('delete', id)
             this.showDeleteModal = false
-        }
+        },
+
+        openMarkModal() {
+            if (this.maintenance.status !== 'completed') {
+                this.showMarkModal = true
+            }
+        },
+
+        handleMark(formData) {
+            this.$emit('mark', formData)
+            this.showMarkModal = false
+        },
+
+        handleSave() {
+            this.$emit('updateMaintenance')
+            this.$emit('close')
+        },
     }
 }
 </script>
@@ -375,27 +435,6 @@ export default {
     align-items: center;
     justify-content: center;
     gap: 8px;
-}
-
-.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--border-color);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: #fff;
-}
-
-.btn-danger:hover {
-    background: var(--danger-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
 }
 
 /* ============================================ */
