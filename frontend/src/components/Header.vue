@@ -7,7 +7,7 @@
         </div>
 
         <div class="header-right">
-            <i class="fa fa-bell notification-icon"></i>
+            <NotificationBell/>
             <button 
                 class="theme-toggle" 
                 @click="toggleTheme"
@@ -20,8 +20,12 @@
 </template>
 
 <script>
+import NotificationBell from './NotificationBell.vue';
+
 export default {
     name: 'Header',
+
+    components: {NotificationBell},
 
     data() {
         return {

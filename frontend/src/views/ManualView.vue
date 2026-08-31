@@ -20,6 +20,13 @@
                         <i :class="statusIcon"></i>
                         {{ getStatusLabel(manual.status) }}
                     </span>
+                    <router-link 
+                        v-if="isAuthor && manual.status === 'rejected'" 
+                        :to="`/manual-creator?edit=${manual.id}`" 
+                        class="btn btn-warning btn-sm"
+                    >
+                        <i class="fa fa-edit"></i> Редактировать
+                    </router-link>
                 </div>
             </div>
 
@@ -343,6 +350,12 @@ export default {
                 'draft': 'fa fa-pencil'
             };
             return icons[this.manual.status] || 'fa-circle';
+        },
+
+        isAuthor() {
+            if (!this.manual) return false
+            const user = JSON.parse(localStorage.getItem('user') || '{}')
+            return this.manual.author_id === user.id
         }
     },
 
@@ -363,7 +376,6 @@ export default {
                 const response = await api.get(`/manual/${id}`);
                 this.manual = response.data;
                 
-                // Сортируем шаги
                 if (this.manual.steps) {
                     this.manual.steps = [...this.manual.steps].sort((a, b) => (a.order || 0) - (b.order || 0));
                 }

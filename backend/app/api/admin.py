@@ -10,6 +10,7 @@ from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
+from app.services.notification_service import NotificationService
 
 admin = Blueprint("admin", __name__)
 
@@ -138,6 +139,15 @@ def approve_manual(manual_id):
     manual.status = "approved"
     db.session.commit()
 
+    NotificationService.send_notification(
+        user_id=manual.author_id,
+        type='manual_status',
+        title='Мануал одобрен',
+        content=f'Ваш мануал "{manual.title}" был одобрен и опубликован.',
+        link=f'/manual/{manual.id}',
+        extra_data={'manual_id': manual.id, 'status': 'approved'}
+    )
+
     return (
         jsonify({"message": "Мануал успешно одобрен", "manual": manual.to_dict()}),
         200,
@@ -170,6 +180,15 @@ def reject_manual(manual_id):
 
     db.session.commit()
 
+    NotificationService.send_notification(
+        user_id=manual.author_id,
+        type='manual_status',
+        title='Мануал отклонен',
+        content=f'Ваш мануал "{manual.title}" был отклонен. Причина: {reason}',
+        link=f'/manual/{manual.id}',
+        extra_data={'manual_id': manual.id, 'status': 'rejected', 'reason': reason}
+    )
+
     return jsonify({"message": "Мануал отклонен", "manual": manual.to_dict()}), 200
 
 
@@ -191,6 +210,15 @@ def reconsider_manual(manual_id):
     manual.status = "moderate"
     manual.rejection_reason = None
     db.session.commit()
+
+    NotificationService.send_notification(
+        user_id=manual.author_id,
+        type='manual_status',
+        title='Мануал отправлен на повторную проверку',
+        content=f'Ваш мануал "{manual.title}" отправлен на повторную проверку.',
+        link=f'/manual/{manual.id}',
+        extra_data={'manual_id': manual.id, 'status': 'moderate'}
+    )
 
     return (
         jsonify(

@@ -156,6 +156,9 @@
             >
                 <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
             </button>
+            <button v-if="!isDesktop" @click="mobileNotif()" class="theme-toggle">
+                <i class="fa fa-bell"></i>
+            </button>
             <button class="btn-logout-sidebar" @click="logout">
                 <i class="fa fa-sign-out"></i>
                 <span v-if="!isCollapsed || !isDesktop">Выйти</span>
@@ -200,13 +203,15 @@ export default {
     },
 
     methods: {
+        mobileNotif() {
+            this.$router.push('/notifications')
+            this.closeSidebar()
+        },
         handleResize() {
             this.isDesktop = window.innerWidth > 770;
-            // На десктопе сайдбар всегда открыт
             if (this.isDesktop) {
                 this.isSidebarOpen = true;
             } else {
-                // На мобильных закрываем при переходе на десктоп
                 if (!this.isDesktop) {
                     this.isSidebarOpen = false;
                 }

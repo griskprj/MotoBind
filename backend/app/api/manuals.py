@@ -236,10 +236,16 @@ def update_manual(manual_id):
     """
     Обновление мануала
     """
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    is_admin = user.role == 'admin' if user else False
+
     data = UpdateManualSchema(**request.get_json())
+
     manual = ManualService.update_manual(
         manual_id=manual_id,
-        user_id=int(get_jwt_identity()),
+        user_id=user_id,
+        is_admin=is_admin,
         **data.get_updates()
     )
     return jsonify(manual.to_dict()), 200
