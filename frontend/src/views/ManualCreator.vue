@@ -409,9 +409,12 @@
                                             <span class="file-name" v-if="step.imageFile">
                                                 {{ step.imageFile.name }}
                                             </span>
+                                            <span class="file-name" v-else-if="step.imagePreview && !step.imageFile">
+                                                Изображение загружено
+                                            </span>
                                             <span class="file-name" v-else>Выберите файл</span>
                                             <button 
-                                                v-if="step.imageFile" 
+                                                v-if="step.imageFile || (isEditMode && step.existingImage)" 
                                                 type="button" 
                                                 class="btn-remove-image" 
                                                 @click.stop="removeImage(index)"
@@ -459,7 +462,10 @@
                     <button type="button" class="btn btn-secondary" @click="resetForm">Отменить</button>
                     <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                         <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
-                        <span v-else><i class="fa fa-check"></i> Создать мануал</span>
+                        <span v-else>
+                            <i class="fa fa-check"></i> 
+                            {{ isEditMode ? 'Сохранить изменения' : 'Создать мануал' }}
+                        </span>
                     </button>
                 </div>
             </form>
@@ -501,7 +507,10 @@ export default {
             errors: {},
             isSubmitting: false,
             stepIdCounter: 0,
-            torqueItems: []
+            torqueItems: [],
+            
+            editingManualId: null,
+            isEditMode: false,
         };
     },
 
@@ -572,20 +581,30 @@ export default {
                 return;
             }
 
-            this.form.steps[index].imageFile = file;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.form.steps[index].imagePreview = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            const step = this.form.steps[index]
+            if (this.isEditMode) {
+                this.uploadStepImage(index, file)
+                event.target.value = ''
+            } else {
+                step.imageFile = file
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                    step.imagePreview = e.target.result
+                }
+                reader.readAsDataURL(file);
+            }
         },
 
         removeImage(index) {
-            this.form.steps[index].imageFile = null;
-            this.form.steps[index].imagePreview = null;
-            const input = this.$refs['fileInput' + index];
-            if (input) input.value = '';
+            const step = this.form.steps[index]
+            if (this.isEditMode) {
+                this.deleteStepImage(index)
+            } else {
+                step.imageFile = null
+                step.imagePreview = null
+                const input = this.$refs['fileInput' + index]
+                if (input) input.value = ''
+            }
         },
 
         addLink() {
@@ -664,71 +683,140 @@ export default {
             this.isSubmitting = true;
 
             try {
-                // Создаём FormData для отправки файлов
-                const formData = new FormData();
-                
-                // Текстовые поля
-                const payload = {
-                    title: this.form.title.trim(),
-                    description: this.form.description.trim(),
-                    category: this.form.category || 'general',
-                    difficult: this.form.difficult,
-                    motorcycle: this.form.motorcycle.trim(),
-                    time_estimate: this.form.time_estimate.trim() || null,
-                    interval: this.form.interval.trim() || null,
-                    safety_tip: this.form.safety_tip.trim() || null,
-                    warnings: this.form.warnings.trim() || null,
-                    conditions: this.form.conditions.trim() || null,
-                    docs_links: this.form.docs_links.filter(link => link.trim()),
-                    specs: this.form.specs || null,
-                    aftercare: this.form.aftercare.trim() || null,
-                    instruments: this.form.instruments.trim() || null,
-                    parts: this.form.parts.trim() || null,
-                    tip: this.form.tip.trim() || null,
-                    steps: this.form.steps.map((step, index) => ({
-                        order: index + 1,
-                        title: step.title.trim(),
-                        text: step.text.trim() || null,
-                        warning: step.warning.trim() || null,
-                        tip: step.tip.trim() || null,
-                        result: step.result.trim() || null
-                    }))
-                };
-
-                // Добавляем JSON данные как строку
-                formData.append('data', JSON.stringify(payload));
-
-                // Добавляем файлы изображений
-                this.form.steps.forEach((step, index) => {
-                    if (step.imageFile) {
-                        formData.append(`image_${index + 1}`, step.imageFile);
+                if (this.isEditMode) {
+                    // === РЕДАКТИРОВАНИЕ ===
+                    const payload = this.buildPayload();
+                    const response = await api.put(`/manual/${this.editingManualId}`, payload);
+                    if (response.status === 200) {
+                        alert('Мануал обновлён и отправлен на повторную проверку!');
+                        this.$router.push(`/manual/${this.editingManualId}`);
                     }
-                });
+                } else {
+                    // === СОЗДАНИЕ ===
+                    const formData = new FormData();
+                    const payload = this.buildPayload();
+                    formData.append('data', JSON.stringify(payload));
 
-                const response = await api.post('/manual/new-manual', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                    this.form.steps.forEach((step, index) => {
+                        if (step.imageFile) {
+                            formData.append(`image_${index + 1}`, step.imageFile);
+                        }
+                    });
 
-                if (response.status === 201) {
-                    alert('Мануал успешно создан!');
-                    this.resetForm();
-                    this.$router.push('/manuals');
+                    const response = await api.post('/manual/new-manual', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+
+                    if (response.status === 201) {
+                        alert('Мануал успешно создан!');
+                        this.resetForm();
+                        this.$router.push('/manuals');
+                    }
                 }
             } catch (error) {
-                console.error('Ошибка создания мануала:', error);
-                
-                let errorMessage = 'Произошла ошибка при создании мануала';
-                if (error.response?.data?.message) {
-                    errorMessage = error.response.data.message;
-                } else if (error.response?.data?.error) {
-                    errorMessage = error.response.data.error;
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
-                
+                console.error('Ошибка сохранения мануала:', error);
+                let errorMessage = 'Произошла ошибка';
+                if (error.response?.data?.message) errorMessage = error.response.data.message;
+                else if (error.response?.data?.error) errorMessage = error.response.data.error;
+                else if (error.message) errorMessage = error.message;
                 alert(`Ошибка: ${errorMessage}`);
             } finally {
                 this.isSubmitting = false;
+            }
+        },
+
+        async loadManualForEdit(id) {
+            try {
+                const response = await api.get(`/manual/${id}`)
+                const manual = response.data
+                this.editingManualId = id
+                this.isEditMode = true
+
+                this.form.title = manual.title || '';
+                this.form.description = manual.description || '';
+                this.form.motorcycle = manual.motorcycle || '';
+                this.form.difficult = manual.difficult || '';
+                this.form.time_estimate = manual.time_estimate || '';
+                this.form.interval = manual.interval || '';
+                this.form.category = manual.category || '';
+                this.form.safety_tip = manual.safety_tip || '';
+                this.form.warnings = manual.warnings || '';
+                this.form.conditions = manual.conditions || '';
+                this.form.instruments = manual.instruments || '';
+                this.form.parts = manual.parts || '';
+                this.form.docs_links = manual.docs_links || [];
+                this.form.aftercare = manual.aftercare || '';
+                this.form.tip = manual.tip || '';
+
+                if (manual.specs) {
+                    this.form.specs = manual.specs;
+                    this.specs_json = JSON.stringify(manual.specs, null, 2);
+                    if (manual.specs.torque) {
+                        this.torqueItems = manual.specs.torque.map(item => ({ ...item }));
+                    }
+                }
+
+                this.form.steps = manual.steps.map((step, index) => ({
+                    id: ++this.stepIdCounter,
+                    order: step.order || index + 1,
+                    title: step.title || '',
+                    text: step.text || '',
+                    warning: step.warning || '',
+                    tip: step.tip || '',
+                    result: step.result || '',
+                    imageFile: null,
+                    imagePreview: step.image ? this.getImageUrl(step.image) : null,
+                    existingImage: step.image || null,
+                    errors: {}
+                }));
+
+                if (this.form.steps.length === 0) {
+                    this.addStep();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки мануала для редакитрования:', error)
+                alert('Не удалось загрузить мануал для редактирования')
+                this.$router.push('/manuals')
+            }
+        },
+
+        async uploadStepImage(stepIndex, file) {
+            const step = this.form.steps[stepIndex]
+            if (!step.id) {
+                alert('Сначала сохраните мануал, чтобы загрузить изображения')
+                return
+            }
+            try {
+                const formData = new FormData()
+                formData.append('image', file)
+                const response = await api.post(
+                    `/manual/${this.editingManualId}/steps/${step.id}/image`,
+                    formData,
+                    { headers: { 'Content-Type': 'multipart/form-data' } }
+                )
+                const imageUrl = response.data.image_url
+                step.existingImage = imageUrl
+                step.imagePreview = this.getImageUrl(imagePreview)
+                step.imageFile = null
+                alert('Изображение загружено')
+            } catch (error) {
+                console.error('Ошибка загрузки изображения:', error)
+                alert('Не удалось загрузить изображение')
+            }
+        },
+
+        async deleteStepImage(stepIndex) {
+            const step = this.form.steps[stepIndex]
+            if (!step.id || !step.existingImage) return
+            if (!confirm('Удалить изображение?')) return
+            try {
+                await api.delete(`/manual/${this.editingManualId}/steps/${step.id}/image`)
+                step.existingImage = null
+                step.imagePreview = null
+                alert('Изображение удалено')
+            } catch (error) {
+                console.error('Ошибка удаления изображения:', error)
+                alert('Не удалось удалить изображение')
             }
         },
 
@@ -756,7 +844,45 @@ export default {
             this.errors = {};
             this.stepIdCounter = 0;
             this.torqueItems = [];
+            this.editingManualId = null
+            this.isEditMode = false
             this.addStep();
+        },
+
+        buildPayload() {
+            return {
+                title: this.form.title.trim(),
+                description: this.form.description.trim(),
+                category: this.form.category || 'general',
+                difficult: this.form.difficult,
+                motorcycle: this.form.motorcycle.trim(),
+                time_estimate: this.form.time_estimate.trim() || null,
+                interval: this.form.interval.trim() || null,
+                safety_tip: this.form.safety_tip.trim() || null,
+                warnings: this.form.warnings.trim() || null,
+                conditions: this.form.conditions.trim() || null,
+                docs_links: this.form.docs_links.filter(link => link.trim()),
+                specs: this.form.specs || null,
+                aftercare: this.form.aftercare.trim() || null,
+                instruments: this.form.instruments.trim() || null,
+                parts: this.form.parts.trim() || null,
+                tip: this.form.tip.trim() || null,
+                steps: this.form.steps.map((step, index) => ({
+                    order: index + 1,
+                    title: step.title.trim(),
+                    text: step.text.trim() || null,
+                    warning: step.warning.trim() || null,
+                    tip: step.tip.trim() || null,
+                    result: step.result.trim() || null,
+                }))
+            };
+        },
+
+        getImageUrl(path) {
+            if (!path) return '';
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            if (path.startsWith('/')) return path;
+            return `/uploads/${path}`;
         },
 
         async logout() {
@@ -772,7 +898,12 @@ export default {
     },
 
     mounted() {
-        this.addStep();
+        const editId = this.$route.query.edit
+        if (editId) {
+            this.loadManualForEdit(editId)
+        } else {
+            this.addStep
+        }
     }
 };
 </script>

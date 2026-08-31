@@ -199,6 +199,18 @@ const router = createRouter({
         showHeader: true
       }
     },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../views/Notifications.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'MotoBind - Уведомления',
+        description: 'Все ваши уведомления',
+        showFooter: true,
+        showHeader: true
+      }
+    },
 
     // ===== ДОКУМЕНТЫ =====
     {

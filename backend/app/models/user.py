@@ -43,7 +43,8 @@ class User(db.Model):
         cascade="all, delete-orphan",
     )
 
-    maintenances = db.relationship('Maintenance', back_populates='author', lazy='dynamic')  
+    maintenances = db.relationship('Maintenance', back_populates='author', lazy='dynamic')
+    notifications = db.relationship('Notification', back_populates='user', cascade='all, delete-orphan')  
 
     def set_password(self, password):
         """Set hash password"""

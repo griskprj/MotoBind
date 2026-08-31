@@ -79,6 +79,7 @@ def create_app():
     from app.api.motorcycle import motorcycle
     from app.api.statistic import statistic
     from app.api.user import user
+    from app.api.notifications import notifications_bp
 
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(motorcycle, url_prefix="/api/motorcycle")
@@ -87,5 +88,6 @@ def create_app():
     app.register_blueprint(manual, url_prefix="/api/manual")
     app.register_blueprint(admin, url_prefix="/api/admin")
     app.register_blueprint(user, url_prefix="/api/user")
+    app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
 
     return app

@@ -259,6 +259,14 @@
         <!-- ===== ДЕЙСТВИЯ ===== -->
         <template #actions>
             <div class="modal-actions">
+                <router-link 
+                    v-if="isAuthor && manual?.status === 'rejected'" 
+                    :to="`/manual-creator?edit=${manual.id}`" 
+                    class="btn btn-warning"
+                    @click="$emit('close')"
+                >
+                    <i class="fa fa-edit"></i> Редактировать
+                </router-link>
                 <button class="btn btn-primary" @click="openFullManual">
                     <i class="fa fa-book"></i> Открыть инструкцию
                 </button>
@@ -304,6 +312,12 @@ export default {
                 'draft': 'fa fa-pencil'
             }
             return icons[this.manual?.status] || 'fa-circle'
+        },
+
+        isAuthor() {
+            if (!this.manual) return false;
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            return this.manual.author_id === user.id;
         }
     },
 
@@ -385,13 +399,11 @@ export default {
             return labels[key] || key
         },
 
-        // ===== РАБОТА С ИЗОБРАЖЕНИЯМИ =====
         getImageUrl(path) {
             if (!path) return ''
             if (path.startsWith('http://') || path.startsWith('https://')) {
                 return path
             }
-            // Для локальных файлов из папки uploads
             if (path.startsWith('/')) {
                 return path
             }

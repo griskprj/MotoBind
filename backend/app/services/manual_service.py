@@ -125,14 +125,28 @@ class ManualService:
             return None
 
     @staticmethod
-    def update_manual(manual_id: int, user_id: int, **kwargs) -> Manual:
+    def update_manual(manual_id: int, user_id: int, is_admin=False, **kwargs) -> Manual:
         """Обновляет мануал"""
         manual = Manual.query.get(manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
 
-        if manual.author_id != user_id:
+        if manual.author_id != user_id and not is_admin:
             raise ForbiddenError("Вы можете редактировать только свои мануалы")
+
+        if manual.author_id == user_id:
+            if manual.status == 'rejected':
+                manual.status = 'moderate'
+                manual.rejection_reason = None
+            elif manual.status == 'approved':
+                if not is_admin:
+                    raise ForbiddenError("Нельзя редактировать опубликованный мануал. Обратитесь к администратору.")
+            elif manual.status == 'moderate':
+                if not is_admin:
+                    raise ForbiddenError("Мануал уже на проверке, дождитесь решения администратора.")
+        else:
+            if not is_admin:
+                raise ForbiddenError("Вы не являетесь автором этого мануала")
 
         if "steps" in kwargs:
             steps_data = kwargs.pop("steps")

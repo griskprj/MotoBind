@@ -344,7 +344,7 @@ export default {
         
         async loadMotorcycles() {
             try {
-                const response = await api.get('/motorcycle')
+                const response = await api.get('/motorcycle/')
                 this.motorcycles = response.data || []
             } catch (error) {
                 console.error('Error loading motorcycles:', error)
