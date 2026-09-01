@@ -65,6 +65,15 @@
                     <i class="fa fa-book"></i>
                     <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                 </router-link>
+                <router-link 
+                    to="/social"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/social' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-users"></i>
+                    <span>MotoSocial</span>
+                </router-link>
                 <router-link
                     to="/profile"
                     class="nav-link"
@@ -131,15 +140,6 @@
                     >
                         <i class="fa fa-tools"></i>
                         <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
-                    </router-link>
-                    <router-link 
-                        to="/social"
-                        class="nav-link"
-                        :class="{ active: $route.path === '/social' }"
-                        @click="closeSidebar"
-                    >
-                        <i class="fa fa-users"></i>
-                        <span>MotoSocial</span>
                     </router-link>
                 </div>
 
