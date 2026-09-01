@@ -95,7 +95,7 @@
                     <router-link
                         to="/admin/panel"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/panel'}"
+                        :class="{ active: $route.path === '/admin/panel' }"
                         @click="closeSidebar"
                     >
                         <i class="fa fa-sitemap"></i>
@@ -108,7 +108,7 @@
                     <router-link
                         to="/admin/users"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/users'}"
+                        :class="{ active: $route.path === '/admin/users' }"
                         @click="closeSidebar"
                     >
                         <i class="fa fa-users"></i>
@@ -117,7 +117,7 @@
                     <router-link
                         to="/admin/motorcycles"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/motorcycles'}"
+                        :class="{ active: $route.path === '/admin/motorcycles' }"
                         @click="closeSidebar"
                     >
                         <i class="fa fa-motorcycle"></i>
@@ -126,11 +126,20 @@
                     <router-link
                         to="/admin/manuals"
                         class="nav-link"
-                        :class="{ active: $route.path === '/admin/manuals'}"
+                        :class="{ active: $route.path === '/admin/manuals' }"
                         @click="closeSidebar"
                     >
                         <i class="fa fa-tools"></i>
                         <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
+                    </router-link>
+                    <router-link 
+                        to="/social"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/social' }"
+                        @click="closeSidebar"
+                    >
+                        <i class="fa fa-users"></i>
+                        <span>MotoSocial</span>
                     </router-link>
                 </div>
 

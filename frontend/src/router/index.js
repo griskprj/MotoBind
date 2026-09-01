@@ -211,6 +211,18 @@ const router = createRouter({
         showHeader: true
       }
     },
+    {
+      path: '/social',
+      name: 'social',
+      component: () => import('../views/Social.vue'),
+      meta: {
+          requiresAuth: true,
+          title: 'MotoBind - MotoSocial',
+          description: 'Социальная сеть для мотоциклистов. Делитесь опытом, общайтесь и вдохновляйтесь',
+          showFooter: true,
+          showHeader: true
+      }
+    },
 
     // ===== ДОКУМЕНТЫ =====
     {
