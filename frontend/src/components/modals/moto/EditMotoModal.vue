@@ -70,7 +70,6 @@
                             type="color"
                             class="color-input"
                         />
-                        <span class="color-hex">{{ form.color }}</span>
                     </div>
                 </div>
             </div>

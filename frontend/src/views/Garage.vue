@@ -1,254 +1,365 @@
 <template>
-    <div class="container garage-page">
+    <div class="garage-page">
         <LoadingOverlay :isLoading="loading" text="Загрузка гаража..."/>
-        <!-- === HEADER === -->
-        <Header
-            title="Гараж"
-            subtitle="Управляйте своими мотоциклами"
-        />
+        
+        <div class="container">
+            <!-- Header -->
+            <Header
+                title="Мой гараж"
+                subtitle="Управляйте своими мотоциклами"
+            />
 
-        <!-- === TABS === -->
-        <div class="header-tabs">
-            <button class="tab-btn active disable" disabled>Мои мотоциклы</button>
-            <button @click="showAddMotoModal = true" class="tab-btn outline">Добавить мотоцикл</button>
-        </div>
-
-        <!-- === MOTORCYCLE SELECTOR === -->
-        <section class="moto-selector-wrapper">
-            <div class="moto-scroll-container">
-                <div @click="changeMoto(moto.id)" class="moto-card"
-                    v-for="moto in motorcycles"
-                    :key="moto.id"
-                    :class="motorcycle?.id === moto.id ? 'active' : ''"
-                >
-                    <div class="moto-card-icon">
-                        <img v-if="moto.photo_url" :src="getPhotoUrl(moto.photo_url)" alt="Фото" class="moto-thumb">
-                        <img v-else src="/MotoLandingHero.webp" alt="Фото по умолчанию">
-                    </div>
-                    <div class="moto-card-info">
-                        <div class="moto-name">{{ moto.name }}</div>
-                        <div class="moto-meta">{{ moto.years }} • {{ moto.mileage }} км</div>
-                    </div>
-                    <div v-if="motorcycle && motorcycle.id === moto.id" class="moto-active-badge"><i class="fa fa-check"></i></div>
+            <!-- Статистика гаража -->
+            <div v-if="motorcycles.length > 0" class="garage-stats">
+                <div class="stat-chip">
+                    <i class="fa fa-motorcycle"></i>
+                    <span>{{ motorcycles.length }}</span>
                 </div>
-                
-                <div @click="showAddMotoModal = true" class="moto-card add-card">
-                    <i class="fa fa-plus"></i>
-                    <span>Добавить</span>
+                <div class="stat-chip">
+                    <i class="fa fa-wrench"></i>
+                    <span>{{ totalMaintenances }}</span>
+                </div>
+                <div class="stat-chip">
+                    <i class="fa fa-ruble"></i>
+                    <span>{{ totalCosts }} ₽</span>
                 </div>
             </div>
-        </section>
 
-        <!-- === MAIN GRID === -->
-        <div v-if="motorcycle" class="main-grid">
-            <!-- LEFT COLUMN: Moto Info -->
-            <aside class="moto-details-col">
-                <div class="big-moto-card">
-                    <div class="big-card-header">
-                        <span class="big-title">{{ motorcycle.name }}</span>
-                    </div>
-                    <div class="big-card-header-actions">
-                        <button @click="showEditMotoModal = true" class="icon-btn" title="Редактировать мотоцикл"><i class="fa fa-pen"></i></button>
-                        <button @click="showDeleteMotoModal = true" class="icon-btn" title="Удалить мотоцикл"><i class="fa fa-trash"></i></button>
-                        <button @click="showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег мотоцикла"><i class="fa fa-tachometer"></i></button>
-                        <button @click="showPhotoModal = true" class="icon-btn" title="Изменить фото мотоцикла"><i class="fa fa-camera"></i></button>
-                    </div>
-                    <div class="big-card-img" @click="showPhotoModal = true" style="cursor: pointer;">
-                        <img 
-                            v-if="motorcycle.photo_url" 
-                            :src="getPhotoUrl(motorcycle.photo_url)" 
-                            alt="Фото мотоцикла"
-                            @error="handleImageError"
+            <!-- Мотоциклы -->
+            <div class="motorcycles-container">
+                <div class="motorcycles-scroll-wrapper">
+                    <div class="motorcycles-grid">
+                        <div 
+                            v-for="moto in motorcycles" 
+                            :key="moto.id"
+                            class="moto-card"
+                            :class="{ active: selectedMotoId === moto.id }"
+                            @click="selectMotorcycle(moto)"
                         >
-                        <img v-else src="/MotoLandingHero.webp" alt="Фото по умолчанию">
-                        <div class="photo-overlay">
-                            <i class="fa fa-camera"></i>
-                            <span>Изменить фото</span>
-                        </div>
-                    </div>
-                    <div class="big-card-grid">
-                        <div class="spec-item"><span class="label">Год выпуска</span><span class="value">{{ motorcycle.years }}</span></div>
-                        <div class="spec-item"><span class="label">Двигатель</span><span class="value">{{ motorcycle.volume }} см³</span></div>
-                        <div class="spec-item"><span class="label">Пробег</span><span class="value">{{ motorcycle.mileage }} км</span></div>
-                        <div class="spec-item"><span class="label">Цвет</span><div class="color-dot" :style="{ 'background': motorcycle.color }"></div></div>
-                        <div class="spec-item full-width"><span class="label">VIN</span><span class="value">{{ motorcycle.vin ? motorcycle.vin : '—' }}</span></div>
-                        <div class="spec-item full-width"><span class="label">Гос. номер</span><span class="value">{{ motorcycle.license_plate ? motorcycle.license_plate : '—' }}</span></div>
-                    </div>
-                    <div class="notes-block">
-                        <div class="notes-header">
-                            <span>Заметки</span>
-                            <button @click="showEditMotoNoteModal = true" class="icon-btn"><i class="fa fa-pen"></i></button>
-                        </div>
-                        <div class="note-body">
-                            <p v-if="motorcycle.note" class="notes-text">{{ motorcycle.note }}</p>
-                            <div v-else class="empty-note-state">
-                                <div class="empty-note-header">
-                                    <p class="empty-text">
-                                        Добавьте заметку. Например: "Мой любимый мотоцикл..."
-                                    </p>
+                            <div class="moto-preview">
+                                <img 
+                                    v-if="moto.photo_url" 
+                                    :src="getPhotoUrl(moto.photo_url)" 
+                                    :alt="moto.name"
+                                    @error="handleImageError"
+                                    loading="lazy"
+                                >
+                                <div v-else class="moto-placeholder">
+                                    <i class="fa fa-motorcycle"></i>
+                                </div>
+                                <div v-if="selectedMotoId === moto.id" class="moto-selected">
+                                    <i class="fa fa-check"></i>
+                                </div>
+                                <div class="moto-status-badge" :class="getMotoStatusClass(moto)">
+                                    {{ getMotoStatusLabel(moto) }}
                                 </div>
                             </div>
+                            
+                            <div class="moto-info">
+                                <h3 class="moto-name">{{ moto.name }}</h3>
+                                <div class="moto-details">
+                                    <span>{{ moto.years }}</span>
+                                    <span class="dot">•</span>
+                                    <span>{{ formatMileage(moto.mileage) }}</span>
+                                </div>
+                                <div class="moto-meta">
+                                    <span class="moto-volume">{{ moto.volume }} см³</span>
+                                    <span class="color-indicator" :style="{ background: moto.color }"></span>
+                                </div>
+                            </div>
+
+                            <div class="moto-actions" @click.stop>
+                                <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
+                                    <i class="fa fa-pen"></i>
+                                </button>
+                                <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
+                                    <i class="fa fa-camera"></i>
+                                </button>
+                                <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </aside>
 
-            <!-- RIGHT COLUMN: Stats & Table -->
-            <main class="stats-col">
-                <!-- 4 Stats Cards -->
-                <div class="stats-grid-4">
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-tachometer"></i> Пробег</div>
-                        <div class="stat-val">{{ motorcycle.mileage }} км</div>
+                <!-- Список на десктопе (от 600px) -->
+                <div class="motorcycles-list">
+                    <div 
+                        v-for="moto in motorcycles" 
+                        :key="moto.id"
+                        class="moto-list-item"
+                        :class="{ active: selectedMotoId === moto.id }"
+                        @click="selectMotorcycle(moto)"
+                    >
+                        <div class="moto-list-preview">
+                            <img 
+                                v-if="moto.photo_url" 
+                                :src="getPhotoUrl(moto.photo_url)" 
+                                :alt="moto.name"
+                                @error="handleImageError"
+                                loading="lazy"
+                            >
+                            <div v-else class="moto-list-placeholder">
+                                <i class="fa fa-motorcycle"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="moto-list-info">
+                            <div class="moto-list-header">
+                                <h3 class="moto-list-name">{{ moto.name }}</h3>
+                                <span class="moto-list-year">{{ moto.years }}</span>
+                            </div>
+                            <div class="moto-list-meta">
+                                <span class="moto-list-mileage">{{ formatMileage(moto.mileage) }}</span>
+                                <span class="moto-list-volume">{{ moto.volume }} см³</span>
+                                <span class="moto-list-color">
+                                    <span class="color-dot-sm" :style="{ background: moto.color }"></span>
+                                </span>
+                                <span class="moto-list-status" :class="getMotoStatusClass(moto)">
+                                    {{ getMotoStatusLabel(moto) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="moto-list-actions" @click.stop>
+                            <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
+                                <i class="fa fa-pen"></i>
+                            </button>
+                            <button @click="showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
+                                <i class="fa fa-tachometer"></i>
+                            </button>
+                            <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
+                                <i class="fa fa-camera"></i>
+                            </button>
+                            <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-wrench"></i> Обслуживаний</div>
-                        <div class="stat-val">{{ motorcycle.maintenances?.length || 0 }}</div>
+                    <button @click="showAddMotoModal = true" class="add-btn outline-btn">
+                        <i class="fa fa-plus"></i>
+                        <span>Добавить мотоцикл</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="motorcycles.length === 0" class="empty-state">
+                <div class="empty-icon">
+                    <i class="fa fa-motorcycle"></i>
+                </div>
+                <h3>Мотоциклов пока нет</h3>
+                <p>Добавьте свой первый мотоцикл и начните вести учёт</p>
+                <button @click="showAddMotoModal = true" class="btn-primary">
+                    <i class="fa fa-plus"></i>
+                    Добавить мотоцикл
+                </button>
+            </div>
+
+            <!-- Детальная информация -->
+            <div v-if="selectedMotorcycle" class="moto-detail">
+                <!-- Статистика -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fa fa-tachometer"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Пробег</span>
+                            <span class="stat-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-calendar"></i> Следующее ТО</div>
-                        <div class="stat-val">
-                            <span v-if="nextMaintenance">
-                                <span v-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue > 0" style="color: var(--danger);">
-                                    Просрочено на {{ nextMaintenance.distanceOverdue }} км
-                                </span>
-                                <span v-else-if="nextMaintenance.isOverdue && nextMaintenance.distanceOverdue === 0" style="color: var(--danger);">
-                                    Просрочено
-                                </span>
-                                <span v-else>
-                                    {{ nextMaintenance.distanceToNext }} км
-                                </span>
-                                <small style="font-size: 12px; color: var(--text-muted); display: block; font-weight: 400;">
-                                    ({{ nextMaintenance.title.slice(0, 23) + '...' || 'ТО' }})
-                                </small>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fa fa-wrench"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Обслуживаний</span>
+                            <span class="stat-value">{{ selectedMotorcycle.maintenances?.length || 0 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" :class="{ 'stat-warning': nextMaintenance?.isOverdue }">
+                        <div class="stat-icon">
+                            <i class="fa fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Следующее ТО</span>
+                            <span class="stat-value">
+                                <template v-if="nextMaintenance">
+                                    <span v-if="nextMaintenance.isOverdue" class="text-danger">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
+                                    </span>
+                                    <span v-else>
+                                        {{ Math.round(nextMaintenance.distanceToNext) }} км
+                                    </span>
+                                </template>
+                                <span v-else class="text-muted">Все выполнены</span>
                             </span>
-                            <span v-else style="font-size: 18px;">Все ТО выполнены</span>
                         </div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-head"><i class="fa fa-ruble"></i> Общие расходы</div>
-                        <div class="stat-val">{{ maintenanceSpends }} ₽</div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fa fa-ruble"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Расходы</span>
+                            <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div v-if="motorcycle && motorcycle.maintenances && motorcycle.maintenances.length > 0" class="maintenance-table-wrapper">
-                    <div class="table-header">
-                        <span class="th">Дата</span>
-                        <span class="th">Обслуживание</span>
-                        <span class="th">Пробег</span>
-                        <span class="th">Стоимость</span>
-                        <span class="th">Статус</span>
-                        <span class="th"></span>
-                    </div>
-                    <div class="table-body">
-                        <div class="tr"
-                            v-for="maintenance in getRecentMaintenances()"
-                            :key="maintenance.id"
-                            @click="openMaintenanceDetailsModal(maintenance)"
-                        >
-                            <div class="td date-cell">
-                                <div class="icon-square purple"><i class="fa fa-wrench"></i></div>
-                                <span>{{ formatDate(maintenance.completed_date || maintenance.planned_date) }}</span>
+                <!-- Характеристики и заметки -->
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <h4 class="detail-title">Характеристики</h4>
+                        <div class="spec-list">
+                            <div class="spec-item">
+                                <span class="spec-label">Год выпуска</span>
+                                <span class="spec-value">{{ selectedMotorcycle.years }}</span>
                             </div>
-                            <div class="td service-cell">
-                                <div class="s-title">{{ maintenance.title }}</div>
-                                <div class="s-desc">{{ maintenance.description }}</div>
+                            <div class="spec-item">
+                                <span class="spec-label">Двигатель</span>
+                                <span class="spec-value">{{ selectedMotorcycle.volume }} см³</span>
                             </div>
-                            <div class="td" data-label="Пробег:">{{ maintenance.completed_mileage || maintenance.planned_mileage || '—' }} км</div>
-                            <div class="td" data-label="Стоимость:">{{ maintenance.cost || '—' }} ₽</div>
-                            <div class="td">
-                                <span :class="getStatusBadgeClass(maintenance.status)">
-                                    {{ getStatusLabel(maintenance.status) }}
+                            <div class="spec-item">
+                                <span class="spec-label">Цвет</span>
+                                <span class="spec-value">
+                                    <span class="color-dot" :style="{ background: selectedMotorcycle.color }"></span>
                                 </span>
                             </div>
-                            <div class="td action-cell"><i class="fa fa-chevron-right"></i></div>
+                            <div class="spec-item">
+                                <span class="spec-label">Пробег</span>
+                                <span class="spec-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
+                            </div>
+                            <div class="spec-item full" v-if="selectedMotorcycle.vin">
+                                <span class="spec-label">VIN</span>
+                                <span class="spec-value spec-code">{{ selectedMotorcycle.vin }}</span>
+                            </div>
+                            <div class="spec-item full" v-if="selectedMotorcycle.license_plate">
+                                <span class="spec-label">Гос. номер</span>
+                                <span class="spec-value spec-code">{{ selectedMotorcycle.license_plate }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="table-footer">
-                        <button @click="this.$router.push('/maintenance')" class="outline-btn" style="width: 100%;">Все записи <i class="fa fa-chevron-right"></i></button>
+
+                    <div class="detail-card">
+                        <div class="detail-header">
+                            <h4 class="detail-title">Заметки</h4>
+                            <button @click="showEditMotoNoteModal = true" class="icon-btn small">
+                                <i class="fa fa-pen"></i>
+                            </button>
+                        </div>
+                        <div class="notes-content">
+                            <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
+                            <p v-else class="notes-empty">Добавьте заметку о мотоцикле</p>
+                        </div>
                     </div>
                 </div>
-                <!-- Table empty state -->
-                <div v-else class="empty-state">
-                    <div class="empty-header">
+
+                <!-- Обслуживания -->
+                <div class="maintenances-section">
+                    <div class="section-header">
+                        <h4>Последние обслуживания</h4>
+                        <button @click="$router.push('/maintenance')" class="btn-link">
+                            Все записи <i class="fa fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div v-if="recentMaintenances.length > 0" class="maintenances-list">
+                        <div 
+                            v-for="item in recentMaintenances" 
+                            :key="item.id"
+                            class="maintenance-item"
+                            @click="openMaintenanceDetails(item)"
+                        >
+                            <div class="maint-icon" :class="'maint-icon-' + item.status">
+                                <i class="fa fa-wrench"></i>
+                            </div>
+                            <div class="maint-info">
+                                <div class="maint-title">{{ item.title }}</div>
+                                <div class="maint-meta">
+                                    <span>{{ formatDate(item.completed_date || item.planned_date) }}</span>
+                                    <span class="dot">•</span>
+                                    <span>{{ item.completed_mileage || item.planned_mileage || '—' }} км</span>
+                                    <span class="dot">•</span>
+                                    <span>{{ item.cost ? formatCost(item.cost) : '—' }}</span>
+                                </div>
+                            </div>
+                            <div class="maint-status">
+                                <span :class="'badge ' + getStatusClass(item.status)">
+                                    {{ getStatusLabel(item.status) }}
+                                </span>
+                                <i class="fa fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="empty-small">
                         <i class="fa fa-wrench"></i>
-                        <p class="empty-title">Здесь будут записи обслуживаний</p>
-                    </div>
-                    <div class="empty-body">
-                        <p class="empty-text">
-                            Начните вести обслуживание своего мотоцикла
-                        </p>
-                        <p class="empty-text">
-                            Запланировать или добавить запись ТО вы можете на странице <a href="/maintenance">"Обслуживание"</a>
-                        </p>
+                        <p>Нет записей обслуживания</p>
+                        <span class="hint">Перейдите в раздел "Обслуживание" чтобы добавить</span>
                     </div>
                 </div>
-            </main>
-        </div>
-        <div v-else class="empty-state">
-            <div class="empty-header">
-                <i class="fa fa-motorcycle"></i>
-                <p class="empty-title">Мотоциклов пока нет</p>
-            </div>
-            <div class="empty-body">
-                <p class="empty-text">Добавьте первый мотоцикл</p>
             </div>
         </div>
+
+        <!-- MODALS -->
+        <AddMotoModal
+            :isOpen="showAddMotoModal"
+            @submit="addMoto"
+            @close="showAddMotoModal = false"
+        />
+
+        <EditMotoModal 
+            :isOpen="showEditMotoModal" 
+            :motorcycle="selectedMotorcycle"
+            @submit="updateMoto" 
+            @close="showEditMotoModal=false"
+        />
+
+        <UpdateMileageModal
+            :isOpen="showUpdateMotoMileageModal"
+            :motorcycle="selectedMotorcycle"
+            @submit="updateMotoMileage"
+            @close="showUpdateMotoMileageModal = false"
+        />
+
+        <EditMotoNoteModal
+            :isOpen="showEditMotoNoteModal"
+            :motorcycle="selectedMotorcycle"
+            @submit="updateMotoNote"
+            @close="showEditMotoNoteModal = false"
+        />
+
+        <DeleteMotoModal 
+            :isOpen="showDeleteMotoModal" 
+            :motorcycle="selectedMotorcycle" 
+            @submit="deleteMoto" 
+            @close="showDeleteMotoModal = false" 
+        />
+
+        <MaintenanceDetailsModal
+            v-if="selectedMotorcycle"
+            :isOpen="showDetailsMaintenanceModal"
+            :maintenance="selectedMaintenance"
+            :motorcycle="selectedMotorcycle"
+            @delete="deleteMaintenance"
+            @close="closeMaintenanceDetails"
+        />
+
+        <PhotoModal
+            :isOpen="showPhotoModal"
+            :motorcycle="selectedMotorcycle"
+            @upload="uploadPhoto"
+            @delete="deletePhoto"
+            @close="showPhotoModal = false"
+        />
     </div>
-
-    <!-- === MODALS === -->
-    <AddMotoModal
-        :isOpen="showAddMotoModal"
-        @submit="addMoto"
-        @close="showAddMotoModal = false"
-    />
-
-    <EditMotoModal 
-        :isOpen="showEditMotoModal" 
-        :motorcycle="motorcycle"
-        @submit="updateMoto" 
-        @close="showEditMotoModal=false"
-    />
-
-    <UpdateMileageModal
-        :isOpen="showUpdateMotoMileageModal"
-        :motorcycle="motorcycle"
-        @submit="updateMotoMileage"
-        @close="showUpdateMotoMileageModal = false"
-    />
-
-    <EditMotoNoteModal
-        :isOpen="showEditMotoNoteModal"
-        :motorcycle="motorcycle"
-        @submit="updateMotoNote"
-        @close="showEditMotoNoteModal = false"
-    />
-
-    <DeleteMotoModal 
-        :isOpen="showDeleteMotoModal" 
-        :motorcycle="motorcycle" 
-        @submit="deleteMoto" 
-        @close="showDeleteMotoModal = false" 
-    />
-
-    <MaintenanceDetailsModal
-        v-if="motorcycle"
-        :isOpen="showDetailsMaintenanceModal"
-        :maintenance="selectedMaintenance"
-        :motorcycle="motorcycle"
-        @delete="deleteMaintenance"
-        @close="closeMaintenanceDetailsModal"
-    />
-
-    <!-- Новый модал для фото -->
-    <PhotoModal
-        :isOpen="showPhotoModal"
-        :motorcycle="motorcycle"
-        @upload="uploadPhoto"
-        @delete="deletePhoto"
-        @close="showPhotoModal = false"
-    />
 </template>
 
 <script>
@@ -262,11 +373,12 @@ import MaintenanceDetailsModal from '../components/modals/maintenance/Maintenanc
 import PhotoModal from '../components/modals/moto/PhotoModal.vue';
 import LoadingOverlay from '../components/LoadingOverlay.vue';
 
-import api from '../api/api.js'
-import formatDate from '../utils/DateFormatter.js'
+import api from '../api/api.js';
+import formatDate from '../utils/DateFormatter.js';
 
 export default {
     components: {
+        Header,
         AddMotoModal,
         EditMotoModal,
         DeleteMotoModal,
@@ -274,22 +386,16 @@ export default {
         EditMotoNoteModal,
         MaintenanceDetailsModal,
         PhotoModal,
-        Header,
-        LoadingOverlay
+        LoadingOverlay,
     },
 
     data() {
         return {
-            // --- motorcycle ---
             motorcycles: [],
-            motorcycle: null,
             selectedMotoId: null,
-
-            // --- maintenance ---
-            nextMaintenance: null,
             selectedMaintenance: null,
-
-            // --- modals ---
+            loading: false,
+            
             showAddMotoModal: false,
             showEditMotoModal: false,
             showDeleteMotoModal: false,
@@ -297,518 +403,487 @@ export default {
             showEditMotoNoteModal: false,
             showDetailsMaintenanceModal: false,
             showPhotoModal: false,
+        }
+    },
 
-            loading: false,
+    computed: {
+        selectedMotorcycle() {
+            return this.motorcycles.find(m => m.id === this.selectedMotoId) || null;
+        },
+
+        recentMaintenances() {
+            if (!this.selectedMotorcycle?.maintenances) return [];
+            return [...this.selectedMotorcycle.maintenances]
+                .sort((a, b) => {
+                    const da = a.completed_date || a.planned_date || a.created_at;
+                    const db = b.completed_date || b.planned_date || b.created_at;
+                    return new Date(db) - new Date(da);
+                })
+                .slice(0, 5);
+        },
+
+        nextMaintenance() {
+            if (!this.selectedMotorcycle?.maintenances) return null;
+            
+            const current = this.selectedMotorcycle.mileage || 0;
+            const planned = this.selectedMotorcycle.maintenances
+                .filter(m => m.status === 'planned' && m.planned_mileage)
+                .sort((a, b) => a.planned_mileage - b.planned_mileage);
+            
+            const overdue = planned.filter(m => m.planned_mileage <= current);
+            const upcoming = planned.filter(m => m.planned_mileage > current);
+            
+            if (overdue.length > 0) {
+                const item = overdue[0];
+                return {
+                    ...item,
+                    isOverdue: true,
+                    distanceOverdue: current - item.planned_mileage
+                };
+            }
+            
+            if (upcoming.length > 0) {
+                const item = upcoming[0];
+                return {
+                    ...item,
+                    isOverdue: false,
+                    distanceToNext: item.planned_mileage - current
+                };
+            }
+            
+            return null;
+        },
+
+        maintenanceSpends() {
+            if (!this.selectedMotorcycle?.maintenances) return 0;
+            return this.selectedMotorcycle.maintenances
+                .filter(m => m.status === 'completed')
+                .reduce((sum, m) => sum + (m.cost || 0), 0);
+        },
+
+        totalMaintenances() {
+            return this.motorcycles.reduce((sum, m) => sum + (m.maintenances?.length || 0), 0);
+        },
+
+        totalCosts() {
+            return this.motorcycles.reduce((sum, m) => {
+                return sum + (m.maintenances || [])
+                    .filter(mt => mt.status === 'completed')
+                    .reduce((s, mt) => s + (mt.cost || 0), 0);
+            }, 0);
         }
     },
 
     methods: {
         async loadData() {
             try {
-                this.loading = true
-
-                const motorcycleResponse = await api.get('/motorcycle/')
-                this.motorcycles = motorcycleResponse.data
+                this.loading = true;
+                
+                const res = await api.get('/motorcycle/');
+                this.motorcycles = res.data;
                 
                 for (const moto of this.motorcycles) {
                     try {
-                        const maintResponse = await api.get(`/maintenance/motorcycle/${moto.id}`)
-                        moto.maintenances = maintResponse.data || []
-                    } catch (err) {
-                        console.error(`Failed load maintenances for moto ${moto.id}:`, err)
-                        moto.maintenances = []
+                        const maint = await api.get(`/maintenance/motorcycle/${moto.id}`);
+                        moto.maintenances = maint.data || [];
+                    } catch {
+                        moto.maintenances = [];
                     }
                 }
                 
-                if (this.motorcycles.length > 0) {
-                    this.motorcycle = this.motorcycles[0]
+                if (this.motorcycles.length > 0 && !this.selectedMotoId) {
+                    this.selectedMotoId = this.motorcycles[0].id;
+                }
+                
+                if (this.selectedMotoId && !this.motorcycles.find(m => m.id === this.selectedMotoId)) {
+                    this.selectedMotoId = this.motorcycles[0]?.id || null;
                 }
             } catch (err) {
-                console.error(err)
+                console.error(err);
             } finally {
-                this.loading = false
+                this.loading = false;
             }
         },
 
+        selectMotorcycle(moto) {
+            this.selectedMotoId = moto.id;
+        },
 
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) { console.error(err) }
-            finally {
-                const { removeTokens } = await import('../api/auth');
-                removeTokens();
-                this.$router.push('/login');
+        getPhotoUrl(path) {
+            if (!path) return null;
+            if (path.startsWith('http')) return path;
+            return `${import.meta.env.VITE_API_URL || ''}/uploads/${path}`;
+        },
+
+        handleImageError(e) {
+            e.target.src = '';
+            e.target.style.display = 'none';
+            const placeholder = e.target.parentElement.querySelector('.moto-placeholder, .moto-list-placeholder');
+            if (placeholder) placeholder.classList.remove('hidden');
+        },
+
+        formatMileage(value) {
+            if (!value && value !== 0) return '—';
+            if (value >= 1000) {
+                return (value / 1000).toFixed(1) + ' тыс. км';
             }
+            return value + ' км';
         },
 
-        // === PHOTO ===
-        getPhotoUrl(photoPath) {
-            if (!photoPath) return null;
-            if (photoPath.startsWith('http')) return photoPath;
-            const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `${baseUrl}/uploads/${photoPath}`;
+        formatCost(value) {
+            if (!value) return '0';
+            if (value >= 1000) {
+                return (value / 1000).toFixed(1) + ' тыс.';
+            }
+            return value.toString();
         },
 
-        handleImageError(event) {
-            event.target.src = '/moto_default.jpg';
+        declensionMotorcycles(count) {
+            const last = count % 10;
+            const last2 = count % 100;
+            if (last2 >= 11 && last2 <= 19) return 'мотоциклов';
+            if (last === 1) return 'мотоцикл';
+            if (last >= 2 && last <= 4) return 'мотоцикла';
+            return 'мотоциклов';
+        },
+
+        getMotoStatusClass(moto) {
+            if (!moto.maintenances?.length) return 'status-ok';
+            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
+            if (hasOverdue) return 'status-warning';
+            return 'status-ok';
+        },
+
+        getMotoStatusLabel(moto) {
+            if (!moto.maintenances?.length) return 'Нет ТО';
+            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
+            if (hasOverdue) return 'Просрочка';
+            return 'В порядке';
         },
 
         async uploadPhoto(formData) {
             try {
-                const file = formData.get('photo');
-                const uploadFormData = new FormData();
-                uploadFormData.append('photo', file);
-
-                const { data } = await api.post(
-                    `/motorcycle/${this.motorcycle.id}/photo`,
-                    uploadFormData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }
-                );
-
-                // Обновляем данные
-                const index = this.motorcycles.findIndex(m => m.id === data.id);
-                if (index !== -1) {
-                    this.motorcycles[index] = data;
-                }
-                this.motorcycle = data;
+                const fd = new FormData();
+                fd.append('photo', formData.get('photo'));
+                
+                const { data } = await api.post(`/motorcycle/${this.selectedMotoId}/photo`, fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                
+                const idx = this.motorcycles.findIndex(m => m.id === data.id);
+                if (idx !== -1) this.motorcycles[idx] = data;
                 this.showPhotoModal = false;
-                alert('Фото успешно загружено!');
+                alert('Фото загружено');
             } catch (err) {
-                console.error('Failed upload photo:', err);
                 alert(err.response?.data?.error || 'Ошибка загрузки фото');
             }
         },
 
         async deletePhoto() {
             if (!confirm('Удалить фото?')) return;
-            
             try {
-                const { data } = await api.delete(`/motorcycle/${this.motorcycle.id}/photo`);
-                
-                const index = this.motorcycles.findIndex(m => m.id === data.id);
-                if (index !== -1) {
-                    this.motorcycles[index] = data;
-                }
-                this.motorcycle = data;
+                const { data } = await api.delete(`/motorcycle/${this.selectedMotoId}/photo`);
+                const idx = this.motorcycles.findIndex(m => m.id === data.id);
+                if (idx !== -1) this.motorcycles[idx] = data;
                 this.showPhotoModal = false;
                 alert('Фото удалено');
             } catch (err) {
-                console.error('Failed delete photo:', err);
                 alert(err.response?.data?.error || 'Ошибка удаления фото');
             }
         },
 
-        // === MOTORCYCLE ===
         async addMoto(formData) {
             try {
-                const { photoFile, ...motoData } = formData
-                
-                const { data } = await api.post('/motorcycle/', motoData)
+                const { photoFile, ...data } = formData;
+                const { data: moto } = await api.post('/motorcycle/', data);
                 
                 if (photoFile) {
-                    const uploadFormData = new FormData()
-                    uploadFormData.append('photo', photoFile)
-                    
-                    await api.post(`/motorcycle/${data.id}/photo`, uploadFormData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    })
-                    
-                    const updatedResponse = await api.get(`/motorcycle/`)
-                    this.motorcycles = updatedResponse.data
-                    this.motorcycle = this.motorcycles.find(m => m.id === data.id) || this.motorcycles[0]
-                } else {
-                    this.motorcycles.push(data)
-                    this.motorcycle = data
+                    const fd = new FormData();
+                    fd.append('photo', photoFile);
+                    await api.post(`/motorcycle/${moto.id}/photo`, fd, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
                 }
-
-                this.showAddMotoModal = false
-                alert('Мотоцикл добавлен!')
-            } catch(err) {
-                console.error('Failed add moto:', err)
-                alert(err.response?.data?.error || 'Ошибка добавления мотоцикла')
+                
+                await this.loadData();
+                this.selectedMotoId = moto.id;
+                this.showAddMotoModal = false;
+                alert('Мотоцикл добавлен');
+            } catch (err) {
+                alert(err.response?.data?.error || 'Ошибка добавления');
             }
         },
 
         async updateMoto(formData) {
             try {
-                this.loading = true
+                this.loading = true;
+                const { newPhotoFile, deleteExistingPhoto, ...data } = formData;
                 
-                const { newPhotoFile, deleteExistingPhoto, ...motoData } = formData
-                
-                const { data } = await api.put(`/motorcycle/${motoData.id}`, motoData)
+                await api.put(`/motorcycle/${data.id}`, data);
                 
                 if (deleteExistingPhoto) {
-                    await api.delete(`/motorcycle/${motoData.id}/photo`)
+                    await api.delete(`/motorcycle/${data.id}/photo`);
                 }
                 
                 if (newPhotoFile) {
-                    const uploadFormData = new FormData()
-                    uploadFormData.append('photo', newPhotoFile)
-                    
-                    await api.post(`/motorcycle/${motoData.id}/photo`, uploadFormData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    })
+                    const fd = new FormData();
+                    fd.append('photo', newPhotoFile);
+                    await api.post(`/motorcycle/${data.id}/photo`, fd, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
                 }
                 
-                const index = this.motorcycles.findIndex(m => m.id === motoData.id)
-                if (index !== -1) {
-                    const updatedResponse = await api.get('/motorcycle/')
-                    this.motorcycles = updatedResponse.data
-                    this.motorcycle = this.motorcycles.find(m => m.id === motoData.id)
-                }
-                
-                this.showEditMotoModal = false
-                alert("Мотоцикл обновлен")
+                await this.loadData();
+                this.showEditMotoModal = false;
+                alert('Мотоцикл обновлен');
             } catch (err) {
-                console.error('Failed update moto:', err)
-                alert(err.response?.data?.error || 'Ошибка обновления мотоцикла')
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async updateMotoMileage (formData) {
-            try {
-                const { data } = await api.patch(`motorcycle/${formData.id}`, formData)
-
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                if (index !== -1) {
-                    this.motorcycles[index] = data
-                }
-
-                this.motorcycle = data
-
-                this.showUpdateMotoMileageModal = false
-                alert('Пробег мотоцикла обновлен!')
-            } catch(err) {
-                console.error('Failed update moto mileage', err)
-                alert(err.response?.data?.error || 'Ошибка обновления пробега')
-            }
-        },
-
-        async updateMotoNote(formData) {
-            try {
-                const { data } = await api.patch(`/motorcycle/${formData.id}/note`, formData)
-                
-                const index = this.motorcycles.findIndex(m => m.id === formData.id)
-                if (index !== -1) {
-                    this.motorcycles[index] = data
-                }
-
-                this.motorcycle = data
-
-                this.showEditMotoNoteModal = false
-            } catch(err) {
-                console.error('Failed update moto note', err)
-                alert(err.response?.data?.error || 'Ошибка обновления заметки')
-            }
-        },
-
-        async deleteMoto(motoId) {
-            try {
-                await api.delete(`/motorcycle/${motoId}`)
-
-                const index = this.motorcycles.findIndex(m => m.id === motoId)
-                if (index !== -1) {
-                    this.motorcycles.splice(index, 1)
-                }
-
-                if (this.motorcycles.length > 0) {
-                    this.motorcycle = this.motorcycles[0];
-                } else {
-                    this.motorcycle = null;
-                }
-                this.showDeleteMotoModal = false;
-                alert("Мотоцикл удален");
-            } catch (err) {
-                console.error(`Failed delete moto: ${err}`);
-                alert(err.response?.data?.error || "Ошибка при удалении мотоцикла");
+                alert(err.response?.data?.error || 'Ошибка обновления');
             } finally {
                 this.loading = false;
             }
         },
 
+        async updateMotoMileage(formData) {
+            try {
+                await api.patch(`/motorcycle/${formData.id}`, formData);
+                await this.loadData();
+                this.showUpdateMotoMileageModal = false;
+                alert('Пробег обновлен');
+            } catch (err) {
+                alert(err.response?.data?.error || 'Ошибка обновления пробега');
+            }
+        },
+
+        async updateMotoNote(formData) {
+            try {
+                await api.patch(`/motorcycle/${formData.id}/note`, formData);
+                await this.loadData();
+                this.showEditMotoNoteModal = false;
+            } catch (err) {
+                alert(err.response?.data?.error || 'Ошибка обновления заметки');
+            }
+        },
+
+        async deleteMoto(id) {
+            try {
+                await api.delete(`/motorcycle/${id}`);
+                await this.loadData();
+                if (this.motorcycles.length > 0) {
+                    this.selectedMotoId = this.motorcycles[0].id;
+                } else {
+                    this.selectedMotoId = null;
+                }
+                this.showDeleteMotoModal = false;
+                alert('Мотоцикл удален');
+            } catch (err) {
+                alert(err.response?.data?.error || 'Ошибка удаления');
+            }
+        },
 
         async deleteMaintenance(id) {
             try {
                 await api.delete(`/maintenance/${id}`);
-                
                 await this.loadData();
                 this.showDetailsMaintenanceModal = false;
-                alert("Обслуживание успешно удалено");
+                alert('Обслуживание удалено');
             } catch (err) {
-                console.error(`Failed delete maintenance: ${err}`);
-                alert(err.response?.data?.error || "Ошибка удаления обслуживания");
+                alert(err.response?.data?.error || 'Ошибка удаления');
             }
         },
 
-        getRecentMaintenances() {
-            if (!this.motorcycle || !this.motorcycle.maintenances) return [];
-            return this.motorcycle.maintenances
-                .sort((a, b) => {
-                    const dateA = a.completed_date || a.planned_date || a.created_at;
-                    const dateB = b.completed_date || b.planned_date || b.created_at;
-                    return new Date(dateB) - new Date(dateA);
-                })
-                .slice(0, 6);
+        openMaintenanceDetails(item) {
+            this.selectedMaintenance = item;
+            this.showDetailsMaintenanceModal = true;
         },
 
-        getStatusBadgeClass(status) {
-            const classes = {
-                'completed': 'badge-green',
-                'planned': 'badge-warning',
-                'overdue': 'badge-danger'
-            };
-            return classes[status] || 'badge-gray';
+        closeMaintenanceDetails() {
+            this.selectedMaintenance = null;
+            this.showDetailsMaintenanceModal = false;
+        },
+
+        getStatusClass(status) {
+            return {
+                completed: 'badge-success',
+                planned: 'badge-warning',
+                overdue: 'badge-danger'
+            }[status] || 'badge-gray';
         },
 
         getStatusLabel(status) {
-            const labels = {
-                'completed': 'Выполнено',
-                'planned': 'Запланировано',
-                'overdue': 'Просрочено'
-            };
-            return labels[status] || status;
+            return {
+                completed: 'Выполнено',
+                planned: 'Запланировано',
+                overdue: 'Просрочено'
+            }[status] || status;
         },
 
-        changeMoto(motoId) {
-            this.motorcycle = this.motorcycles.find(m => m.id === motoId) || this.motorcycles[0]
-        },
-
-        // === MODALS ===
-        openMaintenanceDetailsModal(maintenance) {
-            this.selectedMaintenance = maintenance
-            this.showDetailsMaintenanceModal = true
-        },
-        closeMaintenanceDetailsModal() {
-            this.selectedMaintenance = null
-            this.showDetailsMaintenanceModal = false
-        },
-
-        // === UTILS ===
-        formatDate(dateString) {
-            return formatDate(dateString)
+        formatDate(date) {
+            return formatDate(date);
         }
     },
 
-    computed: {
-        nextMaintenance() {
-            if (!this.motorcycle || !this.motorcycle.maintenances) {
-                return null;
-            }
-
-            const currentMileage = this.motorcycle.mileage || 0;
-            
-            const upcomingMaintenances = this.motorcycle.maintenances
-                .filter(m => m.status === 'planned' && m.planned_mileage && m.planned_mileage > currentMileage)
-                .sort((a, b) => a.planned_mileage - b.planned_mileage);
-
-            const overdueMaintenances = this.motorcycle.maintenances
-                .filter(m => m.status === 'planned' && m.planned_mileage && m.planned_mileage <= currentMileage)
-                .sort((a, b) => a.planned_mileage - b.planned_mileage);
-
-            if (overdueMaintenances.length > 0) {
-                const overdue = overdueMaintenances[0];
-                const distanceOverdue = currentMileage - overdue.planned_mileage;
-                
-                return {
-                    ...overdue,
-                    distanceOverdue: distanceOverdue,
-                    planned_mileage: overdue.planned_mileage,
-                    isOverdue: true,
-                    title: overdue.title
-                };
-            }
-
-            if (upcomingMaintenances.length > 0) {
-                const next = upcomingMaintenances[0];
-                const distanceToNext = next.planned_mileage - currentMileage;
-                
-                return {
-                    ...next,
-                    distanceToNext: distanceToNext,
-                    planned_mileage: next.planned_mileage,
-                    isOverdue: false,
-                    title: next.title
-                };
-            }
-
-            return null;
-        },
-
-        maintenanceSpends() {
-            if (!this.motorcycle || !this.motorcycle.maintenances) {
-                return 0;
-            }
-            return this.motorcycle.maintenances
-                .filter(m => m.status === 'completed')
-                .reduce((sum, item) => sum + (item.cost || 0), 0);
-        },
-
-    },
     mounted() {
-        this.loadData()
+        this.loadData();
     }
 }
 </script>
 
 <style scoped>
-/* ===== БАЗОВЫЕ СТИЛИ ===== */
+/* ===== BASE ===== */
 .garage-page {
-    padding-top: 16px;
-    padding-bottom: 40px;
+    padding: 20px 0 40px;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-.moto-thumb {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    object-fit: cover;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+    overflow-x: hidden;
 }
 
-.moto-card-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: var(--accent-trans);
-    color: var(--accent-text);
+/* ===== HEADER ===== */
+.page-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    overflow: hidden;
-}
-
-.moto-card-icon i {
-    font-size: 18px;
-}
-
-.big-card-img {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    cursor: pointer;
-}
-
-.big-card-img img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.photo-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    color: white;
-}
-
-.photo-overlay i {
-    font-size: 32px;
-}
-
-.photo-overlay span {
-    font-size: 14px;
-}
-
-.big-card-img:hover .photo-overlay {
-    opacity: 1;
-}
-
-/* === TABS === */
-.header-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
     flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
-.tab-btn {
-    padding: 8px 20px;
-    border-radius: 20px;
-    border: 1px solid var(--border-light);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: 0.2s;
+.header-content {
+    flex: 1;
+    min-width: 150px;
 }
 
-.tab-btn.active {
-    background: var(--accent-trans);
-    border-color: var(--accent);
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-title i {
     color: var(--accent-text);
 }
 
-.tab-btn.disable {
-    cursor: default;
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 2px 0 0;
 }
 
-.tab-btn.outline:hover {
-    background: var(--accent-trans);
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
 }
 
-/* ===== MOTORCYCLE SELECTOR ===== */
-.moto-selector-wrapper {
+.btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.25);
+}
+
+/* ===== GARAGE STATS ===== */
+.garage-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.stat-chip i {
+    color: var(--accent-text);
+    font-size: 14px;
+}
+
+.stat-chip span {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== MOTORCYCLES CONTAINER ===== */
+.motorcycles-container {
     margin-bottom: 24px;
 }
 
-.moto-scroll-container {
-    display: flex;
-    gap: 12px;
+/* ===== ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ (только до 600px) ===== */
+.motorcycles-scroll-wrapper {
+    display: none;
     overflow-x: auto;
-    padding: 4px 0 8px 0;
+    overflow-y: visible;
+    margin: 0 -16px;
+    padding: 0 16px 8px;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
-    -webkit-overflow-scrolling: touch;
 }
 
-.moto-scroll-container::-webkit-scrollbar {
+.motorcycles-scroll-wrapper::-webkit-scrollbar {
     height: 4px;
 }
 
-.moto-scroll-container::-webkit-scrollbar-thumb {
+.motorcycles-scroll-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.motorcycles-scroll-wrapper::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 4px;
 }
 
-.moto-card {
-    flex: 0 0 220px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 12px;
-    padding: 14px 16px;
+.motorcycles-grid {
     display: flex;
-    align-items: center;
     gap: 12px;
+    min-width: min-content;
+    padding-bottom: 4px;
+}
+
+.moto-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    max-width: 240px;
+    padding: 14px;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: 16px;
     cursor: pointer;
     transition: 0.2s;
-    min-width: 0;
+    flex: 1 0 auto;
 }
 
 .moto-card:hover {
     background: var(--bg-card-hover);
+    border-color: var(--border-light);
 }
 
 .moto-card.active {
@@ -816,96 +891,694 @@ export default {
     background: var(--accent-trans);
 }
 
-.moto-card.add-card {
-    border: 2px dashed var(--border-color);
-    background: transparent;
-    justify-content: center;
-    color: var(--accent);
-    flex: 0 0 120px;
+.moto-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/10;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-card);
+    margin-bottom: 10px;
 }
 
-.moto-card-info {
+.moto-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.moto-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 32px;
+    background: var(--bg-card);
+}
+
+.moto-placeholder.hidden {
+    display: none;
+}
+
+.moto-selected {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.moto-status-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+}
+
+.moto-status-badge.status-warning {
+    background: rgba(239, 68, 68, 0.85);
+}
+
+.moto-status-badge.status-ok {
+    background: rgba(16, 185, 129, 0.85);
+}
+
+.moto-info {
     flex: 1;
-    overflow: hidden;
     min-width: 0;
 }
 
 .moto-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.moto-meta {
+.moto-details {
     font-size: 12px;
     color: var(--text-muted);
-}
-
-.moto-active-badge {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--accent);
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: #fff;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.moto-details .dot {
+    opacity: 0.3;
+}
+
+.moto-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.moto-volume {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+.color-indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
-/* ===== MAIN GRID ===== */
-.main-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 24px;
-    align-items: start;
+.moto-actions {
+    display: flex;
+    gap: 2px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    justify-content: flex-end;
 }
 
-/* LEFT COLUMN */
-.big-moto-card {
+/* ===== СПИСОК (от 600px) ===== */
+.motorcycles-list {
+    display: block;
+}
+
+.moto-list-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 6px;
+}
+
+.moto-list-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-light);
+}
+
+.moto-list-item.active {
+    border-color: var(--accent);
+    background: var(--accent-trans);
+}
+
+.moto-list-preview {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-card);
+}
+
+.moto-list-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.moto-list-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 20px;
+    background: var(--bg-card);
+}
+
+.moto-list-placeholder.hidden {
+    display: none;
+}
+
+.moto-list-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.moto-list-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.moto-list-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.moto-list-year {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.moto-list-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.moto-list-mileage {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.moto-list-volume {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 1px 10px;
+    border-radius: 10px;
+}
+
+.moto-list-color {
+    display: flex;
+    align-items: center;
+}
+
+.color-dot-sm {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    display: block;
+}
+
+.moto-list-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
+.moto-list-status.status-warning {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+}
+
+.moto-list-status.status-ok {
+    background: var(--success-trans);
+    color: var(--success-text);
+}
+
+.moto-list-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.add-btn {
+    width: 100%;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 24px;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-trans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--accent-text);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin: 0 0 8px;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+}
+
+/* ===== DETAIL SECTION ===== */
+.moto-detail {
+    margin-top: 24px;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    transition: 0.2s;
 }
 
-.big-card-header {
+.stat-card:hover {
+    border-color: var(--border-color);
+}
+
+.stat-card.stat-warning {
+    border-color: var(--danger-trans);
+    background: var(--danger-trans);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-trans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--accent-text);
+    flex-shrink: 0;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.stat-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-value.text-danger {
+    color: var(--danger);
+}
+
+.stat-value .text-muted {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+/* Detail Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.detail-card {
+    padding: 18px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+}
+
+.detail-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
-    flex-wrap: wrap;
+}
+
+.detail-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.spec-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+}
+
+.spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.spec-item.full {
+    grid-column: 1 / -1;
+}
+
+.spec-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.spec-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.spec-value.spec-code {
+    font-family: monospace;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.color-dot {
+    display: inline-block;
+    width: 28px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.notes-content {
+    min-height: 50px;
+}
+
+.notes-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.notes-empty {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+.btn-mileage {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-mileage:hover {
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+
+/* Maintenances */
+.maintenances-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.section-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--accent-text);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: 0.2s;
+}
+
+.btn-link:hover {
+    color: var(--accent);
     gap: 8px;
 }
 
-.big-title {
-    font-size: 20px;
-    font-weight: 600;
+.maintenances-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.big-card-header-actions {
+.maintenance-item {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.maintenance-item:hover {
+    background: var(--border-light);
+}
+
+.maint-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.maint-icon-completed {
+    background: var(--success-trans);
+    color: var(--success-text);
+}
+
+.maint-icon-planned {
+    background: var(--warning-trans);
+    color: var(--warning-text);
+}
+
+.maint-icon-overdue {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+}
+
+.maint-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.maint-title {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.maint-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
     gap: 4px;
-    margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
-.big-card-header-actions button {
-    flex: 1;
-    min-width: 32px;
+.maint-meta .dot {
+    opacity: 0.3;
 }
 
-.icon-btn {
-    background: var(--border-light);
-    border: none;
+.maint-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.maint-status i {
     color: var(--text-muted);
+    font-size: 11px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.badge-success {
+    background: var(--success-trans);
+    color: var(--success-text);
+}
+
+.badge-warning {
+    background: var(--warning-trans);
+    color: var(--warning-text);
+}
+
+.badge-danger {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+}
+
+.badge-gray {
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+}
+
+/* Empty small */
+.empty-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px;
+    text-align: center;
+}
+
+.empty-small i {
+    font-size: 24px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.empty-small p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.empty-small .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ===== ICON BTN ===== */
+.icon-btn {
     width: 32px;
     height: 32px;
+    border: none;
     border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
     cursor: pointer;
     transition: 0.2s;
     display: flex;
@@ -914,792 +1587,355 @@ export default {
 }
 
 .icon-btn:hover {
-    background: var(--border-color);
+    background: var(--border-light);
     color: var(--text-primary);
 }
 
-.big-card-img {
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    position: relative;
+.icon-btn.danger:hover {
+    background: var(--danger-trans);
+    color: var(--danger);
 }
 
-.big-card-img img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.big-card-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 16px;
-    margin-bottom: 16px;
-}
-
-.spec-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.spec-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.spec-item .label {
+.icon-btn.small {
+    width: 28px;
+    height: 28px;
     font-size: 12px;
-    color: var(--text-muted);
 }
 
-.spec-item .value {
-    font-size: 14px;
-    font-weight: 500;
+/* ===== MEDIA QUERIES ===== */
+
+/* До 600px - горизонтальный скролл, список скрыт */
+@media (max-width: 599px) {
+    .moto-card {
+        min-width: 180px;
+        max-width: 210px;
+        padding: 12px;
+    }
+
+    .moto-preview {
+        aspect-ratio: 16/11;
+    }
+
+    .moto-name {
+        font-size: 14px;
+    }
+
+    .moto-details {
+        font-size: 11px;
+    }
+
+    .moto-actions .icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
 }
 
-.color-dot {
-    width: 40px;
-    height: 14px;
+@media (max-width: 480px) {
+    .moto-card {
+        min-width: 160px;
+        max-width: 180px;
+        padding: 10px;
+    }
+
+    .moto-preview {
+        aspect-ratio: 16/12;
+        border-radius: 10px;
+    }
+
+    .moto-status-badge {
+        font-size: 8px;
+        padding: 1px 8px;
+        bottom: 6px;
+        left: 6px;
+    }
+
+    .moto-placeholder {
+        font-size: 24px;
+    }
+
+    .moto-name {
+        font-size: 13px;
+    }
+
+    .moto-details {
+        font-size: 10px;
+    }
+
+    .moto-volume {
+        font-size: 10px;
+        padding: 1px 8px;
+    }
+
+    .color-indicator {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (min-width: 600px) {
+    .moto-list-item {
+        padding: 8px 14px;
+    }
+
+    .moto-list-preview {
+        width: 44px;
+        height: 44px;
+    }
+
+    .moto-list-placeholder {
+        font-size: 16px;
+    }
+
+    .moto-list-name {
+        font-size: 14px;
+    }
+
+    .moto-list-year {
+        font-size: 12px;
+    }
+
+    .moto-list-mileage {
+        font-size: 12px;
+    }
+
+    .moto-list-volume {
+        font-size: 11px;
+        padding: 1px 8px;
+    }
+
+    .moto-list-status {
+        font-size: 10px;
+        padding: 1px 8px;
+    }
+
+    .moto-list-actions .icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 768px) {
+    .moto-list-item {
+        padding: 10px 18px;
+    }
+
+    .moto-list-preview {
+        width: 52px;
+        height: 52px;
+    }
+
+    .moto-list-name {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 820px) {
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    .btn-primary span {
+        display: inline;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .stat-card {
+        padding: 12px 14px;
+    }
+    
+    .stat-value {
+        font-size: 15px;
+    }
+    
+    .spec-list {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    .garage-page {
+        padding: 12px 0 24px;
+    }
+    
+    .page-title {
+        font-size: 20px;
+    }
+    
+    .page-subtitle {
+        font-size: 13px;
+    }
+
+    .garage-stats {
+        gap: 6px;
+    }
+
+    .stat-chip {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .stat-card {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .stat-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+
+    .stat-value {
+        font-size: 14px;
+    }
+    
+    .detail-card {
+        padding: 14px 16px;
+    }
+    
+    .spec-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 12px;
+    }
+    
+    .spec-value {
+        font-size: 13px;
+    }
+
+    .maintenances-section {
+        padding: 14px 16px;
+    }
+
+    .maintenance-item {
+        padding: 8px 12px;
+        gap: 10px;
+    }
+
+    .maint-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .maint-title {
+        font-size: 12px;
+    }
+
+    .maint-meta {
+        font-size: 10px;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+    }
+    
+    .empty-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+    
+    .empty-state h3 {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .spec-list {
+        grid-template-columns: 1fr;
+    }
+
+    .moto-card {
+        min-width: 140px;
+        max-width: 160px;
+        padding: 8px;
+    }
+
+    .moto-preview {
+        aspect-ratio: 16/13;
+        border-radius: 8px;
+    }
+
+    .moto-actions .icon-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .moto-actions {
+        gap: 0;
+    }
+
+    .stat-card {
+        padding: 8px 10px;
+    }
+
+    .moto-list-item {
+    }
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+.motorcycles-scroll-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.motorcycles-scroll-wrapper::-webkit-scrollbar {
+    height: 3px;
+}
+
+.motorcycles-scroll-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.motorcycles-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border-color);
     border-radius: 4px;
 }
 
-.notes-block {
-    background: var(--border-light);
-    border-radius: 12px;
-    padding: 14px;
-}
-
-.notes-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 500;
-    font-size: 14px;
-    margin-bottom: 6px;
-}
-
-.notes-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin: 0;
-    word-wrap: break-word;
-}
-
-.empty-note-state {
-    background-color: var(--bg-secondary);
-    border-radius: 10px;
-    border: 2px dashed var(--border-color);
-    color: var(--text-secondary);
-    font-size: 14px;
-    padding: 12px;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* RIGHT COLUMN */
-.stats-grid-4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.stat-box {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    min-height: 100px;
-}
-
-.stat-head {
-    font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-}
-
-.stat-head i {
-    font-size: 16px;
-    color: var(--accent-text);
-}
-
-.stat-val {
-    font-size: 22px;
-    font-weight: 700;
-    word-wrap: break-word;
-}
-
-/* ===== TABLE ===== */
-.maintenance-table-wrapper {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.table-header {
-    display: grid;
-    grid-template-columns: 160px 1fr 90px 100px 120px 40px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-light);
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.table-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.tr {
-    display: grid;
-    grid-template-columns: 160px 1fr 90px 100px 120px 40px;
-    padding: 14px 16px;
-    align-items: center;
-    border-bottom: 1px solid var(--border-light);
-    transition: background-color 0.2s;
-    cursor: pointer;
-}
-
-.tr:hover {
-    background-color: var(--border-light);
-}
-
-.td {
-    font-size: 14px;
-}
-
-.date-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.icon-square {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.icon-square.purple { background: var(--accent-trans); color: var(--accent-text); }
-.icon-square.green { background: var(--success-trans); color: var(--success-text); }
-.icon-square.blue { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
-
-.service-cell {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.s-title { 
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.s-desc { 
-    font-size: 13px; 
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Badges */
-.badge-green {
-    display: inline-block;
-    padding: 3px 12px;
-    background: var(--success-trans);
-    color: var(--success-text);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.badge-warning {
-    display: inline-block;
-    padding: 3px 12px;
-    background: var(--warning-trans);
-    color: var(--warning-text);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.badge-danger {
-    display: inline-block;
-    padding: 3px 12px;
-    background: var(--danger-trans);
-    color: var(--danger-text);
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.action-cell {
-    display: flex;
-    justify-content: flex-end;
-    color: var(--text-muted);
-    transition: color 0.2s;
-}
-
-.tr:hover .action-cell { color: var(--accent-text); }
-
-.table-footer {
-    padding: 16px;
-    text-align: center;
-}
-
-.outline-btn {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 10px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.outline-btn:hover {
-    background: var(--accent-trans);
-    border-color: var(--accent);
-}
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 48px;
-    background-color: var(--bg-secondary);
-    border-radius: 24px;
-    border: 2px dashed var(--border-color);
-    text-align: center;
-}
-
-.empty-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.empty-header i {
-    font-size: 48px;
-    color: var(--accent);
-}
-
-.empty-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.empty-body {
-    margin-top: 12px;
-}
-
-.empty-text {
-    color: var(--text-muted);
-    font-size: 14px;
-    margin: 4px 0;
-}
-
-.empty-text a {
-    color: var(--accent);
-    text-decoration: none;
-}
-
-.empty-text a:hover {
-    text-decoration: underline;
-}
-
-/* ================================================================
-   MEDIA QUERIES
-   ================================================================ */
-
-/* Планшеты и небольшие ноутбуки (до 1220px) */
-@media (max-width: 1220px) {
-    .main-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .moto-details-col {
-        max-width: 100%;
-    }
-    
-    .big-moto-card {
-        display: grid;
-        grid-template-columns: 240px 1fr;
-        gap: 20px;
-    }
-    
-    .big-card-img {
-        grid-row: span 2;
-        margin-bottom: 0;
-    }
-    
-    .big-card-img img {
-        height: 100%;
-        min-height: 200px;
-        object-fit: cover;
-        margin-bottom: 0;
-    }
-    
-    .big-card-grid {
-        margin-bottom: 0;
-    }
-    
-    .notes-block {
-        grid-column: 1 / -1;
-    }
-    
-    .stats-grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Телефоны (до 820px) */
-@media (max-width: 820px) {
-    .garage-page {
-        padding-top: 8px;
-        padding-bottom: 24px;
-    }
-
-    .container {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    .header-tabs {
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-    
-    .tab-btn {
-        padding: 6px 14px;
-        font-size: 13px;
-    }
-    
-    .moto-card {
-        flex: 0 0 160px;
-        padding: 10px 12px;
-    }
-    
-    .moto-card.add-card {
-        flex: 0 0 90px;
-        font-size: 13px;
-    }
-    
-    .moto-card-icon { 
-        width: 32px;
-        height: 32px;
-    }
-    
-    .moto-thumb {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .moto-name { 
-        font-size: 13px; 
-    }
-    
-    .moto-meta {
-        font-size: 11px;
-    }
-    
-    /* Левая колонка в одну колонку */
-    .big-moto-card {
-        grid-template-columns: 1fr;
-    }
-    
-    .big-card-img {
-        grid-row: auto;
-        margin-bottom: 16px;
-    }
-    
-    .big-card-img img {
-        height: 160px;
-        width: 100%;
-    }
-    
-    .big-title {
-        font-size: 18px;
-    }
-    
-    .big-card-header-actions {
-        flex-wrap: wrap;
-    }
-    
-    .big-card-header-actions button {
-        flex: 1;
-        min-width: 36px;
-        height: 36px;
-    }
-
-    .big-card-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px 14px;
-    }
-
-    .spec-item .value {
-        font-size: 13px;
-    }
-    
-    /* Статистика */
-    .stats-grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
-    
-    .stat-box {
-        padding: 12px;
-        min-height: 80px;
-    }
-    
-    .stat-val {
-        font-size: 18px;
-    }
-    
-    .stat-head {
-        font-size: 12px;
-    }
-    
-    /* Таблица -> карточки */
-    .table-header {
-        display: none;
-    }
-    
-    .tr {
-        grid-template-columns: 1fr;
-        gap: 4px;
-        padding: 16px;
-        border: 1px solid var(--border-light);
-        border-radius: 12px;
-        margin-bottom: 8px;
-        background: var(--bg-primary);
-        position: relative;
-    }
-    
-    .tr:hover {
-        background: var(--bg-primary);
-    }
-    
-    .date-cell {
-        order: 1;
-        margin-bottom: 4px;
-    }
-    
-    .service-cell {
-        order: 2;
-        padding-left: 40px;
-        margin-bottom: 4px;
-    }
-    
-    .service-cell .s-title {
-        white-space: normal;
-    }
-    
-    .service-cell .s-desc {
-        white-space: normal;
-    }
-    
-    .td:not(.date-cell):not(.service-cell):not(.action-cell) {
-        order: 3;
-        padding-left: 40px;
-        font-size: 13px;
-    }
-    
-    .td:not(.date-cell):not(.service-cell):not(.action-cell)::before {
-        content: attr(data-label);
-        color: var(--text-muted);
-        font-weight: 400;
-        margin-right: 4px;
-    }
-    
-    .td.action-cell {
-        order: 4;
-        position: absolute;
-        right: 16px;
-        top: 20px;
-    }
-    
-    .td.action-cell i {
-        font-size: 16px;
-    }
-    
-    .empty-state {
-        padding: 32px 20px;
-    }
-    
-    .empty-header i {
-        font-size: 36px;
-    }
-    
-    .empty-title {
-        font-size: 16px;
-    }
-}
-
-/* Маленькие телефоны (до 480px) */
-@media (max-width: 480px) {
-    .container {
-        padding-left: 8px;
-        padding-right: 8px;
-    }
-    
-    .stats-grid-4 {
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-    }
-    
-    .stat-box {
-        padding: 10px;
-        min-height: 70px;
-    }
-    
-    .stat-val {
-        font-size: 16px;
-    }
-    
-    .stat-head {
-        font-size: 11px;
-        gap: 4px;
-    }
-    
-    .stat-head i {
-        font-size: 13px;
-    }
-    
-    .moto-scroll-container {
-        gap: 8px;
-    }
-    
-    .moto-card {
-        flex: 0 0 140px;
-        padding: 8px 10px;
-        gap: 8px;
-    }
-    
-    .moto-card.add-card {
-        flex: 0 0 80px;
-        font-size: 12px;
-        padding: 8px;
-    }
-    
-    .moto-card-icon {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .moto-thumb {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .moto-name {
-        font-size: 12px;
-    }
-    
-    .moto-meta {
-        font-size: 10px;
-    }
-    
-    .moto-active-badge {
-        width: 16px;
-        height: 16px;
-        font-size: 8px;
-    }
-    
-    .big-moto-card {
-        padding: 14px;
-    }
-    
-    .big-card-img img {
-        height: 120px;
-    }
-    
-    .big-card-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px 12px;
-    }
-    
-    .spec-item .label {
-        font-size: 11px;
-    }
-    
-    .spec-item .value {
-        font-size: 12px;
-    }
-    
-    .color-dot {
-        width: 32px;
-        height: 12px;
-    }
-    
-    .notes-block {
-        padding: 10px;
-    }
-    
-    .notes-header {
-        font-size: 13px;
-    }
-    
-    .notes-text {
-        font-size: 12px;
-    }
-    
-    .empty-note-state {
-        font-size: 12px;
-        padding: 10px;
-    }
-    
-    .tr {
-        padding: 12px;
-    }
-    
-    .date-cell {
-        font-size: 13px;
-    }
-    
-    .icon-square {
-        width: 26px;
-        height: 26px;
-        font-size: 12px;
-    }
-    
-    .service-cell {
-        padding-left: 36px;
-    }
-    
-    .s-title {
-        font-size: 13px;
-    }
-    
-    .s-desc {
-        font-size: 12px;
-    }
-    
-    .td:not(.date-cell):not(.service-cell):not(.action-cell) {
-        padding-left: 36px;
-        font-size: 12px;
-    }
-    
-    .td.action-cell {
-        right: 12px;
-        top: 16px;
-    }
-    
-    .badge-green,
-    .badge-warning,
-    .badge-danger {
-        font-size: 11px;
-        padding: 2px 10px;
-    }
-    
-    .empty-state {
-        padding: 24px 16px;
-    }
-    
-    .empty-header i {
-        font-size: 28px;
-    }
-    
-    .empty-title {
-        font-size: 14px;
-    }
-    
-    .empty-text {
-        font-size: 12px;
-    }
-}
-
-/* Очень маленькие экраны (до 360px) */
-@media (max-width: 360px) {
-    .stats-grid-4 {
-        grid-template-columns: 1fr 1fr;
-        gap: 4px;
-    }
-    
-    .stat-box {
-        padding: 8px;
-        min-height: 60px;
-    }
-    
-    .stat-val {
-        font-size: 14px;
-    }
-    
-    .stat-head {
-        font-size: 10px;
-    }
-    
-    .stat-head i {
-        font-size: 12px;
-    }
-    
-    .moto-card {
-        flex: 0 0 120px;
-        padding: 6px 8px;
-    }
-    
-    .moto-card.add-card {
-        flex: 0 0 70px;
-        font-size: 11px;
-        padding: 6px;
-    }
-    
-    .moto-name {
-        font-size: 11px;
-    }
-    
-    .moto-meta {
-        font-size: 9px;
-    }
-    
-    .big-title {
-        font-size: 16px;
-    }
-    
-    .big-card-grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-    }
-    
-    .spec-item.full-width {
-        grid-column: 1;
-    }
-    
-    .big-card-header-actions button {
-        min-width: 30px;
-        height: 30px;
-        font-size: 12px;
+@media (hover: hover) {
+    .motorcycles-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
     }
 }
 </style>
