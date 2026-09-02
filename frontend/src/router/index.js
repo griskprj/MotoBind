@@ -30,6 +30,18 @@ const router = createRouter({
         return '/landing'
       }
     },
+    {
+      path: '/contacts',
+      name: 'contacts',
+      component: () => import('../views/Contacts.vue'),
+      meta: {
+          requiresAuth: false,
+          title: 'MotoBind - Контакты',
+          description: 'Свяжитесь с нами через Telegram или Email',
+          showFooter: true,
+          showHeader: true
+      }
+    },
 
     // ===== АУТЕНТИФИКАЦИЯ =====
     {
