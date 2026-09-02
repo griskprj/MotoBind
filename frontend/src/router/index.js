@@ -223,6 +223,18 @@ const router = createRouter({
           showHeader: true
       }
     },
+    {
+      path: '/profile/:id',
+      name: 'public-profile',
+      component: () => import('../views/PublicProfile.vue'),
+      meta: {
+          requiresAuth: true,
+          title: 'MotoBind - Профиль пользователя',
+          description: 'Публичный профиль пользователя MotoBind',
+          showFooter: true,
+          showHeader: true
+      }
+    },
 
     // ===== ДОКУМЕНТЫ =====
     {

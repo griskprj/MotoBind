@@ -1,14 +1,16 @@
 <template>
     <div class="post-card">
         <div class="post-header">
-            <img 
-                :src="getAvatarUrl(post.author_avatar)" 
-                alt="Avatar" 
-                class="avatar"
-            >
-            <div class="post-author">
-                <span class="username">{{ post.author }}</span>
-                <span class="date">{{ formatDate(post.created_at) }}</span>
+            <div class="post-author-info" @click="goToProfile">
+                <img 
+                    :src="getAvatarUrl(post.author_avatar)" 
+                    alt="Avatar" 
+                    class="avatar"
+                >
+                <div class="post-author">
+                    <span class="username">{{ post.author }}</span>
+                    <span class="date">{{ formatDate(post.created_at) }}</span>
+                </div>
             </div>
             <div class="post-actions" v-if="isAuthor">
                 <button class="btn-icon" @click="openEditModal">
@@ -150,6 +152,9 @@ export default {
         }
     },
     methods: {
+        goToProfile() {
+            this.$router.push(`/profile/${this.post.author_id}`)
+        },
         getImageUrl(path) {
             if (!path) return ''
             if (path.startsWith('http://') || path.startsWith('https://')) return path
@@ -342,6 +347,22 @@ export default {
 
 .post-author {
     flex: 1;
+}
+
+.post-author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.post-author-info:hover {
+    background: var(--bg-secondary);
 }
 
 .username {

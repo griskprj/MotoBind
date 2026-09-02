@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.post_service import PostService
 from app.exceptions import NotFoundError, ForbiddenError, ValidationError
 
-social_bp = Blueprint('social', __name__)
+social_bp = Blueprint('social', __name__, url_prefix='/api/social')
 
 @social_bp.route('/posts', methods=['POST'])
 @jwt_required()
@@ -18,7 +18,9 @@ def create_post():
             return jsonify({'error': 'Содержимое поста не может быть пустым'}), 400
         
         post = PostService.create_post(user_id, content, image)
-        return jsonify(post.to_dict()), 201
+        post_dict = post.to_dict()
+        post_dict['is_liked'] = False
+        return jsonify(post_dict), 201
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
@@ -28,12 +30,19 @@ def create_post():
 @jwt_required()
 def get_posts():
     """Получение списка постов"""
+    current_user_id = int(get_jwt_identity())
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     user_id = request.args.get('user_id', type=int)
     include_comments = request.args.get('include_comments', 'false').lower() == 'true'
     
-    data = PostService.get_posts(page, per_page, user_id, include_comments)
+    data = PostService.get_posts(
+        page=page,
+        per_page=per_page,
+        user_id=user_id,
+        current_user_id=current_user_id,
+        include_comments=include_comments
+    )
     return jsonify(data), 200
 
 @social_bp.route('/posts/<int:post_id>', methods=['GET'])
@@ -41,9 +50,15 @@ def get_posts():
 def get_post(post_id):
     """Получение поста по ID"""
     try:
+        current_user_id = int(get_jwt_identity())
         include_comments = request.args.get('include_comments', 'true').lower() == 'true'
-        post = PostService.get_post(post_id, include_comments)
-        return jsonify(post.to_dict(include_comments=include_comments)), 200
+        
+        post_data = PostService.get_post(
+            post_id=post_id,
+            current_user_id=current_user_id,
+            include_comments=include_comments
+        )
+        return jsonify(post_data), 200
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
 
@@ -56,10 +71,21 @@ def update_post(post_id):
         content = request.form.get('content')
         image = request.files.get('image')
         
+        if not content or not content.strip():
+            return jsonify({'error': 'Содержимое поста не может быть пустым'}), 400
+        
         post = PostService.update_post(post_id, user_id, content, image)
-        return jsonify(post.to_dict()), 200
+        post_dict = post.to_dict()
+        
+        # Добавляем информацию о лайке для текущего пользователя
+        from app.models.post_like import PostLike
+        like = PostLike.query.filter_by(post_id=post.id, user_id=user_id).first()
+        post_dict['is_liked'] = bool(like)
+        
+        return jsonify(post_dict), 200
     except (NotFoundError, ForbiddenError, ValidationError) as e:
-        return jsonify({'error': str(e)}), 400 if isinstance(e, ValidationError) else 403 if isinstance(e, ForbiddenError) else 404
+        status_code = 404 if isinstance(e, NotFoundError) else 403 if isinstance(e, ForbiddenError) else 400
+        return jsonify({'error': str(e)}), status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -72,7 +98,8 @@ def delete_post(post_id):
         PostService.delete_post(post_id, user_id)
         return jsonify({'message': 'Пост удалён'}), 200
     except (NotFoundError, ForbiddenError) as e:
-        return jsonify({'error': str(e)}), 404 if isinstance(e, NotFoundError) else 403
+        status_code = 404 if isinstance(e, NotFoundError) else 403
+        return jsonify({'error': str(e)}), status_code
 
 @social_bp.route('/posts/<int:post_id>/like', methods=['POST'])
 @jwt_required()
@@ -98,7 +125,8 @@ def add_comment(post_id):
         comment = PostService.add_comment(post_id, user_id, data['content'])
         return jsonify(comment.to_dict()), 201
     except (NotFoundError, ValidationError) as e:
-        return jsonify({'error': str(e)}), 404 if isinstance(e, NotFoundError) else 400
+        status_code = 404 if isinstance(e, NotFoundError) else 400
+        return jsonify({'error': str(e)}), status_code
 
 @social_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
 @jwt_required()
@@ -109,4 +137,5 @@ def delete_comment(comment_id):
         PostService.delete_comment(comment_id, user_id)
         return jsonify({'message': 'Комментарий удалён'}), 200
     except (NotFoundError, ForbiddenError) as e:
-        return jsonify({'error': str(e)}), 404 if isinstance(e, NotFoundError) else 403
+        status_code = 404 if isinstance(e, NotFoundError) else 403
+        return jsonify({'error': str(e)}), status_code

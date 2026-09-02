@@ -62,7 +62,7 @@
                             <img class="user-img" :src="getAvatarUrl(user?.avatar)" alt="">
                             <div class="reg-card-body">
                                 <p class="user-name">{{ user.username }}</p>
-                                <p class="user-time">26.08.2008, 12:45</p>
+                                <p class="user-time">{{ formatDate(user.last_login) }}</p>
                             </div>
                         </div>
                         <div class="user-status" :class="user.role">
@@ -179,6 +179,16 @@ export default {
             } catch (err) {
                 console.error(`Failed add user: ${err}`)
             }
+        },
+
+        formatDate(date) {
+            if (!date) return '-'
+            const d = new Date(date)
+            return d.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            })
         },
 
         getUserRole(status) {

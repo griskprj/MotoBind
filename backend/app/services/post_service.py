@@ -63,7 +63,7 @@ class PostService:
             raise ValidationError("Не удалось сохранить изображение")
 
     @staticmethod
-    def get_posts(page=1, per_page=20, user_id=None, include_comments=False):
+    def get_posts(page=1, per_page=20, user_id=None, current_user_id=None, include_comments=False):
         """Получает список постов с пагинацией"""
         query = Post.query
         
@@ -73,8 +73,18 @@ class PostService:
         query = query.order_by(Post.created_at.desc())
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
         
+        posts_data = []
+        for post in paginated.items:
+            post_dict = post.to_dict(include_comments=include_comments)
+            if current_user_id:
+                like = PostLike.query.filter_by(post_id=post.id, user_id=current_user_id).first()
+                post_dict['is_liked'] = bool(like)
+            else:
+                post_dict['is_liked'] = False
+            posts_data.append(post_dict)
+        
         return {
-            'posts': [p.to_dict(include_comments=include_comments) for p in paginated.items],
+            'posts': posts_data,
             'total': paginated.total,
             'pages': paginated.pages,
             'current_page': paginated.page,
@@ -84,12 +94,19 @@ class PostService:
         }
 
     @staticmethod
-    def get_post(post_id: int, include_comments=False) -> Post:
-        """Получает пост по ID"""
+    def get_post(post_id: int, current_user_id=None, include_comments=False) -> dict:
+        """Получает пост по ID с комментариями"""
         post = Post.query.get(post_id)
         if not post:
             raise NotFoundError("Пост не найден")
-        return post
+        
+        post_dict = post.to_dict(include_comments=include_comments)
+        
+        if current_user_id:
+            like = PostLike.query.filter_by(post_id=post.id, user_id=current_user_id).first()
+            post_dict['is_liked'] = bool(like)
+        
+        return post_dict
 
     @staticmethod
     def update_post(post_id: int, user_id: int, content: str, image_file=None) -> Post:
@@ -109,7 +126,9 @@ class PostService:
                 from app.utils.files import delete_file
                 delete_file(post.image)
             post.image = PostService._save_image(image_file)
-
+        else:
+            pass
+        
         db.session.commit()
         return post
 
@@ -150,11 +169,12 @@ class PostService:
             liked = True
             
             if post.author_id != user_id:
+                user = User.query.get(user_id)
                 NotificationService.send_notification(
                     user_id=post.author_id,
                     type='social',
                     title='Новый лайк',
-                    content=f'Пользователь {like.user.username} лайкнул ваш пост',
+                    content=f'Пользователь {user.username} лайкнул ваш пост',
                     link=f'/social/post/{post_id}',
                     extra_data={'post_id': post_id, 'liked_by': user_id}
                 )
