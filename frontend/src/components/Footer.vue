@@ -35,6 +35,8 @@
                     <div class="nav-section">
                         <h4 class="nav-title">Информация</h4>
                         <router-link class="nav-link" to="/landing">О сервисе</router-link>
+                        <router-link class="nav-link" to="/contacts">Контакты</router-link>
+                    
                     </div>
                 </div>
             </div>
