@@ -28,14 +28,20 @@
         </div>
         
         <div class="post-footer">
-            <button class="like-btn" @click="toggleLike" :class="{ liked: userLiked }">
-                <i class="fa fa-heart"></i>
-                <span>{{ post.likes_count || 0 }}</span>
-            </button>
-            
-            <button class="comment-btn" @click="toggleComments">
-                <i class="fa fa-comment"></i>
-                <span>{{ post.comments_count || 0 }}</span>
+            <div class="footer-actions">
+                <button class="like-btn" @click="toggleLike" :class="{ liked: post.is_liked }">
+                    <i class="fa fa-heart"></i>
+                    <span>{{ post.likes_count || 0 }}</span>
+                </button>
+                
+                <button class="comment-btn" @click="toggleComments">
+                    <i class="fa fa-comment"></i>
+                    <span>{{ post.comments_count || 0 }}</span>
+                </button>
+            </div>
+            <button class="outline-btn" @click="openPost">
+                <i class="fa fa-arrow-right"></i>
+                <span>Подробнее</span>
             </button>
         </div>
         
@@ -152,6 +158,9 @@ export default {
         }
     },
     methods: {
+        openPost() {
+            this.$router.push(`/social/post/${this.post.id}`)
+        },
         goToProfile() {
             this.$router.push(`/profile/${this.post.author_id}`)
         },
@@ -410,10 +419,15 @@ export default {
 
 .post-footer {
     display: flex;
+    flex-direction: column;
     gap: 20px;
     margin-top: 16px;
     padding-top: 12px;
     border-top: 1px solid var(--border-light);
+}
+
+.footer-actions {
+    display: flex;
 }
 
 .like-btn, .comment-btn {

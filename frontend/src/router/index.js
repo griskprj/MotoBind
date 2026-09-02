@@ -200,6 +200,18 @@ const router = createRouter({
       }
     },
     {
+      path: '/profile/:id',
+      name: 'public-profile',
+      component: () => import('../views/PublicProfile.vue'),
+      meta: {
+          requiresAuth: true,
+          title: 'MotoBind - Профиль пользователя',
+          description: 'Публичный профиль пользователя MotoBind',
+          showFooter: true,
+          showHeader: true
+      }
+    },
+    {
       path: '/notifications',
       name: 'notifications',
       component: () => import('../views/Notifications.vue'),
@@ -224,15 +236,15 @@ const router = createRouter({
       }
     },
     {
-      path: '/profile/:id',
-      name: 'public-profile',
-      component: () => import('../views/PublicProfile.vue'),
+      path: '/social/post/:id',
+      name: 'post-view',
+      component: () => import('../views/PostView.vue'),
       meta: {
-          requiresAuth: true,
-          title: 'MotoBind - Профиль пользователя',
-          description: 'Публичный профиль пользователя MotoBind',
-          showFooter: true,
-          showHeader: true
+        requiresAuth: true,
+        title: 'MotoBind - Просмотр поста',
+        description: 'Просмотр поста в социальной сети MotoSocial',
+        showFooter: true,
+        showHeader: true
       }
     },
 
