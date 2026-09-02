@@ -27,63 +27,6 @@
 
             <!-- Мотоциклы -->
             <div class="motorcycles-container">
-                <div class="motorcycles-scroll-wrapper">
-                    <div class="motorcycles-grid">
-                        <div 
-                            v-for="moto in motorcycles" 
-                            :key="moto.id"
-                            class="moto-card"
-                            :class="{ active: selectedMotoId === moto.id }"
-                            @click="selectMotorcycle(moto)"
-                        >
-                            <div class="moto-preview">
-                                <img 
-                                    v-if="moto.photo_url" 
-                                    :src="getPhotoUrl(moto.photo_url)" 
-                                    :alt="moto.name"
-                                    @error="handleImageError"
-                                    loading="lazy"
-                                >
-                                <div v-else class="moto-placeholder">
-                                    <i class="fa fa-motorcycle"></i>
-                                </div>
-                                <div v-if="selectedMotoId === moto.id" class="moto-selected">
-                                    <i class="fa fa-check"></i>
-                                </div>
-                                <div class="moto-status-badge" :class="getMotoStatusClass(moto)">
-                                    {{ getMotoStatusLabel(moto) }}
-                                </div>
-                            </div>
-                            
-                            <div class="moto-info">
-                                <h3 class="moto-name">{{ moto.name }}</h3>
-                                <div class="moto-details">
-                                    <span>{{ moto.years }}</span>
-                                    <span class="dot">•</span>
-                                    <span>{{ formatMileage(moto.mileage) }}</span>
-                                </div>
-                                <div class="moto-meta">
-                                    <span class="moto-volume">{{ moto.volume }} см³</span>
-                                    <span class="color-indicator" :style="{ background: moto.color }"></span>
-                                </div>
-                            </div>
-
-                            <div class="moto-actions" @click.stop>
-                                <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
-                                    <i class="fa fa-pen"></i>
-                                </button>
-                                <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
-                                    <i class="fa fa-camera"></i>
-                                </button>
-                                <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Список на десктопе (от 600px) -->
                 <div class="motorcycles-list">
                     <div 
                         v-for="moto in motorcycles" 
@@ -91,34 +34,36 @@
                         class="moto-list-item"
                         :class="{ active: selectedMotoId === moto.id }"
                         @click="selectMotorcycle(moto)"
-                    >
-                        <div class="moto-list-preview">
-                            <img 
-                                v-if="moto.photo_url" 
-                                :src="getPhotoUrl(moto.photo_url)" 
-                                :alt="moto.name"
-                                @error="handleImageError"
-                                loading="lazy"
-                            >
-                            <div v-else class="moto-list-placeholder">
-                                <i class="fa fa-motorcycle"></i>
+                    >   
+                        <div class="moto-card-wrapper">
+                            <div class="moto-list-preview">
+                                <img 
+                                    v-if="moto.photo_url" 
+                                    :src="getPhotoUrl(moto.photo_url)" 
+                                    :alt="moto.name"
+                                    @error="handleImageError"
+                                    loading="lazy"
+                                >
+                                <div v-else class="moto-list-placeholder">
+                                    <i class="fa fa-motorcycle"></i>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="moto-list-info">
-                            <div class="moto-list-header">
-                                <h3 class="moto-list-name">{{ moto.name }}</h3>
-                                <span class="moto-list-year">{{ moto.years }}</span>
-                            </div>
-                            <div class="moto-list-meta">
-                                <span class="moto-list-mileage">{{ formatMileage(moto.mileage) }}</span>
-                                <span class="moto-list-volume">{{ moto.volume }} см³</span>
-                                <span class="moto-list-color">
-                                    <span class="color-dot-sm" :style="{ background: moto.color }"></span>
-                                </span>
-                                <span class="moto-list-status" :class="getMotoStatusClass(moto)">
-                                    {{ getMotoStatusLabel(moto) }}
-                                </span>
+                            
+                            <div class="moto-list-info">
+                                <div class="moto-list-header">
+                                    <h3 class="moto-list-name">{{ moto.name }}</h3>
+                                    <span class="moto-list-year">{{ moto.years }}</span>
+                                </div>
+                                <div class="moto-list-meta">
+                                    <span class="moto-list-mileage">{{ formatMileage(moto.mileage) }}</span>
+                                    <span class="moto-list-volume">{{ moto.volume }} см³</span>
+                                    <span class="moto-list-color">
+                                        <span class="color-dot-sm" :style="{ background: moto.color }"></span>
+                                    </span>
+                                    <span class="moto-list-status" :class="getMotoStatusClass(moto)">
+                                        {{ getMotoStatusLabel(moto) }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -891,6 +836,11 @@ export default {
     background: var(--accent-trans);
 }
 
+.moto-card-wrapper {
+    display: flex;
+    gap: 12px;
+}
+
 .moto-preview {
     position: relative;
     width: 100%;
@@ -1603,13 +1553,31 @@ export default {
 }
 
 /* ===== MEDIA QUERIES ===== */
-
-/* До 600px - горизонтальный скролл, список скрыт */
 @media (max-width: 599px) {
     .moto-card {
         min-width: 180px;
         max-width: 210px;
         padding: 12px;
+    }
+
+    .moto-list-item {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .moto-card-wrapper {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .moto-list-actions {
+        width: 100%;
+    }
+
+    .moto-list-actions .icon-btn {
+        width: 100%;
     }
 
     .moto-preview {
@@ -1632,6 +1600,17 @@ export default {
 
     .page-title {
         font-size: 22px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .maintenance-item {
+        flex-direction: column;
+    }
+
+    .maint-icon {
+        min-width: 100%;
     }
 }
 
