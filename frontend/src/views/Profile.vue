@@ -4,8 +4,8 @@
 
         <!-- === HEADER === -->
         <Header
-            title="Профиль"
-            subtitle="Управление личными данными и настройками аккаунта"
+            title="Мой профиль"
+            subtitle="Управляйте личными данными и настройками"
         />
 
         <!-- === PROFILE CONTENT === -->
@@ -31,8 +31,10 @@
                             style="display: none"
                         />
                     </div>
+                    
                     <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
                     <p class="profile-email">{{ user?.email || '—' }}</p>
+                    
                     <div class="profile-badge">
                         <span :class="getStatusClass(user?.status)">
                             {{ getStatusName(user?.status) }}
@@ -41,19 +43,75 @@
                     </div>
 
                     <div v-if="user?.avatar" class="avatar-actions">
-                        <button class="btn btn-danger" @click="deleteAvatar">
+                        <button class="btn btn-danger btn-sm" @click="deleteAvatar">
                             <i class="fa fa-trash"></i> Удалить аватар
                         </button>
                     </div>
 
-                    <p class="profile-bio">
-                        {{ user?.bio || 'Нет описания' }}
-                    </p>
+                    <!-- Информация о пользователе -->
+                    <div class="profile-info-items">
+                        <div v-if="user?.location" class="info-item">
+                            <i class="fa fa-map-marker"></i>
+                            <span>{{ user.location }}</span>
+                        </div>
+                        <div v-if="user?.motorcycle" class="info-item">
+                            <i class="fa fa-motorcycle"></i>
+                            <span>{{ user.motorcycle }}</span>
+                        </div>
+                        <div v-if="user?.experience" class="info-item">
+                            <i class="fa fa-signal"></i>
+                            <span>{{ getExperienceLabel(user.experience) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fa fa-calendar"></i>
+                            <span>С нами с {{ formatDate(user?.created_at) }}</span>
+                        </div>
+                    </div>
+
+                    <div v-if="user?.bio" class="profile-bio">
+                        <i class="fa fa-quote-left"></i>
+                        {{ user.bio }}
+                    </div>
+
+                    <!-- Социальные сети -->
+                    <div v-if="hasSocialLinks" class="profile-social">
+                        <a 
+                            v-for="(url, platform) in user.social_links" 
+                            :key="platform"
+                            :href="url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="social-link"
+                            :title="platform"
+                        >
+                            <i :class="getSocialIcon(platform)"></i>
+                        </a>
+                    </div>
 
                     <div class="profile-actions">
                         <button class="outline-btn" style="width: 100%;" @click="showEditProfile = true">
-                            <i class="fa fa-pen"></i> Редактировать
+                            <i class="fa fa-pen"></i> Редактировать профиль
                         </button>
+                    </div>
+                </div>
+
+                <!-- Статистика -->
+                <div class="stats-card">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ stats.posts || 0 }}</span>
+                        <span class="stat-label">Постов</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ stats.likes || 0 }}</span>
+                        <span class="stat-label">Лайков</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ stats.comments || 0 }}</span>
+                        <span class="stat-label">Комментариев</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ stats.motorcycles || 0 }}</span>
+                        <span class="stat-label">Мотоциклов</span>
                     </div>
                 </div>
             </aside>
@@ -74,6 +132,18 @@
                         <div class="info-row">
                             <span class="info-label">Email</span>
                             <span class="info-value">{{ user?.email || '—' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Город/Регион</span>
+                            <span class="info-value">{{ user?.location || 'Не указан' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Мой мотоцикл</span>
+                            <span class="info-value">{{ user?.motorcycle || 'Не указан' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Опыт вождения</span>
+                            <span class="info-value">{{ getExperienceLabel(user?.experience) || 'Не указан' }}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Роль</span>
@@ -113,12 +183,40 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Публичный профиль -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <i class="fa fa-globe"></i>
+                        <h3>Публичный профиль</h3>
+                    </div>
+                    <div class="settings-card-body">
+                        <p class="hint-text">
+                            <i class="fa fa-info-circle"></i>
+                            Ваш публичный профиль доступен по ссылке:
+                        </p>
+                        <div class="profile-link">
+                            <input 
+                                :value="profileUrl" 
+                                readonly
+                                @click="copyProfileLink"
+                            >
+                            <button class="btn btn-secondary btn-sm" @click="copyProfileLink">
+                                <i class="fa fa-copy"></i> Копировать
+                            </button>
+                        </div>
+                        <button class="outline-btn" style="width: 100%;" @click="viewPublicProfile">
+                            <i class="fa fa-eye"></i> Посмотреть публичный профиль
+                        </button>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
 
     <!-- === MODALS === -->
-    <EditUserModal
+    <EditProfileModal
+        v-if="showEditProfile"
         :isOpen="showEditProfile"
         :user="user"
         @submit="updateProfile"
@@ -142,17 +240,17 @@
 <script>
 import api from '../api/api'
 import { removeTokens } from '../api/auth'
-import EditUserModal from '../components/modals/user/EditUserModal.vue';
-import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue';
-import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue';
+import EditProfileModal from '../components/modals/user/EditProfileModal.vue'
+import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue'
+import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue'
 import Header from '../components/Header.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue';
+import LoadingOverlay from '../components/LoadingOverlay.vue'
 
 export default {
     name: 'ProfilePage',
 
     components: {
-        EditUserModal,
+        EditProfileModal,
         ChangePasswordModal,
         DeleteAccountModal,
         Header,
@@ -166,11 +264,11 @@ export default {
 
             user: null,
             stats: {
-                motorcycles: 0,
-                maintenances: 0,
-                manuals: 0
+                posts: 0,
+                likes: 0,
+                comments: 0,
+                motorcycles: 0
             },
-            sessions: [],
 
             showEditProfile: false,
             showChangePassword: false,
@@ -178,81 +276,99 @@ export default {
         }
     },
 
+    computed: {
+        profileUrl() {
+            const baseUrl = window.location.origin
+            return `${baseUrl}/profile/${this.user?.id || ''}`
+        },
+        hasSocialLinks() {
+            return this.user?.social_links && 
+                   Object.values(this.user.social_links).some(url => url && url.trim())
+        }
+    },
+
     methods: {
+        // ===== АВАТАР =====
         getAvatarUrl(avatarPath) {
             if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg';
+                return '/BaseAvatar.jpg'
             }
             if (avatarPath.startsWith('http')) {
-                return avatarPath;
+                return avatarPath
             }
-            const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `${baseUrl}/uploads/${avatarPath}`;  // ✅
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`
         },
 
         handleAvatarError(event) {
-            event.target.src = '/BaseAvatar.jpg';
+            event.target.src = '/BaseAvatar.jpg'
         },
 
         async handleAvatarUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]
+            if (!file) return
 
-            // Проверка размера (5 МБ)
             if (file.size > 5 * 1024 * 1024) {
-                alert('Файл слишком большой. Максимальный размер 5 МБ.');
-                this.$refs.avatarInput.value = '';
-                return;
+                alert('Файл слишком большой. Максимальный размер 5 МБ.')
+                this.$refs.avatarInput.value = ''
+                return
             }
 
-            // Проверка типа
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
             if (!allowedTypes.includes(file.type)) {
-                alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP');
-                this.$refs.avatarInput.value = '';
-                return;
+                alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
+                this.$refs.avatarInput.value = ''
+                return
             }
 
-            this.uploadingAvatar = true;
+            this.uploadingAvatar = true
             try {
-                const formData = new FormData();
-                formData.append('avatar', file);
+                const formData = new FormData()
+                formData.append('avatar', file)
 
                 const { data } = await api.post('/user/avatar', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
-                });
+                })
 
-                this.user = data;
-                alert('Аватар успешно обновлен!');
+                localStorage.setItem('user', JSON.stringify(data))
+                this.user = data
+                alert('Аватар успешно обновлен!')
             } catch (error) {
-                console.error('Error uploading avatar:', error);
-                alert(error.response?.data?.error || 'Ошибка загрузки аватара');
+                console.error('Error uploading avatar:', error)
+                alert(error.response?.data?.error || 'Ошибка загрузки аватара')
             } finally {
-                this.uploadingAvatar = false;
-                this.$refs.avatarInput.value = '';
+                this.uploadingAvatar = false
+                this.$refs.avatarInput.value = ''
             }
         },
 
         async deleteAvatar() {
-            if (!confirm('Удалить аватар?')) return;
+            if (!confirm('Удалить аватар?')) return
 
             try {
-                const { data } = await api.delete('/user/avatar');
-                this.user = data;
-                alert('Аватар удален');
+                const { data } = await api.delete('/user/avatar')
+                this.user = data
+                alert('Аватар удален')
             } catch (error) {
-                console.error('Error deleting avatar:', error);
-                alert(error.response?.data?.error || 'Ошибка удаления аватара');
+                console.error('Error deleting avatar:', error)
+                alert(error.response?.data?.error || 'Ошибка удаления аватара')
             }
         },
 
+        // ===== ЗАГРУЗКА ПРОФИЛЯ =====
         async loadProfile() {
             this.loading = true
             try {
-                const response = await api.get('/auth/me')
-                this.user = response.data
+                const response = await api.get('/user/profile/me')
+                this.user = response.data.user
+                this.stats = {
+                    posts: response.data.user.stats?.posts_count || 0,
+                    likes: response.data.user.stats?.likes_received || 0,
+                    comments: response.data.user.stats?.comments_received || 0,
+                    motorcycles: response.data.user.motorcycles?.length || 0
+                }
             } catch (error) {
                 console.error('Error loading profile:', error)
                 if (error.response?.status === 401) {
@@ -263,9 +379,11 @@ export default {
             }
         },
 
+        // ===== ОБНОВЛЕНИЕ ПРОФИЛЯ =====
         async updateProfile(formData) {
             try {
                 const response = await api.put('/user/profile', formData)
+                localStorage.setItem('user', JSON.stringify(response.data))
                 this.user = response.data
                 this.showEditProfile = false
                 alert('Профиль обновлен!')
@@ -275,6 +393,7 @@ export default {
             }
         },
 
+        // ===== БЕЗОПАСНОСТЬ =====
         async changePassword(formData) {
             try {
                 if (formData.newPassword !== formData.repeatPassword) {
@@ -294,7 +413,7 @@ export default {
         async deleteAccount(password) {
             try {
                 await api.delete('/user/account', {
-                        data: { password }
+                    data: { password }
                 })
                 this.showDeleteAccount = false
                 removeTokens()
@@ -305,17 +424,23 @@ export default {
             }
         },
 
-        async logout() {
-            try {
-                await api.post('/auth/logout')
-            } catch(err) { console.error(err) }
-            finally {
-                removeTokens()
-                this.$router.push('/login')
-            }
+        // ===== ПУБЛИЧНЫЙ ПРОФИЛЬ =====
+        viewPublicProfile() {
+            this.$router.push(`/profile/${this.user.id}`)
         },
 
-        // Вспомогательные методы
+        copyProfileLink() {
+            navigator.clipboard.writeText(this.profileUrl).then(() => {
+                alert('Ссылка на профиль скопирована!')
+            }).catch(() => {
+                const input = document.querySelector('.profile-link input')
+                input.select()
+                document.execCommand('copy')
+                alert('Ссылка на профиль скопирована!')
+            })
+        },
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
         formatDate(dateString) {
             if (!dateString) return '—'
             try {
@@ -353,9 +478,41 @@ export default {
             const map = {
                 'admin': 'Администратор',
                 'motorcyclist': 'Мотоциклист',
-                'club_member': 'Член клуба'
+                'motoclub': 'Мотоклуб'
             }
             return map[role] || role || '—'
+        },
+
+        getExperienceLabel(experience) {
+            const map = {
+                'beginner': 'Новичок',
+                'intermediate': 'Опытный',
+                'expert': 'Эксперт'
+            }
+            return map[experience] || experience || 'Не указан'
+        },
+
+        getSocialIcon(platform) {
+            const icons = {
+                'instagram': 'fa fa-instagram',
+                'youtube': 'fa fa-youtube',
+                'telegram': 'fa fa-telegram',
+                'vk': 'fa fa-vk',
+                'facebook': 'fa fa-facebook',
+                'twitter': 'fa fa-twitter',
+                'tiktok': 'fa fa-tiktok'
+            }
+            return icons[platform] || 'fa fa-link'
+        },
+
+        async logout() {
+            try {
+                await api.post('/auth/logout')
+            } catch(err) { console.error(err) }
+            finally {
+                removeTokens()
+                this.$router.push('/login')
+            }
         }
     },
 
@@ -376,8 +533,9 @@ export default {
 
 /* ===== SIDEBAR ===== */
 .profile-sidebar {
-    position: sticky;
-    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .profile-card {
@@ -408,7 +566,6 @@ export default {
     bottom: 4px;
     right: 4px;
     min-width: 38px;
-    min-height: 38px;
     border-radius: 50%;
     background: var(--accent);
     border: none;
@@ -423,52 +580,6 @@ export default {
 .avatar-edit-btn:hover {
     background: var(--accent-hover);
     transform: scale(1.05);
-}
-
-.avatar-edit-btn {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatar-edit-btn:hover {
-    background: var(--accent-hover);
-    transform: scale(1.05);
-}
-
-.avatar-actions {
-    margin: 8px 0;
-    text-align: center;
-}
-
-.btn-small {
-    padding: 4px 12px;
-    font-size: 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-danger {
-    background: var(--danger-trans);
-    color: var(--danger);
-    border: 1px solid transparent;
-    padding: 10px 16px;
-}
-
-.btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2);
 }
 
 .profile-username {
@@ -488,7 +599,8 @@ export default {
     display: flex;
     gap: 8px;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .status-active {
@@ -531,21 +643,95 @@ export default {
     color: var(--accent-text);
 }
 
-.profile-bio {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-bottom: 14px;
-    font-style: italic;
+.avatar-actions {
+    margin-bottom: 12px;
 }
 
-.profile-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.profile-info-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
     gap: 8px;
-    padding: 16px 0;
-    border-top: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.info-item i {
+    width: 18px;
+    color: var(--accent-text);
+}
+
+.profile-bio {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
+    text-align: left;
+    line-height: 1.6;
+}
+
+.profile-bio i {
+    color: var(--accent-text);
+    margin-right: 6px;
+    opacity: 0.7;
+}
+
+.profile-social {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.social-link:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.profile-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.profile-actions .btn {
+    flex: 1;
+}
+
+/* ===== STATS CARD ===== */
+.stats-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
 }
 
 .stat-item {
@@ -563,15 +749,6 @@ export default {
 .stat-label {
     font-size: 12px;
     color: var(--text-secondary);
-}
-
-.profile-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.profile-actions .btn {
-    flex: 1;
 }
 
 /* ===== SETTINGS ===== */
@@ -593,7 +770,7 @@ export default {
     gap: 12px;
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-light);
-    background: var(--border-light);
+    background: var(--bg-secondary);
 }
 
 .settings-card-header i {
@@ -606,15 +783,6 @@ export default {
     font-weight: 600;
     margin: 0;
     color: var(--text-primary);
-}
-
-.sessions-count {
-    margin-left: auto;
-    font-size: 13px;
-    color: var(--text-secondary);
-    background: var(--border-light);
-    padding: 2px 12px;
-    border-radius: 20px;
 }
 
 .settings-card-body {
@@ -647,76 +815,45 @@ export default {
     color: var(--text-primary);
 }
 
-.settings-card-body .btn {
-    width: 100%;
-    margin-bottom: 8px;
-    justify-content: center;
-}
-
-.settings-card-body .btn:last-child {
-    margin-bottom: 0;
-}
-
-/* ===== SESSIONS ===== */
-.session-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.session-item:last-child {
-    border-bottom: none;
-}
-
-.session-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.session-info i {
-    font-size: 20px;
-    color: var(--text-secondary);
-    width: 24px;
-    text-align: center;
-}
-
-.session-device {
+.hint-text {
     font-size: 14px;
-    font-weight: 500;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.session-meta {
-    font-size: 12px;
     color: var(--text-secondary);
-    margin: 0;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-remove-session {
-    background: none;
-    border: none;
-    color: var(--text-muted);
+.hint-text i {
+    color: var(--accent-text);
+}
+
+.profile-link {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.profile-link input {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
+    font-family: monospace;
 }
 
-.btn-remove-session:hover {
-    background: var(--danger-trans);
-    color: var(--danger);
+.profile-link input:focus {
+    outline: none;
+    border-color: var(--accent);
 }
 
-.current-badge {
-    font-size: 12px;
-    color: var(--success-text);
-    background: var(--success-trans);
-    padding: 2px 12px;
-    border-radius: 20px;
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 13px;
 }
 
 /* ===== BUTTONS ===== */
@@ -732,6 +869,11 @@ export default {
     border: none;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .btn-primary {
@@ -765,123 +907,83 @@ export default {
     background: rgba(239, 68, 68, 0.2);
 }
 
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 13px;
+    min-height: 36px;
 }
 
-/* ===== EMPTY STATE ===== */
-.empty-state.small {
-    padding: 20px;
-    text-align: center;
+.outline-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
 }
 
-.empty-state.small p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 14px;
+.outline-btn:hover {
+    background: var(--accent);
+    color: #fff;
 }
 
-/* ===== ANIMATIONS ===== */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* ============================================ */
+/* ===== АДАПТИВНОСТЬ ===== */
+/* ============================================ */
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .profile-grid {
         grid-template-columns: 1fr;
     }
 
     .profile-sidebar {
-        position: static;
-    }
-
-    .profile-card {
         display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 16px 24px;
-        text-align: left;
-        align-items: start;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
     }
 
-    .profile-avatar-wrapper {
-        margin: 0;
-        grid-row: span 4;
-    }
-
-    .profile-username {
-        grid-column: 2;
-        margin-top: 8px;
-    }
-
-    .profile-email {
-        grid-column: 2;
-    }
-
-    .profile-badge {
-        grid-column: 2;
-        justify-content: flex-start;
-    }
-
-    .profile-stats {
-        grid-column: 2;
-        grid-template-columns: repeat(3, auto);
-        gap: 24px;
-        border-top: none;
-        border-bottom: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .profile-actions {
-        grid-column: 2;
+    .stats-card {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .profile-card {
+    .profile-sidebar {
         grid-template-columns: 1fr;
-        text-align: center;
     }
 
-    .profile-avatar-wrapper {
-        margin: 0 auto;
-        grid-row: auto;
+    .profile-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    .profile-username {
-        grid-column: auto;
+    .profile-info-items {
+        width: 100%;
     }
 
-    .profile-email {
-        grid-column: auto;
+    .profile-bio {
+        width: 100%;
     }
 
-    .profile-badge {
-        grid-column: auto;
+    .profile-social {
+        width: 100%;
         justify-content: center;
     }
 
-    .profile-stats {
-        grid-column: auto;
-        grid-template-columns: repeat(3, 1fr);
-        border-top: 1px solid var(--border-light);
-        border-bottom: 1px solid var(--border-light);
-        padding: 16px 0;
-        margin: 0 0 16px 0;
+    .profile-actions {
+        width: 100%;
+        flex-direction: column;
     }
 
-    .profile-actions {
-        grid-column: auto;
-        flex-direction: column;
+    .profile-actions .btn {
+        width: 100%;
+    }
+
+    .stats-card {
+        grid-template-columns: repeat(4, 1fr);
     }
 
     .info-row {
@@ -889,15 +991,33 @@ export default {
         align-items: flex-start;
         gap: 4px;
     }
+
+    .profile-link {
+        flex-direction: column;
+    }
+
+    .profile-link input {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
+    .stats-card {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
     .settings-card-body {
         padding: 16px;
     }
 
-    .profile-stats {
-        gap: 8px;
+    .profile-card {
+        padding: 16px;
+    }
+
+    .profile-avatar-wrapper {
+        width: 100px;
+        height: 100px;
     }
 
     .stat-value {

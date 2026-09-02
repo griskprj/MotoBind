@@ -13,7 +13,7 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    author = db.relationship('User', backref='posts')
+    author = db.relationship('User', backref='posts_authored')
     likes = db.relationship('PostLike', backref='post', cascade='all, delete-orphan')
     comments = db.relationship('PostComment', backref='post', cascade='all, delete-orphan')
 

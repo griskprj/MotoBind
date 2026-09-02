@@ -8,11 +8,6 @@
         icon-color="var(--accent-text)"
         @close="$emit('close')"
     >
-        <!-- Аватар -->
-        <div class="profile-avatar-wrapper">
-            <img :src="getAvatarUrl(user?.avatar)" alt="Аватар" class="profile-avatar" />
-        </div>
-
         <!-- Форма -->
         <div class="modal-form-group">
             <label>
@@ -42,8 +37,70 @@
                 <textarea 
                     v-model="form.bio" 
                     rows="3"
-                    placeholder="Расскажите немного о себе..."
+                    placeholder="Расскажите немного о себе, своём опыте и мотоцикле..."
                 ></textarea>
+            </label>
+        </div>
+
+        <div class="modal-form-row">
+            <div class="modal-form-group">
+                <label>
+                    Город/Регион
+                    <input 
+                        v-model="form.location" 
+                        type="text" 
+                        placeholder="Например: Москва"
+                    />
+                </label>
+            </div>
+            <div class="modal-form-group">
+                <label>
+                    Мой мотоцикл
+                    <input 
+                        v-model="form.motorcycle" 
+                        type="text" 
+                        placeholder="Например: BMW S1000RR"
+                    />
+                </label>
+            </div>
+        </div>
+
+        <div class="modal-form-group">
+            <label>
+                Опыт вождения
+                <select v-model="form.experience">
+                    <option value="">Не указано</option>
+                    <option value="beginner">Новичок</option>
+                    <option value="intermediate">Опытный</option>
+                    <option value="expert">Эксперт</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="modal-form-group">
+            <label>
+                Социальные сети
+                <div class="social-links-editor">
+                    <div 
+                        v-for="platform in socialPlatforms" 
+                        :key="platform"
+                        class="social-link-row"
+                    >
+                        <i :class="getSocialIcon(platform)" class="social-icon"></i>
+                        <input 
+                            v-model="form.social_links[platform]" 
+                            :placeholder="`Ссылка на ${platform}`"
+                        />
+                        <button 
+                            v-if="form.social_links[platform]" 
+                            class="clear-link"
+                            @click="form.social_links[platform] = ''"
+                            type="button"
+                        >
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
             </label>
         </div>
 
@@ -52,7 +109,7 @@
                 <i class="fa fa-info-circle"></i>
             </div>
             <p class="modal-info-text">
-                Эти данные будут отображаться в вашем профиле.
+                Эти данные будут отображаться в вашем публичном профиле.
             </p>
         </div>
 
@@ -98,9 +155,18 @@ export default {
             form: {
                 username: '',
                 email: '',
-                bio: ''
+                bio: '',
+                location: '',
+                motorcycle: '',
+                experience: '',
+                social_links: {
+                    youtube: '',
+                    telegram: '',
+                    vk: '',
+                }
             },
-            loading: false
+            loading: false,
+            socialPlatforms: ['youtube', 'telegram', 'vk']
         }
     },
 
@@ -129,7 +195,15 @@ export default {
             this.form = {
                 username: this.user.username || '',
                 email: this.user.email || '',
-                bio: this.user.bio || ''
+                bio: this.user.bio || '',
+                location: this.user.location || '',
+                motorcycle: this.user.motorcycle || '',
+                experience: this.user.experience || '',
+                social_links: {
+                    youtube: this.user.social_links?.youtube || '',
+                    telegram: this.user.social_links?.telegram || '',
+                    vk: this.user.social_links?.vk || '',
+                }
             }
         },
 
@@ -137,9 +211,21 @@ export default {
             this.form = {
                 username: '',
                 email: '',
-                bio: ''
+                bio: '',
+                location: '',
+                motorcycle: '',
+                experience: '',
+                social_links: {
+                    youtube: '',
+                    telegram: '',
+                    vk: '',
+                }
             }
             this.loading = false
+        },
+
+        getSocialIcon(platform) {
+            return 'fa fa-link'
         },
 
         async submit() {
@@ -164,17 +250,6 @@ export default {
             } finally {
                 this.loading = false
             }
-        },
-
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg'
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${avatarPath}`
         }
     },
 
@@ -187,49 +262,6 @@ export default {
 </script>
 
 <style scoped>
-/* ===== АВАТАР ===== */
-.profile-avatar-wrapper {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 20px;
-    border-radius: 50%;
-}
-
-.profile-avatar {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--accent);
-    transition: all 0.3s ease;
-}
-
-.avatar-edit-hint {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    background: rgba(0, 0, 0, 0.6);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    color: #fff;
-}
-
-.avatar-edit-hint i {
-    font-size: 20px;
-}
-
-.avatar-edit-hint span {
-    font-size: 11px;
-    font-weight: 500;
-}
-
-
 /* ===== ПОЛЯ ВВОДА ===== */
 .modal-form-group {
     margin-bottom: 14px;
@@ -248,7 +280,8 @@ export default {
 }
 
 .modal-form-group input,
-.modal-form-group textarea {
+.modal-form-group textarea,
+.modal-form-group select {
     width: 100%;
     padding: 0.6rem 0.8rem;
     border-radius: 10px;
@@ -262,7 +295,8 @@ export default {
 }
 
 .modal-form-group input:focus,
-.modal-form-group textarea:focus {
+.modal-form-group textarea:focus,
+.modal-form-group select:focus {
     border-color: var(--accent);
     outline: none;
     box-shadow: 0 0 0 3px var(--accent-trans);
@@ -276,6 +310,47 @@ export default {
 .modal-form-group textarea {
     resize: vertical;
     min-height: 80px;
+}
+
+.modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ===== СОЦИАЛЬНЫЕ СЕТИ ===== */
+.social-links-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.social-link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.social-icon {
+    width: 24px;
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.social-link-row input {
+    flex: 1;
+}
+
+.clear-link {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.clear-link:hover {
+    color: var(--danger);
 }
 
 /* ===== ИНФО-БЛОК ===== */
@@ -358,9 +433,9 @@ export default {
 /* ============================================ */
 
 @media (max-width: 640px) {
-    .profile-avatar-wrapper {
-        width: 80px;
-        height: 80px;
+    .modal-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
 
     .modal-actions {
@@ -384,25 +459,9 @@ export default {
 }
 
 @media (max-width: 400px) {
-    .profile-avatar-wrapper {
-        width: 70px;
-        height: 70px;
-    }
-
-    .profile-avatar {
-        border-width: 2px;
-    }
-
-    .avatar-edit-hint i {
-        font-size: 16px;
-    }
-
-    .avatar-edit-hint span {
-        font-size: 10px;
-    }
-
     .modal-form-group input,
-    .modal-form-group textarea {
+    .modal-form-group textarea,
+    .modal-form-group select {
         font-size: 0.9rem;
         padding: 0.5rem 0.7rem;
     }

@@ -55,6 +55,22 @@ class UserService:
         return user
 
     @staticmethod
+    def get_user_stats(user_id: int) -> dict:
+        """Получает статистику пользователя"""
+        from app.models.post import Post
+        
+        posts = Post.query.filter_by(author_id=user_id).all()
+        posts_count = len(posts)
+        likes_received = sum(p.likes_count for p in posts)
+        comments_received = sum(p.comments_count for p in posts)
+        
+        return {
+            'posts_count': posts_count,
+            'likes_received': likes_received,
+            'comments_received': comments_received,
+        }
+
+    @staticmethod
     def update_avatar(user_id: int, file) -> User:
         """Обновляет аватар пользователя"""
         user = UserService.get_user_by_id(user_id)

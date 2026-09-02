@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (create_access_token, create_refresh_token,
                                 jwt_required, get_jwt_identity)
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 import secrets
 
 from app.exceptions import UnauthorizedError, ValidationError, ForbiddenError
@@ -67,6 +67,9 @@ def login():
     if not(data.rememberMe) and user.refresh_token:
         user.refresh_token = None
         db.session.commit()
+
+    user.last_login = datetime.now(timezone.utc)
+    db.session.commit()
 
     return (
         jsonify(
