@@ -794,10 +794,6 @@ export default {
 }
 
 @media (max-width: 820px) {
-    .container { 
-        padding: 16px; 
-    }
-    
     .tabs {
         overflow-x: auto;
         gap: 16px;
