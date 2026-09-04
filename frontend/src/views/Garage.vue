@@ -293,6 +293,7 @@
             :isOpen="showDetailsMaintenanceModal"
             :maintenance="selectedMaintenance"
             :motorcycle="selectedMotorcycle"
+            @mark="markMaintenance"
             @delete="deleteMaintenance"
             @close="closeMaintenanceDetails"
         />
@@ -633,6 +634,41 @@ export default {
                 alert('Обслуживание удалено');
             } catch (err) {
                 alert(err.response?.data?.error || 'Ошибка удаления');
+            }
+        },
+
+        async markMaintenance(formData) {
+            try {
+                if (!formData || !formData.id) {
+                    console.error('No maintenance ID provided');
+                    this.$toast?.error('Ошибка: отсутствует ID обслуживания');
+                    return;
+                }
+
+                const payload = {
+                    completed_mileage: formData.completed_mileage || formData.mileage || 0,
+                    completed_date: formData.completed_date || new Date().toISOString().split('T')[0],
+                    cost: formData.cost || 0,
+                    is_repeat: formData.is_repeat || false,
+                    interval: formData.interval || null,
+                    interval_days: formData.interval_days || null
+                };
+
+                console.log('Sending payload:', payload);
+
+                const { data } = await api.post(`/maintenance/${formData.id}/complete`, payload);
+                
+                this.showCompleteModal = false;
+                this.$toast?.success('Обслуживание успешно завершено!');
+                
+                await this.loadData();
+                
+                this.selectedMaintenance = null;
+                this.selectedMaintenanceData = null;
+            } catch (err) {
+                console.error('Failed to complete maintenance:', err);
+                const errorMsg = err.response?.data?.error || 'Ошибка при завершении обслуживания';
+                this.$toast?.error(errorMsg);
             }
         },
 
