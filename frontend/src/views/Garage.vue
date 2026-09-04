@@ -1147,7 +1147,6 @@ export default {
     display: flex;
     gap: 4px;
     flex-shrink: 0;
-    z-index: 1000;
 }
 
 
