@@ -226,16 +226,12 @@ export default {
         },
 
         isFormValid() {
-            // Проверка пробега
             if (!this.form.mileage || this.form.mileage < 0) return false
 
-            // Если выбрано повторение, проверяем интервал
             if (this.form.isRepeat) {
-                // Должен быть заполнен ровно один тип интервала
                 const hasInterval = this.form.interval && this.form.interval > 0
                 const hasDays = this.form.interval_days && this.form.interval_days > 0
                 
-                // Если оба заполнены или оба пусты — невалидно
                 if (hasInterval && hasDays) return false
                 if (!hasInterval && !hasDays) return false
             }
