@@ -223,6 +223,10 @@ export default {
         openEditModal() {
             this.showEditModal = true
         },
+    
+        handleEdit() {
+            this.$emit('save')
+        },
 
         handleDelete(id) {
             this.$emit('delete', id)

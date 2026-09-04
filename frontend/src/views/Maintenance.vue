@@ -212,6 +212,7 @@
         :motorcycles="motorcycles"
         :maintenance="selectedMaintenance"
         @delete="deleteMaintenance"
+        @save="editMaintenance"
         @mark="markMaintenance"
         @updateMaintenance="updateMaintenance"
         @close="closeDetailsMaintenance"
@@ -341,6 +342,10 @@ export default {
                 console.error('Failed create maintenance:', err)
                 alert(err.response?.data?.error || 'Ошибка при добавлении обслуживания')
             }
+        },
+
+        editMaintenance() {
+            this.loadData()
         },
 
         async deleteMaintenance(id) {
