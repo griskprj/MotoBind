@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-splash": "node scripts/generate-splash.js"
   },
   "dependencies": {
     "apexcharts": "^3.54.0",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",
     "sass-embedded": "^1.77.5",
+    "sharp": "^0.35.4",
     "vite": "^8.2.0"
   }
 }
