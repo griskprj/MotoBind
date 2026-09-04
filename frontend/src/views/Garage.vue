@@ -72,7 +72,7 @@
                                 <i class="fa fa-pen"></i>
                             </button>
                             <button @click="showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
-                                <i class="fa fa-tachometer"></i>
+                                <i class="fa-solid fa-gauge-high"></i>
                             </button>
                             <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
                                 <i class="fa fa-camera"></i>
@@ -106,9 +106,9 @@
             <div v-if="selectedMotorcycle" class="moto-detail">
                 <!-- Статистика -->
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card"> 
                         <div class="stat-icon">
-                            <i class="fa fa-tachometer"></i>
+                            <i class="fa-solid fa-gauge-high"></i>
                         </div>
                         <div class="stat-info">
                             <span class="stat-label">Пробег</span>
@@ -1147,7 +1147,9 @@ export default {
     display: flex;
     gap: 4px;
     flex-shrink: 0;
+    z-index: 1000;
 }
+
 
 .add-btn {
     width: 100%;
@@ -1558,34 +1560,63 @@ export default {
 }
 
 /* ===== ICON BTN ===== */
+.moto-list-actions .icon-btn i,
+.moto-actions .icon-btn i,
+.icon-btn i {
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    pointer-events: none;
+}
+
+.moto-list-actions .icon-btn,
+.moto-actions .icon-btn,
 .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 32px;
     height: 32px;
+    padding: 0;
     border: none;
     border-radius: 8px;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     transition: 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
+.moto-list-actions .icon-btn:hover,
+.moto-actions .icon-btn:hover,
 .icon-btn:hover {
     background: var(--border-light);
     color: var(--text-primary);
 }
 
+.moto-list-actions .icon-btn.danger:hover,
+.moto-actions .icon-btn.danger:hover,
 .icon-btn.danger:hover {
     background: var(--danger-trans);
     color: var(--danger);
 }
 
+.moto-list-actions .icon-btn.small,
+.moto-actions .icon-btn.small,
 .icon-btn.small {
     width: 28px;
     height: 28px;
     font-size: 12px;
+}
+
+/* Убираем лишние отступы у иконок в кнопках */
+.moto-list-actions .icon-btn i,
+.moto-actions .icon-btn i,
+.icon-btn i {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ===== MEDIA QUERIES ===== */
