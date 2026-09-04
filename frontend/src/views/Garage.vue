@@ -1151,6 +1151,7 @@ export default {
 }
 
 
+
 .add-btn {
     width: 100%;
 }
@@ -1611,7 +1612,6 @@ export default {
     font-size: 12px;
 }
 
-/* Убираем лишние отступы у иконок в кнопках */
 .moto-list-actions .icon-btn i,
 .moto-actions .icon-btn i,
 .icon-btn i {
@@ -1639,13 +1639,7 @@ export default {
         justify-content: space-between;
     }
 
-    .moto-list-actions {
-        width: 100%;
-    }
 
-    .moto-list-actions .icon-btn {
-        width: 100%;
-    }
 
     .moto-preview {
         aspect-ratio: 16/11;
