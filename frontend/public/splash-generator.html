@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Splash Screen MotoBind</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0A0A0F;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #F8FAFC;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 24px; }
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .btn {
+            padding: 12px 24px;
+            background: #8B5CF6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #7C3AED;
+            transform: translateY(-2px);
+        }
+        .btn.secondary { background: #2D2D3A; }
+        .btn.secondary:hover { background: #3D3D4A; }
+        .btn.success { background: #10B981; }
+        .btn.success:hover { background: #059669; }
+        .preview-wrap {
+            background: #111118;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #2D2D3A;
+            text-align: center;
+        }
+        .preview-wrap canvas {
+            max-width: 300px;
+            border-radius: 12px;
+            border: 2px solid #2D2D3A;
+        }
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .device-card {
+            background: #111118;
+            border: 1px solid #2D2D3A;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .device-card:hover { border-color: #8B5CF6; }
+        .device-card .name { font-weight: 600; margin-bottom: 4px; }
+        .device-card .size { color: #64748B; font-size: 12px; }
+        .device-card .status { margin-top: 8px; font-size: 12px; color: #64748B; }
+        .device-card .status.done { color: #4ADE80; }
+        .device-card .btn-sm {
+            margin-top: 8px;
+            padding: 6px 16px;
+            background: #8B5CF6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .device-card .btn-sm:hover { background: #7C3AED; }
+        .status-bar {
+            text-align: center;
+            color: #64748B;
+            margin: 12px 0;
+        }
+        .status-bar.success { color: #4ADE80; }
+        .icon-preview {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .icon-preview img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: #1A1A24;
+            padding: 8px;
+            border: 1px solid #2D2D3A;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏍️ Генератор Splash Screen MotoBind</h1>
+        
+        <div class="icon-preview">
+            <div>
+                <img src="/icons/icon-192x192.png" alt="Иконка" onerror="this.style.display='none'">
+                <p style="font-size: 12px; color: #64748B; margin-top: 4px;">Ваша иконка</p>
+            </div>
+        </div>
+        
+        <div class="preview-wrap">
+            <h3 style="margin-bottom: 12px; font-size: 16px; color: #94A3B8;">Предпросмотр</h3>
+            <canvas id="splashCanvas" width="390" height="844"></canvas>
+            <div style="margin-top: 12px; color: #64748B; font-size: 14px;">
+                iPhone 12/13/14 (390×844)
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="generateAll()">📱 Скачать все</button>
+            <button class="btn secondary" onclick="downloadCurrent()">💾 Скачать текущий</button>
+            <button class="btn success" onclick="downloadAllZip()">📦 Скачать ZIP</button>
+        </div>
+        
+        <div class="status-bar" id="statusBar">Готов к генерации</div>
+        
+        <div class="device-grid" id="deviceGrid"></div>
+    </div>
+    
+    <script>
+        const devices = [
+            { id: 'iphone5', name: 'iPhone 5/SE', w: 320, h: 568, scale: 2 },
+            { id: 'iphone6', name: 'iPhone 6/7/8', w: 375, h: 667, scale: 2 },
+            { id: 'iphone6plus', name: 'iPhone 6+/7+/8+', w: 414, h: 736, scale: 3 },
+            { id: 'iphonex', name: 'iPhone X/XR/11', w: 375, h: 812, scale: 3 },
+            { id: 'iphone12', name: 'iPhone 12/13/14', w: 390, h: 844, scale: 3 },
+            { id: 'iphone14pro', name: 'iPhone 14/15 Pro', w: 430, h: 932, scale: 3 },
+            { id: 'ipad', name: 'iPad', w: 768, h: 1024, scale: 2 },
+            { id: 'ipadpro', name: 'iPad Pro', w: 1024, h: 1366, scale: 2 },
+        ];
+        
+        let iconImage = null;
+        
+        // Загружаем иконку
+        function loadIcon() {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                iconImage = img;
+                drawSplash(390, 844);
+                generateDeviceList();
+                document.getElementById('statusBar').textContent = '✅ Иконка загружена! Можно генерировать';
+                document.getElementById('statusBar').className = 'status-bar success';
+            };
+            img.onerror = function() {
+                // Если иконка не загрузилась, рисуем без нее
+                iconImage = null;
+                drawSplash(390, 844);
+                generateDeviceList();
+                document.getElementById('statusBar').textContent = '⚠️ Иконка не найдена, используется текст';
+                document.getElementById('statusBar').className = 'status-bar';
+            };
+            img.src = '/MotoBindLogo.png';
+        }
+        
+        function drawSplash(width, height) {
+            const canvas = document.getElementById('splashCanvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Фон
+            const grad = ctx.createLinearGradient(0, 0, width, height);
+            grad.addColorStop(0, '#0A0A0F');
+            grad.addColorStop(0.5, '#111118');
+            grad.addColorStop(1, '#1A1A24');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Иконка
+            const iconSize = Math.min(width, height) * 0.18;
+            const iconX = (width - iconSize) / 2;
+            const iconY = height * 0.30;
+            const radius = iconSize * 0.25;
+            
+            // Фон иконки
+            ctx.shadowColor = 'rgba(139, 92, 246, 0.4)';
+            ctx.shadowBlur = 40;
+            
+            ctx.beginPath();
+            ctx.moveTo(iconX + radius, iconY);
+            ctx.lineTo(iconX + iconSize - radius, iconY);
+            ctx.quadraticCurveTo(iconX + iconSize, iconY, iconX + iconSize, iconY + radius);
+            ctx.lineTo(iconX + iconSize, iconY + iconSize - radius);
+            ctx.quadraticCurveTo(iconX + iconSize, iconY + iconSize, iconX + iconSize - radius, iconY + iconSize);
+            ctx.lineTo(iconX + radius, iconY + iconSize);
+            ctx.quadraticCurveTo(iconX, iconY + iconSize, iconX, iconY + iconSize - radius);
+            ctx.lineTo(iconX, iconY + radius);
+            ctx.quadraticCurveTo(iconX, iconY, iconX + radius, iconY);
+            ctx.closePath();
+            
+            const iconGrad = ctx.createLinearGradient(iconX, iconY, iconX + iconSize, iconY + iconSize);
+            iconGrad.addColorStop(0, '#8B5CF6');
+            iconGrad.addColorStop(1, '#7C3AED');
+            ctx.fillStyle = iconGrad;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Рисуем иконку если загружена
+            if (iconImage) {
+                const padding = iconSize * 0.12;
+                ctx.save();
+                ctx.beginPath();
+                const clipRadius = radius * 0.6;
+                ctx.moveTo(iconX + padding + clipRadius, iconY + padding);
+                ctx.lineTo(iconX + iconSize - padding - clipRadius, iconY + padding);
+                ctx.quadraticCurveTo(iconX + iconSize - padding, iconY + padding, iconX + iconSize - padding, iconY + padding + clipRadius);
+                ctx.lineTo(iconX + iconSize - padding, iconY + iconSize - padding - clipRadius);
+                ctx.quadraticCurveTo(iconX + iconSize - padding, iconY + iconSize - padding, iconX + iconSize - padding - clipRadius, iconY + iconSize - padding);
+                ctx.lineTo(iconX + padding + clipRadius, iconY + iconSize - padding);
+                ctx.quadraticCurveTo(iconX + padding, iconY + iconSize - padding, iconX + padding, iconY + iconSize - padding - clipRadius);
+                ctx.lineTo(iconX + padding, iconY + padding + clipRadius);
+                ctx.quadraticCurveTo(iconX + padding, iconY + padding, iconX + padding + clipRadius, iconY + padding);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(iconImage, iconX + padding, iconY + padding, iconSize - padding * 2, iconSize - padding * 2);
+                ctx.restore();
+            }
+            
+            // Текст
+            const textSize = Math.min(width, height) * 0.065;
+            ctx.fillStyle = '#F8FAFC';
+            ctx.font = `700 ${textSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('MotoBind', width/2, height * 0.58);
+            
+            // Подзаголовок
+            const subSize = textSize * 0.5;
+            ctx.fillStyle = '#64748B';
+            ctx.font = `400 ${subSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+            ctx.fillText('Сервис для мотоциклистов', width/2, height * 0.66);
+            
+            // Точки
+            const dotSize = Math.min(width, height) * 0.006;
+            const dotY = height * 0.82;
+            const dotGap = dotSize * 3;
+            const totalWidth = dotSize * 3 + dotGap * 2;
+            const startX = (width - totalWidth) / 2;
+            
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(startX + i * (dotSize + dotGap), dotY, dotSize, 0, Math.PI * 2);
+                ctx.fillStyle = i === 1 ? '#8B5CF6' : '#2D2D3A';
+                ctx.fill();
+            }
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function downloadCurrent() {
+            const canvas = document.getElementById('splashCanvas');
+            downloadCanvas(canvas, 'splash-current.png');
+        }
+        
+        function generateAll() {
+            const status = document.getElementById('statusBar');
+            status.textContent = '⏳ Генерация...';
+            status.className = 'status-bar';
+            
+            let count = 0;
+            devices.forEach(device => {
+                const canvas = document.createElement('canvas');
+                canvas.width = device.w * device.scale;
+                canvas.height = device.h * device.scale;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(device.scale, device.scale);
+                
+                // Рисуем на временном canvas
+                const tempCanvas = drawSplash(device.w, device.h);
+                ctx.drawImage(tempCanvas, 0, 0);
+                
+                // Скачиваем
+                downloadCanvas(canvas, `${device.id}.png`);
+                count++;
+                
+                // Обновляем статус в карточке
+                const statusEl = document.getElementById(`status-${device.id}`);
+                if (statusEl) {
+                    statusEl.textContent = '✅ Готово';
+                    statusEl.className = 'status done';
+                }
+            });
+            
+            status.textContent = `✅ Сгенерировано ${count} splash экранов!`;
+            status.className = 'status-bar success';
+        }
+        
+        function generateDeviceList() {
+            const grid = document.getElementById('deviceGrid');
+            grid.innerHTML = '';
+            
+            devices.forEach(device => {
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.innerHTML = `
+                    <div class="name">${device.name}</div>
+                    <div class="size">${device.w}×${device.h} (${device.scale}x)</div>
+                    <div class="status" id="status-${device.id}">⏳ Ожидает</div>
+                    <button class="btn-sm" onclick="downloadDevice('${device.id}')">⬇️ Скачать</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        function downloadDevice(deviceId) {
+            const device = devices.find(d => d.id === deviceId);
+            if (!device) return;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = device.w * device.scale;
+            canvas.height = device.h * device.scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(device.scale, device.scale);
+            
+            const tempCanvas = drawSplash(device.w, device.h);
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            downloadCanvas(canvas, `${device.id}.png`);
+            
+            const statusEl = document.getElementById(`status-${deviceId}`);
+            if (statusEl) {
+                statusEl.textContent = '✅ Скачан';
+                statusEl.className = 'status done';
+            }
+        }
+        
+        function downloadAllZip() {
+            // Простой вариант - просто генерируем все
+            generateAll();
+            alert('Все файлы скачаны по отдельности. Для ZIP используйте архиватор.');
+        }
+        
+        // Запуск
+        loadIcon();
+    </script>
+</body>
+</html>
