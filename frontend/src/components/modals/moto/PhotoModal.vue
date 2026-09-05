@@ -351,8 +351,6 @@ export default {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 28px;
-    height: 28px;
     border-radius: 50%;
     background: rgba(239, 68, 68, 0.9);
     border: none;
@@ -409,8 +407,6 @@ export default {
 }
 
 .btn-remove-file {
-    width: 28px;
-    height: 28px;
     border-radius: 50%;
     border: none;
     background: var(--danger-trans);

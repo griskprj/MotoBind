@@ -2,7 +2,7 @@
     <ModalWrapper
         :isOpen="isOpen"
         :title="maintenance?.title || 'Детали обслуживания'"
-        :subtitle="motoName"
+        :subtitle="motorcycle.name"
         icon="wrench"
         bg-icon-color="var(--accent-trans)"
         icon-color="var(--accent-text)"
@@ -86,12 +86,14 @@
                 <button v-if="maintenance.status !== 'completed'" class="btn btn-success" @click="openMarkModal">
                     <i class="fa fa-check"></i> Завершить
                 </button>
-                <button class="btn btn-warning" @click="openEditModal">
+                <div class="modal-actions-wrapper">
+                    <button class="btn btn-warning" @click="openEditModal">
                     <i class="fa fa-pen"></i> Редактировать
-                </button>
-                <button class="btn btn-danger" @click="openDeleteModal">
-                    <i class="fa fa-trash"></i> Удалить
-                </button>
+                    </button>
+                    <button class="btn btn-danger" @click="openDeleteModal">
+                        <i class="fa fa-trash"></i> Удалить
+                    </button>
+                </div>
                 <button class="btn btn-secondary" @click="$emit('close')">
                     <i class="fa fa-times"></i> Закрыть
                 </button>
@@ -424,6 +426,11 @@ export default {
 .modal-actions {
     display: flex;
     gap: 10px;
+}
+
+.modal-actions-wrapper {
+    display: flex;
+    gap: 8px;
 }
 
 .modal-actions .btn {
