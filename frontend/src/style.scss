@@ -228,7 +228,7 @@ button,
   }
 }
 
-.accept-btn {
+.success-btn {
   background-color: var(--success);
   &:hover {
     background-color: var(--success-hover);
@@ -269,6 +269,29 @@ button,
   &:hover {
     color: var(--text-primary);
   }
+}
+
+.view-btn {
+    width: 100%;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.view-btn:hover {
+    background: var(--accent-trans);
+    border-color: var(--accent);
+    color: var(--accent-text);
 }
 
 @media (max-width: 640px) {
@@ -839,7 +862,7 @@ position: fixed;
     color: var(--text-muted);
     font-size: 14px;
     font-style: italic;
-    margin: 0;
+    margin-bottom: 8px;
 }
 
 .empty-container {
@@ -851,4 +874,5 @@ position: fixed;
 
 .empty-container button {
   width: 100%;
+  font-size: 14px;
 }

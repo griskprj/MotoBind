@@ -8,43 +8,8 @@
       subtitle="Проводите обслуживание мотоцикла с нашими мануалами"
     />
 
-    <!-- СТАТИСТИКА -->
-    <section class="stats-section">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon warning">
-            <i class="fa fa-exclamation-triangle"></i>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ overdueCount }}</span>
-            <span class="stat-label">Просроченных ТО</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon info">
-            <i class="fa fa-clock"></i>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ pendingCount }}</span>
-            <span class="stat-label">Скоро ТО</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon success">
-            <i class="fa fa-calendar-check"></i>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ plannedCount }}</span>
-            <span class="stat-label">Плановых ТО</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ВЫБОР МОТОЦИКЛА И ОБСЛУЖИВАНИЯ -->
-    <section class="selection-section">
+    <div class="selection-section">
       <div class="selection-flow">
         <!-- Шаг 1: Мотоцикл -->
         <div class="selection-step">
@@ -52,7 +17,10 @@
             <span class="step-number">1</span>
           </div>
           <div class="step-content">
-            <label class="step-label">Выберите мотоцикл</label>
+            <label class="step-label">
+              <i class="fa fa-motorcycle"></i>
+              Выберите мотоцикл
+            </label>
             <div class="select-wrapper">
               <select 
                 v-model="selectedMoto" 
@@ -72,7 +40,12 @@
             </div>
             <div v-if="selectedMotoData" class="moto-info">
               <span class="moto-mileage">
-                <i class="fa fa-road"></i> {{ selectedMotoData.mileage }} км
+                <i class="fa-solid fa-gauge-high"></i> 
+                {{ formatMileage(selectedMotoData.mileage) }}
+              </span>
+              <span class="moto-year" v-if="selectedMotoData.years">
+                <i class="fa fa-calendar"></i> 
+                {{ selectedMotoData.years }}
               </span>
             </div>
           </div>
@@ -84,7 +57,10 @@
             <span class="step-number">2</span>
           </div>
           <div class="step-content">
-            <label class="step-label">Выберите обслуживание</label>
+            <label class="step-label">
+              <i class="fa fa-wrench"></i>
+              Выберите обслуживание
+            </label>
             <div class="select-wrapper">
               <select 
                 v-model="selectedMaintenance" 
@@ -99,7 +75,6 @@
                   :value="m.id"
                 >
                   {{ m.title }}
-                  <span v-if="m.status === 'overdue'" class="badge-overdue">Просрочено</span>
                 </option>
               </select>
               <i class="fa fa-chevron-down select-arrow"></i>
@@ -125,14 +100,16 @@
         }">
           <div class="step-content">
             <div class="result-status">
-              <div class="result-icon" v-if="manual">
-                <i class="fa fa-check-circle"></i>
-              </div>
-              <div class="result-icon empty" v-else-if="selectedMoto && selectedMaintenance">
-                <i class="fa fa-search"></i>
-              </div>
-              <div class="result-icon waiting" v-else>
-                <i class="fa fa-hourglass-half"></i>
+              <div class="result-icon" :class="{
+                success: manual,
+                empty: !manual && selectedMoto && selectedMaintenance,
+                waiting: !selectedMoto || !selectedMaintenance
+              }">
+                <i :class="{
+                  'fa fa-check-circle': manual,
+                  'fa fa-search': !manual && selectedMoto && selectedMaintenance,
+                  'fa fa-hourglass-half': !selectedMoto || !selectedMaintenance
+                }"></i>
               </div>
               
               <div class="result-text">
@@ -149,11 +126,11 @@
 
             <div class="result-actions">
               <button 
-                v-if="manual" 
-                @click="resetSelection" 
-                class="btn btn-secondary btn-sm"
+                v-if="manual"
+                @click="scrollToManual"
+                class="outline-btn"
               >
-                <i class="fa fa-refresh"></i> Сменить
+                <i class="fa fa-arrow-down"></i> К инструкции
               </button>
               <button 
                 v-else-if="selectedMoto && selectedMaintenance && !manual"
@@ -173,10 +150,10 @@
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- ===== МАНУАЛ ===== -->
-    <section v-if="manual" class="manual-section">
+    <div v-if="manual" class="manual-section" id="manual-section">
       <!-- О МАНУАЛЕ -->
       <div class="manual-header-card">
         <div class="manual-header-left">
@@ -275,7 +252,7 @@
         </div>
 
         <!-- Объёмы жидкостей -->
-        <div v-if="manual.specs.fluids" class="specs-section">
+        <div v-if="manual.specs.fluids && Object.keys(manual.specs.fluids).length > 0" class="specs-section">
           <h5 class="specs-subtitle">Объёмы жидкостей</h5>
           <div class="fluids-grid">
             <div 
@@ -290,7 +267,7 @@
         </div>
 
         <!-- Допуски и зазоры -->
-        <div v-if="manual.specs.tolerances" class="specs-section">
+        <div v-if="manual.specs.tolerances && Object.keys(manual.specs.tolerances).length > 0" class="specs-section">
           <h5 class="specs-subtitle">Допуски и зазоры</h5>
           <div class="tolerances-grid">
             <div 
@@ -410,15 +387,15 @@
             <li><i class="fa fa-check"></i> Записать в историю</li>
             <li><i class="fa fa-check"></i> Создать следующее ТО</li>
           </ul>
-          <button @click="openCompleteModal" class="btn btn-success btn-block">
+          <button @click="openCompleteModal" class="success-btn">
             <i class="fa fa-check"></i> Завершить обслуживание
           </button>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- ПУСТОЕ СОСТОЯНИЕ -->
-    <section v-else-if="!selectedMoto || !selectedMaintenance" class="empty-section">
+    <div v-else-if="!selectedMoto || !selectedMaintenance" class="empty-state-wrapper">
       <div class="empty-state">
         <div class="empty-icon">
           <i class="fa fa-motorcycle"></i>
@@ -426,26 +403,26 @@
         <h3>Выберите данные для начала</h3>
         <p>Выберите мотоцикл и необходимое обслуживание, чтобы получить инструкцию</p>
       </div>
-    </section>
+    </div>
 
     <!-- МАНУАЛ НЕ НАЙДЕН -->
-    <section v-else-if="selectedMoto && selectedMaintenance && !manual" class="empty-section">
+    <div v-else-if="selectedMoto && selectedMaintenance && !manual" class="empty-state-wrapper">
       <div class="empty-state">
         <div class="empty-icon warning">
-          <i class="fa fa-file-text-o"></i>
+          <i class="fa fa-file-text"></i>
         </div>
         <h3>Мануал не найден</h3>
         <p>К сожалению, мы не нашли подходящий мануал в базе. Вы можете создать его сами.</p>
         <div class="empty-actions">
-          <button @click="openCreateManual" class="outline-btn">
+          <button @click="openCreateManual" class="btn-primary">
             Создать мануал
           </button>
-          <button @click="openCompleteModal" class="outline-btn">
+          <button @click="openCompleteModal" class="btn-secondary">
             Завершить обслуживание
           </button>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- МОДАЛ ЗАВЕРШЕНИЯ -->
     <MarkPlanMaintenanceModal
@@ -492,11 +469,6 @@ export default {
       
       // Модалки
       showCompleteModal: false,
-      
-      // Статистика
-      overdueCount: 0,
-      pendingCount: 0,
-      plannedCount: 0,
     }
   },
 
@@ -663,6 +635,13 @@ export default {
       this.manual = null
     },
 
+    scrollToManual() {
+      const el = document.getElementById('manual-section')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    },
+
     openCompleteModal() {
       if (!this.selectedMaintenanceData) {
         this.$toast?.warning('Выберите обслуживание')
@@ -699,6 +678,14 @@ export default {
       this.$router.push('/manual-creator')
     },
 
+    formatMileage(value) {
+      if (!value && value !== 0) return '—'
+      if (value >= 1000) {
+        return (value / 1000).toFixed(1) + ' тыс. км'
+      }
+      return value + ' км'
+    },
+
     getCategoryName(category) {
       const map = {
         engine: 'Двигатель',
@@ -723,10 +710,13 @@ export default {
       return map[difficult] || difficult || 'Средняя'
     },
 
-    // ===== НОВЫЕ МЕТОДЫ ДЛЯ ТЕХДАННЫХ =====
     hasSpecs(specs) {
       if (!specs) return false
-      return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances)
+      return !!(
+        (specs.torque && specs.torque.length > 0) || 
+        (specs.fluids && Object.keys(specs.fluids).length > 0) || 
+        (specs.tolerances && Object.keys(specs.tolerances).length > 0)
+      )
     },
 
     getFluidLabel(key) {
@@ -762,74 +752,42 @@ export default {
   padding: 0 20px 40px;
 }
 
-/* ===== STATS ===== */
-.stats-section {
-  margin-bottom: 32px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.stat-card {
+/* ===== HEADER ===== */
+.page-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
-  padding: 20px 24px;
-  background: var(--bg-card);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
 }
 
-.stat-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+.header-content {
+  flex: 1;
+  min-width: 150px;
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.stat-icon.warning {
-  background: var(--warning-trans);
-  color: var(--warning-text);
-}
-
-.stat-icon.info {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
-}
-
-.stat-icon.success {
-  background: var(--success-trans);
-  color: var(--success-text);
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
+.page-title {
   font-size: 28px;
   font-weight: 700;
-  line-height: 1.2;
+  margin: 0;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.stat-label {
+.page-title i {
+  color: var(--accent-text);
+  font-size: 28px;
+}
+
+.page-subtitle {
   font-size: 14px;
   color: var(--text-muted);
+  margin: 4px 0 0;
 }
 
 /* ===== SELECTION ===== */
@@ -841,16 +799,15 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr 1.2fr;
   gap: 16px;
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   padding: 24px;
 }
 
 .selection-step {
   display: flex;
   gap: 16px;
-  position: relative;
 }
 
 .selection-step.disabled {
@@ -896,11 +853,17 @@ export default {
 }
 
 .step-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 8px;
+}
+
+.step-label i {
+  color: var(--accent-text);
 }
 
 .select-wrapper {
@@ -923,6 +886,7 @@ export default {
 .styled-select:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-trans);
 }
 
 .styled-select:disabled {
@@ -948,7 +912,8 @@ export default {
   flex-wrap: wrap;
 }
 
-.moto-mileage {
+.moto-mileage,
+.moto-year {
   font-size: 13px;
   color: var(--text-secondary);
   display: flex;
@@ -984,16 +949,6 @@ export default {
   gap: 4px;
 }
 
-.badge-overdue {
-  background: var(--danger-trans);
-  color: var(--danger-text);
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 10px;
-  margin-left: 6px;
-}
-
 .result-status {
   display: flex;
   align-items: flex-start;
@@ -1012,7 +967,7 @@ export default {
   flex-shrink: 0;
 }
 
-.result-icon {
+.result-icon.success {
   background: var(--success-trans);
   color: var(--success-text);
 }
@@ -1045,6 +1000,10 @@ export default {
   gap: 8px;
 }
 
+.result-actions button {
+  width: 100%;
+}
+
 /* ===== MANUAL ===== */
 .manual-section {
   display: flex;
@@ -1053,9 +1012,9 @@ export default {
 }
 
 .manual-header-card {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   padding: 24px;
 }
 
@@ -1084,7 +1043,8 @@ export default {
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   font-size: 12px;
   color: var(--text-secondary);
@@ -1092,13 +1052,14 @@ export default {
 
 .tag i {
   font-size: 12px;
+  color: var(--accent-text);
 }
 
 /* ===== BLOCKS ===== */
 .block {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   padding: 20px 24px;
 }
 
@@ -1177,8 +1138,8 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   color: var(--accent-text);
   text-decoration: none;
@@ -1188,6 +1149,7 @@ export default {
 .docs-link:hover {
   border-color: var(--accent);
   background: var(--accent-trans);
+  transform: translateX(4px);
 }
 
 .docs-link i:first-child {
@@ -1224,7 +1186,7 @@ export default {
 .torque-table {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1233,7 +1195,7 @@ export default {
   display: grid;
   grid-template-columns: 2fr 1fr 2fr;
   padding: 8px 14px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
@@ -1245,13 +1207,13 @@ export default {
   display: grid;
   grid-template-columns: 2fr 1fr 2fr;
   padding: 8px 14px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-light);
   font-size: 14px;
   color: var(--text-primary);
 }
 
 .torque-row:nth-child(even) {
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
 }
 
 .fluids-grid {
@@ -1264,9 +1226,9 @@ export default {
   display: flex;
   justify-content: space-between;
   padding: 8px 14px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
 }
 
 .fluid-label {
@@ -1290,9 +1252,9 @@ export default {
   display: flex;
   justify-content: space-between;
   padding: 8px 14px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
 }
 
 .tolerance-label {
@@ -1308,9 +1270,9 @@ export default {
 
 /* Steps */
 .manual-content {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   padding: 24px;
 }
 
@@ -1345,10 +1307,10 @@ export default {
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-radius: 12px;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
+  border: 1px solid var(--border-light);
+  transition: all 0.25s ease;
 }
 
 .step-item:hover {
@@ -1380,7 +1342,7 @@ export default {
   width: 2px;
   flex: 1;
   min-height: 20px;
-  background: var(--border-color);
+  background: var(--border-light);
   margin: 4px 0;
 }
 
@@ -1494,7 +1456,7 @@ export default {
   align-items: flex-start;
   gap: 10px;
   padding: 12px 16px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.6;
@@ -1516,9 +1478,9 @@ export default {
 }
 
 .sidebar-card {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   padding: 20px;
 }
 
@@ -1530,6 +1492,10 @@ export default {
   align-items: center;
   gap: 8px;
   color: var(--text-primary);
+}
+
+.sidebar-card h4 i {
+  color: var(--accent-text);
 }
 
 .items-list {
@@ -1595,8 +1561,12 @@ export default {
   color: var(--success-text);
 }
 
+.complete-card button {
+  width: 100%;
+}
+
 /* Empty states */
-.empty-section {
+.empty-state-wrapper {
   margin-top: 8px;
 }
 
@@ -1606,7 +1576,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60px 40px;
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border-radius: 16px;
   border: 2px dashed var(--border-color);
   text-align: center;
@@ -1616,30 +1586,36 @@ export default {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--accent-trans);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  color: #3b82f6;
+  color: var(--accent-text);
   margin-bottom: 16px;
+}
+
+.empty-icon i {
+  margin: 0;
 }
 
 .empty-icon.warning {
   background: var(--warning-trans);
-  color: var(--warning-text);
+  color: var(--warning);
+}
+
+.empty-icon.warning i {
+  color: var(--warning);
 }
 
 .empty-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.empty-actions button {
-  width: 100%;
-}
 
 .empty-state h3 {
   margin: 0 0 8px 0;
@@ -1653,84 +1629,6 @@ export default {
   font-size: 15px;
   color: var(--text-secondary);
   max-width: 400px;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-}
-
-.btn-sm {
-  padding: 6px 14px;
-  font-size: 13px;
-}
-
-.btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--border-color);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--accent-text);
-  border: 1px solid var(--accent);
-}
-
-.btn-outline:hover {
-  background: var(--accent-trans);
-}
-
-.btn-success {
-  background: var(--success);
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: var(--success-hover);
-  transform: translateY(-1px);
-}
-
-.btn-block {
-  width: 100%;
-  justify-content: center;
-}
-
-.outline-btn {
-  padding: 10px 24px;
-  border: 2px solid var(--accent);
-  border-radius: 40px;
-  background: transparent;
-  color: var(--accent-text);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-.outline-btn:hover {
-  background: var(--accent);
-  color: #fff;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -1749,7 +1647,7 @@ export default {
   .selection-step.result-step {
     border-left: none;
     padding-left: 0;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-light);
     padding-top: 20px;
   }
 
@@ -1767,16 +1665,26 @@ export default {
     padding: 0 12px 32px;
   }
 
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
 
   .stat-card {
-    padding: 16px 20px;
+    padding: 14px 16px;
   }
 
   .stat-value {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .manual-sidebar {
@@ -1825,7 +1733,7 @@ export default {
     flex-direction: column;
   }
 
-  .result-actions .btn {
+  .result-actions button {
     width: 100%;
     justify-content: center;
   }
@@ -1834,8 +1742,8 @@ export default {
     padding: 16px;
   }
 
-  .empty-actions .btn {
-    min-width: unset;
+  .empty-actions {
+    flex-direction: column;
     width: 100%;
   }
 
@@ -1889,11 +1797,6 @@ export default {
     font-size: 18px;
   }
 
-  .complete-card .btn {
-    font-size: 14px;
-    padding: 12px;
-  }
-
   .block {
     padding: 14px 16px;
   }
@@ -1907,6 +1810,16 @@ export default {
 
   .torque-row span {
     font-size: 11px;
+  }
+
+  .selection-step {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .step-indicator {
+    flex-direction: row;
+    gap: 8px;
   }
 }
 </style>

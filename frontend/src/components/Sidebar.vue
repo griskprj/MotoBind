@@ -293,13 +293,14 @@ export default {
     z-index: 1001;
     display: none;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 12px;
     width: 30px;
     height: 21px;
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
+    border-radius: 0px !important;
 }
 
 @media (max-width: 770px) {
@@ -312,12 +313,11 @@ export default {
     width: 100%;
     height: 3px;
     background-color: var(--text-primary, #fff);
-    border-radius: 3px;
     transition: all 0.3s ease;
 }
 
 .sidebar-toggle.active .burger-line:nth-child(1) {
-    transform: translateY(9px) rotate(45deg);
+    transform: translateY(7px) rotate(35deg);
 }
 
 .sidebar-toggle.active .burger-line:nth-child(2) {
@@ -325,7 +325,7 @@ export default {
 }
 
 .sidebar-toggle.active .burger-line:nth-child(3) {
-    transform: translateY(-9px) rotate(-45deg);
+    transform: translateY(-7px) rotate(-35deg);
 }
 
 /* ===== Оверлей ===== */
@@ -462,13 +462,11 @@ export default {
     margin-left: 4px;
 }
 
-/* Кнопка сворачивания внутри блока лого */
 .collapse-toggle {
     width: 28px;
     height: 28px;
     background: var(--bg-secondary);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -485,7 +483,6 @@ export default {
     border-color: var(--accent);
 }
 
-/* В свернутом состоянии логотип по центру, без текста */
 .sidebar-collapsed .sidebar-logo {
     justify-content: center;
     padding-bottom: 16px;
@@ -611,7 +608,6 @@ export default {
     gap: 10px;
     padding: 10px;
     border: none;
-    border-radius: 10px;
     background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
     font-size: 14px;
