@@ -151,7 +151,7 @@
         <!-- Инфо-блок -->
         <div class="modal-info-block info">
             <div class="modal-info-icon">
-                <i class="fa fa-lightbulb-o"></i>
+                <i class="fa fa-lightbulb"></i>
             </div>
             <p class="modal-info-text">
                 Эти данные помогут строить статистику и подбирать мануалы для вашего мотоцикла
@@ -274,13 +274,11 @@ export default {
         },
 
         processFile(file) {
-            // Проверка размера (10 МБ)
             if (file.size > 10 * 1024 * 1024) {
                 alert('Файл слишком большой. Максимальный размер 10 МБ.')
                 return
             }
 
-            // Проверка типа
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
             if (!allowedTypes.includes(file.type)) {
                 alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
@@ -307,7 +305,6 @@ export default {
         },
 
         async submit() {
-            // Валидация
             if (!this.form.name || this.form.name.trim().length < 2) {
                 alert('Введите название мотоцикла (минимум 2 символа)')
                 return
@@ -528,8 +525,6 @@ export default {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 28px;
-    height: 28px;
     border-radius: 50%;
     background: rgba(239, 68, 68, 0.9);
     border: none;

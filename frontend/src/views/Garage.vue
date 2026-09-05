@@ -307,6 +307,7 @@
             :maintenance="selectedMaintenance"
             :motorcycle="selectedMotorcycle"
             @mark="markMaintenance"
+            @save="saveMaintenance"
             @delete="deleteMaintenance"
             @close="closeMaintenanceDetails"
         />
@@ -367,6 +368,7 @@ export default {
 
     computed: {
         selectedMotorcycle() {
+            if (!this.selectedMotoId || !this.motorcycles.length) return null;
             return this.motorcycles.find(m => m.id === this.selectedMotoId) || null;
         },
 
@@ -450,13 +452,16 @@ export default {
                     }
                 }
                 
+                // Если есть мотоциклы и нет выбранного - выбираем первый
                 if (this.motorcycles.length > 0 && !this.selectedMotoId) {
                     this.selectedMotoId = this.motorcycles[0].id;
                 }
                 
+                // Если выбранный ID не существует - выбираем первый или null
                 if (this.selectedMotoId && !this.motorcycles.find(m => m.id === this.selectedMotoId)) {
                     this.selectedMotoId = this.motorcycles[0]?.id || null;
                 }
+
             } catch (err) {
                 console.error(err);
             } finally {
@@ -465,6 +470,7 @@ export default {
         },
 
         selectMotorcycle(moto) {
+            if (!moto || !moto.id) return;
             this.selectedMotoId = moto.id;
         },
 
@@ -477,7 +483,7 @@ export default {
         handleImageError(e) {
             e.target.src = '';
             e.target.style.display = 'none';
-            const placeholder = e.target.parentElement.querySelector('.moto-placeholder, .moto-list-placeholder');
+            const placeholder = e.target.parentElement?.querySelector('.moto-placeholder, .moto-list-placeholder');
             if (placeholder) placeholder.classList.remove('hidden');
         },
 
@@ -507,10 +513,17 @@ export default {
         },
 
         getMotoStatusClass(moto) {
-            if (!moto.maintenances?.length) return 'status-ok';
+            if (!moto?.maintenances?.length) return 'status-ok';
             const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
             if (hasOverdue) return 'status-warning';
             return 'status-ok';
+        },
+
+        getMotoStatusLabel(moto) {
+            if (!moto?.maintenances?.length) return 'Нет ТО';
+            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
+            if (hasOverdue) return 'Просрочка';
+            return 'В порядке';
         },
 
         async uploadPhoto(formData) {
@@ -611,6 +624,7 @@ export default {
                 await api.patch(`/motorcycle/${formData.id}/note`, formData);
                 await this.loadData();
                 this.showEditMotoNoteModal = false;
+                alert('Заметка обновлена');
             } catch (err) {
                 alert(err.response?.data?.error || 'Ошибка обновления заметки');
             }
@@ -660,22 +674,21 @@ export default {
                     interval_days: formData.interval_days || null
                 };
 
-                console.log('Sending payload:', payload);
-
-                const { data } = await api.post(`/maintenance/${formData.id}/complete`, payload);
+                await api.post(`/maintenance/${formData.id}/complete`, payload);
                 
-                this.showCompleteModal = false;
                 this.$toast?.success('Обслуживание успешно завершено!');
-                
                 await this.loadData();
                 
                 this.selectedMaintenance = null;
-                this.selectedMaintenanceData = null;
             } catch (err) {
                 console.error('Failed to complete maintenance:', err);
                 const errorMsg = err.response?.data?.error || 'Ошибка при завершении обслуживания';
                 this.$toast?.error(errorMsg);
             }
+        },
+
+        saveMaintenance() {
+            this.loadData();
         },
 
         openMaintenanceDetails(item) {

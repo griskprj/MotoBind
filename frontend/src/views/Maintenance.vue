@@ -677,15 +677,12 @@ export default {
 
 .tabs {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     background: var(--bg-secondary);
     padding: 4px;
     border-radius: 12px;
     border: 1px solid var(--border-light);
-}
-
-.tabs button {
-    width: 100%;
 }
 
 .tabs-btn {
