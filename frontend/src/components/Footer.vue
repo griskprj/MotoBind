@@ -6,7 +6,7 @@
                 <!-- Левая колонка - Логотип -->
                 <div class="footer-brand">
                     <router-link to="/garage" class="brand-link">
-                        <img class="brand-logo" src="/MotoBindLogo.png" alt="MotoBind">
+                        <img class="brand-logo" src="/MotoBindLogo.webp" alt="MotoBind">
                         <div class="brand-text">
                             <span class="brand-name">Moto<span class="brand-accent">Bind</span></span>
                             <span class="brand-tagline">Управляй своим мотоциклом</span>
@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="footer-version">
-                    <span class="version-badge">v1.1.2</span>
+                    <span class="version-badge">v1.2.2</span>
                 </div>
             </div>
         </div>
@@ -130,9 +130,6 @@ export default {
     transition: transform 0.3s ease;
 }
 
-.brand-link:hover {
-    transform: translateY(-2px);
-}
 
 .brand-logo {
     width: 56px;
@@ -272,8 +269,8 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    min-width: 48px;
+    height: 48px;
     border-radius: 50%;
     color: var(--text-muted);
     background: transparent;
