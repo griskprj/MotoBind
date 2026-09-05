@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta, timezone
 from flask import current_app
 from flask_mail import Mail, Message
+from thread import Thread
 from app.extensions import mail
 
 class EmailService:
@@ -111,3 +112,55 @@ class EmailService:
         except Exception as e:
             print(f"Failed to send reset email: {e}")
             return False
+
+
+    @staticmethod
+    def send_bulk_email(app, recipients: list, subject: str, html_body: str, 
+                         sender: str = None) -> dict:
+        """
+        Отправка массовой рассылки асинхронно
+        """
+        if not recipients:
+            return {"success": False, "error": "Нет получателей"}
+        
+        thread = Thread(
+            target=EmailService._send_bulk_email_thread,
+            args=(app, recipients, subject, html_body, sender)
+        )
+        thread.daemon = True
+        thread.start()
+        
+        return {
+            "success": True, 
+            "message": f"Рассылка запущена для {len(recipients)} получателей",
+            "total": len(recipients)
+        }
+    
+    @staticmethod
+    def _send_bulk_email_thread(app, recipients: list, subject: str, html_body: str, 
+                                 sender: str = None):
+        """Фоновый поток для отправки писем с контекстом приложения"""
+        with app.app_context():
+            success_count = 0
+            failed_count = 0
+            failed_emails = []
+            
+            for email in recipients:
+                try:
+                    msg = Message(
+                        subject=subject,
+                        recipients=[email],
+                        html=html_body,
+                        sender=sender or app.config.get('MAIL_DEFAULT_SENDER')
+                    )
+                    mail.send(msg)
+                    success_count += 1
+                    print(f"✅ Sent to {email}")
+                except Exception as e:
+                    failed_count += 1
+                    failed_emails.append(email)
+                    print(f"❌ Failed to send to {email}: {e}")
+            
+            print(f"Bulk email completed: {success_count} sent, {failed_count} failed")
+            
+            return {"success": success_count, "failed": failed_count, "failed_emails": failed_emails}

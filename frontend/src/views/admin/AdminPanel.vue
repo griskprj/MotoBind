@@ -107,12 +107,12 @@
                     </p>
                 </router-link>
     
-                <div class="fast-action-card">
+                <div @click="showNewsletterModal = true" class="fast-action-card">
                     <div class="action-card-icon">
                         <i class="fa fa-file-text"></i>
                     </div>
                     <p class="fast-action-text">
-                        Добавить новость
+                        Отправить рассылку
                     </p>
                 </div>
             </div>
@@ -124,6 +124,12 @@
         @close="showAddUserModal = false"
         @submit="addUser"
     />
+
+    <NewsletterModal
+        :is-open="showNewsletterModal"
+        @close="showNewsletterModal = false"
+        @sent="getRegChartData"
+    />
 </template>
 
 <script>
@@ -132,11 +138,13 @@ import UserRegistrationsChart from '../../components/charts/UserRegistrationsCha
 import Header from '../../components/Header.vue';
 import LoadingOverlay from '../../components/LoadingOverlay.vue';
 import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
+import NewsletterModal from '../../components/modals/admin/NewsletterModal.vue';
 
 export default {
     components: {
         UserRegistrationsChart,
         AddUserModal,
+        NewsletterModal,
         Header,
         LoadingOverlay
     },
@@ -150,7 +158,8 @@ export default {
             manualsCount: 0,
             lastRegUserData: [],
 
-            showAddUserModal: false
+            showAddUserModal: false,
+            showNewsletterModal: false
         }
     },
 

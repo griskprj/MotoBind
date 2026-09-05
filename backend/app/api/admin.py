@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import desc, or_
 
@@ -11,6 +11,7 @@ from app.models.user import User
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
 from app.services.notification_service import NotificationService
+from app.services.email_service import EmailService
 
 admin = Blueprint("admin", __name__)
 
@@ -442,7 +443,6 @@ def admin_delete_motorcycle(moto_id):
     if not moto:
         raise NotFoundError("Мотоцикл не найден")
 
-    # Удаляем фото
     if moto.photo_url:
         from app.utils.files import delete_file
         delete_file(moto.photo_url)
@@ -451,3 +451,79 @@ def admin_delete_motorcycle(moto_id):
     db.session.commit()
 
     return jsonify({"message": "Мотоцикл успешно удален"}), 200
+
+
+@admin.route("/send-newsletter", methods=["POST"])
+@jwt_required()
+@admin_required
+def send_newsletter():
+    """
+    Отправка рассылки всем пользователям
+    """
+    data = request.get_json()
+    if not data:
+        raise ValidationError("Нет данных")
+    
+    subject = data.get("subject")
+    content = data.get("content")
+    target = data.get("target", "all")
+    
+    if not subject or not content:
+        raise ValidationError("Тема и содержание обязательны")
+    
+    query = User.query.filter(User.email.isnot(None))
+    
+    if target == "active":
+        query = query.filter(User.status == "active")
+    elif target == "admins":
+        query = query.filter(User.role == "admin")
+    
+    users = query.all()
+    if not users:
+        raise ValidationError("Нет получателей")
+    
+    emails = [user.email for user in users if user.email]
+    
+    html_body = f"""
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .header {{ text-align: center; margin-bottom: 20px; }}
+            .header h1 {{ color: #7c3aed; margin: 0; }}
+            .content {{ font-size: 15px; line-height: 1.6; color: #333; }}
+            .footer {{ text-align: center; color: #888; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }}
+            .unsubscribe {{ color: #7c3aed; text-decoration: none; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🏍️ MotoBind</h1>
+            </div>
+            <div class="content">
+                {content}
+            </div>
+            <div class="footer">
+                <p>© 2026 MotoBind. Все права защищены.</p>
+                <p>
+                    <a href="https://motobind.ru/unsubscribe" class="unsubscribe">
+                        Отписаться от рассылки
+                    </a>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    app = current_app._get_current_object()
+    result = EmailService.send_bulk_email(app, emails, subject, html_body)
+    
+    return jsonify({
+        "message": "Рассылка запущена",
+        "total": len(emails),
+        "target": target,
+        "result": result
+    }), 200
