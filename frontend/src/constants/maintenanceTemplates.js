@@ -86,12 +86,10 @@ export const MAINTENANCE_TEMPLATES = {
   ],
 };
 
-// Получить шаблоны для категории
 export const getTemplatesByCategory = (category) => {
   return MAINTENANCE_TEMPLATES[category] || [];
 };
 
-// Получить название ТО по ID шаблона
 export const getTemplateLabel = (category, templateId) => {
   const templates = getTemplatesByCategory(category);
   const found = templates.find(t => t.id === templateId);
