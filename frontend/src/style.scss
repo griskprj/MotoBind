@@ -131,9 +131,12 @@ body {
   color: var(--text-primary);
 }
 
-/* Остальные стили остаются без изменений... */
 section {
   margin-bottom: 24px;
+}
+
+i {
+  min-width: 14px;
 }
 
 h1, h2, h3, h4, h5, h6 {

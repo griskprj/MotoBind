@@ -202,7 +202,7 @@ export default {
 
         getAvatarUrl(avatarPath) {
             if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg';
+                return '/BaseAvatar.webp';
             }
             if (avatarPath.startsWith('http')) {
                 return avatarPath;

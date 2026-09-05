@@ -139,7 +139,7 @@ export default {
         },
         
         getAvatarUrl(avatar) {
-            if (!avatar) return '/BaseAvatar.jpg'
+            if (!avatar) return '/BaseAvatar.webp'
             if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
             if (avatar.startsWith('/')) return avatar
             return `/uploads/${avatar}`
