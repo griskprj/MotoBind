@@ -109,6 +109,7 @@
                 <span class="th">Роль</span>
                 <span class="th">Статус</span>
                 <span class="th">Дата регистрации</span>
+                <span class="th">Последний вход</span>
                 <span class="th">Действия</span>
             </div>
             <div class="table-body">
@@ -127,7 +128,7 @@
                             :src="getAvatarUrl(user.avatar)" 
                             alt=""
                             class="user-img"
-                            @error="(e) => e.target.src = '/BaseAvatar.jpg'"
+                            @error="(e) => e.target.src = '/BaseAvatar.webp'"
                         >
                         <div class="user-info">
                             <p class="user-name">{{ user.username }}</p>
@@ -142,6 +143,9 @@
                     </div>
                     <div class="td date-cell">
                         <span>{{ formatDate(user.created_at) }}</span>
+                    </div>
+                    <div class="td last-login-cell">
+                        <span>{{ formatDate(user.last_login) }}</span>
                     </div>
                     <div class="td table-actions-wrapper">
                         <button class="btn-small" @click="openEditUserModal(user)"><i class="fa fa-pen"></i></button>
@@ -342,7 +346,7 @@ export default {
     methods: {
         getAvatarUrl(avatarPath) {
             if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg';
+                return '/BaseAvatar.webp';
             }
             if (avatarPath.startsWith('http')) {
                 return avatarPath;
@@ -774,7 +778,7 @@ export default {
 
 .table-header {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-light);
@@ -791,7 +795,7 @@ export default {
 
 .tr {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     padding: 14px 16px;
     align-items: center;

@@ -127,7 +127,7 @@
                                 :src="getPhotoUrl(moto.photo_url)"
                                 alt="Фото"
                                 class="moto-thumb"
-                                @error="(e) => e.target.src = '/moto_default.jpg'"
+                                @error="(e) => e.target.src = '/moto_default.webp'"
                             />
                             <div class="moto-placeholder" v-else>
                                 <i class="fa fa-motorcycle"></i>
@@ -157,7 +157,7 @@
                                     'badge-gray': moto.maintenances_count === 0
                                 }"
                             >
-                                {{ moto.maintenances_count || 0 }}
+                                {{ moto.maintenances.length || 0 }}
                             </span>
                         </div>
 
@@ -841,6 +841,7 @@ export default {
     display: flex;
     gap: 6px;
     align-items: center;
+    min-width: 5vh;
 }
 
 .btn-outline.paginate {

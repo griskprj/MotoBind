@@ -291,7 +291,7 @@ export default {
         // ===== АВАТАР =====
         getAvatarUrl(avatarPath) {
             if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.jpg'
+                return '/BaseAvatar.webp'
             }
             if (avatarPath.startsWith('http')) {
                 return avatarPath
@@ -301,7 +301,7 @@ export default {
         },
 
         handleAvatarError(event) {
-            event.target.src = '/BaseAvatar.jpg'
+            event.target.src = '/BaseAvatar.webp'
         },
 
         async handleAvatarUpload(event) {

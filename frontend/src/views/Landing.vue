@@ -176,7 +176,7 @@
       <div class="container riders-layout">
         <div class="riders-left">
           <div class="riders-image-placeholder">
-            <img src="/MotorcForMotorc.jpg" alt="" class="landing-img">
+            <img src="/MotorcForMotorc.webp" alt="" class="landing-img">
           </div>
         </div>
         <div class="riders-right">
@@ -243,7 +243,7 @@
         </div>
         <div class="cta-right">
           <div class="cta-image-placeholder">
-            <img src="/MockupUI.jpeg" alt="" class="landing-img">
+            <img src="/MockupUI.webp" alt="" class="landing-img">
           </div>
         </div>
       </div>
