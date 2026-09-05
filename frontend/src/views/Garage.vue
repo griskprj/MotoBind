@@ -6,7 +6,7 @@
             <!-- Header -->
             <Header
                 title="Мой гараж"
-                subtitle="Управляйте своими мотоциклами"
+                subtitle="Управляйте своими мотоциклами и следите за их состоянием"
             />
 
             <!-- Статистика гаража -->
@@ -14,18 +14,20 @@
                 <div class="stat-chip">
                     <i class="fa fa-motorcycle"></i>
                     <span>{{ motorcycles.length }}</span>
+                    {{ declensionMotorcycles(motorcycles.length) }}
                 </div>
                 <div class="stat-chip">
                     <i class="fa fa-wrench"></i>
                     <span>{{ totalMaintenances }}</span>
+                    обслуживаний
                 </div>
                 <div class="stat-chip">
-                    <i class="fa fa-ruble"></i>
-                    <span>{{ totalCosts }} ₽</span>
+                    <i class="fa fa-ruble-sign"></i>
+                    <span>{{ formatCost(totalCosts) }}</span>
                 </div>
             </div>
 
-            <!-- Мотоциклы -->
+            <!-- Мотоциклы - Десктопный список -->
             <div class="motorcycles-container">
                 <div class="motorcycles-list">
                     <div 
@@ -53,15 +55,19 @@
                                 <div class="moto-list-header">
                                     <h3 class="moto-list-name">{{ moto.name }}</h3>
                                     <span class="moto-list-year">{{ moto.years }}</span>
+                                    <span class="moto-list-volume">{{ moto.volume }} см³</span>
                                 </div>
                                 <div class="moto-list-meta">
-                                    <span class="moto-list-mileage">{{ formatMileage(moto.mileage) }}</span>
-                                    <span class="moto-list-volume">{{ moto.volume }} см³</span>
+                                    <span class="moto-list-mileage">
+                                        <i class="fa-solid fa-gauge-high"></i>
+                                        {{ formatMileage(moto.mileage) }}
+                                    </span>
                                     <span class="moto-list-color">
                                         <span class="color-dot-sm" :style="{ background: moto.color }"></span>
                                     </span>
-                                    <span class="moto-list-status" :class="getMotoStatusClass(moto)">
-                                        {{ getMotoStatusLabel(moto) }}
+                                    <span v-if="moto.maintenances?.length" class="moto-list-maintenances">
+                                        <i class="fa fa-wrench"></i>
+                                        {{ moto.maintenances.length }}
                                     </span>
                                 </div>
                             </div>
@@ -71,7 +77,7 @@
                             <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
                                 <i class="fa fa-pen"></i>
                             </button>
-                            <button @click="showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
+                            <button @click="selectMotorcycle(moto); showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
                                 <i class="fa-solid fa-gauge-high"></i>
                             </button>
                             <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
@@ -82,7 +88,8 @@
                             </button>
                         </div>
                     </div>
-                    <button @click="showAddMotoModal = true" class="add-btn outline-btn">
+                    
+                    <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
                         <i class="fa fa-plus"></i>
                         <span>Добавить мотоцикл</span>
                     </button>
@@ -94,8 +101,8 @@
                 <div class="empty-icon">
                     <i class="fa fa-motorcycle"></i>
                 </div>
-                <h3>Мотоциклов пока нет</h3>
-                <p>Добавьте свой первый мотоцикл и начните вести учёт</p>
+                <h3>Ваш гараж пуст</h3>
+                <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
                 <button @click="showAddMotoModal = true" class="btn-primary">
                     <i class="fa fa-plus"></i>
                     Добавить мотоцикл
@@ -106,7 +113,7 @@
             <div v-if="selectedMotorcycle" class="moto-detail">
                 <!-- Статистика -->
                 <div class="stats-grid">
-                    <div class="stat-card"> 
+                    <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fa-solid fa-gauge-high"></i>
                         </div>
@@ -139,7 +146,7 @@
                                         {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
                                     </span>
                                     <span v-else>
-                                        {{ Math.round(nextMaintenance.distanceToNext) }} км
+                                        через {{ Math.round(nextMaintenance.distanceToNext) }} км
                                     </span>
                                 </template>
                                 <span v-else class="text-muted">Все выполнены</span>
@@ -149,10 +156,10 @@
 
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fa fa-ruble"></i>
+                            <i class="fa fa-ruble-sign"></i>
                         </div>
                         <div class="stat-info">
-                            <span class="stat-label">Расходы</span>
+                            <span class="stat-label">Расходы на ТО</span>
                             <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
                         </div>
                     </div>
@@ -192,16 +199,19 @@
                         </div>
                     </div>
 
-                    <div class="detail-card">
+                    <div class="detail-card notes-card">
                         <div class="detail-header">
                             <h4 class="detail-title">Заметки</h4>
-                            <button @click="showEditMotoNoteModal = true" class="icon-btn small">
+                            <button @click="showEditMotoNoteModal = true" class="icon-btn small" title="Редактировать заметку">
                                 <i class="fa fa-pen"></i>
                             </button>
                         </div>
                         <div class="notes-content">
                             <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
-                            <p v-else class="notes-empty">Добавьте заметку о мотоцикле</p>
+                            <p v-else class="notes-empty">
+                                <i class="fa fa-pen"></i>
+                                Добавьте заметку о мотоцикле
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -209,7 +219,10 @@
                 <!-- Обслуживания -->
                 <div class="maintenances-section">
                     <div class="section-header">
-                        <h4>Последние обслуживания</h4>
+                        <div class="section-header-left">
+                            <i class="fa fa-wrench"></i>
+                            <h4>Последние обслуживания</h4>
+                        </div>
                         <button @click="$router.push('/maintenance')" class="btn-link">
                             Все записи <i class="fa fa-arrow-right"></i>
                         </button>
@@ -477,11 +490,11 @@ export default {
         },
 
         formatCost(value) {
-            if (!value) return '0';
+            if (!value) return '0 ₽';
             if (value >= 1000) {
-                return (value / 1000).toFixed(1) + ' тыс.';
+                return (value / 1000).toFixed(1) + ' тыс. ₽';
             }
-            return value.toString();
+            return Math.round(value) + ' ₽';
         },
 
         declensionMotorcycles(count) {
@@ -498,13 +511,6 @@ export default {
             const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
             if (hasOverdue) return 'status-warning';
             return 'status-ok';
-        },
-
-        getMotoStatusLabel(moto) {
-            if (!moto.maintenances?.length) return 'Нет ТО';
-            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
-            if (hasOverdue) return 'Просрочка';
-            return 'В порядке';
         },
 
         async uploadPhoto(formData) {
@@ -730,8 +736,10 @@ export default {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .header-content {
@@ -740,45 +748,46 @@ export default {
 }
 
 .page-title {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     margin: 0;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .page-title i {
     color: var(--accent-text);
+    font-size: 28px;
 }
 
 .page-subtitle {
     font-size: 14px;
     color: var(--text-muted);
-    margin: 2px 0 0;
+    margin: 4px 0 0;
 }
 
 .btn-primary {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
-    background: var(--accent);
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     color: #fff;
     border: none;
     border-radius: 12px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 12px rgba(138, 92, 246, 0.2);
 }
 
 .btn-primary:hover {
-    background: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(138, 92, 246, 0.35);
 }
 
 /* ===== GARAGE STATS ===== */
@@ -786,19 +795,25 @@ export default {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .stat-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
+    gap: 8px;
+    padding: 8px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: 20px;
     font-size: 13px;
     color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.stat-chip:hover {
+    border-color: var(--border-color);
+    background: var(--bg-card-hover);
 }
 
 .stat-chip i {
@@ -807,221 +822,31 @@ export default {
 }
 
 .stat-chip span {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
-/* ===== MOTORCYCLES CONTAINER ===== */
+/* ===== MOTORCYCLES LIST ===== */
 .motorcycles-container {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
-/* ===== ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ (только до 600px) ===== */
-.motorcycles-scroll-wrapper {
-    display: none;
-    overflow-x: auto;
-    overflow-y: visible;
-    margin: 0 -16px;
-    padding: 0 16px 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar {
-    height: 4px;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
-}
-
-.motorcycles-grid {
-    display: flex;
-    gap: 12px;
-    min-width: min-content;
-    padding-bottom: 4px;
-}
-
-.moto-card {
+.motorcycles-list {
     display: flex;
     flex-direction: column;
-    min-width: 200px;
-    max-width: 240px;
-    padding: 14px;
-    background: var(--bg-secondary);
-    border: 2px solid transparent;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: 0.2s;
-    flex: 1 0 auto;
-}
-
-.moto-card:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-light);
-}
-
-.moto-card.active {
-    border-color: var(--accent);
-    background: var(--accent-trans);
-}
-
-.moto-card-wrapper {
-    display: flex;
-    gap: 12px;
-}
-
-.moto-preview {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/10;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-card);
-    margin-bottom: 10px;
-}
-
-.moto-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.moto-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 32px;
-    background: var(--bg-card);
-}
-
-.moto-placeholder.hidden {
-    display: none;
-}
-
-.moto-selected {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.moto-status-badge {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-}
-
-.moto-status-badge.status-warning {
-    background: rgba(239, 68, 68, 0.85);
-}
-
-.moto-status-badge.status-ok {
-    background: rgba(16, 185, 129, 0.85);
-}
-
-.moto-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.moto-name {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0 0 4px;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.moto-details {
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-.moto-details .dot {
-    opacity: 0.3;
-}
-
-.moto-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-}
-
-.moto-volume {
-    font-size: 11px;
-    color: var(--text-muted);
-    background: var(--bg-primary);
-    padding: 2px 10px;
-    border-radius: 10px;
-}
-
-.color-indicator {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-
-.moto-actions {
-    display: flex;
-    gap: 2px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-light);
-    justify-content: flex-end;
-}
-
-/* ===== СПИСОК (от 600px) ===== */
-.motorcycles-list {
-    display: block;
+    gap: 6px;
 }
 
 .moto-list-item {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 10px 16px;
+    padding: 12px 16px;
     background: var(--bg-secondary);
     border: 2px solid transparent;
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer;
-    transition: 0.2s;
-    margin-bottom: 6px;
+    transition: all 0.25s ease;
 }
 
 .moto-list-item:hover {
@@ -1032,13 +857,22 @@ export default {
 .moto-list-item.active {
     border-color: var(--accent);
     background: var(--accent-trans);
+    box-shadow: 0 0 0 1px var(--accent-trans);
+}
+
+.moto-card-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
 }
 
 .moto-list-preview {
     position: relative;
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
     background: var(--bg-card);
@@ -1057,12 +891,29 @@ export default {
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 20px;
+    font-size: 22px;
     background: var(--bg-card);
 }
 
-.moto-list-placeholder.hidden {
-    display: none;
+.moto-status-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+}
+
+.moto-status-badge.status-warning {
+    background: rgba(239, 68, 68, 0.9);
+}
+
+.moto-status-badge.status-ok {
+    background: rgba(16, 185, 129, 0.9);
 }
 
 .moto-list-info {
@@ -1074,6 +925,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .moto-list-name {
@@ -1092,25 +944,34 @@ export default {
     flex-shrink: 0;
 }
 
+.moto-list-volume {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 2px 12px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
 .moto-list-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 2px;
+    gap: 14px;
+    margin-top: 3px;
     flex-wrap: wrap;
 }
 
 .moto-list-mileage {
     font-size: 13px;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.moto-list-volume {
+.moto-list-mileage i {
     font-size: 12px;
     color: var(--text-muted);
-    background: var(--bg-primary);
-    padding: 1px 10px;
-    border-radius: 10px;
 }
 
 .moto-list-color {
@@ -1124,35 +985,57 @@ export default {
     border-radius: 50%;
     border: 1px solid var(--border-color);
     display: block;
+    transition: transform 0.2s ease;
 }
 
-.moto-list-status {
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 10px;
-    border-radius: 12px;
+.moto-list-item:hover .color-dot-sm {
+    transform: scale(1.15);
 }
 
-.moto-list-status.status-warning {
-    background: var(--danger-trans);
-    color: var(--danger-text);
+.moto-list-maintenances {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.moto-list-status.status-ok {
-    background: var(--success-trans);
-    color: var(--success-text);
+.moto-list-maintenances i {
+    font-size: 12px;
 }
 
 .moto-list-actions {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
 }
 
-
+.moto-list-item:hover .moto-list-actions {
+    opacity: 1;
+}
 
 .add-btn {
-    width: 100%;
+    padding: 12px;
+    border: 2px dashed var(--border-color);
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+    background: var(--accent-trans);
 }
 
 /* ===== EMPTY STATE ===== */
@@ -1166,58 +1049,73 @@ export default {
     border-radius: 24px;
     text-align: center;
     margin-bottom: 32px;
+    transition: all 0.3s ease;
+}
+
+.empty-state:hover {
+    border-color: var(--border-color);
 }
 
 .empty-icon {
-    width: 72px;
-    height: 72px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     background: var(--accent-trans);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 36px;
     color: var(--accent-text);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.empty-state:hover .empty-icon {
+    transform: scale(1.05);
 }
 
 .empty-state h3 {
-    font-size: 20px;
+    font-size: 22px;
     margin: 0 0 8px;
+    color: var(--text-primary);
 }
 
 .empty-state p {
     color: var(--text-muted);
     font-size: 14px;
-    margin: 0 0 24px;
+    margin: 0 0 28px;
 }
 
 /* ===== DETAIL SECTION ===== */
 .moto-detail {
-    margin-top: 24px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-light);
 }
 
 /* Stats */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .stat-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
+    gap: 14px;
+    padding: 16px 20px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
-    transition: 0.2s;
+    border-radius: 14px;
+    transition: all 0.25s ease;
 }
 
 .stat-card:hover {
     border-color: var(--border-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .stat-card.stat-warning {
@@ -1226,16 +1124,21 @@ export default {
 }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: var(--accent-trans);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
     color: var(--accent-text);
     flex-shrink: 0;
+}
+
+.stat-warning .stat-icon {
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .stat-info {
@@ -1248,11 +1151,12 @@ export default {
     font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
+    font-weight: 600;
 }
 
 .stat-value {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -1272,21 +1176,31 @@ export default {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .detail-card {
-    padding: 18px 20px;
+    padding: 20px 24px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
+    border-radius: 14px;
+    transition: all 0.25s ease;
+}
+
+.detail-card:hover {
+    border-color: var(--border-color);
+}
+
+.notes-card {
+    display: flex;
+    flex-direction: column;
 }
 
 .detail-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .detail-title {
@@ -1294,18 +1208,20 @@ export default {
     font-weight: 600;
     margin: 0;
     color: var(--text-primary);
+    letter-spacing: 0.3px;
 }
 
 .spec-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px 16px;
+    gap: 8px 20px;
 }
 
 .spec-item {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
+    padding: 6px 0;
 }
 
 .spec-item.full {
@@ -1316,7 +1232,8 @@ export default {
     font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
+    font-weight: 500;
 }
 
 .spec-value {
@@ -1327,28 +1244,40 @@ export default {
 }
 
 .spec-value.spec-code {
-    font-family: monospace;
+    font-family: 'Courier New', monospace;
     font-size: 13px;
     letter-spacing: 0.5px;
+    background: var(--bg-primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
 }
 
 .color-dot {
     display: inline-block;
-    width: 28px;
-    height: 14px;
-    border-radius: 4px;
+    width: 32px;
+    height: 16px;
+    border-radius: 6px;
     border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
+}
+
+.color-dot:hover {
+    transform: scale(1.1);
 }
 
 .notes-content {
-    min-height: 50px;
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 4px;
 }
 
 .notes-text {
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 .notes-empty {
@@ -1356,46 +1285,45 @@ export default {
     color: var(--text-muted);
     font-style: italic;
     margin: 0;
-}
-
-.btn-mileage {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 6px 14px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    font-size: 12px;
-    cursor: pointer;
-    transition: 0.2s;
+    gap: 8px;
 }
 
-.btn-mileage:hover {
-    background: var(--border-light);
-    color: var(--text-primary);
+.notes-empty i {
+    color: var(--text-muted);
+    font-size: 14px;
 }
 
 /* Maintenances */
 .maintenances-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin-bottom: 20px;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+}
+
+.section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-header-left i {
+    color: var(--accent-text);
+    font-size: 18px;
 }
 
 .section-header h4 {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     margin: 0;
 }
@@ -1409,13 +1337,16 @@ export default {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    transition: 0.2s;
+    gap: 6px;
+    transition: all 0.25s ease;
+    padding: 6px 12px;
+    border-radius: 8px;
 }
 
 .btn-link:hover {
     color: var(--accent);
-    gap: 8px;
+    gap: 10px;
+    background: var(--accent-trans);
 }
 
 .maintenances-list {
@@ -1427,26 +1358,28 @@ export default {
 .maintenance-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
+    gap: 14px;
+    padding: 12px 16px;
     background: var(--bg-primary);
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
 .maintenance-item:hover {
-    background: var(--border-light);
+    background: var(--bg-card-hover);
+    transform: translateX(4px);
 }
 
 .maint-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    font-size: 14px;
 }
 
 .maint-icon-completed {
@@ -1479,11 +1412,11 @@ export default {
 }
 
 .maint-meta {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
@@ -1494,20 +1427,21 @@ export default {
 .maint-status {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 .maint-status i {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 12px;
+    opacity: 0.5;
 }
 
 .badge {
     display: inline-block;
-    padding: 2px 10px;
+    padding: 3px 12px;
     border-radius: 20px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -1537,258 +1471,78 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 28px 16px;
+    padding: 32px 16px;
     text-align: center;
 }
 
 .empty-small i {
-    font-size: 24px;
+    font-size: 28px;
     color: var(--text-muted);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    opacity: 0.4;
 }
 
 .empty-small p {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-secondary);
     margin: 0;
 }
 
 .empty-small .hint {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 /* ===== ICON BTN ===== */
-.moto-list-actions .icon-btn i,
-.moto-actions .icon-btn i,
-.icon-btn i {
-    font-size: 14px;
-    line-height: 1;
-    display: inline-block;
-    pointer-events: none;
-}
-
-.moto-list-actions .icon-btn,
-.moto-actions .icon-btn,
 .icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     border: none;
     border-radius: 8px;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     font-size: 14px;
     line-height: 1;
     flex-shrink: 0;
 }
 
-.moto-list-actions .icon-btn:hover,
-.moto-actions .icon-btn:hover,
 .icon-btn:hover {
     background: var(--border-light);
     color: var(--text-primary);
 }
 
-.moto-list-actions .icon-btn.danger:hover,
-.moto-actions .icon-btn.danger:hover,
 .icon-btn.danger:hover {
     background: var(--danger-trans);
     color: var(--danger);
 }
 
-.moto-list-actions .icon-btn.small,
-.moto-actions .icon-btn.small,
 .icon-btn.small {
     width: 28px;
     height: 28px;
     font-size: 12px;
 }
 
-.moto-list-actions .icon-btn i,
-.moto-actions .icon-btn i,
 .icon-btn i {
-    margin: 0 !important;
-    padding: 0 !important;
+    pointer-events: none;
 }
 
 /* ===== MEDIA QUERIES ===== */
-@media (max-width: 599px) {
-    .moto-card {
-        min-width: 180px;
-        max-width: 210px;
-        padding: 12px;
-    }
-
-    .moto-list-item {
-        display: flex;
-        flex-direction: column-reverse;
-    }
-
-    .moto-card-wrapper {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-
-
-    .moto-preview {
-        aspect-ratio: 16/11;
-    }
-
-    .moto-name {
-        font-size: 14px;
-    }
-
-    .moto-details {
-        font-size: 11px;
-    }
-
-    .moto-actions .icon-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
-
-    .page-title {
-        font-size: 22px;
-    }
-}
-
-@media (max-width: 500px) {
-
-    .maintenance-item {
-        flex-direction: column;
-    }
-
-    .maint-icon {
-        min-width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .moto-card {
-        min-width: 160px;
-        max-width: 180px;
-        padding: 10px;
-    }
-
-    .moto-preview {
-        aspect-ratio: 16/12;
-        border-radius: 10px;
-    }
-
-    .moto-status-badge {
-        font-size: 8px;
-        padding: 1px 8px;
-        bottom: 6px;
-        left: 6px;
-    }
-
-    .moto-placeholder {
-        font-size: 24px;
-    }
-
-    .moto-name {
-        font-size: 13px;
-    }
-
-    .moto-details {
-        font-size: 10px;
-    }
-
-    .moto-volume {
-        font-size: 10px;
-        padding: 1px 8px;
-    }
-
-    .color-indicator {
-        width: 12px;
-        height: 12px;
-    }
-}
-
-@media (min-width: 600px) {
-    .moto-list-item {
-        padding: 8px 14px;
-    }
-
-    .moto-list-preview {
-        width: 44px;
-        height: 44px;
-    }
-
-    .moto-list-placeholder {
-        font-size: 16px;
-    }
-
-    .moto-list-name {
-        font-size: 14px;
-    }
-
-    .moto-list-year {
-        font-size: 12px;
-    }
-
-    .moto-list-mileage {
-        font-size: 12px;
-    }
-
-    .moto-list-volume {
-        font-size: 11px;
-        padding: 1px 8px;
-    }
-
-    .moto-list-status {
-        font-size: 10px;
-        padding: 1px 8px;
-    }
-
-    .moto-list-actions .icon-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
-}
-
-@media (min-width: 768px) {
-    .moto-list-item {
-        padding: 10px 18px;
-    }
-
-    .moto-list-preview {
-        width: 52px;
-        height: 52px;
-    }
-
-    .moto-list-name {
-        font-size: 15px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .detail-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 820px) {
     .page-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 12px;
     }
     
     .page-title {
-        font-size: 22px;
+        font-size: 24px;
     }
     
     .btn-primary {
@@ -1796,25 +1550,13 @@ export default {
         justify-content: center;
         padding: 12px;
     }
-
-    .btn-primary span {
-        display: inline;
-    }
     
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
     
-    .stat-card {
-        padding: 12px 14px;
-    }
-    
-    .stat-value {
-        font-size: 15px;
-    }
-    
-    .spec-list {
-        grid-template-columns: 1fr 1fr;
+    .detail-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1840,8 +1582,9 @@ export default {
     }
 
     .stat-chip {
+        width: 100%;
         font-size: 12px;
-        padding: 4px 12px;
+        padding: 6px 12px;
     }
 
     .stats-grid {
@@ -1850,18 +1593,18 @@ export default {
     }
     
     .stat-card {
-        padding: 10px 12px;
+        padding: 12px 14px;
         gap: 10px;
     }
     
     .stat-icon {
-        width: 34px;
-        height: 34px;
-        font-size: 14px;
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
     }
 
     .stat-value {
-        font-size: 14px;
+        font-size: 15px;
     }
     
     .detail-card {
@@ -1882,13 +1625,14 @@ export default {
     }
 
     .maintenance-item {
-        padding: 8px 12px;
+        padding: 10px 12px;
         gap: 10px;
+        flex-wrap: wrap;
     }
 
     .maint-icon {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         font-size: 12px;
     }
 
@@ -1897,7 +1641,30 @@ export default {
     }
 
     .maint-meta {
-        font-size: 10px;
+        font-size: 11px;
+    }
+
+    .moto-list-item {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .moto-list-preview {
+        width: 48px;
+        height: 48px;
+    }
+
+    .moto-list-name {
+        font-size: 14px;
+    }
+
+    .moto-list-actions {
+        opacity: 1;
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 6px;
+        border-top: 1px solid var(--border-light);
     }
 
     .empty-state {
@@ -1905,9 +1672,9 @@ export default {
     }
     
     .empty-icon {
-        width: 56px;
-        height: 56px;
-        font-size: 24px;
+        width: 60px;
+        height: 60px;
+        font-size: 26px;
     }
     
     .empty-state h3 {
@@ -1924,57 +1691,17 @@ export default {
         grid-template-columns: 1fr;
     }
 
-    .moto-card {
-        min-width: 140px;
-        max-width: 160px;
-        padding: 8px;
+    .moto-list-meta {
+        gap: 8px;
     }
 
-    .moto-preview {
-        aspect-ratio: 16/13;
-        border-radius: 8px;
-    }
-
-    .moto-actions .icon-btn {
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
-    }
-
-    .moto-actions {
-        gap: 0;
+    .moto-list-volume {
+        font-size: 11px;
+        padding: 1px 10px;
     }
 
     .stat-card {
-        padding: 8px 10px;
-    }
-
-    .moto-list-item {
-    }
-}
-
-/* ===== SCROLLBAR STYLING ===== */
-.motorcycles-scroll-wrapper {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar {
-    height: 3px;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.motorcycles-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
-}
-
-@media (hover: hover) {
-    .motorcycles-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
+        padding: 10px 12px;
     }
 }
 </style>

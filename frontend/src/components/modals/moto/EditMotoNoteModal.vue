@@ -25,7 +25,7 @@
 
         <div class="modal-info-block info">
             <div class="modal-info-icon">
-                <i class="fa fa-lightbulb-o"></i>
+                <i class="fa fa-lightbulb"></i>
             </div>
             <p class="modal-info-text">
                 Здесь можно хранить любую полезную информацию: особенности модели, 

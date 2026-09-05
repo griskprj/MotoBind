@@ -226,15 +226,6 @@
                     </label>
                 </div>
 
-                <div v-if="!form.planned_mileage && !form.planned_date" class="modal-info-block warning">
-                    <div class="modal-info-icon">
-                        <i class="fa fa-exclamation-triangle"></i>
-                    </div>
-                    <p class="modal-info-text">
-                        Укажите хотя бы один параметр: пробег или дату.
-                    </p>
-                </div>
-
                 <div class="modal-info-block info">
                     <div class="modal-info-icon">
                         <i class="fa fa-bell"></i>
@@ -296,7 +287,6 @@
         <!-- Действия -->
         <template #actions>
             <div class="step-actions">
-                <!-- Кнопка "Назад" (на 2-м шаге) -->
                 <button 
                     v-if="currentStep === 2"
                     class="btn btn-secondary" 
@@ -305,7 +295,6 @@
                     <i class="fa fa-arrow-left"></i> Назад
                 </button>
 
-                <!-- Кнопка "Отменить" (на 1-м шаге) -->
                 <button 
                     v-if="currentStep === 1"
                     class="btn btn-secondary" 
@@ -314,7 +303,6 @@
                     Отменить
                 </button>
 
-                <!-- Кнопка "Продолжить" (на 1-м шаге) -->
                 <button 
                     v-if="currentStep === 1"
                     class="btn btn-primary" 
@@ -324,7 +312,6 @@
                     Продолжить <i class="fa fa-arrow-right"></i>
                 </button>
 
-                <!-- Кнопка "Сохранить" (на 2-м шаге) -->
                 <button 
                     v-if="currentStep === 2"
                     class="btn btn-primary" 
@@ -339,7 +326,6 @@
                     </span>
                 </button>
 
-                <!-- Кнопка "Закрыть" (на 3-м шаге) -->
                 <button 
                     v-if="currentStep === 3"
                     class="btn btn-success" 
@@ -450,7 +436,6 @@ export default {
             }
 
             if (this.selectedType === 'planned') {
-                // Хотя бы одно поле заполнено: пробег или дата
                 const hasPlanned = (this.form.planned_mileage && this.form.planned_mileage > 0) ||
                                    this.form.planned_date
                 return baseValid && hasPlanned
