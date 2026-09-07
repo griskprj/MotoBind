@@ -184,6 +184,37 @@
                     </div>
                 </div>
 
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <i class="fa fa-envelope"></i>
+                        <h3>Уведомления и рассылки</h3>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                            <div class="toggle-info">
+                                <span class="toggle-label">Новостная рассылка</span>
+                                <span class="toggle-desc">Получать новости и обновления MotoBind</span>
+                            </div>
+                            <label class="switch">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="notificationSettings.email_newsletter_enabled"
+                                    @change="updateNotificationSettings"
+                                    :disabled="!notificationSettings.email_notifications_enabled"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="info-box info">
+                            <i class="fa fa-info-circle"></i>
+                            <span>
+                                Вы можете отписаться от рассылки в один клик из любого письма
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Публичный профиль -->
                 <div class="settings-card">
                     <div class="settings-card-header">
@@ -268,6 +299,11 @@ export default {
                 likes: 0,
                 comments: 0,
                 motorcycles: 0
+            },
+
+            notificationSettings: {
+                email_notifications_enabled: true,
+                email_newsletter_enabled: true,
             },
 
             showEditProfile: false,
@@ -379,6 +415,15 @@ export default {
             }
         },
 
+        async loadNotificationSettings() {
+            try {
+                const { data } = await api.get('/user/notification-settings');
+                this.notificationSettings = data;
+            } catch (err) {
+                console.error('Failed to load notification settings:', err);
+            }
+        },
+
         // ===== ОБНОВЛЕНИЕ ПРОФИЛЯ =====
         async updateProfile(formData) {
             try {
@@ -390,6 +435,16 @@ export default {
             } catch (error) {
                 console.error('Error updating profile:', error)
                 alert(error.response?.data?.message || 'Ошибка при обновлении профиля')
+            }
+        },
+
+        async updateNotificationSettings() {
+            try {
+                await api.put('/user/notification-settings', this.notificationSettings);
+                this.$toast?.success('Настройки уведомлений обновлены');
+            } catch (err) {
+                console.error('Failed to update notification settings:', err);
+                this.$toast?.error('Ошибка обновления настроек');
             }
         },
 
@@ -518,6 +573,7 @@ export default {
 
     mounted() {
         this.loadProfile()
+        this.loadNotificationSettings()
     }
 }
 </script>
@@ -815,6 +871,116 @@ export default {
     color: var(--text-primary);
 }
 
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.toggle-row:last-child {
+    border-bottom: none;
+}
+
+.toggle-row.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.toggle-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Переключатель */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 26px;
+    transition: all 0.3s ease;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.switch input:checked + .slider {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+    background: white;
+}
+
+.switch input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.info-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.info-box.info {
+    background: var(--accent-trans);
+    color: var(--text-secondary);
+}
+
+.info-box i {
+    color: var(--accent-text);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
 .hint-text {
     font-size: 14px;
     color: var(--text-secondary);
@@ -936,11 +1102,12 @@ export default {
 @media (max-width: 1024px) {
     .profile-grid {
         grid-template-columns: 1fr;
+        grid-template-rows: repeat(1, 2fr);
     }
 
     .profile-sidebar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 16px;
     }
 

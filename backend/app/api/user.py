@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.exceptions import ForbiddenError, ValidationError, NotFoundError
@@ -60,6 +60,77 @@ def get_my_profile():
     user_obj = UserService.get_user_by_id(user_id)
     return jsonify({
         'user': user_obj.to_dict(include_moto=True, include_stats=True),
+    }), 200
+
+
+@user.route('/notification-settings', methods=['GET'])
+@jwt_required()
+def get_notification_settings():
+    """Получение настроек уведомлений"""
+    user = UserService.get_user_by_id(int(get_jwt_identity()))
+
+    return jsonify({
+        'email_notifications_enabled': user.email_notifications_enabled,
+        'email_newsletter_enabled': user.email_newsletter_enabled,
+        'email_verification_enabled': user.email_verification_enabled
+    }), 200
+
+@user.route('/notification-settings', methods=['PUT'])
+@jwt_required()
+def update_notification_settings():
+    """Обновление настроек уведомлений"""
+    user = UserService.get_user_by_id(int(get_jwt_identity()))
+
+    data = request.get_json()
+
+    if 'email_notifications_enabled' in data:
+        user.email_notifications_enabled = bool(data['email_notifications_enabled'])
+
+    if 'email_newsletter_enabled' in data:
+        user.email_newsletter_enabled = bool(data['email_newsletter_enabled'])
+
+    if 'email_verification_enabled' in data:
+        user.email_verification_enabled = bool(data['email_verification_enabled'])
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Настройки уведомлений обновлены',
+        'settings': {
+            'email_notifications_enabled': user.email_notifications_enabled,
+            'email_newsletter_enabled': user.email_newsletter_enabled,
+            'email_verification_enabled': user.email_verification_enabled,
+        }
+    }), 200
+
+@user.route('/unsubscribe/<string:token>', methods=['GET'])
+def unsubscribe_from_newsletter(token):
+    """Отписка от рассылки по токену"""
+    try:
+        from itsdangerous import URLSafeTimedSerializer
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        email = serializer.loads(token, max_age=31536000) # 1 year
+    except:
+        return jsonify({'error': 'Недействительная ссылка'}), 400
+
+    user = UserService.get_user_by_email(email=email)
+    user.email_newsletter_enabled = False
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Вы успешно отписались от рассылки',
+        'email': email
+    }), 200
+
+@user.route('/unsubscribe/<string:token>', methods=['POST'])
+def unscubcsribe_direct(email):
+    """Отписка от рассылки по email (без токена, для админов)"""
+    user = UserService.get_user_by_email(email=email)
+    user.email_newsletter_enabled = False
+    db.session.commit()
+
+    return jsonify({
+        'message': f'Пользователь {email} отписан от рассылки'
     }), 200
 
 
