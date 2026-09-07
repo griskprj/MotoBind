@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="footer-version">
-                    <span class="version-badge">v1.2.2</span>
+                    <span class="version-badge">v1.3.2</span>
                 </div>
             </div>
         </div>
