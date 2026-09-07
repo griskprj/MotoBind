@@ -33,6 +33,7 @@
                                     required
                                     placeholder="Например: Замена масла в двигателе"
                                     :class="{ 'error': errors.title }"
+                                    max="200"
                                 >
                                 <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
                             </label>
@@ -47,6 +48,7 @@
                                     rows="2"
                                     placeholder="Краткое описание процедуры, её важность и интервалы"
                                     :class="{ 'error': errors.description }"
+                                    max="1000"
                                 ></textarea>
                                 <span v-if="errors.description" class="error-message">{{ errors.description }}</span>
                             </label>
@@ -62,6 +64,7 @@
                                         required
                                         placeholder="Например: BMW S1000RR (2018+)"
                                         :class="{ 'error': errors.motorcycle }"
+                                        max="100"
                                     >
                                     <span v-if="errors.motorcycle" class="error-message">{{ errors.motorcycle }}</span>
                                 </label>
@@ -88,6 +91,7 @@
                                         type="text" 
                                         v-model="form.time_estimate" 
                                         placeholder="Например: 15–20 минут"
+                                        max="64"
                                     >
                                 </label>
                             </div>
@@ -99,6 +103,7 @@
                                         type="text" 
                                         v-model="form.interval" 
                                         placeholder="Например: каждые 10 000 км или раз в год"
+                                        max="64"
                                     >
                                 </label>
                             </div>
@@ -139,6 +144,7 @@
                                     v-model="form.safety_tip" 
                                     rows="2"
                                     placeholder="Общие рекомендации по выполнению процедуры"
+                                    max="1000"
                                 ></textarea>
                             </label>
                         </div>
@@ -150,6 +156,7 @@
                                     v-model="form.warnings" 
                                     rows="2"
                                     placeholder="Например: Не запускайте двигатель без масла"
+                                    max="1000"
                                 ></textarea>
                             </label>
                         </div>
@@ -161,6 +168,7 @@
                                     v-model="form.conditions" 
                                     rows="2"
                                     placeholder="Например: Двигатель холодный, мотоцикл на центральной подставке"
+                                    max="1000"
                                 ></textarea>
                             </label>
                         </div>
@@ -182,6 +190,7 @@
                                     type="text" 
                                     v-model="form.instruments" 
                                     placeholder="Ключ на 18мм, ветошь, динамометрический ключ, ёмкость для слива"
+                                    max="500"
                                 >
                             </label>
                         </div>
@@ -193,6 +202,7 @@
                                     type="text" 
                                     v-model="form.parts" 
                                     placeholder="Масло моторное 10W-40 (3.2L), масляный фильтр, уплотнительное кольцо"
+                                    max="500"
                                 >
                             </label>
                         </div>
@@ -231,7 +241,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-add-link" @click="addLink">
+                                <button :disabled="docs_links.length >= 10" type="button" class="btn-add-link" @click="addLink">
                                     <i class="fa fa-plus"></i> Добавить ссылку
                                 </button>
                             </label>
@@ -344,6 +354,7 @@
                                             required
                                             :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
                                             :class="{ 'error': step.errors && step.errors.title }"
+                                            max="200"
                                         >
                                         <span v-if="step.errors && step.errors.title" class="error-message">{{ step.errors.title }}</span>
                                     </label>
@@ -356,6 +367,7 @@
                                             v-model="step.text" 
                                             rows="3"
                                             :placeholder="`Подробное описание шага ${index + 1}`"
+                                            max="5000"
                                         ></textarea>
                                     </label>
                                 </div>
@@ -368,6 +380,7 @@
                                                 type="text"
                                                 v-model="step.warning"
                                                 placeholder="Чего нельзя делать на этом шаге"
+                                                max="256"
                                             >
                                         </label>
                                     </div>
@@ -379,6 +392,7 @@
                                                 type="text"
                                                 v-model="step.tip"
                                                 placeholder="Лайфхак или рекомендация"
+                                                max="256"
                                             >
                                         </label>
                                     </div>
@@ -391,6 +405,7 @@
                                             type="text"
                                             v-model="step.result"
                                             placeholder="Как понять, что шаг выполнен правильно"
+                                            max="500"
                                         >
                                     </label>
                                 </div>
@@ -451,6 +466,7 @@
                                     v-model="form.aftercare" 
                                     rows="3"
                                     placeholder="Что проверить после работы: уровень масла, отсутствие течей, затяжку болтов..."
+                                    max="2000"
                                 ></textarea>
                             </label>
                         </div>
