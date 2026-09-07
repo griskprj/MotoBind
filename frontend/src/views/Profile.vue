@@ -419,6 +419,7 @@ export default {
             try {
                 const { data } = await api.get('/user/notification-settings');
                 this.notificationSettings = data;
+                this.email_notifications_enabled = true
             } catch (err) {
                 console.error('Failed to load notification settings:', err);
             }
