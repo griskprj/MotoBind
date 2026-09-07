@@ -190,7 +190,7 @@
                         <h3>Уведомления и рассылки</h3>
                     </div>
                     <div class="settings-card-body">
-                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                        <div class="toggle-row">
                             <div class="toggle-info">
                                 <span class="toggle-label">Новостная рассылка</span>
                                 <span class="toggle-desc">Получать новости и обновления MotoBind</span>
