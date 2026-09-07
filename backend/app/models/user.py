@@ -1,32 +1,25 @@
 from datetime import datetime, timezone
-
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from app.extensions import db
-
 
 class User(db.Model):
     """User model"""
-
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(128), nullable=False)
     password = db.Column(db.String(512), nullable=False)
-    username = db.Column(db.String(64), nullable=False)
-    bio = db.Column(db.String(128), nullable=True)
+    role = db.Column(db.String(32), default="motorcyclist")
+    status = db.Column(db.String, default="active")
+
+    avatar = db.Column(db.String(256), nullable=True)
     location = db.Column(db.String(128), nullable=True)
     motorcycle = db.Column(db.String(128), nullable=True)
     experience = db.Column(db.String(20), nullable=True)
+    bio = db.Column(db.String(128), nullable=True)
     social_links = db.Column(db.JSON, nullable=True)
-    avatar = db.Column(db.String(256), nullable=True)
-    role = db.Column(
-        db.String(32), default="motorcyclist"
-    )  # motorcyclist, admin, motoclub
-    refresh_token = db.Column(db.String(512))
-    status = db.Column(db.String, default="active")
-    is_premium = db.Column(db.Boolean, default=False)
-    is_verified = db.Column(db.Boolean, default=False)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(
         db.DateTime,
@@ -35,11 +28,19 @@ class User(db.Model):
     )
     last_login = db.Column(db.DateTime, nullable=True)
 
+    refresh_token = db.Column(db.String(512))
+    is_premium = db.Column(db.Boolean, default=False)
+    is_verified = db.Column(db.Boolean, default=False)
+
     verification_code = db.Column(db.String(6), nullable=True)
     verification_code_expires = db.Column(db.DateTime, nullable=True)
 
     reset_password_token = db.Column(db.String(256), nullable=True)
     reset_password_expires = db.Column(db.DateTime, nullable=True)
+
+    email_notifications_enabled = db.Column(db.Boolean, default=True)
+    email_newsletter_enabled = db.Column(db.Boolean, default=True)
+    email_verification_enabled = db.Column(db.Boolean, default=True)
 
     motorcycles = db.relationship(
         "Motorcycle",
@@ -75,8 +76,12 @@ class User(db.Model):
             "role": self.role,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "last_login": self.last_login.isoformat() if self.last_login else None
+            "last_login": self.last_login.isoformat() if self.last_login else None,
+            'email_notifications_enabled': self.email_notifications_enabled,
+            'email_newsletter_enabled': self.email_newsletter_enabled,
+            'email_verification_enabled': self.email_verification_enabled
         }
+        
         if include_moto:
             data["motorcycles"] = [m.to_dict() for m in self.motorcycles]
 

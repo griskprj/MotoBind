@@ -113,6 +113,17 @@ const router = createRouter({
         showHeader: false
       }
     },
+    {
+      path: '/unsubscribe/:token',
+      name: 'Unsubscribe',
+      component: () => import('../views/Unsubscribe.vue'),
+      meta: {
+        title: 'MotoBind - Отписка от рассылки',
+        description: 'Отпишитесь от новостной рассылки MotoBind',
+        showFooter: false,
+        showHeader: false
+      }
+    },
 
     // ===== ОСНОВНЫЕ СТРАНИЦЫ =====
     {

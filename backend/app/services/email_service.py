@@ -12,6 +12,25 @@ class EmailService:
     def generate_verification_code() -> str:
         """Генерирует 6-значный код подтверждения"""
         return ''.join(random.choices('0123456789', k=6))
+
+    @staticmethod
+    def can_send_email(user, email_type='newsletter'):
+        """
+        Проверяет, можно ли отправить email пользователю
+        email_type: 'newsletter', 'verification', 'notification'
+        """
+        if not user or not user.email:
+            return False
+
+        if not user.email_notifications_enabled:
+            return False
+
+        if email_type == 'newsletter' and not user.email_newsletter_enabled:
+            return False
+        if email_type == 'verification' and not user.email_verification_enabled:
+            return False
+
+        return True
     
     @staticmethod
     def send_verification_email(email: str, code: str) -> bool:
@@ -122,6 +141,24 @@ class EmailService:
         """
         if not recipients:
             return {"success": False, "error": "Нет получателей"}
+
+        from app.models.user import User
+        with app.app_context():
+            subscribed_users = User.query.filter(
+                User.email.in_(recipients),
+                User.email_newsletter_enabled == True,
+                User.email_notifications_enabled == True
+            ).all()
+
+            subscribed_email = [u.email for u in subscribed_users]
+
+            if not subscribed_users:
+                return {
+                    "success": False,
+                    "error": "Нет подписанных пользователей",
+                    "total": len(recipients),
+                    "subscribed": 0
+                }
         
         thread = Thread(
             target=EmailService._send_bulk_email_thread,
@@ -144,6 +181,43 @@ class EmailService:
             success_count = 0
             failed_count = 0
             failed_emails = []
+
+            from itsdangerous import URLSafeTimedSerializer
+            serializer = URLSafeTimedSerializer(app.config(['SECRET_KEY']))
+
+            for i, email in enumerate(recipients):
+                try:
+                    token = serializer.dumps(email, salt='unsubscribe')
+                    unsubscribe_url = f"{app.config.get('FRONTEND_URL')}/unsubscribe/{token}"
+
+                    final_html = html_body.replace(
+                        '</body>',
+                        f'''
+                        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                            <p style="color: #999; font-size: 12px;">
+                                Вы получили это письмо, потому что подписаны на рассылку MotoBind.
+                                <br>
+                                <a href="{unsubscribe_url}" style="color: #7c3aed; text-decoration: underline;">
+                                    Отписаться от рассылки
+                                </a>
+                            </p>
+                        </div>
+                        </body>
+                        '''
+                    )
+
+                    msg = Message(
+                        subject=subject,
+                        recipients=[email],
+                        html=final_html,
+                        sender=sender or app.config.get('MAIL_DEFAULT_SENDER')
+                    )
+                    mail.send(msg)
+                    success_count += 1
+
+                except Exception as e:
+                    failed_count += 1
+                    failed_emails.append(email)
             
             for email in recipients:
                 try:

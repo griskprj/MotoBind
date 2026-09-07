@@ -458,7 +458,7 @@ def admin_delete_motorcycle(moto_id):
 @admin_required
 def send_newsletter():
     """
-    Отправка рассылки всем пользователям
+    Отправка рассылки только подписанным пользователям
     """
     data = request.get_json()
     if not data:
@@ -504,14 +504,6 @@ def send_newsletter():
             </div>
             <div class="content">
                 {content}
-            </div>
-            <div class="footer">
-                <p>© 2026 MotoBind. Все права защищены.</p>
-                <p>
-                    <a href="https://motobind.ru/unsubscribe" class="unsubscribe">
-                        Отписаться от рассылки
-                    </a>
-                </p>
             </div>
         </div>
     </body>
