@@ -200,7 +200,6 @@
                                     type="checkbox" 
                                     v-model="notificationSettings.email_newsletter_enabled"
                                     @change="updateNotificationSettings"
-                                    :disabled="!notificationSettings.email_notifications_enabled"
                                 >
                                 <span class="slider"></span>
                             </label>
