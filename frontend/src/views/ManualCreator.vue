@@ -241,7 +241,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <button :disabled="docs_links.length >= 10" type="button" class="btn-add-link" @click="addLink">
+                                <button type="button" class="btn-add-link" @click="addLink">
                                     <i class="fa fa-plus"></i> Добавить ссылку
                                 </button>
                             </label>
