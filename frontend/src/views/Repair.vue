@@ -308,7 +308,7 @@
                 
                 <!-- Изображение шага -->
                 <div v-if="step.image" class="step-image">
-                  <img :src="step.image" :alt="step.title || 'Шаг'" loading="lazy" />
+                  <img :src="getImageUrl(step.image)" :alt="step.title || 'Шаг'" loading="lazy" />
                 </div>
                 
                 <!-- Результат шага -->
@@ -740,7 +740,18 @@ export default {
         tire: 'Давление в шинах'
       }
       return labels[key] || key
-    }
+    },
+
+    getImageUrl(path) {
+      if (!path) return ''
+      
+      if (path.startsWith('data:')) return path
+      if (path.startsWith('http://') || path.startsWith('https://')) return path
+      if (path.startsWith('/')) return path
+      
+      const baseUrl = import.meta.env.VITE_API_URL || ''
+      return `${baseUrl}/uploads/${path}`
+    },
   }
 }
 </script>
