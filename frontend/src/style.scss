@@ -178,6 +178,7 @@ button,
   background-color: var(--accent);
   color: white;
   white-space: nowrap;
+  overflow-y: hidden;
 
   &:hover {
     background-color: var(--accent-hover);

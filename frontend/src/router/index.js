@@ -19,6 +19,10 @@ function isAdmin() {
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
   routes: [
     // ===== ГЛАВНАЯ =====
     {
@@ -386,7 +390,67 @@ const router = createRouter({
         showHeader: true
       }
     },
+    {
+      path: '/admin/reports',
+      name: 'AdminReports',
+      component: () => import('../views/admin/AdminReportsPanel.vue'),
+      meta: {
+        requiresAdmin: true,
+        requiresAuth: true,
+        title: 'MotoBind - Управление репортами',
+        description: 'Модерация жалоб на посты. Просмотр, рассмотрение и принятие решений по репортам пользователей.',
+        showFooter: true,
+        showHeader: true
+      }
+    }
   ]
+})
+
+router.afterEach((to) => {
+  document.title = to.meta?.title || 'MotoBind'
+
+  const description = to.meta?.description
+  if (description) {
+    let meta = document.querySelector('meta[name="description"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', 'description')
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', description)
+  }
+
+  const isPrivate = to.meta?.requiresAdmin || to.meta?.requiresGuest
+  let robots = document.querySelector('meta[name="robots"]')
+  if (!robots) {
+    robots = document.createElement('meta')
+    robots.setAttribute('name', 'robots')
+    document.head.appendChild(robots)
+  }
+  robots.setAttribute('content', isPrivate ? 'noindex, nofollow' : 'index, follow')
+
+  let canonical = document.querySelector('link[rel="canonical"]')
+  if (!canonical) {
+    canonical = document.createElement('link')
+    canonical.setAttribute('rel', 'canonical')
+    document.head.appendChild(canonical)
+  }
+  canonical.setAttribute('href', window.location.origin + to.path)
+
+  const setOG = (property, content) => {
+    if (!content) return
+    let tag = document.querySelector(`meta[property="${property}"]`)
+    if (!tag) {
+      tag = document.createElement('meta')
+      tag.setAttribute('property', property)
+      document.head.appendChild(tag)
+    }
+    tag.setAttribute('content', content)
+  }
+  setOG('og:title', to.meta?.title || 'MotoBind')
+  setOG('og:description', to.meta?.description || '')
+  setOG('og:url', window.location.href)
+  setOG('og:type', 'website')
 })
 
 // ===== НАВИГАЦИОННЫЙ ХУК =====

@@ -902,6 +902,14 @@ export default {
     border-color: var(--accent);
 }
 
+.pagination-pages {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
+    margin-right: 8px;
+    overflow-x: auto;
+}
+
 .pagination-ellipsis {
     padding: 0 8px;
     color: var(--text-muted);

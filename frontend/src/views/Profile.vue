@@ -607,6 +607,7 @@ export default {
     width: 120px;
     height: 120px;
     margin: 0 auto 16px;
+    overflow-y: hidden;
 }
 
 .profile-avatar {
