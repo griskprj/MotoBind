@@ -1,5 +1,5 @@
 <div align="center">
-<img src="frontend/public/MotoBindLogo.png" alt="MotoBind Logo" width="120" height="120">
+<img src="frontend/public/MotoBindLogo.webp" alt="MotoBind Logo" width="120" height="120">
   <h1>MotoBind</h1>
   <p><strong>Умное управление обслуживанием мотоциклов</strong></p>
   <p>
