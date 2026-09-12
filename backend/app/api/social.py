@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.post_service import PostService
-from app.exceptions import NotFoundError, ForbiddenError, ValidationError
+from app.exceptions import NotFoundError, ForbiddenError, ValidationError, ConflictError
+from app.services.report_service import ReportService
 
 social_bp = Blueprint('social', __name__, url_prefix='/api/social')
 
@@ -139,3 +140,46 @@ def delete_comment(comment_id):
     except (NotFoundError, ForbiddenError) as e:
         status_code = 404 if isinstance(e, NotFoundError) else 403
         return jsonify({'error': str(e)}), status_code
+
+
+@social_bp.route('/posts/<int:post_id>/report', methods=['POST'])
+@jwt_required()
+def report_post(post_id):
+    """Отправить жалобу на пост"""
+    try:
+        user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        category = data.get('category')
+        description = data.get('description')
+
+        if not category:
+            return jsonify({'error': 'Категория жалобы обязательна'}), 400
+
+        report = ReportService.create_report(
+            post_id=post_id,
+            reporter_id=user_id,
+            category=category,
+            description=description,
+        )
+        return jsonify({
+            'message': 'Жалоба отправлена модератору',
+            'report': report.to_dict(include_post=False),
+        }), 201
+    except NotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+    except ConflictError as e:
+        return jsonify({'error': str(e)}), 409
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@social_bp.route('/report-categories', methods=['GET'])
+@jwt_required()
+def get_report_categories():
+    from app.models.post_report import PostReport
+    return jsonify([
+        {'value': k, 'label': v} for k, v in PostReport.CATEGORIES.items()
+    ]), 200

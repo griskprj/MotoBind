@@ -141,6 +141,15 @@
                         <i class="fa fa-tools"></i>
                         <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                     </router-link>
+                    <router-link
+                        to="/admin/reports"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/reports' }"
+                        @click="closeSidebar"
+                    >
+                        <i class="fa fa-flag"></i>
+                        <span v-if="!isCollapsed || !isDesktop">Репорты</span>
+                    </router-link>
                 </div>
 
                 <router-link

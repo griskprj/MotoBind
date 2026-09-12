@@ -8,10 +8,12 @@ from app.extensions import db
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
+from app.models.post_report import PostReport
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
 from app.services.notification_service import NotificationService
 from app.services.email_service import EmailService
+from app.services.report_service import ReportService
 
 admin = Blueprint("admin", __name__)
 
@@ -519,3 +521,63 @@ def send_newsletter():
         "target": target,
         "result": result
     }), 200
+
+
+@admin.route("/reports", methods=["GET"])
+@jwt_required()
+@admin_required
+def get_reports():
+    """Список жалоб на посты"""
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    status = request.args.get("status") or None
+    category = request.args.get("category") or None
+
+    data = ReportService.get_reports(page=page, per_page=per_page, status=status, category=category)
+    return jsonify(data), 200
+
+
+@admin.route("/reports/<int:report_id>", methods=["GET"])
+@jwt_required()
+@admin_required
+def get_report(report_id):
+    report = PostReport.query.get(report_id)
+    if not report:
+        raise NotFoundError("Жалоба не найдена")
+    return jsonify(report.to_dict()), 200
+
+
+@admin.route("/reports/<int:report_id>/resolve", methods=["POST"])
+@jwt_required()
+@admin_required
+def resolve_report(report_id):
+    """
+    Рассмотреть жалобу.
+    body: { action: 'post_deleted' | 'user_banned' | 'both' | 'none', note?: str }
+    """
+    data = request.get_json() or {}
+    action = data.get("action")
+    note = data.get("note")
+    admin_id = int(get_jwt_identity())
+
+    if action == "none":
+        report = ReportService.reject_report(report_id, admin_id, note)
+    else:
+        report = ReportService.resolve_report(report_id, admin_id, action, note)
+
+    return jsonify({
+        "message": "Жалоба рассмотрена",
+        "report": report.to_dict(),
+    }), 200
+
+
+@admin.route("/reports/<int:report_id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_report(report_id):
+    report = PostReport.query.get(report_id)
+    if not report:
+        raise NotFoundError("Жалоба не найдена")
+    db.session.delete(report)
+    db.session.commit()
+    return jsonify({"message": "Жалоба удалена"}), 200

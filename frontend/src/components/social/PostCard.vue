@@ -38,6 +38,15 @@
                     <i class="fa fa-comment"></i>
                     <span>{{ post.comments_count || 0 }}</span>
                 </button>
+
+                <button
+                    v-if="post.author_id !== currentUserId"
+                    class="flag-btn"
+                    @click="showReportModal = true"
+                    title="Пожаловаться"
+                >
+                    <i class="fa fa-flag"></i>
+                </button>
             </div>
             <button class="outline-btn" @click="openPost">
                 <i class="fa fa-arrow-right"></i>
@@ -52,8 +61,8 @@
                     placeholder="Написать комментарий..."
                     @keyup.enter="submitComment"
                 >
-                <button @click="submitComment" :disabled="!commentText.trim()">
-                    <i class="fa fa-send"></i>
+                <button style="min-width: 45px;" @click="submitComment" :disabled="!commentText.trim()">
+                    <i class="fa fa-angle-right"></i>
                 </button>
             </div>
             
@@ -124,12 +133,22 @@
             </div>
         </div>
     </div>
+
+    <ReportModal
+      :isOpen="showReportModal"
+      :post="post"
+      @close="showReportModal = false"
+      @reported="onReported"
+    />
 </template>
 
 <script>
 import socialApi from '../../api/social'
+import ReportModal from '../../components/modals/social/ReportModal.vue'
 
 export default {
+    components: { ReportModal },
+
     props: {
         post: {
             type: Object,
@@ -149,7 +168,9 @@ export default {
             editContent: '',
             editImageFile: null,
             editImagePreview: null,
-            isSaving: false
+            isSaving: false,
+
+            showReportModal: false
         }
     },
     computed: {
@@ -158,6 +179,9 @@ export default {
         }
     },
     methods: {
+        onReported() {
+            this.showReportModal = false
+        },
         openPost() {
             this.$router.push(`/social/post/${this.post.id}`)
         },
@@ -170,11 +194,15 @@ export default {
             if (path.startsWith('/')) return path
             return `/uploads/${path}`
         },
-        getAvatarUrl(avatar) {
-            if (!avatar) return '/default-avatar.png'
-            if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
-            if (avatar.startsWith('/')) return avatar
-            return `/uploads/${avatar}`
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.webp'
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`
         },
         formatDate(dateStr) {
             if (!dateStr) return ''
@@ -292,11 +320,9 @@ export default {
                 
                 const response = await socialApi.updatePost(this.post.id, formData)
                 
-                // Обновляем данные поста
                 this.post.content = response.data.content
                 this.post.image = response.data.image
                 
-                // Если изображение было удалено или изменено
                 if (!this.post.image) {
                     this.post.image = null
                 }
@@ -345,6 +371,8 @@ export default {
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
+    padding: 15px 10px;
+    overflow-y: hidden;
 }
 
 .avatar {
@@ -428,6 +456,10 @@ export default {
 
 .footer-actions {
     display: flex;
+}
+
+.footer-actions button {
+    transition: all 0.3s;
 }
 
 .like-btn, .comment-btn {
@@ -671,6 +703,19 @@ export default {
     display: flex;
     gap: 12px;
 }
+
+.flag-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    transition: color 0.2s;
+}
+.flag-btn:hover { color: var(--danger); }
 
 .image-upload-btn {
     display: inline-flex;

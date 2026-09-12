@@ -63,7 +63,7 @@
                 </div>
 
                 <div class="footer-version">
-                    <span class="version-badge">v1.3.2</span>
+                    <span class="version-badge">v1.4.0</span>
                 </div>
             </div>
         </div>
@@ -284,7 +284,6 @@ export default {
     color: var(--accent);
     border-color: var(--accent);
     background: var(--accent-trans);
-    transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
 }
 

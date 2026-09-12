@@ -37,5 +37,14 @@ export default {
     },
     deleteComment(commentId) {
         return api.delete(`/social/comments/${commentId}`)
-    }
+    },
+
+    // Репорты
+    reportPost(postId, payload) {
+        return api.post(`/social/posts/${postId}/report`, payload)
+    },
+
+    getReportCategories() {
+        return api.get('/social/report-categories')
+    },
 }

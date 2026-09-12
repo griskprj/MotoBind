@@ -33,6 +33,9 @@
                         </div>
                     </div>
                     <div class="post-actions" v-if="isAuthor">
+                        <button v-if="!isAuthor" class="btn-icon" @click="showReportModal = true" title="Пожаловаться">
+                            <i class="fa fa-flag"></i>
+                        </button>
                         <button class="btn-icon" @click="openEditModal">
                             <i class="fa fa-edit"></i>
                         </button>
@@ -188,17 +191,24 @@
             </div>
         </div>
     </div>
+
+    <ReportModal
+        :isOpen="showReportModal"
+        :post="post"
+        @close="showReportModal = false"
+        @reported="showReportModal = false"
+    />
 </template>
 
 <script>
-import api from '../api/api'
 import socialApi from '../api/social'
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
+import ReportModal from '../components/modals/social/ReportModal.vue';
 
 export default {
     name: 'PostView',
-    components: { Header, LoadingOverlay },
+    components: { Header, LoadingOverlay, ReportModal },
     
     data() {
         return {
@@ -399,11 +409,15 @@ export default {
             return `/uploads/${path}`
         },
         
-        getAvatarUrl(avatar) {
-            if (!avatar) return '/default-avatar.png'
-            if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
-            if (avatar.startsWith('/')) return avatar
-            return `/uploads/${avatar}`
+        getAvatarUrl(avatarPath) {
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.webp'
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`
         },
         
         handleAvatarError(event) {

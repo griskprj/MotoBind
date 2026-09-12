@@ -1,7 +1,7 @@
 <template>
     <div class="post-creator">
         <div class="creator-header">
-            <img :src="userAvatar || '/default-avatar.png'" alt="Avatar" class="avatar">
+            <img :src="userAvatar || '/BaseAvatar.webp'" alt="Avatar" class="avatar">
             <span class="username">{{ userName }}</span>
         </div>
         
@@ -60,7 +60,16 @@ export default {
         },
         userAvatar() {
             const user = JSON.parse(localStorage.getItem('user') || '{}')
-            return `/uploads/${user.avatar}`
+            const avatarPath = user.avatar
+
+            if (!avatarPath || typeof avatarPath !== 'string') {
+                return '/BaseAvatar.webp'
+            }
+            if (avatarPath.startsWith('http')) {
+                return avatarPath
+            }
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${avatarPath}`
         }
     },
     methods: {
