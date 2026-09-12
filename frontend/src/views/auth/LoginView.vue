@@ -1,4 +1,5 @@
 <template>
+  <LoadingOverlay :is-loading="loading" text="Вход..."/>
   <div class="login-container">
     <div class="login-card animate-slide-in">
       <!-- Левая часть с изображением -->
@@ -80,20 +81,25 @@
 <script>
 import api from '../../api/api';
 import { setTokens, setUser } from '../../api/auth';
+import LoadingOverlay from '../../components/LoadingOverlay.vue';
 
 export default {
+  components: { LoadingOverlay },
+
   data() {
     return {
       email: '',
       password: '',
       rememberMe: false,
       error: null,
+      loading: false
     };
   },
 
   methods: {
     async login() {
       this.error = null;
+      this.loading = true
       try {
         const response = await api.post('/auth/login', {
           email: this.email,
@@ -112,6 +118,8 @@ export default {
         }
       } catch (err) {
         this.error = err.response?.data?.error || 'Ошибка входа. Проверьте email и пароль.';
+      } finally {
+        this.loading = false
       }
     },
   },

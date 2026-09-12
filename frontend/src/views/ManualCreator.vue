@@ -26,15 +26,69 @@
                     <div class="form-card-body">
                         <div class="form-group">
                             <label>
+                                Категория / Система*
+                                <select v-model="form.category" @change="onCategoryChange" required>
+                                    <option value="">Выберите категорию</option>
+                                    <option value="engine">⚙️ Двигатель</option>
+                                    <option value="drive">🔗 Привод</option>
+                                    <option value="steering">🔄 Рулевое управление</option>
+                                    <option value="suspension">🛞 Подвеска</option>
+                                    <option value="electronics">💡 Электроника</option>
+                                    <option value="wheel">⚡ Колеса/Шины</option>
+                                    <option value="brakes">🛑 Тормозная система</option>
+                                    <option value="fuel">⛽ Топливная система</option>
+                                    <option value="cooling">❄️ Система охлаждения</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
                                 Название процедуры*
-                                <input 
-                                    type="text" 
-                                    v-model="form.title" 
-                                    required
-                                    placeholder="Например: Замена масла в двигателе"
+                                
+                                <!-- Выпадающий список шаблонов -->
+                                <select 
+                                    v-if="!form.customTitle && form.category"
+                                    v-model="form.templateId" 
+                                    @change="onTemplateChange"
                                     :class="{ 'error': errors.title }"
-                                    maxLength="200"
                                 >
+                                    <option value="">Выберите процедуру</option>
+                                    <option 
+                                        v-for="tpl in availableTemplates" 
+                                        :key="tpl.id" 
+                                        :value="tpl.id"
+                                    >
+                                        {{ tpl.label }}
+                                    </option>
+                                    <option value="__custom__">✏️ Своё название...</option>
+                                </select>
+
+                                <!-- Если категория не выбрана — подсказка -->
+                                <div v-else-if="!form.customTitle" class="field-placeholder">
+                                    Сначала выберите категорию
+                                </div>
+
+                                <!-- Ручной ввод (если выбрано "Своё название" или категория не выбрана) -->
+                                <div v-if="form.customTitle || !form.category" class="custom-title-wrapper">
+                                    <input 
+                                        type="text" 
+                                        v-model="form.title" 
+                                        placeholder="Введите своё название процедуры"
+                                        :class="{ 'error': errors.title }"
+                                        maxLength="200"
+                                    >
+                                    <button 
+                                        v-if="form.customTitle && form.category"
+                                        type="button" 
+                                        class="btn-back-to-templates"
+                                        @click="backToTemplates"
+                                        title="Вернуться к списку"
+                                    >
+                                        <i class="fa fa-list"></i>
+                                    </button>
+                                </div>
+
                                 <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
                             </label>
                         </div>
@@ -107,24 +161,6 @@
                                     >
                                 </label>
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                Категория
-                                <select v-model="form.category">
-                                    <option value="">Выберите категорию</option>
-                                    <option value="engine">Двигатель</option>
-                                    <option value="drive">Привод</option>
-                                    <option value="steering">Рулевое управление</option>
-                                    <option value="suspension">Подвеска</option>
-                                    <option value="electronics">Электроника</option>
-                                    <option value="wheel">Колеса/Шины</option>
-                                    <option value="brakes">Тормозная система</option>
-                                    <option value="fuel">Топливная система</option>
-                                    <option value="cooling">Система охлаждения</option>
-                                </select>
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -493,6 +529,7 @@
 import api from '../api/api';
 import Header from '../components/Header.vue';
 import LoadingOverlay from '../components/LoadingOverlay.vue';
+import { MAINTENANCE_TEMPLATES, getTemplatesByCategory, getTemplateLabel } from '../constants/maintenanceTemplates'
 
 export default {
     name: 'ManualCreator',
@@ -502,12 +539,14 @@ export default {
         return {
             form: {
                 title: '',
+                customTitle: false,
                 description: '',
                 motorcycle: '',
                 difficult: '',
                 time_estimate: '',
                 interval: '',
                 category: '',
+                templateId: '',
                 safety_tip: '',
                 warnings: '',
                 conditions: '',
@@ -557,8 +596,42 @@ export default {
             deep: true
         }
     },
+    
+    computed: {
+        availableTemplates() {
+            if (!this.form.category) return []
+            return getTemplatesByCategory(this.form.category)
+        }
+    },
 
     methods: {
+        onCategoryChange() {
+            this.form.templateId = ''
+            this.form.title = ''
+            this.form.customTitle = false
+        },
+
+        onTemplateChange() {
+            if (this.form.templateId === '__custom__') {
+                this.form.customTitle = true
+                this.form.title = ''
+                this.$nextTick(() => {
+                    const input = this.$el.querySelector('.custom-title-wrapper input')
+                    if (input) input.focus()
+                })
+                return
+            }
+
+            const tpl = this.availableTemplates.find(t => t.id === this.form.templateId)
+            this.form.title = tpl ? tpl.label : ''
+        },
+        
+        backToTemplates() {
+            this.form.customTitle = false
+            this.form.templateId = ''
+            this.form.title = ''
+        },
+
         addStep() {
             this.form.steps.push({
                 id: ++this.stepIdCounter,
@@ -786,6 +859,23 @@ export default {
                     errors: {}
                 }));
 
+                if (this.form.category && manual.title) {
+                    const templates = getTemplatesByCategory(this.form.category)
+                    const match = templates.find(t => t.label.toLowerCase() === manual.title.toLowerCase())
+
+                    if (match) {
+                        this.form.templateId = match.id
+                        this.form.customTitle = false
+                        this.form.title = match.label
+                    } else {
+                        this.form.customTitle = true
+                        this.form.title = manual.title
+                    }
+                } else {
+                    this.form.customTitle = true
+                    this.form.title = manual.title || ''
+                }
+
                 if (this.form.steps.length === 0) {
                     this.addStep();
                 }
@@ -845,6 +935,8 @@ export default {
                 time_estimate: '',
                 interval: '',
                 category: '',
+                templateId: '',
+                customTitle: false,
                 safety_tip: '',
                 warnings: '',
                 conditions: '',
@@ -1129,6 +1221,49 @@ export default {
 
 .btn-add-link:hover {
     background: var(--accent-trans);
+}
+
+.custom-title-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.custom-title-wrapper input {
+    flex: 1;
+}
+
+.btn-back-to-templates {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-input);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.btn-back-to-templates:hover {
+    background: var(--accent-trans);
+    border-color: var(--accent);
+    color: var(--accent-text);
+}
+
+.field-placeholder {
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-input);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 /* ===== TORQUE EDITOR ===== */

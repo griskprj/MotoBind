@@ -451,17 +451,38 @@ export default {
         
         getManualImage(manual) {
             if (manual.image) {
-                return manual.image
+                return this.resolveImageUrl(manual.image)
             }
             
             if (manual.steps && manual.steps.length > 0) {
                 const stepWithImage = manual.steps.find(step => step.image)
-                if (stepWithImage) {
-                    return stepWithImage.image
+                if (stepWithImage?.image) {
+                    return this.resolveImageUrl(stepWithImage.image)
                 }
             }
             
             return '/ManualImgDefault.webp'
+        },
+
+        resolveImageUrl(path) {
+            if (!path || typeof path !== 'string') {
+                return '/ManualImgDefault.webp'
+            }
+            
+            if (path.startsWith('data:')) {
+                return path
+            }
+            
+            if (path.startsWith('http://') || path.startsWith('https://')) {
+                return path
+            }
+            
+            if (path.startsWith('/')) {
+                return path
+            }
+            
+            const baseUrl = import.meta.env.VITE_API_URL || ''
+            return `${baseUrl}/uploads/${path}`
         },
         
         handleImageError(event) {
