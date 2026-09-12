@@ -12,6 +12,7 @@ class Motorcycle(db.Model):
     years = db.Column(db.Integer)
     volume = db.Column(db.Integer)
     mileage = db.Column(db.Integer, default=0)
+    drive_type = db.Column(db.String(20), default='chain')
     color = db.Column(db.String(16), default="#FFFFFF")
     license_plate = db.Column(db.String(10))
     vin = db.Column(db.String(64))
