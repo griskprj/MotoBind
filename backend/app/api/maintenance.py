@@ -1,17 +1,23 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
+from datetime import datetime, timedelta
 
-from app.exceptions import ForbiddenError, NotFoundError, ValidationError as AppValidationError
-from app.models.maintenance import Maintenance
-from app.models.motorcycle import Motorcycle
+from app.extensions import db
+from app.exceptions import ValidationError as AppValidationError
 from app.schemas.maintenance import (
     CreateMaintenanceSchema,
     UpdateMaintenanceSchema,
     MarkMaintenanceAsCompletedSchema,
 )
+from app.models.maintenance import Maintenance
 from app.services.maintenance_service import MaintenanceService
 from app.services.motorcycle_service import MotorcycleService
+from app.services.notification_service import NotificationService
+from app.constants.maintenance_presets import (
+    get_presets_for_motorcycle,
+    calculate_interval
+)
 
 maintenance = Blueprint("maintenance", __name__)
 
@@ -149,3 +155,81 @@ def get_maintenance(maintenance_id):
     )
 
     return jsonify(maintenance.to_dict()), 200
+
+
+@maintenance.route('/quick-start', methods=['POST'])
+@jwt_required()
+def quick_start():
+    """
+    Быстрое создание базовых обслуживаний для мотоцикла
+    """
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+
+    moto_id = data.get('moto_id')
+    current_mileage = data.get('current_mileage')
+    drive_type = data.get('drive_type', 'chain')
+    style = data.get('style', 'normal')
+    terrain = data.get('terrain', 'mixed')
+
+    if not moto_id:
+        raise ValidationError('Не указан мотоцикл')
+
+    moto = MotorcycleService.get_motorcycle_by_id(moto_id=moto_id, user_id=user_id)
+
+    if not current_mileage or current_mileage < 0:
+        raise ValidationError('Некорректный пробег')
+
+    existing = Maintenance.query.filter_by(moto_id=moto_id).count()
+    if existing > 0:
+        raise ValidationError('У мотоцикла уже есть обслуживания')
+
+    moto.mileage = current_mileage
+    if hasattr(moto, 'drive_type'):
+        moto.drive_type = drive_type
+
+    presets = get_presets_for_motorcycle(drive_type)
+
+    today = datetime.utcnow().date()
+    created = []
+
+    for preset in presets:
+        interval = calculate_interval(preset, style, terrain)
+
+        planned_mileage = current_mileage + interval['interval_km']
+        planned_date = today + timedelta(days=interval['interval_days'])
+
+        maintenance = Maintenance(
+            moto_id=moto_id,
+            author_id=user_id,
+            title=preset['title'],
+            description=preset['description'],
+            category=preset['category'],
+            status='planned',
+            planned_mileage=planned_mileage,
+            planned_date=planned_date
+        )
+
+        db.session.add(maintenance)
+        created.append({
+            'title': preset['title'],
+            'planned_mileage': planned_mileage,
+            'planned_date': planned_date.isoformat(),
+            'interval_km': interval['interval_km']
+        })
+
+    db.session.commit()
+
+    NotificationService.send_notification(
+        user_id=user_id,
+        type='system',
+        title='Базовое обслуживание создано',
+        content=f'Для {moto.name} создано {len(created)} плановых работ',
+        link='/maintenance'
+    )
+
+    return jsonify({
+        'message': f'Создано {len(created)} обслуживаний',
+        'created': created,
+        'moto': moto.to_dict()
+    }), 201

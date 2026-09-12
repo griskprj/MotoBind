@@ -194,7 +194,6 @@
                     Начните вести учёт обслуживания своих мотоциклов
                 </p>
                 <button v-if="!hasActiveFilters" @click="showAddMaintenanceModal = true" class="btn-primary">
-                    <i class="fa fa-plus"></i>
                     Добавить обслуживание
                 </button>
                 <button v-else @click="clearFilters" class="btn-secondary">

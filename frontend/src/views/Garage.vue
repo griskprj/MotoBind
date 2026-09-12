@@ -104,8 +104,21 @@
                 <h3>Ваш гараж пуст</h3>
                 <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
                 <button @click="showAddMotoModal = true" class="btn-primary">
-                    <i class="fa fa-plus"></i>
                     Добавить мотоцикл
+                </button>
+            </div>
+
+            <div v-if="selectedMotorcycle && !selectedMotorcycle.maintenances?.length" class="quick-start-promo">
+                <div class="promo-icon">
+                    <i class="fa fa-rocket"></i>
+                </div>
+                <div class="promo-content">
+                    <h4>Настройте обслуживание за 30 секунд</h4>
+                    <p>Мы автоматически создадим базовое расписание на основе пробега и условий эксплуатации</p>
+                </div>
+                <button @click="showQuickStartModal = true" class="btn-primary">
+                    <i class="fa fa-bolt"></i>
+                    Быстрый старт
                 </button>
             </div>
 
@@ -319,6 +332,13 @@
             @delete="deletePhoto"
             @close="showPhotoModal = false"
         />
+
+        <QuickStartModal
+            :isOpen="showQuickStartModal"
+            :motorcycle="selectedMotorcycle"
+            @close="showQuickStartModal = false"
+            @created="onQuickStartCreated"
+        />
     </div>
 </template>
 
@@ -331,6 +351,7 @@ import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue
 import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
 import PhotoModal from '../components/modals/moto/PhotoModal.vue';
+import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 import api from '../api/api.js';
@@ -346,6 +367,7 @@ export default {
         EditMotoNoteModal,
         MaintenanceDetailsModal,
         PhotoModal,
+        QuickStartModal,
         LoadingOverlay,
     },
 
@@ -363,6 +385,7 @@ export default {
             showEditMotoNoteModal: false,
             showDetailsMaintenanceModal: false,
             showPhotoModal: false,
+            showQuickStartModal: false
         }
     },
 
@@ -452,12 +475,11 @@ export default {
                     }
                 }
                 
-                // Если есть мотоциклы и нет выбранного - выбираем первый
+
                 if (this.motorcycles.length > 0 && !this.selectedMotoId) {
                     this.selectedMotoId = this.motorcycles[0].id;
                 }
-                
-                // Если выбранный ID не существует - выбираем первый или null
+
                 if (this.selectedMotoId && !this.motorcycles.find(m => m.id === this.selectedMotoId)) {
                     this.selectedMotoId = this.motorcycles[0]?.id || null;
                 }
@@ -687,6 +709,11 @@ export default {
             }
         },
 
+        onQuickStartCreated() {
+            this.loadData()
+            this.showQuickStartModal = false
+        },
+
         saveMaintenance() {
             this.loadData();
         },
@@ -729,6 +756,65 @@ export default {
 </script>
 
 <style scoped>
+.quick-start-promo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--accent-trans), rgba(139, 92, 246, 0.05));
+    border: 2px solid var(--accent);
+    border-radius: 14px;
+    margin-bottom: 24px;
+}
+
+.promo-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--accent-trans); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 10px transparent; }
+}
+
+.promo-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.promo-content h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.promo-content p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+    .quick-start-promo {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .quick-start-promo .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* ===== BASE ===== */
 .garage-page {
     padding: 20px 0 40px;
@@ -1081,6 +1167,10 @@ export default {
     color: var(--accent-text);
     margin-bottom: 20px;
     transition: transform 0.3s ease;
+}
+
+.empty-icon i {
+    margin-bottom: 0;
 }
 
 .empty-state:hover .empty-icon {

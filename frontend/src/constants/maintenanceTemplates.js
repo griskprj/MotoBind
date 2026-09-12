@@ -57,6 +57,8 @@ export const MAINTENANCE_TEMPLATES = {
     { id: 'tire_summer', label: 'Установка летних шин' },
   ],
   brakes: [
+    { id: 'brake_fluid_check', label: 'Проверка уровня тормозной жидкости' },
+    { id: 'brake_pads_check', label: 'Проверка тормозных колодок' },
     { id: 'brake_pads', label: 'Замена тормозных колодок' },
     { id: 'brake_discs', label: 'Замена тормозных дисков' },
     { id: 'brake_fluid', label: 'Замена тормозной жидкости' },
