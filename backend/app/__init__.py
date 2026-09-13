@@ -4,6 +4,7 @@ import mimetypes
 
 from app.exceptions import register_error_handlers
 from app.extensions import cors, db, jwt, migrate, swagger, mail
+from app.scheduler import start_scheduler
 from config import settings
 
 
@@ -28,6 +29,9 @@ def create_app():
         MAIL_USERNAME=settings.MAIL_USERNAME,
         MAIL_PASSWORD=settings.MAIL_PASSWORD,
         MAIL_DEFAULT_SENDER=settings.MAIL_DEFAULT_SENDER,
+        CRON_SECRET=settings.CRON_SECRET,
+        ENABLE_DEV_SCHEDULER=settings.ENABLE_DEV_SCHEDULER,
+        DISABLE_SCHEDULER=settings.DISABLE_SCHEDULER,
     )
 
     cors.init_app(
@@ -41,6 +45,7 @@ def create_app():
     swagger.init_app(app)
     mail.init_app(app)
     register_error_handlers(app)
+    start_scheduler(app)
 
     @app.route('/uploads/<path:filename>')
     def serve_uploaded_file(filename):
@@ -81,6 +86,7 @@ def create_app():
     from app.api.user import user
     from app.api.notifications import notifications_bp
     from app.api.social import social_bp
+    from app.api.reminders import reminders_bp
 
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(motorcycle, url_prefix="/api/motorcycle")
@@ -91,5 +97,6 @@ def create_app():
     app.register_blueprint(user, url_prefix="/api/user")
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(social_bp, url_prefix='/api/social')
+    app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
 
     return app

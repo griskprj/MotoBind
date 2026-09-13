@@ -66,31 +66,34 @@ def get_my_profile():
 @user.route('/notification-settings', methods=['GET'])
 @jwt_required()
 def get_notification_settings():
-    """Получение настроек уведомлений"""
     user = UserService.get_user_by_id(int(get_jwt_identity()))
 
     return jsonify({
         'email_notifications_enabled': user.email_notifications_enabled,
         'email_newsletter_enabled': user.email_newsletter_enabled,
-        'email_verification_enabled': user.email_verification_enabled
+        'email_verification_enabled': user.email_verification_enabled,
+        'reminders_mileage_enabled': user.reminders_mileage_enabled,
+        'reminders_maintenance_enabled': user.reminders_maintenance_enabled,
     }), 200
+
 
 @user.route('/notification-settings', methods=['PUT'])
 @jwt_required()
 def update_notification_settings():
-    """Обновление настроек уведомлений"""
     user = UserService.get_user_by_id(int(get_jwt_identity()))
+    data = request.get_json() or {}
 
-    data = request.get_json()
+    bool_fields = (
+        'email_notifications_enabled',
+        'email_newsletter_enabled',
+        'email_verification_enabled',
+        'reminders_mileage_enabled',
+        'reminders_maintenance_enabled',
+    )
 
-    if 'email_notifications_enabled' in data:
-        user.email_notifications_enabled = bool(data['email_notifications_enabled'])
-
-    if 'email_newsletter_enabled' in data:
-        user.email_newsletter_enabled = bool(data['email_newsletter_enabled'])
-
-    if 'email_verification_enabled' in data:
-        user.email_verification_enabled = bool(data['email_verification_enabled'])
+    for field in bool_fields:
+        if field in data:
+            setattr(user, field, bool(data[field]))
 
     db.session.commit()
 
@@ -100,6 +103,8 @@ def update_notification_settings():
             'email_notifications_enabled': user.email_notifications_enabled,
             'email_newsletter_enabled': user.email_newsletter_enabled,
             'email_verification_enabled': user.email_verification_enabled,
+            'reminders_mileage_enabled': user.reminders_mileage_enabled,
+            'reminders_maintenance_enabled': user.reminders_maintenance_enabled,
         }
     }), 200
 

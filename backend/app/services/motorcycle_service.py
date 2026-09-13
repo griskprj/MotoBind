@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime, timezone
 
 from app.exceptions import ValidationError
 from app.extensions import db
@@ -6,6 +7,7 @@ from app.models.motorcycle import Motorcycle
 from app.models.maintenance import Maintenance
 from app.utils.helpers import get_motorcycle_or_404
 from app.utils.files import save_moto_photo, delete_file
+from app.models.reminder import Reminder
 
 
 class MotorcycleService:
@@ -36,9 +38,40 @@ class MotorcycleService:
         """Обновляет данные мотоцикла"""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
+        mileage_changed = False
+        if 'mileage' in kwargs and kwargs['mileage'] is not None:
+            mileage_changed = kwargs['mileage'] != moto.mileage
+
         for key, value in kwargs.items():
             if hasattr(moto, key) and value is not None:
                 setattr(moto, key, value)
+
+        if mileage_changed:
+            moto.mileage_updated_at = datetime.now(timezone.utc)
+            Reminder.query.filter_by(
+                motorcycle_id=moto.id,
+                type=Reminder.TYPE_MILEAGE_UPDATE,
+                status=Reminder.STATUS_PENDING
+            ).delete(synchronize_session=False)
+
+        db.session.commit()
+        return moto
+
+    @staticmethod
+    def update_motorcycle_mileage(moto_id: int, user_id: int, mileage: int) -> Motorcycle:
+        """Обновляет пробег мотоцикла"""
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+
+        mileage_changed = mileage != moto.mileage
+        moto.mileage = mileage
+
+        if mileage_changed:
+            moto.mileage_updated_at = datetime.now(timezone.utc)
+            Reminder.query.filter_by(
+                motorcycle_id=moto.id,
+                type=Reminder.TYPE_MILEAGE_UPDATE,
+                status=Reminder.STATUS_PENDING
+            ).delete(synchronize_session=False)
 
         db.session.commit()
         return moto

@@ -9,6 +9,41 @@
                 subtitle="Управляйте своими мотоциклами и следите за их состоянием"
             />
 
+            <!-- Напоминания -->
+            <div v-if="hasActiveReminders" class="reminders-banner">
+                <div
+                    v-for="reminder in activeRemindersForSelected"
+                    :key="reminder.id"
+                    class="reminder-item"
+                    :class="'reminder-' + reminderBannerInfo(reminder).variant"
+                >
+                    <div class="reminder-icon">
+                        <i :class="reminderBannerInfo(reminder).icon"></i>
+                    </div>
+
+                    <div class="reminder-body">
+                        <div class="reminder-title">{{ reminderBannerInfo(reminder).title }}</div>
+                        <div class="reminder-text">{{ reminderBannerInfo(reminder).text }}</div>
+                    </div>
+
+                    <div class="reminder-actions">
+                        <button
+                            class="reminder-btn primary"
+                            @click="handleReminderAction(reminder)"
+                        >
+                            {{ reminderBannerInfo(reminder).cta }}
+                        </button>
+                        <button
+                            class="reminder-btn ghost danger"
+                            @click="dismissReminder(reminder)"
+                            title="Скрыть навсегда"
+                        >
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Статистика гаража -->
             <div v-if="motorcycles.length > 0" class="garage-stats">
                 <div class="stat-chip">
@@ -355,6 +390,7 @@ import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue';
 
 import api from '../api/api.js';
+import remindersApi from '../api/reminders.js';
 import formatDate from '../utils/DateFormatter.js';
 
 export default {
@@ -385,7 +421,10 @@ export default {
             showEditMotoNoteModal: false,
             showDetailsMaintenanceModal: false,
             showPhotoModal: false,
-            showQuickStartModal: false
+            showQuickStartModal: false,
+
+            reminders: [],
+            loadingReeminders: false,
         }
     },
 
@@ -455,7 +494,23 @@ export default {
                     .filter(mt => mt.status === 'completed')
                     .reduce((s, mt) => s + (mt.cost || 0), 0);
             }, 0);
-        }
+        },
+
+        activeRemindersForSelected() {
+            if (!this.selectedMotoId) return []
+            const priority = {
+                maintenance_overdue: 0,
+                maintenance_soon: 1,
+                mileage_update: 2,
+            }
+            return this.reminders
+                .filter(r => r.motorcycle_id === this.selectedMotoId)
+                .sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99))
+        },
+
+        hasActiveReminders() {
+            return this.activeRemindersForSelected.length > 0
+        },
     },
 
     methods: {
@@ -593,6 +648,7 @@ export default {
                 }
                 
                 await this.loadData();
+                await this.loadReminders()
                 this.selectedMotoId = moto.id;
                 this.showAddMotoModal = false;
                 alert('Мотоцикл добавлен');
@@ -621,6 +677,7 @@ export default {
                 }
                 
                 await this.loadData();
+                await this.loadReminders()
                 this.showEditMotoModal = false;
                 alert('Мотоцикл обновлен');
             } catch (err) {
@@ -634,6 +691,7 @@ export default {
             try {
                 await api.patch(`/motorcycle/${formData.id}`, formData);
                 await this.loadData();
+                await this.loadReminders()
                 this.showUpdateMotoMileageModal = false;
                 alert('Пробег обновлен');
             } catch (err) {
@@ -656,6 +714,7 @@ export default {
             try {
                 await api.delete(`/motorcycle/${id}`);
                 await this.loadData();
+                await this.loadReminders()
                 if (this.motorcycles.length > 0) {
                     this.selectedMotoId = this.motorcycles[0].id;
                 } else {
@@ -746,11 +805,105 @@ export default {
 
         formatDate(date) {
             return formatDate(date);
-        }
+        },
+
+
+
+        async loadReminders() {
+            try {
+                this.loadingReminders = true
+                const { data } = await remindersApi.getReminders('pending')
+                this.reminders = data.reminders || []
+            } catch (err) {
+                console.error('Failed to load reminders:', err)
+            } finally {
+                this.loadingReminders = false
+            }
+        },
+
+        async dismissReminder(reminder) {
+            try {
+                await remindersApi.dismiss(reminder.id)
+                this.reminders = this.reminders.filter(r => r.id !== reminder.id)
+            } catch (err) {
+                console.error('Failed to dismiss reminder:', err)
+                alert('Не удалось скрыть напоминание')
+            }
+        },
+
+        async snoozeReminder(reminder, days = 7) {
+            try {
+                const { data } = await remindersApi.snooze(reminder.id, days)
+                const idx = this.reminders.findIndex(r => r.id === reminder.id)
+                if (idx !== -1) this.reminders[idx] = data.reminder
+            } catch (err) {
+                console.error('Failed to snooze reminder:', err)
+                alert('Не удалось отложить напоминание')
+            }
+        },
+
+        reminderBannerInfo(reminder) {
+            const moto = this.motorcycles.find(m => m.id === reminder.motorcycle_id)
+            const motoName = moto?.name || 'мотоцикл'
+
+            switch (reminder.type) {
+                case 'mileage_update': {
+                    const last = reminder.motorcycle?.mileage || moto?.mileage || 0
+                    return {
+                        icon: 'fa-solid fa-gauge-high',
+                        iconColor: 'warning',
+                        title: `Обновите пробег для ${motoName}`,
+                        text: `Текущий: ${last} км. Свежие данные помогают точнее напоминать о ТО.`,
+                        cta: 'Обновить',
+                    }
+                }
+                case 'maintenance_soon': {
+                    const maint = reminder.maintenance
+                    return {
+                        icon: 'fa fa-wrench',
+                        iconColor: 'accent',
+                        title: `Скоро ТО: ${maint?.title || 'обслуживание'}`,
+                        text: `Запланировано на ${maint?.planned_mileage || '—'} км.`,
+                        cta: 'Открыть',
+                    }
+                }
+                case 'maintenance_overdue': {
+                    const maint = reminder.maintenance
+                    return {
+                        icon: 'fa fa-exclamation-triangle',
+                        iconColor: 'danger',
+                        title: `Просрочено ТО: ${maint?.title || 'обслуживание'}`,
+                        text: `Планировалось на ${maint?.planned_mileage || '—'} км.`,
+                        cta: 'Открыть',
+                    }
+                }
+                default:
+                    return {
+                        icon: 'fa fa-bell',
+                        iconColor: 'accent',
+                        title: 'Напоминание',
+                        text: '',
+                        cta: 'Открыть',
+                    }
+            }
+        },
+
+        handleReminderAction(reminder) {
+            if (reminder.type === 'mileage_update') {
+                const moto = this.motorcycles.find(m => m.id === reminder.motorcycle_id)
+                if (moto) {
+                    this.selectMotorcycle(moto)
+                    this.showUpdateMotoMileageModal = true
+                }
+            } else {
+                this.$router.push('/maintenance')
+            }
+        },
     },
 
     mounted() {
-        this.loadData();
+        this.loadData()
+        this.loadReminders()
     }
 }
 </script>
@@ -803,7 +956,7 @@ export default {
     color: var(--text-secondary);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1020px) {
     .quick-start-promo {
         flex-direction: column;
         text-align: center;
@@ -815,78 +968,163 @@ export default {
     }
 }
 
-/* ===== BASE ===== */
-.garage-page {
-    padding: 20px 0 40px;
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 16px;
-    overflow-x: hidden;
-}
-
-/* ===== HEADER ===== */
-.page-header {
+/* ===== REMINDERS BANNER ===== */
+.reminders-banner {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-light);
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
 }
 
-.header-content {
-    flex: 1;
-    min-width: 150px;
-}
-
-.page-title {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-primary);
+.reminder-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
-.page-title i {
+.reminder-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+    border-left-color: var(--accent);
+}
+
+.reminder-warning {
+    border-left-color: var(--warning);
+}
+
+.reminder-danger {
+    border-left-color: var(--danger);
+}
+
+.reminder-accent {
+    border-left-color: var(--accent);
+}
+
+.reminder-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-trans);
     color: var(--accent-text);
-    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
-.page-subtitle {
+.reminder-warning .reminder-icon {
+    background: var(--warning-trans);
+    color: var(--warning-text);
+}
+
+.reminder-danger .reminder-icon {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+}
+
+.reminder-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.reminder-title {
     font-size: 14px;
-    color: var(--text-muted);
-    margin: 4px 0 0;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
 }
 
-.btn-primary {
+.reminder-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reminder-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.reminder-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 24px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    color: #fff;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
     border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
     white-space: nowrap;
-    box-shadow: 0 2px 12px rgba(138, 92, 246, 0.2);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(138, 92, 246, 0.35);
+.reminder-btn.primary {
+    background: var(--accent);
+    color: #fff;
+}
+
+.reminder-btn.primary:hover {
+    background: var(--accent-hover);
+}
+
+.reminder-btn.ghost {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.reminder-btn.ghost:hover {
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+
+.reminder-btn.ghost.danger:hover {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+    border-color: var(--danger-trans);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 640px) {
+    .reminder-item {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .reminder-body {
+        flex-basis: calc(100% - 54px);
+    }
+
+    .reminder-text {
+        white-space: normal;
+    }
+
+    .reminder-actions {
+        flex-basis: 100%;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .reminder-btn.primary {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 /* ===== GARAGE STATS ===== */
@@ -1664,20 +1902,29 @@ export default {
 }
 
 @media (max-width: 600px) {
-    .container {
-        padding: 0 12px;
+    .reminder-item {
+        flex-wrap: wrap;
+        gap: 10px;
     }
-    
-    .garage-page {
-        padding: 12px 0 24px;
+
+    .reminder-body {
+        flex-basis: calc(100% - 54px);
     }
-    
-    .page-title {
-        font-size: 20px;
+
+    .reminder-text {
+        white-space: normal;
     }
-    
-    .page-subtitle {
-        font-size: 13px;
+
+    .reminder-actions {
+        flex-basis: 100%;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .reminder-btn.primary {
+        flex: 1;
+        justify-content: center;
     }
 
     .garage-stats {

@@ -85,8 +85,8 @@ def update_moto_mileage(moto_id):
     """
     data = UpdateMotorcycleSchema(**request.get_json())
     user_id = int(get_jwt_identity())
-    motorcycle = MotorcycleService.update_motorcycle(
-        moto_id=moto_id, user_id=user_id, **data.get_updates()
+    motorcycle = MotorcycleService.update_motorcycle_mileage(
+        moto_id=moto_id, user_id=user_id, mileage=data.mileage
     )
 
     return (

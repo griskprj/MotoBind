@@ -8,6 +8,7 @@ from app.models.post_comment import PostComment
 from app.models.post_like import PostLike
 from app.models.post_report import PostReport
 from app.models.notification import Notification
+from app.models.reminder import Reminder
 
 __all__ = [
     "User",
@@ -20,5 +21,6 @@ __all__ = [
     "PostComment",
     "PostLike",
     "PostReport",
-    "Notification"
+    "Notification",
+    "Reminder"
 ]

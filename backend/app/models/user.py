@@ -42,11 +42,22 @@ class User(db.Model):
     email_newsletter_enabled = db.Column(db.Boolean, default=True)
     email_verification_enabled = db.Column(db.Boolean, default=True)
 
+    reminders_mileage_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    reminders_maintenance_enabled = db.Column(db.Boolean, default=True, nullable=False)
+
     motorcycles = db.relationship(
         "Motorcycle",
         backref="motorcycle_owner",
         lazy=True,
         cascade="all, delete-orphan",
+    )
+
+    reminders = db.relationship(
+        "Reminder",
+        back_populates="user",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        passive_deletes=True
     )
 
     maintenances = db.relationship('Maintenance', back_populates='author', lazy='dynamic')
@@ -79,7 +90,9 @@ class User(db.Model):
             "last_login": self.last_login.isoformat() if self.last_login else None,
             'email_notifications_enabled': self.email_notifications_enabled,
             'email_newsletter_enabled': self.email_newsletter_enabled,
-            'email_verification_enabled': self.email_verification_enabled
+            'email_verification_enabled': self.email_verification_enabled,
+            'reminders_mileage_enabled': self.reminders_mileage_enabled,
+            'reminders_maintenance_enabled': self.reminders_maintenance_enabled,
         }
         
         if include_moto:
