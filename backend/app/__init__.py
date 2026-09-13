@@ -7,6 +7,7 @@ from app.extensions import cors, db, jwt, migrate, swagger, mail
 from app.scheduler import start_scheduler
 from config import settings
 
+__version__ = "0.1.0"
 
 def create_app():
     app = Flask(__name__)
@@ -76,6 +77,11 @@ def create_app():
     def serve_uploaded_file_api(filename):
         """Сервит загруженные файлы через /api"""
         return serve_uploaded_file(filename)
+
+    @app.route("/api/version")
+    def version():
+        return jsonify({"version": __version__})
+
 
     from app.api.admin import admin
     from app.api.auth import auth
