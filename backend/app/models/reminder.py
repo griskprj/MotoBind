@@ -93,12 +93,12 @@ class Reminder(db.Model):
             "type": self.type,
             "type_label": self.TYPE_LABELS.get(self.type, self.type),
             "status": self.status,
-            "last_sent_at": self.last_sent_at.isoformat() + "Z" if self.last_sent_at else None,
-            "next_send_at": self.next_send_at.isoformat() + "Z" if self.next_send_at else None,
-            "snoozed_until": self.snoozed_until.isoformat() + "Z" if self.snoozed_until else None,
-            "dismissed_at": self.dismissed_at.isoformat() + "Z" if self.dismissed_at else None,
-            "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() + "Z" if self.updated_at else None,
+            "last_sent_at": self.last_sent_at.isoformat() if self.last_sent_at else None,
+            "next_send_at": self.next_send_at.isoformat() if self.next_send_at else None,
+            "snoozed_until": self.snoozed_until.isoformat() if self.snoozed_until else None,
+            "dismissed_at": self.dismissed_at.isoformat() if self.dismissed_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
         if include_moto and self.motorcycle:

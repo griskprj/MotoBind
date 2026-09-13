@@ -35,6 +35,11 @@ class Manual(db.Model):
     status = db.Column(db.String(32), default="moderate")
     rejection_reason = db.Column(db.String(32), default="")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
     
     tip = db.Column(db.String(256), nullable=True)
 
@@ -68,6 +73,7 @@ class Manual(db.Model):
             
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "steps": [s.to_dict() for s in self.steps],
         }
 

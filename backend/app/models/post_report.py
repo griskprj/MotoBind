@@ -71,8 +71,8 @@ class PostReport(db.Model):
             "resolution_note": self.resolution_note,
             "resolved_by": self.resolved_by,
             "resolver": self.resolver.username if self.resolver else None,
-            "resolved_at": self.resolved_at.isoformat() + "Z" if self.resolved_at else None,
-            "created_at": self.created_at.isoformat() + "Z" if self.created_at else None,
+            "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "post_snapshot": self.post_snapshot,
         }
 
@@ -85,7 +85,7 @@ class PostReport(db.Model):
                     "author_id": self.post.author_id,
                     "author": self.post.author.username if self.post.author else None,
                     "author_avatar": self.post.author.avatar if self.post.author else None,
-                    "created_at": self.post.created_at.isoformat() + "Z" if self.post.created_at else None,
+                    "created_at": self.post.created_at.isoformat() if self.post.created_at else None,
                     "is_deleted": False,
                 }
             elif self.post_snapshot:
