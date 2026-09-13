@@ -1,6 +1,8 @@
+from sqlalchemy import func
 from datetime import datetime, timezone
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.extensions import db
+from app.models.post import Post
 
 class User(db.Model):
     """User model"""
@@ -99,10 +101,15 @@ class User(db.Model):
             data["motorcycles"] = [m.to_dict() for m in self.motorcycles]
 
         if include_stats:
-            data['stats'] = {
-                'posts_count': len(self.posts) if hasattr(self, 'posts') else 0,
-                'likes_received': sum(p.likes_count for p in self.posts) if hasattr(self,' posts') else 0,
-                'comments_received': sum(p.comments_count for p in self.posts) if hasattr(self,' posts') else 0,
+            stats = db.session.query(
+                func.count(Post.id).label("posts_count"),
+                func.coalesce(func.sum(Post.likes_count), 0).label("likes_received"),
+                func.coalesce(func.sum(Post.comments_count), 0).label("comments_received"),
+            ).filter(Post.author_id == self.id).one()
+            data["stats"] = {
+                "posts_count": stats.posts_count,
+                "likes_received": stats.likes_received,
+                "comments_received": stats.comments_received
             }
 
         return data
