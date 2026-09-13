@@ -25,7 +25,11 @@ class Maintenance(db.Model):
     completed_date = db.Column(db.Date, default=None)
     planned_date = db.Column(db.Date, default=None)
 
-    status = db.Column(db.String(16), default=MaintenanceStatus.PLANNED)
+    status = db.Column(
+        db.String(16), 
+        default=MaintenanceStatus.PLANNED.value,
+        nullable=False,
+    )
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
