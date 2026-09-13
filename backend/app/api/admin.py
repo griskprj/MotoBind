@@ -14,6 +14,7 @@ from app.services.admin_service import AdminService
 from app.services.notification_service import NotificationService
 from app.services.email_service import EmailService
 from app.services.report_service import ReportService
+from app.services.reminder_service import ReminderService
 
 admin = Blueprint("admin", __name__)
 
@@ -581,3 +582,47 @@ def delete_report(report_id):
     db.session.delete(report)
     db.session.commit()
     return jsonify({"message": "Жалоба удалена"}), 200
+
+
+@admin.route("/cron/run-reminders", methods=["POST"])
+def cron_run_reminders():
+    """
+    Ручной запуск cron-задачи напоминаний.
+
+    Защищён секретным ключом (не JWT), чтобы внешний cron мог дёргать.
+    Ключ передаётся в заголовке X-Cron-Secret.
+
+    Использование (Linux crontab):
+        0 9 * * * curl -X POST https://motobind.ru/api/admin/cron/run-reminders \
+                           -H "X-Cron-Secret: ВАШ_СЕКРЕТ"
+
+    Использование (Windows Task Scheduler):
+        curl.exe -X POST https://motobind.ru/api/admin/cron/run-reminders ^
+                 -H "X-Cron-Secret: ВАШ_СЕКРЕТ"
+    """
+    import os
+    from flask import current_app
+
+    secret = current_app.config.get("CRON_SECRET")
+    if not secret:
+        current_app.logger.error("[Cron] CRON_SECRET не настроен")
+        return jsonify({"error": "Cron endpoint не настроен"}), 503
+
+    provided = request.headers.get("X-Cron-Secret")
+    if not provided or provided != secret:
+        current_app.logger.warning("[Cron] Неверный CRON_SECRET")
+        return jsonify({"error": "Forbidden"}), 403
+
+    try:
+        stats = ReminderService.run_daily_check()
+        current_app.logger.info(f"[Cron] run_daily_check: {stats}")
+        return jsonify({
+            "message": "Cron задача выполнена",
+            "stats": stats,
+        }), 200
+    except Exception as e:
+        current_app.logger.exception("[Cron] run_daily_check failed")
+        return jsonify({
+            "error": "Внутренняя ошибка",
+            "detail": str(e),
+        }), 500

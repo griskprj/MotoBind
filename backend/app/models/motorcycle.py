@@ -24,11 +24,23 @@ class Motorcycle(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    mileage_updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=True,
+    )
 
     maintenances = db.relationship(
         "Maintenance", lazy="select", cascade="all, delete-orphan"
     )
     owner = db.relationship('User', back_populates='motorcycles')
+    reminders = db.relationship(
+        "Reminder",
+        back_populates="motorcycle",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
     def to_dict(
         self,

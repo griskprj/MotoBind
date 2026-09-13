@@ -6,6 +6,7 @@ import traceback
 from datetime import datetime
 
 from flask import jsonify, request
+from pydantic import ValidationError as PydanticValidationError
 
 
 class APIException(Exception):
@@ -91,3 +92,14 @@ def register_error_handlers(app):
             response["traceback"] = traceback.format_exc().split("\n")
 
         return jsonify(response), 500
+
+    @app.errorhandler(PydanticValidationError)
+    def handle_pydantic_validation_error(e):
+        response = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "status": 400,
+            "error": "Ошибка валидации",
+            "path": request.path,
+            "errors": e.errors(),
+        }
+        return jsonify(response), 400

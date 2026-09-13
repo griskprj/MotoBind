@@ -190,15 +190,85 @@
                         <h3>Уведомления и рассылки</h3>
                     </div>
                     <div class="settings-card-body">
+                        <!-- Группа: Email -->
+                        <div class="settings-group-title">Почта</div>
+
                         <div class="toggle-row">
                             <div class="toggle-info">
-                                <span class="toggle-label">Новостная рассылка</span>
-                                <span class="toggle-desc">Получать новости и обновления MotoBind</span>
+                                <span class="toggle-label">Уведомления на почту</span>
+                                <span class="toggle-desc">Главный переключатель. Отключение отключает все письма от сервиса</span>
                             </div>
                             <label class="switch">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
+                                    v-model="notificationSettings.email_notifications_enabled"
+                                    @change="updateNotificationSettings"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                            <div class="toggle-info">
+                                <span class="toggle-label">Новостная рассылка</span>
+                                <span class="toggle-desc">Новости, статьи и полезные советы для мотоциклистов</span>
+                            </div>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
                                     v-model="notificationSettings.email_newsletter_enabled"
+                                    :disabled="!notificationSettings.email_notifications_enabled"
+                                    @change="updateNotificationSettings"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                            <div class="toggle-info">
+                                <span class="toggle-label">Подтверждение email</span>
+                                <span class="toggle-desc">Письма для верификации адреса</span>
+                            </div>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    v-model="notificationSettings.email_verification_enabled"
+                                    :disabled="!notificationSettings.email_notifications_enabled"
+                                    @change="updateNotificationSettings"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Группа: Напоминания -->
+                        <div class="settings-group-title">Напоминания</div>
+
+                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                            <div class="toggle-info">
+                                <span class="toggle-label">Напоминать о пробеге</span>
+                                <span class="toggle-desc">Если пробег не обновлялся 30 дней — пришлём письмо</span>
+                            </div>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    v-model="notificationSettings.reminders_mileage_enabled"
+                                    :disabled="!notificationSettings.email_notifications_enabled"
+                                    @change="updateNotificationSettings"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
+                            <div class="toggle-info">
+                                <span class="toggle-label">Напоминать о ТО</span>
+                                <span class="toggle-desc">Предупредим, когда приблизится плановое обслуживание или оно просрочено</span>
+                            </div>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    v-model="notificationSettings.reminders_maintenance_enabled"
+                                    :disabled="!notificationSettings.email_notifications_enabled"
                                     @change="updateNotificationSettings"
                                 >
                                 <span class="slider"></span>
@@ -303,6 +373,9 @@ export default {
             notificationSettings: {
                 email_notifications_enabled: true,
                 email_newsletter_enabled: true,
+                email_verification_enabled: true,
+                reminders_mileage_enabled: true,
+                reminders_maintenance_enabled: true,
             },
 
             showEditProfile: false,
@@ -417,8 +490,13 @@ export default {
         async loadNotificationSettings() {
             try {
                 const { data } = await api.get('/user/notification-settings');
-                this.notificationSettings = data;
-                this.email_notifications_enabled = true
+                this.notificationSettings = {
+                    email_notifications_enabled: data.email_notifications_enabled ?? true,
+                    email_newsletter_enabled: data.email_newsletter_enabled ?? true,
+                    email_verification_enabled: data.email_verification_enabled ?? true,
+                    reminders_mileage_enabled: data.reminders_mileage_enabled ?? true,
+                    reminders_maintenance_enabled: data.reminders_maintenance_enabled ?? true,
+                };
             } catch (err) {
                 console.error('Failed to load notification settings:', err);
             }
@@ -887,6 +965,20 @@ export default {
 .toggle-row.disabled {
     opacity: 0.5;
     pointer-events: none;
+}
+
+.settings-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 12px 0 4px 0;
+    padding-left: 2px;
+}
+
+.settings-group-title:first-child {
+    margin-top: 0;
 }
 
 .toggle-info {

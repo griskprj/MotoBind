@@ -25,6 +25,11 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'motobind@yandex.ru')
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+    # Cron
+    CRON_SECRET = os.getenv("CRON_SECRET", "")
+    ENABLE_DEV_SCHEDULER = os.getenv("ENABLE_DEV_SCHEDULER", "true").lower() == "true"
+    DISABLE_SCHEDULER = os.getenv("DISABLE_SCHEDULER", "false").lower() == "true"
     
     # Другие настройки
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
