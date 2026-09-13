@@ -62,6 +62,7 @@ class Motorcycle(db.Model):
             "note": self.note,
             "vin": self.vin,
             "photo_url": self.photo_url,
+            "mileage_updated_at": self.mileage_updated_at.isoformat() if self.mileage_updated_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

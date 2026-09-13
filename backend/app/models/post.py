@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 
 class Post(db.Model):
@@ -10,8 +10,12 @@ class Post(db.Model):
     image = db.Column(db.String(500), nullable=True)
     likes_count = db.Column(db.Integer, default=0)
     comments_count = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime, 
+        default=lambda: datetime.now(timezone.utc), 
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
 
     author = db.relationship('User', backref='posts_authored')
     likes = db.relationship('PostLike', backref='post', cascade='all, delete-orphan')
@@ -27,8 +31,8 @@ class Post(db.Model):
             'image': self.image,
             'likes_count': self.likes_count,
             'comments_count': self.comments_count,
-            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() + 'Z' if self.updated_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
         
         if include_comments:

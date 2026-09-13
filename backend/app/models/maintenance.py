@@ -30,7 +30,11 @@ class Maintenance(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     photo_url = db.Column(db.String(256))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime, 
+        default=lambda: datetime.now(timezone.utc), 
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
 
     moto = db.relationship('Motorcycle', back_populates='maintenances')
     author = db.relationship('User', back_populates='maintenances')
