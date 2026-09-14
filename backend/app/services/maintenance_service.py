@@ -32,7 +32,7 @@ class MaintenanceService:
         cost: Optional[int] = None,
     ) -> Maintenance:
         """Создает запись обслуживания"""
-        moto = Motorcycle.query.get(moto_id)
+        moto = db.session.get(Motorcycle, moto_id)
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
 
@@ -90,7 +90,7 @@ class MaintenanceService:
         interval_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Отмечает плановое обслуживание как выполненное"""
-        planned = Maintenance.query.get(planned_id)
+        planned = db.session.get(Maintenance, planned_id)
         if not planned:
             raise NotFoundError("Обслуживание не найдено")
 
@@ -155,7 +155,7 @@ class MaintenanceService:
         )
 
         if "moto_id" in kwargs and kwargs["moto_id"] is not None:
-            moto = Motorcycle.query.get(kwargs["moto_id"])
+            moto = db.session.get(Motorcycle, kwargs["moto_id"])
             if not moto:
                 raise NotFoundError("Мотоцикл не найден")
             if moto.owner_id != user_id:
@@ -163,7 +163,7 @@ class MaintenanceService:
 
         if "planned_mileage" in kwargs and kwargs["planned_mileage"] is not None:
             current_moto_id = kwargs.get("moto_id", maintenance.moto_id)
-            moto = Motorcycle.query.get(current_moto_id)
+            moto = db.session.get(Motorcycle, current_moto_id)
             if moto and kwargs["planned_mileage"] < moto.mileage:
                 raise ValidationError("Указан пробег меньше пробега мотоцикла")
 
@@ -204,7 +204,7 @@ class MaintenanceService:
     @staticmethod
     def get_maintenance_by_id(user_id: int, maintenance_id: int) -> Maintenance:
         """Получить обслуживание по ID"""
-        maintenance = Maintenance.query.get(maintenance_id)
+        maintenance = db.session.get(Maintenance, maintenance_id)
         if not maintenance:
             raise NotFoundError("Обслуживание не найдено")
 

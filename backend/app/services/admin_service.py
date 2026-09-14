@@ -28,7 +28,7 @@ class AdminService:
     @staticmethod
     def update_user(user_id: int, updates: dict) -> User:
         """Обновляет пользователя"""
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             raise NotFoundError("Пользователь не найден")
         for key, value in updates.items():

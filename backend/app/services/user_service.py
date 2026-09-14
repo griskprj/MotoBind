@@ -1,5 +1,4 @@
 from typing import Optional
-from datetime import datetime, timezone, timedelta
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.user import User
@@ -132,7 +131,7 @@ class UserService:
     @staticmethod
     def get_user_by_id(user_id: int) -> User:
         """Получает пользователя по ID"""
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             raise NotFoundError("Пользователь не найден")
 

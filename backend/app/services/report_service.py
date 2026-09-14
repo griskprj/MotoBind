@@ -15,7 +15,7 @@ class ReportService:
 
     @staticmethod
     def create_report(post_id: int, reporter_id: int, category: str, description: str | None = None) -> PostReport:
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
 
@@ -84,7 +84,7 @@ class ReportService:
 
     @staticmethod
     def resolve_report(report_id: int, admin_id: int, action: str, note: str | None = None) -> PostReport:
-        report = PostReport.query.get(report_id)
+        report = db.session.get(PostReport, report_id)
         if not report:
             raise NotFoundError("Жалоба не найдена")
         if report.status != "pending":
@@ -92,7 +92,7 @@ class ReportService:
         if action not in ("post_deleted", "user_banned", "both"):
             raise ValidationError("Неверное действие")
 
-        post = Post.query.get(report.post_id) if report.post_id else None
+        post = db.session.get(Post, report.post_id) if report.post_id else None
         author_id = post.author_id if post else (report.post_snapshot or {}).get("author_id")
 
         if action in ("post_deleted", "both") and post:
@@ -102,7 +102,7 @@ class ReportService:
             db.session.delete(post)
 
         if action in ("user_banned", "both") and author_id:
-            author = User.query.get(author_id)
+            author = db.session.get(User, author_id)
             if author and author.status != "banned" and author.id != admin_id:
                 author.status = "banned"
                 NotificationService.send_notification(
@@ -134,7 +134,7 @@ class ReportService:
 
     @staticmethod
     def reject_report(report_id: int, admin_id: int, note: str | None = None) -> PostReport:
-        report = PostReport.query.get(report_id)
+        report = db.session.get(PostReport, report_id)
         if not report:
             raise NotFoundError("Жалоба не найдена")
         if report.status != "pending":

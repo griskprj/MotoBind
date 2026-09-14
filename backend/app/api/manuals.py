@@ -23,9 +23,9 @@ def get_manual_for_maintenance():
     maintenance_id = request.args.get("maintenance_id", type=int)
     moto_id = request.args.get("moto_id", type=int)
 
-    maintenance = Maintenance.query.get(maintenance_id)
-    motorcycle = Motorcycle.query.get(moto_id)
-    user = User.query.get(get_jwt_identity())
+    maintenance = db.session.get(Maintenance, maintenance_id)
+    motorcycle = db.session.get(Motorcycle, moto_id)
+    user = db.session.get(User, int(get_jwt_identity()))
 
     if not maintenance:
         raise NotFoundError("Обслуживание не найдено")
@@ -148,7 +148,7 @@ def list_manuals():
     if interval:
         query = query.filter(Manual.interval.ilike(f"%{interval}%"))
     
-    if status and (User.query.get(current_user_id)).role == 'admin':
+    if status and (db.session.get(User, current_user_id)).role == 'admin':
         query = query.filter(Manual.status == status)
 
     sort_mapping = {
@@ -182,7 +182,7 @@ def get_manual_by_id(manual_id):
     """
     Получение детальной информации о мануале
     """
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
 
@@ -237,7 +237,7 @@ def update_manual(manual_id):
     Обновление мануала
     """
     user_id = int(get_jwt_identity())
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     is_admin = user.role == 'admin' if user else False
 
     data = UpdateManualSchema(**request.get_json())
@@ -272,7 +272,7 @@ def upload_step_image(manual_id, step_id):
     """
     from app.utils.files import save_step_image
     
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
     
@@ -315,7 +315,7 @@ def delete_step_image(manual_id, step_id):
     """
     from app.utils.files import delete_file
     
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
     

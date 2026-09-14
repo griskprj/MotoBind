@@ -96,7 +96,7 @@ class PostService:
     @staticmethod
     def get_post(post_id: int, current_user_id=None, include_comments=False) -> dict:
         """Получает пост по ID с комментариями"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
         
@@ -111,7 +111,7 @@ class PostService:
     @staticmethod
     def update_post(post_id: int, user_id: int, content: str, image_file=None) -> Post:
         """Обновляет пост"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
         
@@ -135,7 +135,7 @@ class PostService:
     @staticmethod
     def delete_post(post_id: int, user_id: int) -> None:
         """Удаляет пост"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
         
@@ -152,7 +152,7 @@ class PostService:
     @staticmethod
     def toggle_like(post_id: int, user_id: int) -> dict:
         """Ставит/убирает лайк на посту"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
 
@@ -169,7 +169,7 @@ class PostService:
             liked = True
             
             if post.author_id != user_id:
-                user = User.query.get(user_id)
+                user = db.session.get(User, user_id)
                 NotificationService.send_notification(
                     user_id=post.author_id,
                     type='social',
@@ -185,7 +185,7 @@ class PostService:
     @staticmethod
     def add_comment(post_id: int, user_id: int, content: str) -> PostComment:
         """Добавляет комментарий к посту"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise NotFoundError("Пост не найден")
 
@@ -202,7 +202,7 @@ class PostService:
         db.session.commit()
 
         if post.author_id != user_id:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             NotificationService.send_notification(
                 user_id=post.author_id,
                 type='social',
@@ -217,7 +217,7 @@ class PostService:
     @staticmethod
     def delete_comment(comment_id: int, user_id: int) -> None:
         """Удаляет комментарий"""
-        comment = PostComment.query.get(comment_id)
+        comment = db.session.get(PostComment, comment_id)
         if not comment:
             raise NotFoundError("Комментарий не найден")
         
@@ -225,7 +225,7 @@ class PostService:
             raise ForbiddenError("Вы можете удалять только свои комментарии")
         
         db.session.delete(comment)
-        post = Post.query.get(comment.post_id)
+        post = db.session.get(Post, comment.post_id)
         if post:
             post.comments_count = max(0, post.comments_count - 1)
         db.session.commit()
