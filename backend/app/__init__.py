@@ -15,13 +15,17 @@ def create_app():
     app.config.from_mapping(
         SECRET_KEY=settings.SECRET_KEY,
         DEBUG=settings.DEBUG,
+        
         SQLALCHEMY_DATABASE_URI=settings.DATABASE_URL,
         SQLALCHEMY_TRACK_MODIFICATIONS=settings.SQLALCHEMY_TRACK_MODIFICATIONS,
+
         JWT_SECRET_KEY=settings.JWT_SECRET_KEY,
         JWT_ACCESS_TOKEN_EXPIRES=settings.JWT_ACCESS_TOKEN_EXPIRES,
         JWT_REFRESH_TOKEN_EXPIRES=settings.JWT_REFRESH_TOKEN_EXPIRES,
+
         UPLOAD_FOLDER=settings.UPLOAD_FOLDER,
         MAX_CONTENT_LENGTH=settings.MAX_CONTENT_LENGTH,
+
         CORS_ORIGINS=settings.get_cors_origins(),
         MAIL_SERVER=settings.MAIL_SERVER,
         MAIL_PORT=settings.MAIL_PORT,
@@ -30,6 +34,8 @@ def create_app():
         MAIL_USERNAME=settings.MAIL_USERNAME,
         MAIL_PASSWORD=settings.MAIL_PASSWORD,
         MAIL_DEFAULT_SENDER=settings.MAIL_DEFAULT_SENDER,
+
+        FRONTEND_URL=settings.FRONTEND_URL,
         CRON_SECRET=settings.CRON_SECRET,
         ENABLE_DEV_SCHEDULER=settings.ENABLE_DEV_SCHEDULER,
         DISABLE_SCHEDULER=settings.DISABLE_SCHEDULER,
