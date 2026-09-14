@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import jwt_required
 
 from app.decorators import moto_owner_required
 from app.schemas.motorcycle import (
     CreateMotorcycleSchema,
-    UpdateMotorcycleSchema
+    MotorcycleDetailSchema,
+    MotorcycleShortSchema,
+    UpdateMotorcycleSchema,
 )
 from app.services.motorcycle_service import MotorcycleService
 from app.utils.helpers import get_current_user_id
@@ -12,11 +14,13 @@ from app.utils.helpers import get_current_user_id
 motorcycle = Blueprint("motorcycle", __name__)
 
 
-def _serialize_moto(moto, *, with_maintenance: bool = True) -> dict:
-    """
-    Временная сериализация до перехода на response-схемы (PR #2)
-    """
-    return moto.to_dict(include_maintenance=with_maintenance)
+def _serialize_short(moto) -> dict:
+    """Базовый ответ без ТО."""
+    return MotorcycleShortSchema.model_validate(moto).model_dump()
+
+def _serialize_detail(moto) -> dict:
+    """Ответ с вложенным ТО."""
+    return MotorcycleDetailSchema.model_validate(moto).model_dump()
 
 
 @motorcycle.route("/", methods=["GET"])
@@ -27,7 +31,7 @@ def get_user_moto():
     """
     user_id = get_current_user_id()
     motorcycles = MotorcycleService.get_user_motorcycles(user_id)
-    return jsonify([_serialize_moto(m) for m in motorcycles]), 200
+    return jsonify([_serialize_detail(m) for m in motorcycles]), 200
 
 @motorcycle.route("/", methods=["POST"])
 @jwt_required()
@@ -45,7 +49,7 @@ def create_moto():
         license_plate=data.license_plate,
         vin=data.vin,
     )
-    return jsonify(_serialize_moto(moto, with_maintenance=False)), 201
+    return jsonify(_serialize_short(moto)), 201
 
 
 @motorcycle.route("/<int:moto_id>", methods=["PUT"])
@@ -59,7 +63,7 @@ def update_moto(moto_id):
         user_id=get_current_user_id(),
         **data.get_updates(),
     )
-    return jsonify(_serialize_moto(updated)), 200
+    return jsonify(_serialize_detail(updated)), 200
 
 
 @motorcycle.route("/<int:moto_id>", methods=["PATCH"])
@@ -73,7 +77,7 @@ def update_moto_mileage(moto_id):
         user_id=get_current_user_id(),
         mileage=data.mileage,
     )
-    return jsonify(_serialize_moto(updated)), 200
+    return jsonify(_serialize_detail(updated)), 200
 
 
 @motorcycle.route("/<int:moto_id>/note", methods=["PATCH"])
@@ -87,7 +91,7 @@ def update_note(moto_id):
         user_id=get_current_user_id(),
         note_text=data.get("note"),
     )
-    return jsonify(_serialize_moto(updated)), 200
+    return jsonify(_serialize_detail(updated)), 200
 
 
 @motorcycle.route("/<int:moto_id>/photo", methods=["POST"])
@@ -105,7 +109,7 @@ def upload_moto_photo(moto_id):
     updated = MotorcycleService.update_moto_photo(
         moto_id, get_current_user_id(), file
     )
-    return jsonify(_serialize_moto(updated)), 200
+    return jsonify(_serialize_detail(updated)), 200
 
 
 @motorcycle.route("/<int:moto_id>/photo", methods=["DELETE"])
@@ -116,7 +120,7 @@ def delete_moto_photo(moto_id):
     updated = MotorcycleService.delete_moto_photo(
         moto_id, get_current_user_id()
     )
-    return jsonify(_serialize_moto(updated)), 200
+    return jsonify(_serialize_detail(updated)), 200
 
 
 @motorcycle.route("/<int:moto_id>", methods=["DELETE"])
