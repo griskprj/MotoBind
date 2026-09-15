@@ -42,6 +42,7 @@ class Motorcycle(db.Model):
         passive_deletes=True
     )
 
+    """Serialize data to JSON"""
     def to_dict(
         self,
         include_maintenance: bool = False,
@@ -49,7 +50,10 @@ class Motorcycle(db.Model):
         include_planned_maintenance: bool = False,
         include_maintenance_nodes: bool = False,
     ):
-        """Serialize data to JSON"""
+        """
+        DEPRECATED: используйте MotorcycleShortSchema / MotorcycleDetailSchema
+        из app.schemas.motorcycle.
+        """
         data = {
             "id": self.id,
             "owner_id": self.owner_id,

@@ -143,8 +143,8 @@ def logout():
 @jwt_required()
 def send_verification():
     """Отправить письмо с подтверждением"""
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
     
     if not user:
         return jsonify({'error': 'Пользователь не найден'}), 404
@@ -192,8 +192,8 @@ def verify_email(token):
 @jwt_required()
 def resend_verification():
     """Отправить письмо повторно"""
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
     
     if not user:
         return jsonify({'error': 'Пользователь не найден'}), 404
@@ -210,8 +210,8 @@ def resend_verification():
 @jwt_required()
 def check_verification():
     """Проверить, подтвержден ли email"""
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
     
     if not user:
         return jsonify({'error': 'Пользователь не найден'}), 404

@@ -133,7 +133,7 @@ def approve_manual(manual_id):
     """
     Одобрение мануала
     """
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
 
@@ -166,7 +166,7 @@ def reject_manual(manual_id):
     Отклонение мануала
     """
 
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
 
@@ -204,7 +204,7 @@ def reconsider_manual(manual_id):
     Пересмотр мануала
     """
 
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
 
@@ -240,7 +240,7 @@ def delete_manual(manual_id):
     Удаление мануала
     """
 
-    manual = Manual.query.get(manual_id)
+    manual = db.session.get(Manual, manual_id)
     if not manual:
         raise NotFoundError("Мануал не найден")
 
@@ -283,7 +283,7 @@ def ban_user(user_id):
     Блокировка пользователя
     """
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
 
@@ -313,7 +313,7 @@ def unban_user(user_id):
     Разблокировка пользователя
     """
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
 
@@ -351,7 +351,7 @@ def delete_user(user_id):
     Удаление пользователя
     """
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
 
@@ -442,7 +442,7 @@ def admin_delete_motorcycle(moto_id):
     """
     Удаление мотоцикла администратором
     """
-    moto = Motorcycle.query.get(moto_id)
+    moto = db.session.get(Motorcycle, moto_id)
     if not moto:
         raise NotFoundError("Мотоцикл не найден")
 
@@ -542,7 +542,7 @@ def get_reports():
 @jwt_required()
 @admin_required
 def get_report(report_id):
-    report = PostReport.query.get(report_id)
+    report = db.session.get(PostReport, report_id)
     if not report:
         raise NotFoundError("Жалоба не найдена")
     return jsonify(report.to_dict()), 200
@@ -576,7 +576,7 @@ def resolve_report(report_id):
 @jwt_required()
 @admin_required
 def delete_report(report_id):
-    report = PostReport.query.get(report_id)
+    report = db.session.get(PostReport, report_id)
     if not report:
         raise NotFoundError("Жалоба не найдена")
     db.session.delete(report)

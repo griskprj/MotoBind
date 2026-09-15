@@ -127,7 +127,7 @@ class ManualService:
     @staticmethod
     def update_manual(manual_id: int, user_id: int, is_admin=False, **kwargs) -> Manual:
         """Обновляет мануал"""
-        manual = Manual.query.get(manual_id)
+        manual = db.session.get(Manual, manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
 
@@ -180,7 +180,7 @@ class ManualService:
     @staticmethod
     def get_manual(manual_id: int, user_id: Optional[int] = None) -> Manual:
         """Получает мануал с проверкой прав"""
-        manual = Manual.query.get(manual_id)
+        manual = db.session.get(Manual, manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
         
@@ -192,7 +192,7 @@ class ManualService:
     @staticmethod
     def delete_manual(manual_id: int, user_id: int) -> None:
         """Удаляет мануал"""
-        manual = Manual.query.get(manual_id)
+        manual = db.session.get(Manual, manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
 

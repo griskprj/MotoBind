@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 from sqlalchemy.orm import selectinload
 
+from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.maintenance import Maintenance, MaintenanceStatus
 from app.models.manual import Manual
@@ -194,7 +195,7 @@ class StatisticService:
             selectinload(Motorcycle.maintenances),
         ).get(moto_id)
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
 
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
@@ -351,7 +352,7 @@ class StatisticService:
     @staticmethod
     def get_registrations_chart(user_id: int) -> Dict[str, Any]:
         """Получить данные для графика регистраций (только для админа)"""
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user or user.role != "admin":
             raise ForbiddenError("Доступ запрещен. Требуются права администратора")
 

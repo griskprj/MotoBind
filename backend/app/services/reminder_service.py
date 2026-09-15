@@ -390,7 +390,7 @@ class ReminderService:
         """Скрывает напоминание навсегда."""
         from app.exceptions import NotFoundError, ForbiddenError
 
-        reminder = Reminder.query.get(reminder_id)
+        reminder = db.session.get(Reminder, reminder_id)
         if not reminder:
             raise NotFoundError("Напоминание не найдено")
         if reminder.user_id != user_id:
@@ -406,7 +406,7 @@ class ReminderService:
         """Откладывает напоминание на N дней."""
         from app.exceptions import NotFoundError, ForbiddenError
 
-        reminder = Reminder.query.get(reminder_id)
+        reminder = db.session.get(Reminder, reminder_id)
         if not reminder:
             raise NotFoundError("Напоминание не найдено")
         if reminder.user_id != user_id:
