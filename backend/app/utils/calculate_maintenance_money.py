@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import selectinload
 
+from app.extensions import db
 from app.exceptions import BusinessLogicError, ForbiddenError, NotFoundError
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
@@ -21,7 +22,7 @@ def calculate_maintenance_money(moto_id, user_id):
     Возвращает данные о затратах на обслуживание: общие затраты, затраты в этом месяце, самое дорогое обслуживание, данные для графика
     """
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     moto = Motorcycle.query.options(selectinload(Motorcycle.maintenances)).get(moto_id)
 
     if not user:

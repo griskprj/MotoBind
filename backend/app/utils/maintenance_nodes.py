@@ -1,5 +1,6 @@
 from sqlalchemy.orm import selectinload
 
+from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
@@ -19,7 +20,7 @@ def gen_maintenance_nodes(moto_id, user_id):
         - Возвращает объект список всех узлов обслуживания
     """
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
 

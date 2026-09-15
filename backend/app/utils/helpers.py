@@ -13,8 +13,8 @@ def get_current_user() -> User:
     Получить текущего авторизованного пользователя
     Использовать только внутри эндпоинтов с @jwt_required
     """
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
     if not user:
         raise NotFoundError("Пользователь не найден")
     return user
