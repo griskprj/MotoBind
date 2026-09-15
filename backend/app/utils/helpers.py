@@ -1,5 +1,4 @@
 from typing import Optional
-
 from flask_jwt_extended import get_jwt_identity
 
 from app.exceptions import ForbiddenError, NotFoundError
