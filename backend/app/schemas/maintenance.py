@@ -1,8 +1,8 @@
 from typing import Optional, Literal
-from pydantic import BaseModel, Field, model_validator
-
+from pydantic import ConfigDict, BaseModel, Field, model_validator, field_serializer
+from datetime import datetime, date
 from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
-
+from app.schemas.mixins import ISO8601Mixin
 
 class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
     motorcycle_id: int = Field(..., alias="motorcycleId")
@@ -89,3 +89,28 @@ class MarkMaintenanceAsCompletedSchema(CompletedDateValidatorMixin, BaseModel):
         if self.interval is not None and self.interval_days is not None:
             raise ValueError("Укажите только один тип интервала: interval (по пробегу) или interval_days (по дням)")
         return self
+
+
+# --------- Response-схемы ---------
+
+class MaintenanceResponseSchema(ISO8601Mixin, BaseModel):
+    """
+    Ответ с данными обслуживания
+    Поля совпадают с Maintenance.to_dict() до рефакторинга.
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    author_id: int
+    moto_id: int
+    title: str
+    description: Optional[str] = None
+    category: str
+    cost: int = 0
+    completed_mileage: Optional[int] = None
+    planned_mileage: Optional[int] = None
+    completed_date: Optional[date] = None
+    planned_date: Optional[date] = None
+    status: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

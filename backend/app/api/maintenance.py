@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 from app.schemas.maintenance import (
     CreateMaintenanceSchema,
+    MaintenanceResponseSchema,
     UpdateMaintenanceSchema,
     MarkMaintenanceAsCompletedSchema,
-    QuickStartSchema
+    QuickStartSchema,
 )
 from app.services.maintenance_service import MaintenanceService
 from app.utils.helpers import get_current_user_id
@@ -14,8 +15,8 @@ maintenance = Blueprint("maintenance", __name__)
 
 
 def _serialize(record) -> dict:
-    """Временная сериализация до перехода на response-схемы (PR 2A.4)"""
-    return record.to_dict()
+    """Сериализация через Pydantic-схему"""
+    return MaintenanceResponseSchema.model_validate(record).model_dump()
 
 
 @maintenance.route("/", methods=["POST"])

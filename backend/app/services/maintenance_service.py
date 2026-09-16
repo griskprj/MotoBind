@@ -226,12 +226,6 @@ class MaintenanceService:
             if moto.owner_id != user_id:
                 raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        if "planned_mileage" in kwargs and kwargs["planned_mileage"] is not None:
-            current_moto_id = kwargs.get("moto_id", maintenance.moto_id)
-            moto = db.session.get(Motorcycle, current_moto_id)
-            if moto and kwargs["planned_mileage"] < moto.mileage:
-                raise ValidationError("Указан пробег меньше пробега мотоцикла")
-
         if "planned_date" in kwargs and kwargs["planned_date"] is not None:
             try:
                 kwargs["planned_date"] = datetime.strptime(kwargs["planned_date"], "%Y-%m-%d").date()

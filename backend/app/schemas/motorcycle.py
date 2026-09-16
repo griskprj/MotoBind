@@ -1,9 +1,9 @@
 import re
 from datetime import datetime, date
 from typing import Optional, List
-
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from app.schemas.mixins import ISO8601Mixin
 
 # --------- Request-схемы ---------
 
@@ -66,25 +66,6 @@ class UpdateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
 
 
 # --------- Response-схемы ---------
-
-class ISO8601Mixin(BaseModel):
-    """
-    Сериализует datetime/date как .isoformat() - сохраняет формат,
-    который отдавал to_dict() до рефакторинга.
-    """
-
-    @field_serializer(
-        "craeted_at",
-        "updated_at",
-        "completed_date",
-        "planned_date",
-        check_fields=False,
-        when_used="always",
-    )
-    def _serialize_datetimes(self, value, _info):
-        if isinstance(value, (datetime, date)):
-            return value.isoformat()
-        return value
 
 
 class MaintenanceShortSchema(ISO8601Mixin, BaseModel):

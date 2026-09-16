@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Optional
-from pydantic import field_validator
+from pydantic import BaseModel, field_serializer, field_validator
 
 class DateValidatorMixin:
     @field_validator("planned_date", "completed_date", mode="before", check_fields=False)
@@ -45,3 +45,22 @@ class CompletedDateValidatorMixin:
             except ValueError:
                 raise ValueError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
         raise ValueError(f"Неподдерживаемый тип для даты: {type(v)}")
+
+
+class ISO8601Mixin(BaseModel):
+    """
+    Сериализует datetime/date как .isoformat() - сохраняет формат,
+    который отдавал Maintenance.to_dict() до рефакторинга.
+    """
+    @field_serializer(
+        "created_at",
+        "updated_at",
+        "completed_date",
+        "planned_date",
+        check_fields=False,
+        when_used="always",
+    )
+    def _serialize_datetime(self, value, _info):
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
+        return value

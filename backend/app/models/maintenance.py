@@ -49,6 +49,10 @@ class Maintenance(db.Model):
     )
 
     def to_dict(self):
+        """
+        DEPRECATED: используйте MaintenanceResponseSchema
+        из app.schemas.maintenance.
+        """
         return {
             'id': self.id,
             'author_id': self.author_id,
