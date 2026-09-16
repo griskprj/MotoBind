@@ -17,9 +17,13 @@ class StatisticService:
     @staticmethod
     def get_dashboard_data(user_id: int) -> Dict[str, Any]:
         """Получить данные для дашборда пользователя"""
-        user = User.query.options(
-            selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
-        ).get(user_id)
+        user = db.session.get(
+            User,
+            user_id,
+            options=[
+                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
+            ],
+        )
 
         if not user:
             raise NotFoundError("Пользователь не найден")
@@ -47,7 +51,6 @@ class StatisticService:
             if motorcycle.created_at and motorcycle.created_at >= month_start:
                 stats["new_motorcycles_count"] += 1
 
-            # Сортируем все обслуживания по дате
             sorted_maintenances = sorted(
                 motorcycle.maintenances,
                 key=lambda x: x.completed_date or x.planned_date or x.created_at or datetime.min,
@@ -57,7 +60,6 @@ class StatisticService:
             planned_records = []
             for maint in sorted_maintenances:
                 maint_dict = maint.to_dict()
-                # Добавляем статус для отображения
                 maint_dict["status"] = maint.status.value if maint.status else None
                 
                 if maint.status == MaintenanceStatus.PLANNED:
@@ -68,7 +70,6 @@ class StatisticService:
                     if maint.cost:
                         stats["total_spends"] += maint.cost
                         
-                        # Расходы по месяцам
                         maint_date = maint.completed_date
                         if maint_date:
                             if maint_date >= month_start:
@@ -88,7 +89,6 @@ class StatisticService:
         )
         stats["motorcycles_count"] = len(user.motorcycles)
 
-        # Сортируем по статусу (overdue > planned > completed)
         all_maintenances.sort(
             key=lambda x: {
                 MaintenanceStatus.OVERDUE: 0,
@@ -108,9 +108,13 @@ class StatisticService:
     @staticmethod
     def get_dashboard_charts(user_id: int) -> Dict[str, List[Dict]]:
         """Получить данные для графиков дашборда"""
-        user = User.query.options(
-            selectinload(User.motorcycles).selectinload(Motorcycle.maintenances)
-        ).get(user_id)
+        user = db.session.get(
+            User,
+            user_id,
+            options=[
+                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
+            ],
+        )
 
         if not user:
             raise NotFoundError("Пользователь не найден")
@@ -149,9 +153,13 @@ class StatisticService:
     @staticmethod
     def get_garage_stats(user_id: int) -> Dict[str, Any]:
         """Получить данные для гаража"""
-        user = User.query.options(
-            selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
-        ).get(user_id)
+        user = db.session.get(
+            User,
+            user_id,
+            options=[
+                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
+            ],
+        )
 
         if not user:
             raise NotFoundError("Пользователь не найден")
@@ -191,9 +199,13 @@ class StatisticService:
     @staticmethod
     def get_moto_garage_stats(moto_id: int, user_id: int) -> Dict[str, Any]:
         """Получить детальную статистику по мотоциклу для гаража"""
-        moto = Motorcycle.query.options(
-            selectinload(Motorcycle.maintenances),
-        ).get(moto_id)
+        moto = db.session.get(
+            Motorcycle,
+            moto_id,
+            options=[
+                selectinload(Motorcycle.maintenances)
+            ]
+        )
 
         user = db.session.get(User, user_id)
 
@@ -204,7 +216,6 @@ class StatisticService:
         if int(moto.owner_id) != int(user.id):
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        # Разделяем на плановые и выполненные
         planned = [m for m in moto.maintenances if m.status == MaintenanceStatus.PLANNED]
         completed = [m for m in moto.maintenances if m.status == MaintenanceStatus.COMPLETED]
 
@@ -221,18 +232,14 @@ class StatisticService:
         )[:5]
 
         # TODO: Обновить gen_maintenance_nodes для новой модели
-        # Пока возвращаем пустой список
         nodes = []
 
-        # Расчет статистики по расходам
         completed_with_cost = [m for m in completed if m.cost]
         total_cost = sum(m.cost for m in completed_with_cost)
         
-        # Расчет среднего и максимума
         avg_cost = round(total_cost / len(completed_with_cost)) if completed_with_cost else 0
         max_cost = max((m.cost for m in completed_with_cost), default=0)
 
-        # Расходы за текущий месяц
         now = datetime.now()
         month_start = datetime(now.year, now.month, 1)
         month_cost = sum(
@@ -240,7 +247,6 @@ class StatisticService:
             if m.completed_date and m.completed_date >= month_start
         )
 
-        # Данные для графика расходов (по месяцам за последние 6 месяцев)
         money_chart_data = []
         for i in range(5, -1, -1):
             month_date = now.replace(day=1) - timedelta(days=i * 30)
@@ -279,9 +285,13 @@ class StatisticService:
     @staticmethod
     def get_repair_stats(user_id: int) -> Dict[str, Any]:
         """Получить статистику для страницы ремонта"""
-        user = User.query.options(
-            selectinload(User.motorcycles).selectinload(Motorcycle.maintenances)
-        ).get(user_id)
+        user = db.session.get(
+            User,
+            user_id,
+            options=[
+                selectinload(User.motorcycle).selectinload(Motorcycle.maintenances),
+            ],
+        )
 
         if not user:
             raise NotFoundError("Пользователь не найден")
@@ -306,7 +316,7 @@ class StatisticService:
 
         return {
             "overdue": overdue,
-            "soon": 0,  # В новой модели нет статуса "soon"
+            "soon": 0,
             "planned": planned,
             "motorcycles": motorcycles,
             "maintenances": maintenances,
