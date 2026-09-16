@@ -115,7 +115,7 @@ class MaintenanceService:
         planned.cost = cost or 0
 
         if mileage > moto.mileage:
-            moto.mileage = mileage
+            MotorcycleService.set_mileage(moto, mileage)
 
         new_planned = None
         if repeat:

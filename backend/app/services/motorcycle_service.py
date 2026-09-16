@@ -37,15 +37,13 @@ class MotorcycleService:
             if k in MotorcycleService.ALLOWED_UPDATE_FIELDS and v is not None
         }
 
-        mileage_changed = {
-            "mileage" in updates and updates["mileage"] != moto.mileage
-        }
+        new_mileage = updates.pop("mileage", None)
 
         for key, value in updates.items():
             setattr(moto, key, value)
 
-        if mileage_changed:
-            MotorcycleService._on_mileage_change(moto)
+        if new_mileage is not None:
+            MotorcycleService.set_mileage(moto, new_mileage)
 
         db.session.commit()
         return moto
@@ -57,9 +55,7 @@ class MotorcycleService:
         """Обновляет пробег мотоцикла."""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
-        if mileage != moto.mileage:
-            moto.mileage = mileage
-            MotorcycleService._on_mileage_change(moto)
+        MotorcycleService.set_mileage(moto, mileage)
 
         db.session.commit()
         return moto
@@ -70,6 +66,8 @@ class MotorcycleService:
         Побочные эффекты при изменении пробега:
         - обновляем timestamp
         - удаляем pending-напоминания об обновлении пробега
+
+        Вызываеся ТОЛЬКО из set_mileage
         """
         moto.mileage_updated_at = datetime.now(timezone.utc)
         Reminder.query.filter_by(
@@ -77,6 +75,23 @@ class MotorcycleService:
             type=Reminder.TYPE_MILEAGE_UPDATE,
             status=Reminder.STATUS_PENDING,
         ).delete(synchronize_session=False)
+
+    @staticmethod
+    def set_mileage(moto: Motorcycle, new_mileage: int) -> bool:
+        """
+        Устанавливает новый пробег, если он изменился.
+
+        Инкапсулирует побочные эффекты:
+        - обновление mileage_updated_at
+        - сброс pending-напоминаний типа mileage_update
+
+        Возвращает True, если пробег был обновлен
+        """
+        if new_mileage == moto.mileage:
+            return False
+        moto.mileage = new_mileage
+        MotorcycleService._on_mileage_change(moto)
+        return True
 
     @staticmethod
     def update_note(
