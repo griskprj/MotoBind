@@ -67,7 +67,7 @@ class MotorcycleService:
         - обновляем timestamp
         - удаляем pending-напоминания об обновлении пробега
 
-        Вызываеся ТОЛЬКО из set_mileage
+        Вызывается ТОЛЬКО из set_mileage
         """
         moto.mileage_updated_at = datetime.now(timezone.utc)
         Reminder.query.filter_by(
