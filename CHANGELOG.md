@@ -5,6 +5,42 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [1.2.0] — 2026-09-16
+
+### Added
+- **schemas/common.py**: общий `ISO8601Mixin` для сохранения формата datetime между схемами
+
+### Fixed
+- **maintenance**: `mark_planned_as_done` не синхронизировал сброс `mileage_update` напоминаний при отметке ТО как выполненного
+- **maintenance/stats**: `calculate_maintenance_freq` и `calculate_maintenance_money` падали с `AttributeError` из-за несуществующего `m.date` (подготовка к premium-фиче)
+- **db**: 6 мест с `Query.options().get()` в `statistic_service.py` (пропущены в PR #3)
+
+### Changed
+- **maintenance/api**: `quick_start` вынесен в `MaintenanceService.quick_start`
+- **maintenance/api**: `Schema(**json)` → `model_validate(json or {})`
+- **maintenance/api**: убран `try/except ValidationError` — покрыто глобальным Pydantic-хендлером
+- **maintenance/api**: локальная переменная `maintenance` переименована в `record` (не затеняет blueprint)
+- **maintenance/service**: `MaintenanceStatus` enum перенесён в модель (single source of truth)
+- **maintenance/service**: `_recompute_status` вынесен из `update_maintenance`
+- **maintenance/schemas**: добавлены `QuickStartSchema`, `MaintenanceResponseSchema`
+- **maintenance/model**: `to_dict` помечен deprecated (путь к удалению в будущих спринтах)
+- **motorcycle/service**: публичный `MotorcycleService.set_mileage(moto, new)` инкапсулирует побочные эффекты (mileage_updated_at, сброс напоминаний)
+- **motorcycle/service**: `update_motorcycle`, `update_motorcycle_mileage` и `mark_planned_as_done` используют `set_mileage`
+
+### Removed
+- **maintenance/utils**: удалены мёртвые `maintenance_nodes.py`, `calculate_node_health.py`, `check_maintenance_status.py` (использовали несуществующие relationship)
+- **maintenance/model**: убраны неиспользуемые параметры `include_planned_maintenance`, `include_maintenance_nodes` из `Motorcycle.to_dict`
+
+### Performance
+- **maintenance/stats**: общий helper `aggregate_by_month` вместо копипасты в freq/money
+- **maintenance/stats**: правильный обход 12 месяцев (было `- timedelta(days=i*30)`, плыло)
+- **maintenance/stats**: `max()` защищён от пустого списка
+
+### Notes
+- JSON-контракт API не изменился (проверено diff'ом до/после 2A.3 и 2A.4)
+- В `api/maintenance.py` больше нет прямых обращений к `db`, `Maintenance.query`, `NotificationService`
+- Sprint 2A завершает рефакторинг домена `maintenance`
+
 ## [1.1.0] — 2026-09-15
 
 ### Fixed
