@@ -1,18 +1,16 @@
-from enum import Enum
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Any, Dict, Optional, List
 
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
-from app.models.maintenance import Maintenance
+from app.models.maintenance import Maintenance, MaintenanceStatus
 from app.models.motorcycle import Motorcycle
+from app.services.notification_service import NotificationService
 from app.services.motorcycle_service import MotorcycleService
-
-
-class MaintenanceStatus(Enum):
-    COMPLETED = "completed"
-    PLANNED = "planned"
-    OVERDUE = "overdue"
+from app.constants.maintenance_presets import (
+    get_presets_for_motorcycle,
+    calculate_interval,
+)
 
 
 class MaintenanceService:
@@ -79,6 +77,73 @@ class MaintenanceService:
         return maintenance
 
     @staticmethod
+    def quick_start(
+        user_id: int,
+        moto_id: int,
+        current_mileage: int,
+        drive_type: str = "chain",
+        style: str = "normal",
+        terrain: str = "mixed",
+    ) -> dict:
+        """Создает базовый набор плановых ТО для мотоцикла"""
+        moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+
+        if current_mileage is None or current_mileage < 0:
+            raise ValidationError("Некорректный пробег")
+
+        existing = Maintenance.query.filter_by(moto_id=moto_id).count()
+        if existing > 0:
+            raise ValidationError("У мотоцикла уже есть обслуживания")
+
+        MotorcycleService.set_mileage(moto, current_mileage)
+        moto.drive_type = drive_type
+
+        presets = get_presets_for_motorcycle(drive_type)
+        today = datetime.now(timezone.utc).date()
+        created = []
+
+        for preset in presets:
+            interval = calculate_interval(preset, style, terrain)
+
+            planned_mileage = current_mileage + interval["interval_km"]
+            planned_date = today + timedelta(days=interval["interval_days"])
+
+            record = Maintenance(
+                moto_id=moto_id,
+                author_id=user_id,
+                title=preset["title"],
+                description=preset["description"],
+                category=preset["category"],
+                status=MaintenanceStatus.PLANNED.value,
+                planned_mileage=planned_mileage,
+                planned_date=planned_date,
+            )
+
+            db.session.add(record)
+            created.append({
+                "title": preset["title"],
+                "planned_mileage": planned_mileage,
+                "planned_date": planned_date.isoformat(),
+                "interval_km": interval["interval_km"],
+            })
+
+        db.session.commit()
+
+        NotificationService.send_notification(
+            user_id=user_id,
+            type="system",
+            title="Базовое обслуживание создано",
+            content=f"Для {moto.name} создано {len(created)} плановых работ",
+            link="/maintenance",
+        )
+
+        return {
+            "message": f"Создано {len(created)} обслуживания",
+            "created": created,
+            "moto": moto.to_dict(),
+        }
+
+    @staticmethod
     def mark_planned_as_done(
         planned_id: int,
         author_id: int,
@@ -97,7 +162,7 @@ class MaintenanceService:
         if planned.author_id != author_id:
             raise ForbiddenError("Вы можете отмечать только свое обслуживание")
 
-        if planned.status == 'completed':
+        if planned.status == MaintenanceStatus.COMPLETED.value:
             raise ValidationError("Обслуживание уже выполнено")
 
         completed_date_obj = None
@@ -109,7 +174,7 @@ class MaintenanceService:
 
         moto = MotorcycleService.get_motorcycle_by_id(planned.moto_id, author_id)
 
-        planned.status = 'completed'
+        planned.status = MaintenanceStatus.COMPLETED.value
         planned.completed_mileage = mileage
         planned.completed_date = completed_date_obj
         planned.cost = cost or 0
@@ -125,7 +190,7 @@ class MaintenanceService:
                 'category': planned.category,
                 'title': planned.title,
                 'description': planned.description,
-                'status': 'planned',
+                'status': MaintenanceStatus.PLANNED.value,
             }
 
             if interval:
@@ -184,10 +249,7 @@ class MaintenanceService:
                 setattr(maintenance, key, value)
 
         if "completed_date" in kwargs or "completed_mileage" in kwargs:
-            if maintenance.completed_mileage is not None or maintenance.completed_date is not None:
-                maintenance.status = 'completed'
-            elif maintenance.planned_mileage is not None or maintenance.planned_date is not None:
-                maintenance.status = 'planned'
+                    MaintenanceService._recompute_status(maintenance)
 
         db.session.commit()
         return maintenance
@@ -218,3 +280,14 @@ class MaintenanceService:
         """Получает обслуживания мотоцикла"""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
         return moto.maintenances or []
+
+    @staticmethod
+    def _recompute_status(record: Maintenance) -> None:
+        """
+        Пересчитывает статус по наличию completed/planned полей
+        Called after update to keep status consistent with filled fields
+        """
+        if record.completed_mileage is not None or record.completed_date is not None:
+            record.status = MaintenanceStatus.COMPLETED.value
+        elif record.planned_mileage is not None or record.planned_date is not None:
+            record.statust = MaintenanceStatus.PLANNED.value

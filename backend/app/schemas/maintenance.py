@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
@@ -33,6 +33,14 @@ class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
             raise ValueError("При указании completed_mileage требуется completed_date")
         
         return self
+
+
+class QuickStartSchema(BaseModel):
+    moto_id: int = Field(..., ge=1)
+    current_mileage: int = Field(..., ge=0, le=1_000_000)
+    drive_type: Literal["chain", "belt", "shaft"] = "chain"
+    style: Literal["calm", "normal", "aggressive"] = "normal"
+    terrain: Literal["city", "highway", "mixed", "dusty", "offroad"] = "mixed"
 
 
 class UpdateMaintenanceSchema(DateValidatorMixin, BaseModel):
