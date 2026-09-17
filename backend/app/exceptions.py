@@ -3,7 +3,7 @@
 """
 
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import jsonify, request
 from pydantic import ValidationError as PydanticValidationError
@@ -68,7 +68,7 @@ def register_error_handlers(app):
     def handle_api_exception(e):
         """Обработчик кастомных исключений"""
         response = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": e.status_code,
             "error": e.message,
             "path": request.path,
@@ -81,7 +81,7 @@ def register_error_handlers(app):
         app.logger.error(f"Unhandled exception: {str(e)}\n{traceback.format_exc()}")
 
         response = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": 500,
             "error": "Внутренняя ошибка сервера",
             "path": request.path,
@@ -96,7 +96,7 @@ def register_error_handlers(app):
     @app.errorhandler(PydanticValidationError)
     def handle_pydantic_validation_error(e):
         response = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": 400,
             "error": "Ошибка валидации",
             "path": request.path,
