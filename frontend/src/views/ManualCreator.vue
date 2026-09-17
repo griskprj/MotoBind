@@ -529,7 +529,7 @@
 import api from '../api/api';
 import Header from '../components/Header.vue';
 import LoadingOverlay from '../components/LoadingOverlay.vue';
-import { MAINTENANCE_TEMPLATES, getTemplatesByCategory, getTemplateLabel } from '../constants/maintenanceTemplates'
+import { getTemplatesByCategory } from '../constants/maintenanceTemplates'
 
 export default {
     name: 'ManualCreator',
@@ -992,17 +992,6 @@ export default {
             if (path.startsWith('/')) return path;
             return `/uploads/${path}`;
         },
-
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) { console.error(err) }
-            finally {
-                const { removeTokens } = await import('../api/auth');
-                removeTokens();
-                this.$router.push('/login');
-            }
-        }
     },
 
     mounted() {

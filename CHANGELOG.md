@@ -5,6 +5,42 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [1.3.0] — 2026-09-17
+
+### Added
+- **frontend/stores**: `useAuthStore` (Pinia, setup store) — единый источник правды для auth state
+- **frontend/router/routes**: разделение роутера на модули (`auth.js`, `documents.js`, `admin.js`, `main.js`)
+- **frontend/router/guards.js**: выделены navigation guards из `router/index.js`
+
+### Changed
+- **frontend/main.js**: подключена Pinia (`app.use(createPinia())`)
+- **frontend/api/api.js**: чтение токена напрямую из localStorage (без циклического импорта `stores/auth`), синхронизация store после refresh / logout через lazy import
+- **frontend/router/index.js**: использует `useAuthStore()` вместо ручного декода JWT, файл сокращён с ~370 до ~30 строк
+- **frontend/components/Sidebar.vue**: `computed isAdmin` из store вместо ручного декода JWT на каждой навигации
+- **frontend/views/auth/** (Login, Register, Verify, Reset): используют `useAuthStore()` для setTokens / setUser
+- **frontend/views/Profile.vue**, **ManualRules.vue**, **ManualsPanel.vue**, **ManualCreator.vue**: `useAuthStore().logout()` вместо `removeTokens` helper
+
+### Removed
+- **frontend/api/auth.js**: удалён (его role выполняет `stores/auth.js`)
+- **frontend/views/Dashboard.vue**: удалён (не подключён в роутере)
+
+### Performance
+- **frontend/main.js**: убрана глобальная регистрация `VueApexCharts`, компоненты чартов регистрируют его локально
+- **главный бандл**: 1.1 МБ → **191 КБ** (apexcharts вынесен в lazy-чанк)
+- **AdminPanel чанк**: ~950 КБ, грузится только на `/admin/*` страницах
+- **apexcharts чанк** (508 КБ): грузится только на страницах с графиками
+
+### Fixed
+- **backend/statistic_service**: `selectinload(User.motorcycle)` → `selectinload(User.motorcycles)` — исправлен 500 на `GET /api/statistic/repair` (колонка вместо relationship)
+
+### Deprecated (в бэклоге, не удалено)
+- `vue-router@5` upgrade отложен: требует `@pinia/colada` как peer
+- Warning `INEFFECTIVE_DYNAMIC_IMPORT` для `stores/auth` в `api.js` — не критично
+
+### Notes
+- JSON-контракт API не изменялся
+- Все изменения frontend — внутренние (архитектура), пользователь не заметит кроме ускорения загрузки
+
 ## [1.2.0] — 2026-09-16
 
 ### Added

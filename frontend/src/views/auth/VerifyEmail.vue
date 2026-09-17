@@ -30,13 +30,13 @@
 
 <script>
 import api from '../../api/api'
-import { setTokens, setUser } from '../../api/auth'
+import { useAuthStore } from '../../stores/auth';
 
 export default {
   name: 'VerifyEmail',
   data() {
     return {
-      status: 'loading', // loading | success | error
+      status: 'loading',
       errorMessage: '',
       token: null
     }
@@ -55,9 +55,9 @@ export default {
         const response = await api.get(`/auth/verify-email/${this.token}`)
         const { access_token, refresh_token, user } = response.data
         
-        // Сохраняем токены
-        setTokens(access_token, refresh_token)
-        setUser(user)
+        const auth = useAuthStore()
+        auth.setTokens(access_token, refresh_token)
+        auth.setUser(user)
         
         this.status = 'success'
       } catch (err) {

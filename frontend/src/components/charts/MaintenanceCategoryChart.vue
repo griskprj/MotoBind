@@ -23,7 +23,6 @@ export default {
     },
 
     props: {
-        // Ожидаем массив объектов: [{ category: "Расходники", cost: 36000 }, ...]
         chartData: {
             type: Array,
             default: () => []
@@ -31,7 +30,6 @@ export default {
     },
 
     computed: {
-        // Вычисляем общую сумму для отображения в центре
         totalCost() {
             if (!this.chartData || this.chartData.length === 0) return 0;
             return this.chartData.reduce((sum, item) => sum + (item.cost || 0), 0);
@@ -44,11 +42,9 @@ export default {
                     height: 350,
                     background: 'transparent'
                 },
-                // Цвета подбираем под дизайн (как на скрине)
                 colors: ['#7C3AED', '#3B82F6', '#22C55E', '#EAB308', '#EF4444', '#8B8B9E'],
                 labels: this.chartData.map(item => item.category || 'Категория'),
                 
-                // Настройки кольца (чтобы внутри был текст)
                 plotOptions: {
                     pie: {
                         donut: {
@@ -86,14 +82,13 @@ export default {
                     }
                 },
                 
-                // Легенда справа с процентами
                 legend: {
                     position: 'right',
                     verticalAlign: 'middle',
                     height: 280,
                     offsetY: 0,
                     labels: {
-                        colors: '#d1d1d1', // Цвет текста легенды
+                        colors: '#d1d1d1',
                         useSeriesColors: false
                     },
                     markers: {
@@ -102,17 +97,14 @@ export default {
                         radius: 4
                     },
                     formatter: function(seriesName, opts) {
-                        // Опция для отображения процентов рядом с названием
                         return seriesName + "  <span style='color:#8b8b9e; margin-left:8px;'>" + opts.w.globals.series[opts.seriesIndex] + "%</span>"
                     }
                 },
                 
-                // Настройки данных на графике (чтобы не было подписей на кусках)
                 dataLabels: {
                     enabled: false
                 },
                 
-                // Всплывающие подсказки
                 tooltip: {
                     y: {
                         formatter: function(value) {
@@ -121,7 +113,6 @@ export default {
                     }
                 },
                 
-                // Адаптивность
                 responsive: [{
                     breakpoint: 768,
                     options: {
@@ -138,7 +129,6 @@ export default {
             }
         },
 
-        // Данные для самой диаграммы (только цифры)
         chartSeries() {
             return this.chartData.map(item => item.cost || 0)
         }

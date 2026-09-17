@@ -6,23 +6,18 @@
   </div>
   <div class="animated-bg"></div>
 
-  <!-- Страницы с сайдбаром -->
   <div v-if="$route.meta.showHeader" class="app-with-sidebar">
-    <!-- Сайдбар рендерится сам, без слота, а контент идет после него -->
     <Sidebar ref="sidebar" />
     
-    <!-- Основной контент -->
     <div class="app-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <div class="page-content">
         <router-view />
       </div>
       
-      <!-- Футер внутри контента, чтобы учитывать отступы -->
       <Footer v-if="$route.meta.showFooter" />
     </div>
   </div>
   
-  <!-- Страницы без сайдбара -->
   <template v-else>
     <router-view />
     <Footer v-if="$route.meta.showFooter" />
@@ -41,25 +36,18 @@ export default {
 
   data() {
     return {
-      user: false,
       isLoading: false,
       isSidebarCollapsed: false,
     }
   },
 
   mounted() {
-      const user = localStorage.getItem('user')
-      if (user) {
-        this.user = true
-      }
-      
       this.$nextTick(() => {
         if (this.$refs.sidebar) {
           this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
           this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
         }
       });
-
   },
 
   beforeUnmount() {
