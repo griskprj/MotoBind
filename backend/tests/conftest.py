@@ -13,6 +13,20 @@ from app.extensions import db as _db
 from app.models.user import User
 
 
+def pytest_configure(config):
+    """
+    Регистрирует кастомные маркеры.
+    """
+    for marker, description in [
+        ("auth", "tests for auth endpoints"),
+        ("motorcycle", "tests for motorcycle endpoints"),
+        ("maintenance", "tests for maintenance endpoints"),
+        ("statistic", "tests for statistic endpoints"),
+        ("slow", "slow tests (skipped by default unless explicitly requested)"),
+    ]:
+        config.addinivalue_line("markers", f"{marker}: {description}")
+
+
 @pytest.fixture(scope="session")
 def app():
     """
