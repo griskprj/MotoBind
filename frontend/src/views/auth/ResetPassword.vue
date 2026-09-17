@@ -60,7 +60,7 @@
 
 <script>
 import api from '../../api/api'
-import { setTokens, setUser } from '../../api/auth'
+import { useAuthStore } from '../../stores/auth';
 
 export default {
   name: 'ResetPassword',
@@ -122,10 +122,10 @@ export default {
           new_password: this.newPassword
         })
         
-        // Автоматически логиним пользователя
         if (response.data.access_token) {
-          setTokens(response.data.access_token, response.data.refresh_token)
-          setUser(response.data.user)
+          const auth = useAuthStore()
+          auth.setTokens(response.data.access_token, response.data.refresh_token)
+          auth.setUser(response.data.user)
           this.$router.push('/garage')
         } else {
           this.success = 'Пароль успешно изменён!'

@@ -1,15 +1,12 @@
 <template>
-    <!-- Кнопка-гамбургер для открытия/закрытия сайдбара -->
     <button class="sidebar-toggle" @click="toggleSidebar" :class="{ active: isSidebarOpen }">
         <span class="burger-line"></span>
         <span class="burger-line"></span>
         <span class="burger-line"></span>
     </button>
 
-    <!-- Оверлей -->
     <div class="sidebar-overlay" v-if="isSidebarOpen && !isDesktop" @click="closeSidebar"></div>
 
-    <!-- Сайдбар -->
     <aside 
         class="sidebar" 
         :class="{ 
@@ -17,7 +14,6 @@
             'sidebar-collapsed': isCollapsed && isDesktop
         }"
     >
-        <!-- Логотип с кнопкой сворачивания -->
         <div class="sidebar-logo">
             <img src="/icons/favicon-remove-bg.png" alt="MotoBind">
             <div class="logo-text" v-if="!isCollapsed || !isDesktop">
@@ -26,7 +22,7 @@
             </div>
         </div>
 
-        <!-- Навигация -->
+        <!-- Пользовательская навигация -->
         <nav class="sidebar-nav">
             <div v-if="!$route.path.startsWith('/admin')" class="user-nav">
                 <router-link
@@ -97,7 +93,7 @@
                 </router-link>
             </div>
 
-            <!-- ADMIN NAV -->
+            <!-- Админская навигация -->
             <div v-if="$route.path.startsWith('/admin')" class="admin-nav">
                 <div class="admin-nav-group">
                     <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">ГЛАВНАЯ</p>
@@ -187,22 +183,26 @@
 
 <script>
 import api from '../api/api';
-import { removeTokens } from '../api/auth';
 import router from '../router';
+import { useAuthStore } from '../stores/auth';
 
 export default {
     data() {
         return {
             isSidebarOpen: false,
             isCollapsed: false,
-            isAdmin: false,
             isDesktop: window.innerWidth > 770,
             isDark: true
         }
     },
 
+    computed: {
+        isAdmin() {
+            return useAuthStore().isAdmin
+        }
+    },
+
     mounted() {
-        this.checkAdminStatus();
         window.addEventListener('resize', this.handleResize);
 
         const savedTheme = localStorage.getItem('theme');
@@ -246,20 +246,6 @@ export default {
             }
         },
 
-        checkAdminStatus() {
-            try {
-                const token = localStorage.getItem('access_token');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    this.isAdmin = payload.role === 'admin';
-                } else {
-                    this.isAdmin = false;
-                }
-            } catch {
-                this.isAdmin = false;
-            }
-        },
-
         toggleTheme() {
             this.isDark = !this.isDark;
             const theme = this.isDark ? 'dark' : 'light';
@@ -278,18 +264,12 @@ export default {
             } catch(err) {
                 console.error('Logout failed:', err);
             } finally {
-                removeTokens();
+                useAuthStore().logout()
                 this.closeSidebar();
                 router.push('/login');
             }
         }
     },
-
-    watch: {
-        '$route'() {
-            this.checkAdminStatus();
-        }
-    }
 }
 </script>
 

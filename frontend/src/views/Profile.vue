@@ -339,7 +339,7 @@
 
 <script>
 import api from '../api/api'
-import { removeTokens } from '../api/auth'
+import { useAuthStore } from '../stores/auth.js'
 import EditProfileModal from '../components/modals/user/EditProfileModal.vue'
 import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue'
 import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue'
@@ -549,7 +549,7 @@ export default {
                     data: { password }
                 })
                 this.showDeleteAccount = false
-                removeTokens()
+                useAuthStore().logout()
                 this.$router.push('/login')
             } catch (error) {
                 console.error('Error deleting account:', error)
@@ -643,7 +643,7 @@ export default {
                 await api.post('/auth/logout')
             } catch(err) { console.error(err) }
             finally {
-                removeTokens()
+                useAuthStore().logout()
                 this.$router.push('/login')
             }
         }

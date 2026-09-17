@@ -1,21 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isAuthenticated } from '../api/auth'
-
-function getUserRole() {
-  const token = localStorage.getItem('access_token')
-  if (!token) return null
-
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.role
-  } catch {
-    return null
-  }
-}
-
-function isAdmin() {
-  return getUserRole() === 'admin'
-}
+import { useAuthStore } from '../stores/auth.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,10 +12,8 @@ const router = createRouter({
     {
       path: '/',
       redirect: () => {
-        if (isAuthenticated()) {
-          return '/garage'
-        }
-        return '/landing'
+        const auth = useAuthStore()
+        return auth.isAuthenticated ? '/garage' : '/landing'
       }
     },
     {
@@ -455,16 +437,15 @@ router.afterEach((to) => {
 
 // ===== НАВИГАЦИОННЫЙ ХУК =====
 router.beforeEach((to, from, next) => {
-  const authenticated = isAuthenticated()
-  const admin = isAdmin()
+  const auth = useAuthStore()
 
-  if (to.meta.requiresAuth && !authenticated) {
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next('/welcome')
     return
   }
 
-  if (to.meta.requiresAdmin && !admin) {
-    if (authenticated) {
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    if (auth.isAuthenticated) {
       next('/garage')
     } else {
       next('/welcome')
@@ -472,7 +453,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (to.meta.requiresGuest && authenticated) {
+  if (to.meta.requiresGuest && auth.isAuthenticated) {
     next('/garage')
     return
   }

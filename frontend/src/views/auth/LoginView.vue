@@ -80,8 +80,8 @@
 
 <script>
 import api from '../../api/api';
-import { setTokens, setUser } from '../../api/auth';
 import LoadingOverlay from '../../components/LoadingOverlay.vue';
+import { useAuthStore } from '../../stores/auth.js';
 
 export default {
   components: { LoadingOverlay },
@@ -107,8 +107,9 @@ export default {
           rememberMe: this.rememberMe,
         });
         const { access_token, refresh_token } = response.data;
-        setTokens(access_token, refresh_token);
-        setUser(response.data.user);
+        const auth = useAuthStore()
+        auth.setTokens(access_token, refresh_token)
+        auth.setUser(response.data.user)
 
         const role = response.data.user.role;
         if (role === 'admin') {

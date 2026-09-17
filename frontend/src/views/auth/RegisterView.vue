@@ -1,13 +1,10 @@
 <template>
   <div class="register-wizard-container">
     <div class="wizard-card animate-slide-in">
-      <!-- Фоновое изображение (десктоп) -->
       <div class="background-image"></div>
       
-      <!-- Затемнение для читаемости -->
       <div class="background-overlay"></div>
 
-      <!-- Прогресс -->
       <div class="progress-section">
         <div class="step-indicator">{{ currentStep }} из {{ totalSteps }}</div>
         <div class="progress-bar">
@@ -361,7 +358,7 @@
 
 <script>
 import api from '../../api/api';
-import { setTokens, setUser } from '../../api/auth';
+import { useAuthStore } from '../../stores/auth.js';
 import VerificationModal from '../../components/modals/VerificationModal.vue';
 
 export default {
@@ -482,9 +479,10 @@ export default {
         if (!access_token || !refresh_token || !user) {
           throw new Error('Сервер не вернул токены авторизации');
         }
-
-        setTokens(access_token, refresh_token);
-        setUser(user);
+        
+        const auth = useAuthStore()
+        auth.setTokens(access_token, refresh_token)
+        auth.setUser(user)
 
         if (requires_verification) {
           this.showVerificationModal = true

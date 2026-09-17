@@ -459,16 +459,6 @@ export default {
             alert(message)
         },
 
-        async logout() {
-            try {
-                await api.post('/auth/logout');
-            } catch(err) { console.error(err) }
-            finally {
-                const { removeTokens } = await import('../../api/auth');
-                removeTokens();
-                this.$router.push('/login');
-            }
-        },
     },
 
     mounted() {
