@@ -289,7 +289,7 @@ class StatisticService:
             User,
             user_id,
             options=[
-                selectinload(User.motorcycle).selectinload(Motorcycle.maintenances),
+                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
             ],
         )
 
