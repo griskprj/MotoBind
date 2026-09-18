@@ -57,6 +57,7 @@ class ISO8601Mixin(BaseModel):
         "updated_at",
         "completed_date",
         "planned_date",
+        "last_login",
         check_fields=False,
         when_used="always",
     )
