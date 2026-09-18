@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List
 
 from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError
-from app.models.maintenance import Maintenance, MaintenanceStatus
+from app.models.maintenance import MaintenanceStatus
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
@@ -62,10 +62,10 @@ class StatisticService:
                 maint_dict = maint.to_dict()
                 maint_dict["status"] = maint.status.value if maint.status else None
                 
-                if maint.status == MaintenanceStatus.PLANNED:
+                if maint.status == MaintenanceStatus.PLANNED.value:
                     planned_records.append(maint_dict)
                     stats["plan_maintenances_count"] += 1
-                elif maint.status == MaintenanceStatus.COMPLETED:
+                elif maint.status == MaintenanceStatus.COMPLETED.value:
                     stats["maintenances_count"] += 1
                     if maint.cost:
                         stats["total_spends"] += maint.cost
@@ -91,9 +91,9 @@ class StatisticService:
 
         all_maintenances.sort(
             key=lambda x: {
-                MaintenanceStatus.OVERDUE: 0,
-                MaintenanceStatus.PLANNED: 1,
-                MaintenanceStatus.COMPLETED: 2,
+                MaintenanceStatus.OVERDUE.value: 0,
+                MaintenanceStatus.PLANNED.value: 1,
+                MaintenanceStatus.COMPLETED.value: 2,
             }.get(x.status, 3)
         )
         all_maintenances = all_maintenances[:3]
@@ -182,9 +182,9 @@ class StatisticService:
             moto_data.append({"id": m.id, "name": m.name})
             
             for maintenance in m.maintenances:
-                if maintenance.status == MaintenanceStatus.PLANNED:
+                if maintenance.status == MaintenanceStatus.PLANNED.value:
                     plan_count += 1
-                elif maintenance.status == MaintenanceStatus.COMPLETED:
+                elif maintenance.status == MaintenanceStatus.COMPLETED.value:
                     completed_count += 1
                     if maintenance.cost:
                         cost += maintenance.cost
@@ -202,11 +202,8 @@ class StatisticService:
         moto = db.session.get(
             Motorcycle,
             moto_id,
-            options=[
-                selectinload(Motorcycle.maintenances)
-            ]
+            options=[selectinload(Motorcycle.maintenances)]
         )
-
         user = db.session.get(User, user_id)
 
         if not moto:
@@ -216,8 +213,8 @@ class StatisticService:
         if int(moto.owner_id) != int(user.id):
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        planned = [m for m in moto.maintenances if m.status == MaintenanceStatus.PLANNED]
-        completed = [m for m in moto.maintenances if m.status == MaintenanceStatus.COMPLETED]
+        planned = [m for m in moto.maintenances if m.status == MaintenanceStatus.PLANNED.value]
+        completed = [m for m in moto.maintenances if m.status == MaintenanceStatus.COMPLETED.value]
 
         planned_maintenances = sorted(
             planned,
@@ -227,41 +224,40 @@ class StatisticService:
 
         recent_maintenances = sorted(
             completed,
-            key=lambda x: x.completed_date or datetime.min,
+            key=lambda x: x.completed_date or date.min,
             reverse=True,
         )[:5]
 
-        # TODO: Обновить gen_maintenance_nodes для новой модели
-        nodes = []
+        nodes = []  # TODO: реализовать узлы здоровья
 
         completed_with_cost = [m for m in completed if m.cost]
         total_cost = sum(m.cost for m in completed_with_cost)
-        
         avg_cost = round(total_cost / len(completed_with_cost)) if completed_with_cost else 0
         max_cost = max((m.cost for m in completed_with_cost), default=0)
 
-        now = datetime.now()
-        month_start = datetime(now.year, now.month, 1)
+        today = date.today()
+        month_start_date = today.replace(day=1)
+
         month_cost = sum(
-            m.cost for m in completed_with_cost 
-            if m.completed_date and m.completed_date >= month_start
+            m.cost for m in completed_with_cost
+            if m.completed_date and m.completed_date >= month_start_date
         )
 
         money_chart_data = []
         for i in range(5, -1, -1):
-            month_date = now.replace(day=1) - timedelta(days=i * 30)
-            month_start_dt = datetime(month_date.year, month_date.month, 1)
-            
+            month_date = month_start_date - timedelta(days=i * 30)
+            month_start_dt = month_date.replace(day=1)
+
             if month_date.month == 12:
-                month_end = datetime(month_date.year + 1, 1, 1)
+                month_end = date(month_date.year + 1, 1, 1)
             else:
-                month_end = datetime(month_date.year, month_date.month + 1, 1)
-            
+                month_end = date(month_date.year, month_date.month + 1, 1)
+
             month_cost_total = sum(
                 m.cost for m in completed_with_cost
                 if m.completed_date and month_start_dt <= m.completed_date < month_end
             )
-            
+
             money_chart_data.append({
                 "month": f"{month_date.strftime('%b')} {month_date.year}",
                 "value": month_cost_total
@@ -278,8 +274,11 @@ class StatisticService:
             "month_cost": month_cost,
             "money_chart_data": money_chart_data,
             "total_maintenances": len(completed),
-            "month_maintenances": len([m for m in completed if m.completed_date and m.completed_date >= month_start]),
-            "freq_chart_data": [],  # TODO: обновить calculate_maintenance_freq
+            "month_maintenances": len([
+                m for m in completed
+                if m.completed_date and m.completed_date >= month_start_date
+            ]),
+            "freq_chart_data": [],
         }
 
     @staticmethod
@@ -303,9 +302,9 @@ class StatisticService:
 
         for moto in user.motorcycles:
             for maint in moto.maintenances:
-                if maint.status == MaintenanceStatus.OVERDUE:
+                if maint.status == MaintenanceStatus.OVERDUE.value:
                     overdue += 1
-                elif maint.status == MaintenanceStatus.PLANNED:
+                elif maint.status == MaintenanceStatus.PLANNED.value:
                     planned += 1
                 
                 maint_dict = maint.to_dict()
@@ -341,11 +340,11 @@ class StatisticService:
                 maint_dict = maintenance.to_dict()
                 maint_dict["moto_name"] = motorcycle.name
                 
-                if maintenance.status == MaintenanceStatus.PLANNED:
+                if maintenance.status == MaintenanceStatus.PLANNED.value:
                     planned_count += 1
-                elif maintenance.status == MaintenanceStatus.OVERDUE:
+                elif maintenance.status == MaintenanceStatus.OVERDUE.value:
                     overdue_count += 1
-                elif maintenance.status == MaintenanceStatus.COMPLETED:
+                elif maintenance.status == MaintenanceStatus.COMPLETED.value:
                     completed_count += 1
                 
                 all_maintenances.append(maint_dict)
