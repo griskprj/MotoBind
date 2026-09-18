@@ -27,7 +27,10 @@ class PostService:
         )
         db.session.add(post)
         db.session.commit()
-        return post
+
+        post_dict = post.to_dict()
+        post_dict["is_liked"] = False
+        return post_dict
 
     @staticmethod
     def _save_image(file) -> str:
@@ -126,11 +129,13 @@ class PostService:
                 from app.utils.files import delete_file
                 delete_file(post.image)
             post.image = PostService._save_image(image_file)
-        else:
-            pass
         
         db.session.commit()
-        return post
+
+        post_dict = post.to_dict()
+        like = PostLike.query.filter_by(post_id=post.id, user_id=user_id).first()
+        post_dict["is_liked"] = bool(like)
+        return post_dict
 
     @staticmethod
     def delete_post(post_id: int, user_id: int) -> None:

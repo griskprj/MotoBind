@@ -1,185 +1,158 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+"""
+Social API — тонкие контроллеры.
+
+Вся бизнес-логика — в services/post_service.py и services/report_service.py.
+"""
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
+
+from app.models.post_report import PostReport
+from app.schemas.social import (
+    CommentResponseSchema,
+    LikeToggleResponseSchema,
+    PostDetailResponseSchema,
+    PostListResponseSchema,
+    PostResponseSchema,
+    ReportCategorySchema,
+    ReportResponseSchema,
+)
 from app.services.post_service import PostService
-from app.exceptions import NotFoundError, ForbiddenError, ValidationError, ConflictError
 from app.services.report_service import ReportService
+from app.utils.helpers import get_current_user_id
 
-social_bp = Blueprint('social', __name__, url_prefix='/api/social')
+social_bp = Blueprint("social", __name__)
 
-@social_bp.route('/posts', methods=['POST'])
+
+# ---- Posts ----
+
+@social_bp.route("/posts", methods=["POST"])
 @jwt_required()
 def create_post():
-    """Создание поста"""
-    try:
-        user_id = int(get_jwt_identity())
-        content = request.form.get('content')
-        image = request.files.get('image')
-        
-        if not content or not content.strip():
-            return jsonify({'error': 'Содержимое поста не может быть пустым'}), 400
-        
-        post = PostService.create_post(user_id, content, image)
-        post_dict = post.to_dict()
-        post_dict['is_liked'] = False
-        return jsonify(post_dict), 201
-    except ValidationError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    """Создание поста."""
+    user_id = get_current_user_id()
+    content = request.form.get("content")
+    image = request.files.get("image")
 
-@social_bp.route('/posts', methods=['GET'])
+    result = PostService.create_post(user_id, content, image)
+    return jsonify(PostResponseSchema.model_validate(result).model_dump()), 201
+
+
+@social_bp.route("/posts", methods=["GET"])
 @jwt_required()
 def get_posts():
-    """Получение списка постов"""
-    current_user_id = int(get_jwt_identity())
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    user_id = request.args.get('user_id', type=int)
-    include_comments = request.args.get('include_comments', 'false').lower() == 'true'
-    
+    """Лента постов."""
+    current_user_id = get_current_user_id()
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    user_id = request.args.get("user_id", type=int)
+    include_comments = request.args.get("include_comments", "false").lower() == "true"
+
     data = PostService.get_posts(
         page=page,
         per_page=per_page,
         user_id=user_id,
         current_user_id=current_user_id,
-        include_comments=include_comments
+        include_comments=include_comments,
     )
-    return jsonify(data), 200
+    return jsonify(PostListResponseSchema.model_validate(data).model_dump()), 200
 
-@social_bp.route('/posts/<int:post_id>', methods=['GET'])
+
+@social_bp.route("/posts/<int:post_id>", methods=["GET"])
 @jwt_required()
 def get_post(post_id):
-    """Получение поста по ID"""
-    try:
-        current_user_id = int(get_jwt_identity())
-        include_comments = request.args.get('include_comments', 'true').lower() == 'true'
-        
-        post_data = PostService.get_post(
-            post_id=post_id,
-            current_user_id=current_user_id,
-            include_comments=include_comments
-        )
-        return jsonify(post_data), 200
-    except NotFoundError as e:
-        return jsonify({'error': str(e)}), 404
+    """Один пост."""
+    current_user_id = get_current_user_id()
+    include_comments = request.args.get("include_comments", "true").lower() == "true"
 
-@social_bp.route('/posts/<int:post_id>', methods=['PUT'])
+    post_data = PostService.get_post(
+        post_id=post_id,
+        current_user_id=current_user_id,
+        include_comments=include_comments,
+    )
+    return jsonify(PostResponseSchema.model_validate(post_data).model_dump()), 200
+
+
+@social_bp.route("/posts/<int:post_id>", methods=["PUT"])
 @jwt_required()
 def update_post(post_id):
-    """Обновление поста"""
-    try:
-        user_id = int(get_jwt_identity())
-        content = request.form.get('content')
-        image = request.files.get('image')
-        
-        if not content or not content.strip():
-            return jsonify({'error': 'Содержимое поста не может быть пустым'}), 400
-        
-        post = PostService.update_post(post_id, user_id, content, image)
-        post_dict = post.to_dict()
-        
-        # Добавляем информацию о лайке для текущего пользователя
-        from app.models.post_like import PostLike
-        like = PostLike.query.filter_by(post_id=post.id, user_id=user_id).first()
-        post_dict['is_liked'] = bool(like)
-        
-        return jsonify(post_dict), 200
-    except (NotFoundError, ForbiddenError, ValidationError) as e:
-        status_code = 404 if isinstance(e, NotFoundError) else 403 if isinstance(e, ForbiddenError) else 400
-        return jsonify({'error': str(e)}), status_code
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    """Обновление поста."""
+    user_id = get_current_user_id()
+    content = request.form.get("content")
+    image = request.files.get("image")
 
-@social_bp.route('/posts/<int:post_id>', methods=['DELETE'])
+    result = PostService.update_post(post_id, user_id, content, image)
+    return jsonify(PostResponseSchema.model_validate(result).model_dump()), 200
+
+
+@social_bp.route("/posts/<int:post_id>", methods=["DELETE"])
 @jwt_required()
 def delete_post(post_id):
-    """Удаление поста"""
-    try:
-        user_id = int(get_jwt_identity())
-        PostService.delete_post(post_id, user_id)
-        return jsonify({'message': 'Пост удалён'}), 200
-    except (NotFoundError, ForbiddenError) as e:
-        status_code = 404 if isinstance(e, NotFoundError) else 403
-        return jsonify({'error': str(e)}), status_code
+    """Удаление поста."""
+    user_id = get_current_user_id()
+    PostService.delete_post(post_id, user_id)
+    return jsonify({"message": "Пост удалён"}), 200
 
-@social_bp.route('/posts/<int:post_id>/like', methods=['POST'])
+
+# ---- Likes ----
+
+@social_bp.route("/posts/<int:post_id>/like", methods=["POST"])
 @jwt_required()
 def toggle_like(post_id):
-    """Поставить/убрать лайк"""
-    try:
-        user_id = int(get_jwt_identity())
-        result = PostService.toggle_like(post_id, user_id)
-        return jsonify(result), 200
-    except NotFoundError as e:
-        return jsonify({'error': str(e)}), 404
+    """Поставить/убрать лайк."""
+    user_id = get_current_user_id()
+    result = PostService.toggle_like(post_id, user_id)
+    return jsonify(LikeToggleResponseSchema.model_validate(result).model_dump()), 200
 
-@social_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
+
+# ---- Comments ----
+
+@social_bp.route("/posts/<int:post_id>/comments", methods=["POST"])
 @jwt_required()
 def add_comment(post_id):
-    """Добавить комментарий"""
-    try:
-        user_id = int(get_jwt_identity())
-        data = request.get_json()
-        if not data or not data.get('content'):
-            return jsonify({'error': 'Комментарий не может быть пустым'}), 400
-        
-        comment = PostService.add_comment(post_id, user_id, data['content'])
-        return jsonify(comment.to_dict()), 201
-    except (NotFoundError, ValidationError) as e:
-        status_code = 404 if isinstance(e, NotFoundError) else 400
-        return jsonify({'error': str(e)}), status_code
+    """Добавить комментарий."""
+    user_id = get_current_user_id()
+    data = request.get_json() or {}
 
-@social_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
+    comment = PostService.add_comment(post_id, user_id, data.get("content"))
+    return jsonify(CommentResponseSchema.model_validate(comment.to_dict()).model_dump()), 201
+
+
+@social_bp.route("/comments/<int:comment_id>", methods=["DELETE"])
 @jwt_required()
 def delete_comment(comment_id):
-    """Удалить комментарий"""
-    try:
-        user_id = int(get_jwt_identity())
-        PostService.delete_comment(comment_id, user_id)
-        return jsonify({'message': 'Комментарий удалён'}), 200
-    except (NotFoundError, ForbiddenError) as e:
-        status_code = 404 if isinstance(e, NotFoundError) else 403
-        return jsonify({'error': str(e)}), status_code
+    """Удалить комментарий."""
+    user_id = get_current_user_id()
+    PostService.delete_comment(comment_id, user_id)
+    return jsonify({"message": "Комментарий удалён"}), 200
 
 
-@social_bp.route('/posts/<int:post_id>/report', methods=['POST'])
+# ---- Reports ----
+
+@social_bp.route("/posts/<int:post_id>/report", methods=["POST"])
 @jwt_required()
 def report_post(post_id):
-    """Отправить жалобу на пост"""
-    try:
-        user_id = int(get_jwt_identity())
-        data = request.get_json() or {}
+    """Отправить жалобу на пост."""
+    user_id = get_current_user_id()
+    data = request.get_json() or {}
 
-        category = data.get('category')
-        description = data.get('description')
-
-        if not category:
-            return jsonify({'error': 'Категория жалобы обязательна'}), 400
-
-        report = ReportService.create_report(
-            post_id=post_id,
-            reporter_id=user_id,
-            category=category,
-            description=description,
-        )
-        return jsonify({
-            'message': 'Жалоба отправлена модератору',
-            'report': report.to_dict(include_post=False),
-        }), 201
-    except NotFoundError as e:
-        return jsonify({'error': str(e)}), 404
-    except ConflictError as e:
-        return jsonify({'error': str(e)}), 409
-    except ValidationError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    report = ReportService.create_report(
+        post_id=post_id,
+        reporter_id=user_id,
+        category=data.get("category"),
+        description=data.get("description"),
+    )
+    report_dict = report.to_dict(include_post=False)
+    return jsonify({
+        "message": "Жалоба отправлена модератору",
+        "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
+    }), 201
 
 
-@social_bp.route('/report-categories', methods=['GET'])
+@social_bp.route("/report-categories", methods=["GET"])
 @jwt_required()
 def get_report_categories():
-    from app.models.post_report import PostReport
+    """Список категорий жалоб."""
     return jsonify([
-        {'value': k, 'label': v} for k, v in PostReport.CATEGORIES.items()
+        ReportCategorySchema.model_validate({"value": k, "label": v}).model_dump()
+        for k, v in PostReport.CATEGORIES.items()
     ]), 200

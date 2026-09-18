@@ -33,13 +33,13 @@ class ReportService:
         if existing:
             raise ConflictError("Вы уже отправили жалобу на этот пост")
 
-        shapshot = {
+        snapshot = {
             "content": post.content,
             "image": post.image,
             "author_id": post.author_id,
             "author": post.author.username if post.author else None,
             "author_avatar": post.author.avatar if post.author else None,
-            "craeted_at": post.created_at.isoformat()+ "Z" if post.created_at else None
+            "craeted_at": post.created_at.isoformat() if post.created_at else None
         }
 
         report = PostReport(
@@ -47,7 +47,7 @@ class ReportService:
             reporter_id=reporter_id,
             category=category,
             description=(description or "").strip() or None,
-            post_snapshot=shapshot,
+            post_snapshot=snapshot,
         )
         db.session.add(report)
         db.session.commit()
@@ -69,7 +69,6 @@ class ReportService:
             "reports": [r.to_dict() for r in paginated.items],
             "total": paginated.total,
             "pages": paginated.pages,
-            "current_page": paginated.page,
             "current_page": paginated.page,
             "per_page": paginated.per_page,
             "has_prev": paginated.has_prev,
