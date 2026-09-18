@@ -6,6 +6,29 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.5.0] — 2026-09-18
+
+### Added
+- **services/auth_service.py**: `AuthService` — вся бизнес-логика аутентификации (register, login, refresh, logout, verify email, password reset) в одном сервисном слое
+- **schemas/auth.py**: response-схемы для всех auth-эндпоинтов
+  - `UserResponseSchema` — единая схема пользователя
+  - `LoginResponseSchema`, `RegisterResponseSchema`, `RefreshResponseSchema`, `VerifyEmailResponseSchema`
+  - `MessageResponseSchema`, `CheckVerificationResponseSchema`, `CheckResetTokenResponseSchema`
+
+### Changed
+- **api/auth.py**: тонкие контроллеры — нет `db.session` writes, нет `User.query`, нет прямых вызовов `create_access_token` / `create_refresh_token`
+- **api/auth.py**: `Schema(**json)` → `Schema.model_validate(json or {})` (Pydantic 2 style)
+- **AuthService**: единый `_issue_tokens` — access/refresh с `role` claim всегда
+
+### Fixed
+- **auth/verify_email**: токены теперь содержат `role` claim (раньше отсутствовал — ломало admin-режим на фронте до перелогина)
+- **auth/verify_email**: применяется `VerifyEmailResponseSchema` (было без схемы)
+
+### Notes
+- JSON-контракт API не изменился (кроме баг-фикса в verify_email)
+- Покрытие тестами auth: 19 тестов (Sprint 3.1)
+- Домен `auth` считается отрефакторенным: сервис + схемы + тонкий API + тесты
+
 ## [1.4.0] — 2026-09-18
 
 ### Added
