@@ -15,7 +15,7 @@ class Maintenance(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     moto_id = db.Column(db.Integer, db.ForeignKey("motorcycles.id"), nullable=False)
     title = db.Column(db.String(64), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=True)
     category = db.Column(db.String, nullable=False)
     cost = db.Column(db.Integer, default=0, nullable=False)
 
