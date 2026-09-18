@@ -6,6 +6,40 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.6.0] — 2026-09-18
+
+### Added
+- **schemas/social.py**: response-схемы для домена social
+  - `PostResponseSchema`, `PostListResponseSchema`, `CommentResponseSchema`
+  - `LikeToggleResponseSchema`, `ReportResponseSchema`, `ReportCategorySchema`
+- **tests/test_social.py**: ~20 тестов (posts, likes, comments, reports)
+
+### Changed
+- **api/social.py**: тонкий контроллер — без `try/except`, без прямых
+  `PostLike.query`, без `int(get_jwt_identity())`
+- **api/social.py**: сериализация через Pydantic-схемы вместо ручного `.to_dict()`
+- **PostService.create_post**: возвращает `dict` с `is_liked=False` вместо `Post`
+- **PostService.update_post**: возвращает `dict` с `is_liked` вместо `Post`
+- **PostService.update_post**: логика `is_liked` уехала из API в сервис
+
+### Fixed
+- **api/social.py**: убран `except Exception` — глобальные handler'ы `APIException`
+  и `PydanticValidationError` возвращают правильные коды (было 500 вместо 400
+  при невалидном вводе)
+- **report_service.create_report**: опечатка `craeted_at` → `created_at` в `post_snapshot`
+- **report_service.create_report**: убран лишний `+ "Z"` (datetime уже aware,
+  `.isoformat()` содержит `+00:00`)
+- **report_service.get_reports**: убран дублирующийся ключ `current_page` в ответе
+- **api/social.py**: убран двойной `url_prefix` в Blueprint (был в `api/social.py` **и** в `__init__.py`)
+
+### Notes
+- JSON-контракт API не изменился (проверено `Compare-Object` до/после)
+- Домен `social` считается отрефакторенным: сервис + схемы + тонкий API + тесты
+- В бэклоге: db.paginate вместо Query.paginate (SQLAlchemy 2.0)
+
+## [1.5.0] — 2026-09-18
+...
+
 ## [1.5.0] — 2026-09-18
 
 ### Added
