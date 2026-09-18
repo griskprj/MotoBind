@@ -43,4 +43,26 @@ class Config:
         return [origin.strip() for origin in origins.split(',')]
 
 
+class TestingConfig(Config):
+    """Конфиг для тестов."""
+    DEBUG = False
+    TESTING = True
+
+    DATABASE_URL = "sqlite://"
+
+    DISABLE_SCHEDULER = True
+    ENABLE_DEV_SCHEDULER = False
+
+    MAIL_SUPPRESS_SEND = True
+    MAIL_SERVER = "localhost"
+    MAIL_USERNAME = "test@test.local"
+    MAIL_PASSWORD = "test"
+    MAIL_DEFAULT_SENDER = "test@test.local"
+
+    SECRET_KEY = "test-secret-key-not-for-production"
+    JWT_SECRET_KEY = "test-jwt-secret-key-not-for-production"
+
+    CORS_ORIGINS = "http://localhost:5173"
+
 settings = Config()
+testing_settings = TestingConfig()

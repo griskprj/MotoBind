@@ -7,9 +7,9 @@ from app.extensions import cors, db, jwt, migrate, swagger, mail
 from app.scheduler import start_scheduler
 from config import settings
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
-def create_app():
+def create_app(config_override=None):
     app = Flask(__name__)
 
     app.config.from_mapping(
@@ -41,6 +41,9 @@ def create_app():
         DISABLE_SCHEDULER=settings.DISABLE_SCHEDULER,
     )
 
+    if config_override:
+        app.config.update(config_override)
+
     cors.init_app(
         app,
         resources={r"/api/*": {"origins": settings.get_cors_origins()}},
@@ -52,7 +55,9 @@ def create_app():
     swagger.init_app(app)
     mail.init_app(app)
     register_error_handlers(app)
-    start_scheduler(app)
+
+    if not app.config.get("TESTING"):
+        start_scheduler(app)
 
     @app.route('/uploads/<path:filename>')
     def serve_uploaded_file(filename):

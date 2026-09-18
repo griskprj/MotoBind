@@ -5,6 +5,41 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
+
+## [1.4.0] — 2026-09-18
+
+### Added
+- **backend/tests**: инфраструктура pytest (`conftest.py`, `pyproject.toml`)
+  - fixtures: `app`, `db_session`, `client`, `make_user`, `auth_headers`
+  - `TestingConfig` + `create_app(config_override=...)` для изоляции тестов
+  - in-memory SQLite с `StaticPool` (shared connection pool)
+  - auto-mock email sending
+- **backend/tests**: 68 новых тестов (auth, motorcycle, maintenance, statistic)
+  - `test_auth.py` — 19 тестов (register/login/refresh/logout/password reset)
+  - `test_motorcycle.py` — 19 тестов (CRUD, permissions, validation)
+  - `test_maintenance.py` — 17 тестов (CRUD, complete flow, quick-start)
+  - `test_statistic.py` — 13 тестов (garage/maintenance/repair/registrations)
+
+### Fixed
+- **schemas/manual**: 3 × Pydantic `class Config` deprecated → мигрирован на `ConfigDict` *(если делал в рамках этого релиза; иначе пропусти этот пункт)*
+- **api/exceptions**: `handle_pydantic_validation_error` падал с `TypeError` при кастомных `@field_validator` (ValueError в ctx) → теперь sanitize errors перед jsonify
+- **maintenance/model**: `description` был `nullable=False`, но схема и сервис передают `None` → 500 на создании ТО без описания
+- **maintenance/service**: опечатка `record.statust` в `_recompute_status` → `record.status`
+- **statistic/service**: сравнение `maintenance.status` (строка) с `MaintenanceStatus` (enum) → все счётчики всегда 0
+- **statistic/service**: сравнение `completed_date` (`date`) с `month_start` (`datetime`) в `get_moto_garage_stats` → 500 для любого мото с выполненным ТО
+- **decorators**: `Motorcycle.query.get()` (legacy) → `db.session.get()` (пропущено в Sprint 1)
+- **migrations**: новая миграция для `maintenances.description` nullable (для PostgreSQL prod)
+
+### Changed
+- **api/exceptions**: `datetime.utcnow()` → `datetime.now(timezone.utc)` (Sprint 0 хвост)
+- **tests/conftest**: `pytest_configure` регистрирует кастомные маркеры (`@pytest.mark.auth`, etc.)
+- **tests**: SECRET_KEY/JWT_SECRET_KEY в тестах ≥32 символа (убирает PyJWT warning)
+
+### Notes
+- JSON-контракт API не менялся (кроме исправленных ошибок 500→400 и правильных счётчиков статистики)
+- Тесты нашли 3 скрытых прод-бага (500 на невалидных данных, 500 на ТО без description, 500 на статистике с completed ТО)
+- Покрытие: ~74 теста (было 4 нерабочих)
+
 ## [1.3.0] — 2026-09-17
 
 ### Added

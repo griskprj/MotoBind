@@ -243,7 +243,7 @@ class MaintenanceService:
                 setattr(maintenance, key, value)
 
         if "completed_date" in kwargs or "completed_mileage" in kwargs:
-                    MaintenanceService._recompute_status(maintenance)
+            MaintenanceService._recompute_status(maintenance)
 
         db.session.commit()
         return maintenance
@@ -284,4 +284,4 @@ class MaintenanceService:
         if record.completed_mileage is not None or record.completed_date is not None:
             record.status = MaintenanceStatus.COMPLETED.value
         elif record.planned_mileage is not None or record.planned_date is not None:
-            record.statust = MaintenanceStatus.PLANNED.value
+            record.status = MaintenanceStatus.PLANNED.value

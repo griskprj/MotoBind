@@ -1,0 +1,13 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "auth: tests for auth endpoints",
+    "motorcycle: tests for motorcycle endpoints",
+    "maintenance: tests for maintenance endpoints",
+    "statistic: tests for statistic endpoints",
+    "slow: slow tests (skipped by default unless explicitly requested)",
+]

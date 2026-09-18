@@ -1,7 +1,7 @@
 from functools import wraps
-
 from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
+from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from app.models.motorcycle import Motorcycle
 
@@ -93,7 +93,7 @@ def moto_owner_required(fn):
         if not moto_id:
             raise NotFoundError("ID мотоцикла не указан")
 
-        moto = Motorcycle.query.get(moto_id)
+        moto = db.session.get(Motorcycle, moto_id)
         if not moto:
             raise NotFoundError("Мотоцикл не найден")
 
