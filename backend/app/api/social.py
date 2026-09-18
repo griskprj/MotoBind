@@ -4,7 +4,7 @@ from app.services.post_service import PostService
 from app.exceptions import NotFoundError, ForbiddenError, ValidationError, ConflictError
 from app.services.report_service import ReportService
 
-social_bp = Blueprint('social', __name__, url_prefix='/api/social')
+social_bp = Blueprint('social', __name__)
 
 @social_bp.route('/posts', methods=['POST'])
 @jwt_required()
