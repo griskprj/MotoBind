@@ -7,6 +7,15 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from app.models.post_report import PostReport
+from app.schemas.social import (
+    CommentResponseSchema,
+    LikeToggleResponseSchema,
+    PostDetailResponseSchema,
+    PostListResponseSchema,
+    PostResponseSchema,
+    ReportCategorySchema,
+    ReportResponseSchema,
+)
 from app.services.post_service import PostService
 from app.services.report_service import ReportService
 from app.utils.helpers import get_current_user_id
@@ -25,7 +34,7 @@ def create_post():
     image = request.files.get("image")
 
     result = PostService.create_post(user_id, content, image)
-    return jsonify(result), 201
+    return jsonify(PostResponseSchema.model_validate(result).model_dump()), 201
 
 
 @social_bp.route("/posts", methods=["GET"])
@@ -45,7 +54,7 @@ def get_posts():
         current_user_id=current_user_id,
         include_comments=include_comments,
     )
-    return jsonify(data), 200
+    return jsonify(PostListResponseSchema.model_validate(data).model_dump()), 200
 
 
 @social_bp.route("/posts/<int:post_id>", methods=["GET"])
@@ -60,7 +69,7 @@ def get_post(post_id):
         current_user_id=current_user_id,
         include_comments=include_comments,
     )
-    return jsonify(post_data), 200
+    return jsonify(PostResponseSchema.model_validate(post_data).model_dump()), 200
 
 
 @social_bp.route("/posts/<int:post_id>", methods=["PUT"])
@@ -72,7 +81,7 @@ def update_post(post_id):
     image = request.files.get("image")
 
     result = PostService.update_post(post_id, user_id, content, image)
-    return jsonify(result), 200
+    return jsonify(PostResponseSchema.model_validate(result).model_dump()), 200
 
 
 @social_bp.route("/posts/<int:post_id>", methods=["DELETE"])
@@ -92,7 +101,7 @@ def toggle_like(post_id):
     """Поставить/убрать лайк."""
     user_id = get_current_user_id()
     result = PostService.toggle_like(post_id, user_id)
-    return jsonify(result), 200
+    return jsonify(LikeToggleResponseSchema.model_validate(result).model_dump()), 200
 
 
 # ---- Comments ----
@@ -105,7 +114,7 @@ def add_comment(post_id):
     data = request.get_json() or {}
 
     comment = PostService.add_comment(post_id, user_id, data.get("content"))
-    return jsonify(comment.to_dict()), 201
+    return jsonify(CommentResponseSchema.model_validate(comment.to_dict()).model_dump()), 201
 
 
 @social_bp.route("/comments/<int:comment_id>", methods=["DELETE"])
@@ -132,9 +141,10 @@ def report_post(post_id):
         category=data.get("category"),
         description=data.get("description"),
     )
+    report_dict = report.to_dict(include_post=False)
     return jsonify({
         "message": "Жалоба отправлена модератору",
-        "report": report.to_dict(include_post=False),
+        "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
     }), 201
 
 
@@ -143,5 +153,6 @@ def report_post(post_id):
 def get_report_categories():
     """Список категорий жалоб."""
     return jsonify([
-        {"value": k, "label": v} for k, v in PostReport.CATEGORIES.items()
+        ReportCategorySchema.model_validate({"value": k, "label": v}).model_dump()
+        for k, v in PostReport.CATEGORIES.items()
     ]), 200
