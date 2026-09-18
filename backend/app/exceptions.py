@@ -95,11 +95,35 @@ def register_error_handlers(app):
 
     @app.errorhandler(PydanticValidationError)
     def handle_pydantic_validation_error(e):
+        """
+        Обработчик ошибок валидации Pydantic.
+        
+        `e.errors()` может содержать не-JSON-сериализуемые объекты
+        (например ValueError в ctx при кастомных @field_validator).
+        Санитизируем их в строки.
+        """
+        def sanitize_error(err: dict) -> dict:
+            """Убирает несериализуемые объекты из error dict."""
+            result = {
+                "type": err.get("type"),
+                "loc": err.get("loc", []),
+                "msg": err.get("msg", ""),
+                "input": err.get("input"),
+            }
+            if "ctx" in err:
+                result["ctx"] = {
+                    k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
+                    for k, v in err["ctx"].items()
+                }
+            return result
+
+        errors = [sanitize_error(err) for err in e.errors()]
+
         response = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": 400,
             "error": "Ошибка валидации",
             "path": request.path,
-            "errors": e.errors(),
+            "errors": errors,
         }
         return jsonify(response), 400
