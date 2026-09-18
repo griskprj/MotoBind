@@ -96,7 +96,7 @@ def send_verification():
 def verify_email(token):
     """Подтверждение email по токену."""
     result = AuthService.verify_email(token=token)
-    return jsonify(result), 200
+    return jsonify(VerifyEmailResponseSchema.model_validate(result).model_dump()), 200
 
 
 @auth.route("/resend-verification", methods=["POST"])
