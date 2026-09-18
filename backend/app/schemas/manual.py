@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ManualStepSchema(BaseModel):
@@ -83,9 +83,7 @@ class CreateManualSchema(BaseModel):
                 raise ValueError(f"Некорректный URL: {url}")
         return v
 
-    class Config:
-        populate_by_name = True
-
+    model_config = ConfigDict(populate_by_name=True)
 
 class UpdateManualSchema(BaseModel):
     """Схема для обновления мануала"""
@@ -140,8 +138,7 @@ class UpdateManualSchema(BaseModel):
             if v is not None
         }
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ManualResponseSchema(BaseModel):
@@ -174,5 +171,4 @@ class ManualResponseSchema(BaseModel):
     created_at: datetime
     steps: List[ManualStepSchema]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
