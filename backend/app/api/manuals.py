@@ -1,11 +1,8 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 import json
 
-from app.exceptions import ForbiddenError, NotFoundError, ValidationError
-from app.extensions import db
-from app.models.manual import Manual
-from app.models.user import User
+from app.exceptions import ValidationError
 from app.schemas.manual import CreateManualSchema, UpdateManualSchema
 from app.services.manual_service import ManualService
 
@@ -66,54 +63,39 @@ def get_manual_by_id(manual_id):
 @manual.route("/new-manual", methods=["POST"])
 @jwt_required()
 def create_manual():
-    """
-    Создание мануала с файлами
-    """
-    try:
-        data = request.form.get('data')
-        if not data:
-            raise ValidationError("Данные не переданы")
-        
-        data = json.loads(data)
-        
-        files = request.files.to_dict() if request.files else {}
-        
-        schema = CreateManualSchema(**data)
-        
-        manual = ManualService.create_manual(
-            author_id=int(get_jwt_identity()),
-            data=schema.model_dump(),
-            files=files
-        )
+    """Создание мануала с файлами."""
+    data_raw = request.form.get("data")
+    if not data_raw:
+        raise ValidationError("Данные не переданы")
 
-        return jsonify(manual.to_dict()), 201
-        
+    try:
+        data = json.loads(data_raw)
     except json.JSONDecodeError:
         raise ValidationError("Неверный формат JSON")
-    except Exception as e:
-        current_app.logger.error(f"Ошибка создания мануала: {e}")
-        raise
+
+    schema = CreateManualSchema.model_validate(data)
+    files = request.files.to_dict() if request.files else {}
+
+    created = ManualService.create_manual(
+        author_id=int(get_jwt_identity()),
+        data=schema.model_dump(),
+        files=files,
+    )
+    return jsonify(created.to_dict()), 201
 
 
 @manual.route("/<int:manual_id>", methods=["PUT"])
 @jwt_required()
 def update_manual(manual_id):
-    """
-    Обновление мануала
-    """
-    user_id = int(get_jwt_identity())
-    user = db.session.get(User, user_id)
-    is_admin = user.role == 'admin' if user else False
+    """Обновление мануала."""
+    data = UpdateManualSchema.model_validate(request.get_json() or {})
 
-    data = UpdateManualSchema(**request.get_json())
-
-    manual = ManualService.update_manual(
+    updated = ManualService.update_manual(
         manual_id=manual_id,
-        user_id=user_id,
-        is_admin=is_admin,
-        **data.get_updates()
+        user_id=int(get_jwt_identity()),
+        **data.get_updates(),
     )
-    return jsonify(manual.to_dict()), 200
+    return jsonify(updated.to_dict()), 200
 
 
 @manual.route("/<int:manual_id>", methods=["DELETE"])
@@ -132,74 +114,33 @@ def delete_manual(manual_id):
 @manual.route("/<int:manual_id>/steps/<int:step_id>/image", methods=["POST"])
 @jwt_required()
 def upload_step_image(manual_id, step_id):
-    """
-    Загрузка изображения для шага мануала
-    """
-    from app.utils.files import save_step_image
-    
-    manual = db.session.get(Manual, manual_id)
-    if not manual:
-        raise NotFoundError("Мануал не найден")
-    
-    current_user_id = int(get_jwt_identity())
-    if manual.author_id != current_user_id:
-        raise ForbiddenError("Вы можете редактировать только свои мануалы")
-    
-    step = None
-    for s in manual.steps:
-        if s.id == step_id:
-            step = s
-            break
-    
-    if not step:
-        raise NotFoundError("Шаг не найден")
-    
-    if 'image' not in request.files:
+    """Загрузка изображения для шага мануала."""
+    if "image" not in request.files:
         raise ValidationError("Файл изображения не найден")
-    
-    file = request.files['image']
-    if not file or file.filename == '':
+
+    file = request.files["image"]
+    if not file or file.filename == "":
         raise ValidationError("Файл не выбран")
-    
-    image_url = save_step_image(file, manual_id, step_id)
-    
-    step.image = image_url
-    db.session.commit()
-    
+
+    image_url = ManualService.update_step_image(
+        manual_id=manual_id,
+        step_id=step_id,
+        user_id=int(get_jwt_identity()),
+        file=file,
+    )
     return jsonify({
         "message": "Изображение загружено",
-        "image_url": image_url
+        "image_url": image_url,
     }), 200
 
 
 @manual.route("/<int:manual_id>/steps/<int:step_id>/image", methods=["DELETE"])
 @jwt_required()
 def delete_step_image(manual_id, step_id):
-    """
-    Удаление изображения шага
-    """
-    from app.utils.files import delete_file
-    
-    manual = db.session.get(Manual, manual_id)
-    if not manual:
-        raise NotFoundError("Мануал не найден")
-    
-    current_user_id = int(get_jwt_identity())
-    if manual.author_id != current_user_id:
-        raise ForbiddenError("Вы можете редактировать только свои мануалы")
-    
-    step = None
-    for s in manual.steps:
-        if s.id == step_id:
-            step = s
-            break
-    
-    if not step:
-        raise NotFoundError("Шаг не найден")
-    
-    if step.image:
-        delete_file(step.image)
-        step.image = None
-        db.session.commit()
-    
+    """Удаление изображения шага."""
+    ManualService.delete_step_image(
+        manual_id=manual_id,
+        step_id=step_id,
+        user_id=int(get_jwt_identity()),
+    )
     return jsonify({"message": "Изображение удалено"}), 200
