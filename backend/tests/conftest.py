@@ -23,6 +23,8 @@ def pytest_configure(config):
         ("maintenance", "tests for maintenance endpoints"),
         ("statistic", "tests for statistic endpoints"),
         ("slow", "slow tests (skipped by default unless explicitly requested)"),
+        ("social", "tests for social endpoints"),
+        ("manuals", "tests for manuals endpoints"),
     ]:
         config.addinivalue_line("markers", f"{marker}: {description}")
 
