@@ -9,6 +9,7 @@ from app.extensions import db
 from app.models.manual import Manual, ManualStep
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
+from app.schemas.manual import ManualForMaintenanceResponseSchema
 
 
 class ManualService:
@@ -446,7 +447,7 @@ class ManualService:
         Формат отличается от Manual.to_dict() (обрезает description,
         не отдаёт author_username, steps без id/manual_id, null -> "").
         """
-        return {
+        result = {
             "id": manual.id,
             "title": manual.title,
             "description": manual.description[:200] if manual.description else "",
@@ -477,3 +478,6 @@ class ManualService:
                 for step in sorted(manual.steps, key=lambda s: s.order)
             ],
         }
+
+        ManualForMaintenanceResponseSchema.model_validate(result)
+        return result

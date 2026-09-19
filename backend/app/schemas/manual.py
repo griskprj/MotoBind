@@ -141,34 +141,83 @@ class UpdateManualSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class ManualStepResponseSchema(BaseModel):
+    """Шаг мануала в ответе API."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    manual_id: int
+    order: int
+    title: str
+    text: Optional[str] = None
+    tip: Optional[str] = None
+    warning: Optional[str] = None
+    result: Optional[str] = None
+    image: Optional[str] = None
+
+
 class ManualResponseSchema(BaseModel):
-    """Схема для ответа с мануалом"""
+    """Мануал в ответе API. Совпадает с Manual.to_dict()."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    author_id: int
+    author_username: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    category: str
+    difficult: Optional[str] = None
+    motorcycle: str
+
+    time_estimate: Optional[str] = None
+    interval: Optional[str] = None
+    safety_tip: Optional[str] = None
+    warnings: Optional[str] = None
+    conditions: Optional[str] = None
+    docs_links: Optional[list] = None
+    specs: Optional[dict] = None
+    aftercare: Optional[str] = None
+
+    instruments: Optional[str] = None
+    parts: Optional[str] = None
+    tip: Optional[str] = None
+
+    status: str
+    created_at: Optional[datetime] = None
+    steps: list[ManualStepResponseSchema] = []
+
+
+class MaintenanceManualStepSchema(BaseModel):
+    """Шаг мануала для ответа на /api/manual/ (без id и manual_id)."""
+    model_config = ConfigDict(from_attributes=True)
+
+    order: int
+    title: str
+    text: Optional[str] = None
+    tip: Optional[str] = None
+    warning: Optional[str] = None
+    image: Optional[str] = None
+    result: Optional[str] = None
+
+class ManualForMaintenanceResponseSchema(BaseModel):
+    """Мануал для /api/manual/ (get_manual_for_maintenance_endpoint)."""
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
-    description: Optional[str]
+    description: Optional[str] = None
     category: str
-    difficult: str
+    difficult: Optional[str] = None
+    time_estimate: Optional[str] = None
+    interval: Optional[str] = None
+    safety_tip: Optional[str] = None
+    warnings: Optional[str] = None
+    conditions: Optional[str] = None
+    docs_links: Optional[list] = None
+    specs: Optional[dict] = None
+    aftercare: Optional[str] = None
+    instruments: Optional[str] = None
+    parts: Optional[str] = None
     motorcycle: str
-    
-    # Новые поля
-    time_estimate: Optional[str]
-    interval: Optional[str]
-    safety_tip: Optional[str]
-    warnings: Optional[str]
-    conditions: Optional[str]
-    docs_links: Optional[List[str]]
-    specs: Optional[Dict[str, Any]]
-    aftercare: Optional[str]
-    
-    # Старые поля
-    instruments: Optional[str]
-    parts: Optional[str]
-    tip: Optional[str]
-    
-    status: str
-    author_id: int
-    created_at: datetime
-    steps: List[ManualStepSchema]
-
-    model_config = ConfigDict(from_attributes=True)
+    tip: Optional[str] = None
+    steps: list[MaintenanceManualStepSchema] = []

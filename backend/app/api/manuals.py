@@ -3,10 +3,19 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 import json
 
 from app.exceptions import ValidationError
-from app.schemas.manual import CreateManualSchema, UpdateManualSchema
+from app.schemas.manual import (
+    CreateManualSchema,
+    UpdateManualSchema,
+    ManualResponseSchema,
+)
 from app.services.manual_service import ManualService
 
 manual = Blueprint("manual", __name__)
+
+
+def _serialize_manual(record) -> dict:
+    """Сериализация мануала через Pydantic-схему."""
+    return ManualResponseSchema.model_validate(record.to_dict()).model_dump()
 
 
 @manual.route("/", methods=["GET"])
@@ -46,6 +55,10 @@ def list_manuals():
         interval=request.args.get("interval", ""),
         status=request.args.get("status", ""),
     )
+    data["manuals"] = [
+        ManualResponseSchema.model_validate(m).model_dump()
+        for m in data["manuals"]
+    ]
     return jsonify(data), 200
 
 
@@ -57,7 +70,7 @@ def get_manual_by_id(manual_id):
         manual_id=manual_id,
         user_id=int(get_jwt_identity()),
     )
-    return jsonify(manual_record.to_dict()), 200
+    return jsonify(_serialize_manual(manual_record)), 200
 
 
 @manual.route("/new-manual", methods=["POST"])
@@ -81,7 +94,7 @@ def create_manual():
         data=schema.model_dump(),
         files=files,
     )
-    return jsonify(created.to_dict()), 201
+    return jsonify(_serialize_manual(created)), 201
 
 
 @manual.route("/<int:manual_id>", methods=["PUT"])
@@ -95,7 +108,7 @@ def update_manual(manual_id):
         user_id=int(get_jwt_identity()),
         **data.get_updates(),
     )
-    return jsonify(updated.to_dict()), 200
+    return jsonify(_serialize_manual(updated)), 200
 
 
 @manual.route("/<int:manual_id>", methods=["DELETE"])
