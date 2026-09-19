@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import or_
+import json
 
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
@@ -188,7 +189,8 @@ def get_manual_by_id(manual_id):
 
     if manual.status != "approved":
         current_user_id = int(get_jwt_identity())
-        is_admin = current_user_id == 1
+        user = db.session.get(User, current_user_id)
+        is_admin = user is not None and user.role == "admin"
         is_author = manual.author_id == current_user_id
         
         if not is_admin and not is_author:
@@ -208,7 +210,6 @@ def create_manual():
         if not data:
             raise ValidationError("Данные не переданы")
         
-        import json
         data = json.loads(data)
         
         files = request.files.to_dict() if request.files else {}
@@ -220,7 +221,7 @@ def create_manual():
             data=schema.model_dump(),
             files=files
         )
-        
+
         return jsonify(manual.to_dict()), 201
         
     except json.JSONDecodeError:
