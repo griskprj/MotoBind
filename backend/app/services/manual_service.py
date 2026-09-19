@@ -222,23 +222,32 @@ class ManualService:
             return None
 
     @staticmethod
-    def update_manual(manual_id: int, user_id: int, is_admin=False, **kwargs) -> Manual:
-        """Обновляет мануал"""
+    def update_manual(manual_id: int, user_id: int, **kwargs) -> Manual:
+        """
+        Обновляет мануал.
+
+        is_admin определяется внутри — сервис сам проверяет роль пользователя.
+        """
+        from app.models.user import User
+
         manual = db.session.get(Manual, manual_id)
         if not manual:
             raise NotFoundError("Мануал не найден")
+
+        user = db.session.get(User, user_id)
+        is_admin = user is not None and user.role == "admin"
 
         if manual.author_id != user_id and not is_admin:
             raise ForbiddenError("Вы можете редактировать только свои мануалы")
 
         if manual.author_id == user_id:
-            if manual.status == 'rejected':
-                manual.status = 'moderate'
+            if manual.status == "rejected":
+                manual.status = "moderate"
                 manual.rejection_reason = None
-            elif manual.status == 'approved':
+            elif manual.status == "approved":
                 if not is_admin:
                     raise ForbiddenError("Нельзя редактировать опубликованный мануал. Обратитесь к администратору.")
-            elif manual.status == 'moderate':
+            elif manual.status == "moderate":
                 if not is_admin:
                     raise ForbiddenError("Мануал уже на проверке, дождитесь решения администратора.")
         else:
@@ -258,21 +267,36 @@ class ManualService:
 
     @staticmethod
     def _update_steps(manual_id: int, steps_data: List[Dict[str, Any]]) -> None:
-        """Обновляет шаги мануала"""
-        ManualStep.query.filter_by(manual_id=manual_id).delete()
+        """Обновляет шаги мануала, сохраняя существующие картинки."""
+        existing_steps = {
+            s.order: s for s in ManualStep.query.filter_by(manual_id=manual_id).all()
+        }
+
+        new_orders = {step_data["order"] for step_data in steps_data}
+        for order, old_step in existing_steps.items():
+            if order not in new_orders:
+                db.session.delete(old_step)
 
         for step_data in steps_data:
-            step = ManualStep(
-                manual_id=manual_id,
-                order=step_data["order"],
-                title=step_data["title"],
-                text=step_data.get("text"),
-                tip=step_data.get("tip"),
-                warning=step_data.get("warning"),
-                image=step_data.get("image"),
-                result=step_data.get("result"),
-            )
-            db.session.add(step)
+            order = step_data["order"]
+            if order in existing_steps:
+                step = existing_steps[order]
+                step.title = step_data["title"]
+                step.text = step_data.get("text")
+                step.tip = step_data.get("tip")
+                step.warning = step_data.get("warning")
+                step.result = step_data.get("result")
+            else:
+                step = ManualStep(
+                    manual_id=manual_id,
+                    order=order,
+                    title=step_data["title"],
+                    text=step_data.get("text"),
+                    tip=step_data.get("tip"),
+                    warning=step_data.get("warning"),
+                    result=step_data.get("result"),
+                )
+                db.session.add(step)
 
     @staticmethod
     def get_manual_for_user(manual_id: int, user_id: int) -> Manual:
@@ -297,6 +321,63 @@ class ManualService:
                 raise ForbiddenError("Мануал не был допущен к публикации")
 
         return manual
+
+    @staticmethod
+    def _get_step_for_user(manual_id: int, step_id: int, user_id: int) -> ManualStep:
+        """
+        Возвращает шаг мануала с проверкой прав (автор мануала или админ).
+        """
+        from app.models.user import User
+
+        manual = db.session.get(Manual, manual_id)
+        if not manual:
+            raise NotFoundError("Мануал не найден")
+
+        user = db.session.get(User, user_id)
+        is_admin = user is not None and user.role == "admin"
+
+        if manual.author_id != user_id and not is_admin:
+            raise ForbiddenError("Вы можете редактировать только свои мануалы")
+
+        step = None
+        for s in manual.steps:
+            if s.id == step_id:
+                step = s
+                break
+
+        if not step:
+            raise NotFoundError("Шаг не найден")
+
+        return step
+
+    @staticmethod
+    def update_step_image(manual_id: int, step_id: int, user_id: int, file) -> str:
+        """
+        Сохраняет изображение шага, возвращает путь.
+        """
+        from app.utils.files import save_step_image
+
+        step = ManualService._get_step_for_user(manual_id, step_id, user_id)
+
+        image_url = save_step_image(file, manual_id, step_id)
+        step.image = image_url
+        db.session.commit()
+
+        return image_url
+
+    @staticmethod
+    def delete_step_image(manual_id: int, step_id: int, user_id: int) -> None:
+        """
+        Удаляет изображение шага.
+        """
+        from app.utils.files import delete_file
+
+        step = ManualService._get_step_for_user(manual_id, step_id, user_id)
+
+        if step.image:
+            delete_file(step.image)
+            step.image = None
+            db.session.commit()
 
     @staticmethod
     def delete_manual(manual_id: int, user_id: int) -> None:
