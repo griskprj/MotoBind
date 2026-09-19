@@ -372,7 +372,7 @@
                             <p>Нажмите "Добавить шаг", чтобы создать инструкцию</p>
                         </div>
 
-                        <div v-for="(step, index) in form.steps" :key="step.id" class="step-card">
+                        <div v-for="(step, index) in form.steps" :key="step.localId" class="step-card">
                             <div class="step-header">
                                 <span class="step-number">Шаг {{ index + 1 }}</span>
                                 <button type="button" class="btn-remove-step" @click="removeStep(index)">
@@ -590,7 +590,6 @@ export default {
                         this.form.specs = JSON.parse(newVal);
                     }
                 } catch (e) {
-                    // Невалидный JSON - игнорируем
                 }
             },
             deep: true
@@ -634,7 +633,8 @@ export default {
 
         addStep() {
             this.form.steps.push({
-                id: ++this.stepIdCounter,
+                id: null,
+                localId: ++this.stepIdCounter,
                 title: '',
                 text: '',
                 warning: '',
@@ -846,7 +846,8 @@ export default {
                 }
 
                 this.form.steps = manual.steps.map((step, index) => ({
-                    id: ++this.stepIdCounter,
+                    id: step.id,
+                    localId: ++this.stepIdCounter,
                     order: step.order || index + 1,
                     title: step.title || '',
                     text: step.text || '',
@@ -902,7 +903,7 @@ export default {
                 )
                 const imageUrl = response.data.image_url
                 step.existingImage = imageUrl
-                step.imagePreview = this.getImageUrl(imagePreview)
+                step.imagePreview = this.getImageUrl(imageUrl)
                 step.imageFile = null
                 alert('Изображение загружено')
             } catch (error) {
