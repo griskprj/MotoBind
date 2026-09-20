@@ -5,6 +5,39 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
+
+## [1.7.1] — 2026-09-20
+
+### Fixed
+- **models**: устранены 2 `SAWarning` о конфликтующих SQLAlchemy relationships
+  - `Motorcycle.motorcycle_owner` (создавался через `backref`) конфликтовал с `Motorcycle.owner`
+  - `User.posts_authored` (создавался через `backref`) конфликтовал с `User.posts`
+  - Заменено на `back_populates` — теперь одно каноничное relationship на каждую FK
+
+### Removed
+- **api/statistic**: удалены мёртвые эндпоинты Dashboard
+  - `GET /api/statistic/dashboard-data`
+  - `GET /api/statistic/dashboard-charts`
+- **services/statistic_service**: удалены неиспользуемые методы
+  - `get_dashboard_data`
+  - `get_dashboard_charts`
+  - `_calculate_change_percent` (использовался только в `get_dashboard_data`)
+
+Dashboard-страница была удалена из продукта ранее. Эндпоинты не использовались
+фронтендом и содержали баги (`maint.status.value` → `AttributeError` после
+рефакторинга Sprint 0; смещение месяцев через `i*30` вместо календарных).
+
+### Changed
+- **schemas**: единый `model_config = ConfigDict(...)` вместо `class Config`
+  (завершение миграции Pydantic v2; в `schemas/manual.py` сделано в 6.0,
+  в остальных файлах — в этом релизе)
+- **tests**: убраны все warnings (было 2, стало 0)
+
+### Notes
+- JSON-контракт API не изменился
+- Технический релиз без функциональных изменений
+- Готовы к следующему мажорному спринту (7.2 / 8)
+
 ## [1.7.0] — 2026-09-19
 
 ### Added
