@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from sqlalchemy.orm import selectinload
 
@@ -13,142 +13,6 @@ from app.models.user import User
 
 class StatisticService:
     """Сервис для работы со статистикой"""
-
-    @staticmethod
-    def get_dashboard_data(user_id: int) -> Dict[str, Any]:
-        """Получить данные для дашборда пользователя"""
-        user = db.session.get(
-            User,
-            user_id,
-            options=[
-                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
-            ],
-        )
-
-        if not user:
-            raise NotFoundError("Пользователь не найден")
-
-        now = datetime.now()
-        month_start = datetime(now.year, now.month, 1)
-        prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
-
-        stats = {
-            "motorcycles_count": 0,
-            "plan_maintenances_count": 0,
-            "maintenances_count": 0,
-            "total_spends": 0,
-            "new_motorcycles_count": 0,
-            "month_maintenances_count": 0,
-            "spends_change_percent": 0.0,
-        }
-
-        motorcycle_data = []
-        all_maintenances = []
-        current_month_spends = 0
-        previous_month_spends = 0
-
-        for motorcycle in user.motorcycles[:3]:
-            if motorcycle.created_at and motorcycle.created_at >= month_start:
-                stats["new_motorcycles_count"] += 1
-
-            sorted_maintenances = sorted(
-                motorcycle.maintenances,
-                key=lambda x: x.completed_date or x.planned_date or x.created_at or datetime.min,
-                reverse=True,
-            )[:3]
-
-            planned_records = []
-            for maint in sorted_maintenances:
-                maint_dict = maint.to_dict()
-                maint_dict["status"] = maint.status.value if maint.status else None
-                
-                if maint.status == MaintenanceStatus.PLANNED.value:
-                    planned_records.append(maint_dict)
-                    stats["plan_maintenances_count"] += 1
-                elif maint.status == MaintenanceStatus.COMPLETED.value:
-                    stats["maintenances_count"] += 1
-                    if maint.cost:
-                        stats["total_spends"] += maint.cost
-                        
-                        maint_date = maint.completed_date
-                        if maint_date:
-                            if maint_date >= month_start:
-                                current_month_spends += maint.cost
-                                stats["month_maintenances_count"] += 1
-                            elif prev_month_start <= maint_date < month_start:
-                                previous_month_spends += maint.cost
-
-            moto_dict = motorcycle.to_dict()
-            moto_dict["recent_maintenances"] = [m.to_dict() for m in sorted_maintenances]
-            moto_dict["planned_maintenances"] = planned_records
-            motorcycle_data.append(moto_dict)
-            all_maintenances.extend(sorted_maintenances)
-
-        stats["spends_change_percent"] = StatisticService._calculate_change_percent(
-            current_month_spends, previous_month_spends
-        )
-        stats["motorcycles_count"] = len(user.motorcycles)
-
-        all_maintenances.sort(
-            key=lambda x: {
-                MaintenanceStatus.OVERDUE.value: 0,
-                MaintenanceStatus.PLANNED.value: 1,
-                MaintenanceStatus.COMPLETED.value: 2,
-            }.get(x.status, 3)
-        )
-        all_maintenances = all_maintenances[:3]
-
-        return {
-            "user": user.to_dict(),
-            "motorcycles": motorcycle_data,
-            "maintenance": [m.to_dict() for m in all_maintenances],
-            **stats,
-        }
-
-    @staticmethod
-    def get_dashboard_charts(user_id: int) -> Dict[str, List[Dict]]:
-        """Получить данные для графиков дашборда"""
-        user = db.session.get(
-            User,
-            user_id,
-            options=[
-                selectinload(User.motorcycles).selectinload(Motorcycle.maintenances),
-            ],
-        )
-
-        if not user:
-            raise NotFoundError("Пользователь не найден")
-
-        now = datetime.now()
-        cost_data = []
-        count_data = []
-        month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
-
-        for i in range(11, -1, -1):
-            month_date = now.replace(day=1) - timedelta(days=i * 30)
-            month_start = datetime(month_date.year, month_date.month, 1)
-            
-            if month_date.month == 12:
-                month_end = datetime(month_date.year + 1, 1, 1)
-            else:
-                month_end = datetime(month_date.year, month_date.month + 1, 1)
-
-            month_cost = 0
-            month_count = 0
-
-            for motorcycle in user.motorcycles:
-                for maintenance in motorcycle.maintenances:
-                    maint_date = maintenance.completed_date or maintenance.planned_date
-                    if maint_date and month_start <= maint_date < month_end:
-                        if maintenance.cost:
-                            month_cost += maintenance.cost
-                        month_count += 1
-
-            month_label = f"{month_names[month_date.month - 1]} {month_date.year}"
-            cost_data.append({"month": month_label, "value": month_cost})
-            count_data.append({"month": month_label, "value": month_count})
-
-        return {"cost_chart": cost_data, "count_chart": count_data}
 
     @staticmethod
     def get_garage_stats(user_id: int) -> Dict[str, Any]:
@@ -399,12 +263,3 @@ class StatisticService:
             "manuals_count": manuals_count,
             "last_reg": last_reg_data,
         }
-
-    @staticmethod
-    def _calculate_change_percent(current: float, previous: float) -> float:
-        """Вычисляет процент изменения расходов"""
-        if previous > 0:
-            return round(((current - previous) / previous) * 100, 1)
-        elif current > 0:
-            return 100.0
-        return 0.0
