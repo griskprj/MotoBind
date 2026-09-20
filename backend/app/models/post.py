@@ -17,7 +17,7 @@ class Post(db.Model):
         onupdate=lambda: datetime.now(timezone.utc)
     )
 
-    author = db.relationship('User', backref='posts_authored')
+    author = db.relationship('User', back_populates='posts')
     likes = db.relationship('PostLike', backref='post', cascade='all, delete-orphan')
     comments = db.relationship('PostComment', backref='post', cascade='all, delete-orphan')
 

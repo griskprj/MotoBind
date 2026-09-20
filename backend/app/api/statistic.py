@@ -6,24 +6,6 @@ from app.services.statistic_service import StatisticService
 statistic = Blueprint("statistic", __name__)
 
 
-@statistic.route("/dashboard-data", methods=["GET"])
-@jwt_required()
-def get_dashboard_data():
-    """Получить данные для дашборда"""
-    user_id = get_jwt_identity()
-    data = StatisticService.get_dashboard_data(user_id=user_id)
-    return jsonify(data), 200
-
-
-@statistic.route("/dashboard-charts", methods=["GET"])
-@jwt_required()
-def get_dashboard_charts():
-    """Получить данные для графиков дашборда"""
-    user_id = get_jwt_identity()
-    data = StatisticService.get_dashboard_charts(user_id)
-    return jsonify(data), 200
-
-
 @statistic.route("/garage", methods=["GET"])
 @jwt_required()
 def get_garage_stat():
