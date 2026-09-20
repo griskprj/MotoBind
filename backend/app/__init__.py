@@ -7,7 +7,7 @@ from app.extensions import cors, db, jwt, migrate, swagger, mail
 from app.scheduler import start_scheduler
 from config import settings
 
-__version__ = "1.7.1"
+__version__ = "1.8.0"
 
 def create_app(config_override=None):
     app = Flask(__name__)
