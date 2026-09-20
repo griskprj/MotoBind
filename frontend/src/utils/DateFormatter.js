@@ -1,30 +1,28 @@
 function formatDate(dateString) {
     if (!dateString) return '—';
-    
+
     try {
+        let date;
+
         if (dateString instanceof Date) {
-            return dateString.toLocaleDateString('ru-RU', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
+            date = dateString;
+        } else {
+            date = new Date(dateString);
         }
-        
-        const date = new Date(dateString);
-        
+
         if (isNaN(date.getTime())) {
             return '—';
         }
-        
+
         return date.toLocaleDateString('ru-RU', {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
         });
     } catch (error) {
         console.error('Error formatting date:', dateString, error);
         return '—';
     }
-};
+}
 
 export default formatDate;
