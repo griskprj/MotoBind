@@ -5,6 +5,42 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [1.7.0] — 2026-09-19
+
+### Added
+- **tests/test_manuals.py**: 23 теста домена manuals
+  (create, list, get, update, delete, steps, admin permissions)
+- **schemas/manual.py**: `ManualStepResponseSchema`, `ManualForMaintenanceResponseSchema`
+
+### Changed
+- **api/manuals.py**: тонкий контроллер — вся логика в `ManualService`
+- **api/manuals.py**: Pydantic `Schema(**data)` → `model_validate(data)`
+- **api/manuals.py**: убран `try/except Exception` (глобальный handler)
+- **api/manuals.py**: ответы через `ManualResponseSchema` вместо `manual.to_dict()`
+- **api/manuals.py**: `upload_step_image` / `delete_step_image` — тонкие контроллеры
+- **services/manual_service.py**: `ManualService.list_manuals` — пагинация и фильтры в сервисе
+- **services/manual_service.py**: `ManualService.get_manual_for_user` — единая проверка доступа
+- **services/manual_service.py**: `ManualService.get_manual_for_maintenance_endpoint` — полный цикл
+- **services/manual_service.py**: `ManualService.update_manual` — `is_admin` определяется внутри
+- **services/manual_service.py**: `ManualService.update_step_image` / `delete_step_image`
+- **services/manual_service.py**: `_update_steps` — обновляет существующие шаги по order, сохраняет `id` и `image`
+- **schemas/manual.py**: `ManualResponseSchema` соответствует `Manual.to_dict()`
+
+### Fixed
+- **api/manuals.py**: `import json` был внутри `try` → `UnboundLocalError` (500 на пустом `data`)
+- **api/manuals.py**: `is_admin` был хардкодом `current_user_id == 1` → админ с `id != 1` не видел moderate мануалы
+- **services/manual_service.py**: `_update_steps` удалял и пересоздавал шаги → `PUT /api/manual/<id>` **затирал `step.image`** (картинки шагов терялись при редактировании мануала)
+- **frontend/ManualCreator.vue**: `step.id` перезаписывался локальным счётчиком → upload/delete image шёл на неправильный `step_id` (404)
+- **frontend/ManualCreator.vue**: `imagePreview` был undefined в `uploadStepImage` → `ReferenceError`, preview не устанавливался
+- **frontend/ManualCreator.vue**: `this.addStep` без скобок в `mounted` → первый шаг не создавался при создании мануала
+- **schemas/manual.py**: `class Config` → `model_config = ConfigDict(...)` (deprecated в Pydantic v2)
+
+### Notes
+- JSON-контракт API не изменён (проверено `Compare-Object`)
+- Домен `manuals` считается отрефакторенным: сервис + схемы + тонкий API + тесты
+- **Все 5 доменов backend отрефакторены** (motorcycle, maintenance, auth, social, manuals)
+- Покрытие тестами: 121 тест (auth, motorcycle, maintenance, statistic, social, manuals)
+
 
 ## [1.6.0] — 2026-09-18
 
