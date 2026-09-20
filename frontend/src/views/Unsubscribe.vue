@@ -6,7 +6,7 @@
                     <i class="fa fa-spinner fa-spin"></i>
                     <span>Обработка запроса...</span>
                 </div>
-                
+
                 <div v-else-if="success" class="success-state">
                     <div class="icon success">
                         <i class="fa fa-check-circle"></i>
@@ -17,7 +17,7 @@
                         На главную
                     </button>
                 </div>
-                
+
                 <div v-else-if="error" class="error-state">
                     <div class="icon error">
                         <i class="fa fa-exclamation-circle"></i>

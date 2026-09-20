@@ -97,11 +97,12 @@ def register_error_handlers(app):
     def handle_pydantic_validation_error(e):
         """
         Обработчик ошибок валидации Pydantic.
-        
+
         `e.errors()` может содержать не-JSON-сериализуемые объекты
         (например ValueError в ctx при кастомных @field_validator).
         Санитизируем их в строки.
         """
+
         def sanitize_error(err: dict) -> dict:
             """Убирает несериализуемые объекты из error dict."""
             result = {

@@ -2,9 +2,9 @@
     <div class="post-card">
         <div class="post-header">
             <div class="post-author-info" @click="goToProfile">
-                <img 
-                    :src="getAvatarUrl(post.author_avatar)" 
-                    alt="Avatar" 
+                <img
+                    :src="getAvatarUrl(post.author_avatar)"
+                    alt="Avatar"
                     class="avatar"
                 >
                 <div class="post-author">
@@ -21,19 +21,19 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="post-content">
             <p>{{ post.content }}</p>
             <img v-if="post.image" :src="getImageUrl(post.image)" alt="Post image" class="post-image">
         </div>
-        
+
         <div class="post-footer">
             <div class="footer-actions">
                 <button class="like-btn" @click="toggleLike" :class="{ liked: post.is_liked }">
                     <i class="fa fa-heart"></i>
                     <span>{{ post.likes_count || 0 }}</span>
                 </button>
-                
+
                 <button class="comment-btn" @click="toggleComments">
                     <i class="fa fa-comment"></i>
                     <span>{{ post.comments_count || 0 }}</span>
@@ -53,11 +53,11 @@
                 <span>Подробнее</span>
             </button>
         </div>
-        
+
         <div v-if="showComments" class="comments-section">
             <div class="comment-input">
-                <input 
-                    v-model="commentText" 
+                <input
+                    v-model="commentText"
                     placeholder="Написать комментарий..."
                     @keyup.enter="submitComment"
                 >
@@ -65,12 +65,12 @@
                     <i class="fa fa-angle-right"></i>
                 </button>
             </div>
-            
+
             <div v-if="post.comments && post.comments.length > 0" class="comments-list">
                 <div v-for="comment in post.comments" :key="comment.id" class="comment">
-                    <img 
-                        :src="getAvatarUrl(comment.author_avatar)" 
-                        alt="Avatar" 
+                    <img
+                        :src="getAvatarUrl(comment.author_avatar)"
+                        alt="Avatar"
                         class="avatar"
                     >
                     <div class="comment-body">
@@ -78,8 +78,8 @@
                         <span class="comment-text">{{ comment.content }}</span>
                         <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
                     </div>
-                    <button 
-                        v-if="comment.user_id === currentUserId" 
+                    <button
+                        v-if="comment.user_id === currentUserId"
                         class="delete-comment"
                         @click="deleteComment(comment.id)"
                     >
@@ -98,22 +98,22 @@
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
-                
+
                 <div class="edit-modal-body">
-                    <textarea 
-                        v-model="editContent" 
+                    <textarea
+                        v-model="editContent"
                         placeholder="Что нового в мире мотоциклов?"
                         rows="4"
                         class="edit-textarea"
                     ></textarea>
-                    
+
                     <div v-if="editImagePreview" class="edit-image-preview">
                         <img :src="editImagePreview" alt="Preview">
                         <button class="remove-edit-image" @click="removeEditImage">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
-                    
+
                     <div class="edit-actions">
                         <label class="image-upload-btn">
                             <i class="fa fa-image"></i>
@@ -122,7 +122,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="edit-modal-footer">
                     <button class="btn btn-secondary" @click="closeEditModal">Отмена</button>
                     <button class="btn btn-primary" @click="saveEdit" :disabled="isSaving">
@@ -269,28 +269,28 @@ export default {
             this.editImageFile = null
             this.showEditModal = true
         },
-        
+
         closeEditModal() {
             this.showEditModal = false
             this.editContent = ''
             this.editImageFile = null
             this.editImagePreview = null
         },
-        
+
         handleEditImage(event) {
             const file = event.target.files[0]
             if (!file) return
-            
+
             if (file.size > 5 * 1024 * 1024) {
                 alert('Размер файла не должен превышать 5MB')
                 return
             }
-            
+
             if (!file.type.startsWith('image/')) {
                 alert('Пожалуйста, загрузите изображение')
                 return
             }
-            
+
             this.editImageFile = file
             const reader = new FileReader()
             reader.onload = (e) => {
@@ -298,18 +298,18 @@ export default {
             }
             reader.readAsDataURL(file)
         },
-        
+
         removeEditImage() {
             this.editImageFile = null
             this.editImagePreview = null
         },
-        
+
         async saveEdit() {
             if (!this.editContent.trim()) {
                 alert('Содержимое поста не может быть пустым')
                 return
             }
-            
+
             this.isSaving = true
             try {
                 const formData = new FormData()
@@ -317,16 +317,16 @@ export default {
                 if (this.editImageFile) {
                     formData.append('image', this.editImageFile)
                 }
-                
+
                 const response = await socialApi.updatePost(this.post.id, formData)
-                
+
                 this.post.content = response.data.content
                 this.post.image = response.data.image
-                
+
                 if (!this.post.image) {
                     this.post.image = null
                 }
-                
+
                 this.$emit('post-updated', this.post)
                 this.closeEditModal()
             } catch (error) {
@@ -336,14 +336,14 @@ export default {
                 this.isSaving = false
             }
         },
-        
+
         // ===== УДАЛЕНИЕ =====
         confirmDelete() {
             if (confirm('Вы уверены, что хотите удалить этот пост?')) {
                 this.deletePost()
             }
         },
-        
+
         async deletePost() {
             try {
                 await socialApi.deletePost(this.post.id)
@@ -801,11 +801,11 @@ export default {
         width: 95%;
         max-height: 95vh;
     }
-    
+
     .edit-modal-footer {
         flex-direction: column;
     }
-    
+
     .edit-modal-footer .btn {
         width: 100%;
         justify-content: center;

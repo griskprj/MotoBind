@@ -1,4 +1,5 @@
 from typing import Optional
+
 from flask_jwt_extended import get_jwt_identity
 
 from app.exceptions import ForbiddenError, NotFoundError
@@ -24,9 +25,7 @@ def get_current_user_id() -> int:
     return int(get_jwt_identity())
 
 
-def get_motorcycle_or_404(
-        moto_id: int, user_id: Optional[int] = None
-    ) -> Motorcycle:
+def get_motorcycle_or_404(moto_id: int, user_id: Optional[int] = None) -> Motorcycle:
     """
     Получить мотоцикл по ID. Если передан user_id - проверяет владельца.
     """
@@ -40,9 +39,7 @@ def get_motorcycle_or_404(
     return moto
 
 
-def get_object_or_404(
-        model, obj_id: int, error_message: str = "Объект не найден"
-    ):
+def get_object_or_404(model, obj_id: int, error_message: str = "Объект не найден"):
     """Универсальная функция для получения объекта по ID или 404."""
     obj = db.session.get(model, obj_id)
     if not obj:

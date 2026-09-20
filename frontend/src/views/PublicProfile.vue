@@ -1,20 +1,20 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="loading" text="Загрузка профиля..."/>
-        
+
         <div v-if="profile" class="profile-page">
             <!-- === ШАПКА ПРОФИЛЯ === -->
             <div class="profile-header">
                 <div class="profile-avatar">
-                    <img 
-                        :src="getAvatarUrl(profile.user.avatar)" 
+                    <img
+                        :src="getAvatarUrl(profile.user.avatar)"
                         :alt="profile.user.username"
                     >
                 </div>
-                
+
                 <div class="profile-info">
                     <h1 class="profile-username">{{ profile.user.username }}</h1>
-                    
+
                     <div class="profile-meta">
                         <span v-if="profile.user.location" class="meta-item">
                             <i class="fa fa-map-marker"></i> {{ profile.user.location }}
@@ -29,13 +29,13 @@
                             <i class="fa fa-calendar"></i> С нами с {{ formatDate(profile.user.created_at) }}
                         </span>
                     </div>
-                    
+
                     <div v-if="profile.user.bio" class="profile-bio">
                         {{ profile.user.bio }}
                     </div>
                 </div>
             </div>
-            
+
             <!-- === СТАТИСТИКА === -->
             <div class="profile-stats">
                 <div class="stat-item">
@@ -51,16 +51,16 @@
                     <span class="stat-label">Комментариев</span>
                 </div>
             </div>
-            
+
             <!-- === ПОСТЫ ПОЛЬЗОВАТЕЛЯ === -->
             <div class="profile-posts">
                 <h2 class="section-title">
                     <i class="fa fa-newspaper-o"></i> Посты {{ profile.user.username }}
                 </h2>
-                
+
                 <div v-if="profile.recent_posts && profile.recent_posts.length > 0" class="posts-grid">
-                    <div 
-                        v-for="post in profile.recent_posts" 
+                    <div
+                        v-for="post in profile.recent_posts"
                         :key="post.id"
                         class="post-preview"
                         @click="goToPost(post.id)"
@@ -78,19 +78,19 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div v-else class="empty-state">
                     <i class="fa fa-newspaper-o"></i>
                     <p>У {{ profile.user.username }} пока нет постов</p>
                 </div>
             </div>
-            
+
             <!-- === КНОПКА НАЗАД === -->
             <button class="btn btn-secondary back-btn" @click="$router.back()">
                 <i class="fa fa-arrow-left"></i> Назад
             </button>
         </div>
-        
+
         <!-- === ОШИБКА === -->
         <div v-else-if="!loading && error" class="error-state">
             <i class="fa fa-exclamation-triangle"></i>
@@ -137,21 +137,21 @@ export default {
                 this.loading = false
             }
         },
-        
+
         getAvatarUrl(avatar) {
             if (!avatar) return '/BaseAvatar.webp'
             if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
             if (avatar.startsWith('/')) return avatar
             return `/uploads/${avatar}`
         },
-        
+
         getImageUrl(path) {
             if (!path) return ''
             if (path.startsWith('http://') || path.startsWith('https://')) return path
             if (path.startsWith('/')) return path
             return `/uploads/${path}`
         },
-        
+
         getExperienceLabel(experience) {
             const labels = {
                 'beginner': 'Новичок',
@@ -160,11 +160,11 @@ export default {
             }
             return labels[experience] || experience
         },
-        
+
         getSocialIcon(platform) {
             return 'fa fa-link'
         },
-        
+
         formatDate(dateStr) {
             if (!dateStr) return ''
             const date = new Date(dateStr)
@@ -174,7 +174,7 @@ export default {
                 year: 'numeric'
             })
         },
-        
+
         goToPost(postId) {
             this.$router.push(`/social/post/${postId}`)
         }
@@ -486,30 +486,30 @@ export default {
         align-items: center;
         text-align: center;
     }
-    
+
     .profile-avatar img {
         width: 100px;
         height: 100px;
     }
-    
+
     .profile-meta {
         justify-content: center;
     }
-    
+
     .profile-social {
         justify-content: center;
     }
-    
+
     .profile-stats {
         justify-content: center;
         gap: 20px;
         flex-wrap: wrap;
     }
-    
+
     .posts-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .profile-page {
         padding: 20px;
     }
@@ -519,15 +519,15 @@ export default {
     .profile-page {
         padding: 16px;
     }
-    
+
     .profile-username {
         font-size: 22px;
     }
-    
+
     .profile-stats {
         gap: 16px;
     }
-    
+
     .stat-value {
         font-size: 20px;
     }

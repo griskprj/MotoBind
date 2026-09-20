@@ -10,9 +10,9 @@
         <form @submit.prevent="submit" class="newsletter-form">
             <div class="field">
                 <label>Тема письма <span>*</span></label>
-                <input 
-                    v-model="form.subject" 
-                    type="text" 
+                <input
+                    v-model="form.subject"
+                    type="text"
                     placeholder="Новое обновление MotoBind"
                     required
                 />
@@ -29,8 +29,8 @@
 
             <div class="field">
                 <label>Содержание письма <span>*</span></label>
-                <textarea 
-                    v-model="form.content" 
+                <textarea
+                    v-model="form.content"
                     rows="8"
                     placeholder="Текст письма. Поддерживается HTML..."
                     required
@@ -45,7 +45,7 @@
             <div class="info-box info">
                 <i class="fa fa-info-circle"></i>
                 <span>
-                    Рассылка будет отправлена асинхронно. 
+                    Рассылка будет отправлена асинхронно.
                     Вы получите уведомление о завершении.
                 </span>
             </div>

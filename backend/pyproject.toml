@@ -1,0 +1,48 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "auth: tests for auth endpoints",
+    "motorcycle: tests for motorcycle endpoints",
+    "maintenance: tests for maintenance endpoints",
+    "statistic: tests for statistic endpoints",
+    "slow: slow tests (skipped by default unless explicitly requested)",
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py313"]
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | __pycache__
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip = [".venv", "venv", "migrations"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [".venv", "venv", "migrations", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E203",   # whitespace before ':' (конфликтует с black)
+    "E501",   # line too long (black справляется)
+    "F401",   # imported but unused (в .flake8 тоже игнорируется)
+    "F811",   # redefinition (в .flake8 тоже игнорируется)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401", "F811"]

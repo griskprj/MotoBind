@@ -15,7 +15,7 @@ export default {
     computed: {
         progressPercent() {
             if (!this.maintenance.planned_mileage) return 0;
-            const current = this.maintenance.moto_mileage; 
+            const current = this.maintenance.moto_mileage;
             const planned = this.maintenance.planned_mileage;
             return Math.min((current / planned) * 100, 100);
         }
@@ -39,7 +39,7 @@ export default {
                 <span v-else style="color: var(--warning)"><i class="fa fa-exclamation-triangle" style="margin-right: 10px;"></i> Пора обслужить</span>
             </div>
             <div class="info-desc">{{ maintenance.title || 'Обслуживание' }}</div>
-            
+
             <div class="info-progress">
                 <div class="progress-track">
                     <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -154,16 +154,16 @@ export default {
         flex-wrap: wrap;
         padding: 12px;
     }
-    
+
     .card-info {
         width: 100%;
         order: 2;
     }
-    
+
     .card-icon {
         order: 1;
     }
-    
+
     .card-action {
         order: 3;
         margin-left: auto;

@@ -30,9 +30,7 @@ def calculate_maintenance_freq(moto_id: int, user_id: int) -> dict:
         total_maintenances = len(completed)
         month_start = first_day_of_month()
 
-        month_maintenances = sum(
-            1 for m in completed if is_in_month(m.completed_date, month_start)
-        )
+        month_maintenances = sum(1 for m in completed if is_in_month(m.completed_date, month_start))
 
         chart_data = aggregate_by_month(
             completed,
@@ -47,6 +45,4 @@ def calculate_maintenance_freq(moto_id: int, user_id: int) -> dict:
         }
 
     except (ValueError, KeyError) as e:
-        raise BusinessLogicError(
-            f"Ошибка при расчете частоты обслуживания: {str(e)}"
-        )
+        raise BusinessLogicError(f"Ошибка при расчете частоты обслуживания: {str(e)}")

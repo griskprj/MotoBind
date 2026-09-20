@@ -3,15 +3,22 @@ Auth API — тонкие контроллеры.
 
 Вся бизнес-логика — в app/services/auth_service.py.
 """
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from app.schemas.auth import (
-    LoginSchema, RefreshSchema, RegisterSchema,
-    LoginResponseSchema, RegisterResponseSchema,
-    RefreshResponseSchema, VerifyEmailResponseSchema,
-    UserResponseSchema, MessageResponseSchema,
-    CheckVerificationResponseSchema, CheckResetTokenResponseSchema,
+    CheckResetTokenResponseSchema,
+    CheckVerificationResponseSchema,
+    LoginResponseSchema,
+    LoginSchema,
+    MessageResponseSchema,
+    RefreshResponseSchema,
+    RefreshSchema,
+    RegisterResponseSchema,
+    RegisterSchema,
+    UserResponseSchema,
+    VerifyEmailResponseSchema,
 )
 from app.services.auth_service import AuthService
 from app.utils.helpers import get_current_user
@@ -20,6 +27,7 @@ auth = Blueprint("auth", __name__)
 
 
 # ---- Registration / Login ----
+
 
 @auth.route("/register", methods=["POST"])
 def register():
@@ -52,6 +60,7 @@ def login():
 
 # ---- Current user ----
 
+
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def get_me():
@@ -61,6 +70,7 @@ def get_me():
 
 
 # ---- Refresh / logout ----
+
 
 @auth.route("/refresh", methods=["POST"])
 def refresh():
@@ -82,6 +92,7 @@ def logout():
 
 
 # ---- Email verification ----
+
 
 @auth.route("/send-verification", methods=["POST"])
 @jwt_required()
@@ -118,12 +129,16 @@ def check_verification():
 
 # ---- Password reset ----
 
+
 @auth.route("/forgot-password", methods=["POST"])
 def forgot_password():
     """Запрос на сброс пароля."""
     data = request.get_json() or {}
     AuthService.forgot_password(email=data.get("email"))
-    return jsonify(MessageResponseSchema(message="Если такой email существует, письмо будет отправлено").model_dump()), 200
+    return (
+        jsonify(MessageResponseSchema(message="Если такой email существует, письмо будет отправлено").model_dump()),
+        200,
+    )
 
 
 @auth.route("/reset-password", methods=["POST"])

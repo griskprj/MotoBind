@@ -10,8 +10,8 @@
         <div class="header-actions">
           <button @click="this.$router.push('/login')" class="btn-outline">Войти</button>
           <button @click="this.$router.push('/welcome')" class="btn-primary">Начать</button>
-          <button 
-              class="theme-toggle" 
+          <button
+              class="theme-toggle"
               @click="toggleTheme"
               :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
           >
@@ -278,7 +278,7 @@ export default {
       const theme = this.isDark ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
-      
+
       const icon = this.$el.querySelector('.theme-toggle i');
       if (icon) {
           icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';

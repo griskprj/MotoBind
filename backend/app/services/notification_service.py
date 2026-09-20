@@ -1,6 +1,7 @@
+from app.exceptions import NotFoundError
 from app.extensions import db
 from app.models.notification import Notification
-from app.exceptions import NotFoundError
+
 
 class NotificationService:
     @staticmethod
@@ -25,34 +26,34 @@ class NotificationService:
         query = query.order_by(Notification.created_at.desc())
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
         return {
-            'notifications': [n.to_dict() for n in paginated.items],
-            'total': paginated.total,
-            'pages': paginated.pages,
-            'current_page': paginated.page,
-            'per_page': paginated.per_page,
-            'has_prev': paginated.has_prev,
-            'has_next': paginated.has_next,
+            "notifications": [n.to_dict() for n in paginated.items],
+            "total": paginated.total,
+            "pages": paginated.pages,
+            "current_page": paginated.page,
+            "per_page": paginated.per_page,
+            "has_prev": paginated.has_prev,
+            "has_next": paginated.has_next,
         }
 
     @staticmethod
     def mark_as_read(notification_id, user_id):
         notif = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
         if not notif:
-            raise NotFoundError('Уведомление не найдено')
+            raise NotFoundError("Уведомление не найдено")
         notif.is_read = True
         db.session.commit()
         return notif
 
     @staticmethod
     def mark_all_read(user_id):
-        Notification.query.filter_by(user_id=user_id, is_read=False).update({'is_read': True})
+        Notification.query.filter_by(user_id=user_id, is_read=False).update({"is_read": True})
         db.session.commit()
 
     @staticmethod
     def delete_notification(notification_id, user_id):
         notif = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
         if not notif:
-            raise NotFoundError('Уведомление не найдено')
+            raise NotFoundError("Уведомление не найдено")
         db.session.delete(notif)
         db.session.commit()
 

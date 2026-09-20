@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="loading" text="Загрузка поста..."/>
-        
+
         <!-- === HEADER === -->
         <Header
             title="Пост"
@@ -21,9 +21,9 @@
                 <!-- Шапка поста -->
                 <div class="post-header">
                     <div class="post-author-info" @click="goToProfile(post.author_id)">
-                        <img 
-                            :src="getAvatarUrl(post.author_avatar)" 
-                            alt="Avatar" 
+                        <img
+                            :src="getAvatarUrl(post.author_avatar)"
+                            alt="Avatar"
                             class="avatar"
                             @error="handleAvatarError"
                         >
@@ -44,20 +44,20 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Контент -->
                 <div class="post-content">
                     <p>{{ post.content }}</p>
                     <img v-if="post.image" :src="getImageUrl(post.image)" alt="Post image" class="post-image">
                 </div>
-                
+
                 <!-- Футер с лайками и комментариями -->
                 <div class="post-footer">
                     <button class="like-btn" @click="toggleLike" :class="{ liked: post.is_liked }">
                         <i class="fa fa-heart"></i>
                         <span>{{ post.likes_count || 0 }}</span>
                     </button>
-                    
+
                     <button class="comment-btn">
                         <i class="fa fa-comment"></i>
                         <span>{{ post.comments_count || 0 }}</span>
@@ -68,27 +68,27 @@
             <!-- === КОММЕНТАРИИ === -->
             <div class="comments-section">
                 <h3 class="comments-title">
-                    <i class="fa fa-comments"></i> 
+                    <i class="fa fa-comments"></i>
                     Комментарии ({{ post.comments_count || 0 }})
                 </h3>
-                
+
                 <!-- Форма добавления комментария -->
                 <div class="comment-input-wrapper">
-                    <img 
-                        :src="getAvatarUrl(currentUser?.avatar)" 
-                        alt="Your avatar" 
+                    <img
+                        :src="getAvatarUrl(currentUser?.avatar)"
+                        alt="Your avatar"
                         class="avatar-small"
                         @error="handleAvatarError"
                     >
                     <div class="comment-input-group">
-                        <input 
-                            v-model="commentText" 
+                        <input
+                            v-model="commentText"
                             placeholder="Написать комментарий..."
                             @keyup.enter="submitComment"
                             :disabled="isSubmittingComment"
                         >
-                        <button 
-                            @click="submitComment" 
+                        <button
+                            @click="submitComment"
                             :disabled="!commentText.trim() || isSubmittingComment"
                             class="btn-send"
                         >
@@ -97,17 +97,17 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Список комментариев -->
                 <div v-if="comments.length > 0" class="comments-list">
-                    <div 
-                        v-for="comment in comments" 
-                        :key="comment.id" 
+                    <div
+                        v-for="comment in comments"
+                        :key="comment.id"
                         class="comment-item"
                     >
-                        <img 
-                            :src="getAvatarUrl(comment.author_avatar)" 
-                            alt="Avatar" 
+                        <img
+                            :src="getAvatarUrl(comment.author_avatar)"
+                            alt="Avatar"
                             class="avatar-small"
                             @error="handleAvatarError"
                         >
@@ -120,8 +120,8 @@
                             </div>
                             <p class="comment-text">{{ comment.content }}</p>
                         </div>
-                        <button 
-                            v-if="comment.user_id === currentUserId" 
+                        <button
+                            v-if="comment.user_id === currentUserId"
                             class="delete-comment"
                             @click="deleteComment(comment.id)"
                             title="Удалить комментарий"
@@ -130,7 +130,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Пустое состояние комментариев -->
                 <div v-else class="empty-comments">
                     <i class="fa fa-comment-o"></i>
@@ -138,7 +138,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- === ПОСТ НЕ НАЙДЕН === -->
         <div v-else-if="!loading && error" class="error-state">
             <i class="fa fa-exclamation-triangle"></i>
@@ -156,22 +156,22 @@
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
-                
+
                 <div class="edit-modal-body">
-                    <textarea 
-                        v-model="editContent" 
+                    <textarea
+                        v-model="editContent"
                         placeholder="Что нового в мире мотоциклов?"
                         rows="4"
                         class="edit-textarea"
                     ></textarea>
-                    
+
                     <div v-if="editImagePreview" class="edit-image-preview">
                         <img :src="editImagePreview" alt="Preview">
                         <button class="remove-edit-image" @click="removeEditImage">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
-                    
+
                     <div class="edit-actions">
                         <label class="image-upload-btn">
                             <i class="fa fa-image"></i>
@@ -180,7 +180,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="edit-modal-footer">
                     <button class="btn btn-secondary" @click="closeEditModal">Отмена</button>
                     <button class="btn btn-primary" @click="saveEdit" :disabled="isSaving">
@@ -209,7 +209,7 @@ import ReportModal from '../components/modals/social/ReportModal.vue';
 export default {
     name: 'PostView',
     components: { Header, LoadingOverlay, ReportModal },
-    
+
     data() {
         return {
             loading: true,
@@ -218,10 +218,10 @@ export default {
             comments: [],
             currentUser: null,
             currentUserId: null,
-            
+
             commentText: '',
             isSubmittingComment: false,
-            
+
             showEditModal: false,
             editContent: '',
             editImageFile: null,
@@ -229,18 +229,18 @@ export default {
             isSaving: false
         }
     },
-    
+
     computed: {
         isAuthor() {
             return this.post?.author_id === this.currentUserId
         }
     },
-    
+
     mounted() {
         const userId = JSON.parse(localStorage.getItem('user') || '{}')
         this.currentUserId = userId.id
         this.currentUser = userId
-        
+
         const postId = this.$route.params.id
         if (postId) {
             this.loadPost(postId)
@@ -249,7 +249,7 @@ export default {
             this.loading = false
         }
     },
-    
+
     methods: {
         async loadPost(postId) {
             this.loading = true
@@ -264,7 +264,7 @@ export default {
                 this.loading = false
             }
         },
-        
+
         async toggleLike() {
             try {
                 const result = await socialApi.toggleLike(this.post.id)
@@ -274,10 +274,10 @@ export default {
                 console.error('Ошибка лайка:', error)
             }
         },
-        
+
         async submitComment() {
             if (!this.commentText.trim() || this.isSubmittingComment) return
-            
+
             this.isSubmittingComment = true
             try {
                 const response = await socialApi.addComment(this.post.id, this.commentText)
@@ -292,7 +292,7 @@ export default {
                 this.isSubmittingComment = false
             }
         },
-        
+
         async deleteComment(commentId) {
             if (!confirm('Удалить комментарий?')) return
             try {
@@ -304,7 +304,7 @@ export default {
                 alert('Не удалось удалить комментарий')
             }
         },
-        
+
         // ===== РЕДАКТИРОВАНИЕ ПОСТА =====
         openEditModal() {
             this.editContent = this.post.content
@@ -312,28 +312,28 @@ export default {
             this.editImageFile = null
             this.showEditModal = true
         },
-        
+
         closeEditModal() {
             this.showEditModal = false
             this.editContent = ''
             this.editImageFile = null
             this.editImagePreview = null
         },
-        
+
         handleEditImage(event) {
             const file = event.target.files[0]
             if (!file) return
-            
+
             if (file.size > 5 * 1024 * 1024) {
                 alert('Размер файла не должен превышать 5MB')
                 return
             }
-            
+
             if (!file.type.startsWith('image/')) {
                 alert('Пожалуйста, загрузите изображение')
                 return
             }
-            
+
             this.editImageFile = file
             const reader = new FileReader()
             reader.onload = (e) => {
@@ -341,18 +341,18 @@ export default {
             }
             reader.readAsDataURL(file)
         },
-        
+
         removeEditImage() {
             this.editImageFile = null
             this.editImagePreview = null
         },
-        
+
         async saveEdit() {
             if (!this.editContent.trim()) {
                 alert('Содержимое поста не может быть пустым')
                 return
             }
-            
+
             this.isSaving = true
             try {
                 const formData = new FormData()
@@ -360,16 +360,16 @@ export default {
                 if (this.editImageFile) {
                     formData.append('image', this.editImageFile)
                 }
-                
+
                 const response = await socialApi.updatePost(this.post.id, formData)
-                
+
                 this.post.content = response.data.content
                 this.post.image = response.data.image
-                
+
                 if (!this.post.image) {
                     this.post.image = null
                 }
-                
+
                 this.closeEditModal()
             } catch (error) {
                 console.error('Ошибка редактирования поста:', error)
@@ -378,14 +378,14 @@ export default {
                 this.isSaving = false
             }
         },
-        
+
         // ===== УДАЛЕНИЕ ПОСТА =====
         confirmDelete() {
             if (confirm('Вы уверены, что хотите удалить этот пост?')) {
                 this.deletePost()
             }
         },
-        
+
         async deletePost() {
             try {
                 await socialApi.deletePost(this.post.id)
@@ -395,12 +395,12 @@ export default {
                 alert('Не удалось удалить пост')
             }
         },
-        
+
         // ===== НАВИГАЦИЯ =====
         goToProfile(userId) {
             this.$router.push(`/profile/${userId}`)
         },
-        
+
         // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
         getImageUrl(path) {
             if (!path) return ''
@@ -408,7 +408,7 @@ export default {
             if (path.startsWith('/')) return path
             return `/uploads/${path}`
         },
-        
+
         getAvatarUrl(avatarPath) {
             if (!avatarPath || typeof avatarPath !== 'string') {
                 return '/BaseAvatar.webp'
@@ -419,11 +419,11 @@ export default {
             const baseUrl = import.meta.env.VITE_API_URL || ''
             return `${baseUrl}/uploads/${avatarPath}`
         },
-        
+
         handleAvatarError(event) {
             event.target.src = '/default-avatar.png'
         },
-        
+
         formatDate(dateStr) {
             if (!dateStr) return ''
             const date = new Date(dateStr)
@@ -1021,37 +1021,37 @@ export default {
     .container {
         padding: 12px;
     }
-    
+
     .post-card {
         padding: 16px;
     }
-    
+
     .comments-section {
         padding: 16px;
     }
-    
+
     .post-content p {
         font-size: 15px;
     }
-    
+
     .comment-input-wrapper {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .avatar-small {
         display: none;
     }
-    
+
     .edit-modal {
         padding: 20px;
         width: 95%;
     }
-    
+
     .edit-modal-footer {
         flex-direction: column;
     }
-    
+
     .edit-modal-footer .btn {
         width: 100%;
         justify-content: center;
@@ -1062,33 +1062,33 @@ export default {
     .post-header {
         flex-wrap: wrap;
     }
-    
+
     .post-author-info {
         flex: 1;
         min-width: 0;
     }
-    
+
     .avatar {
         width: 36px;
         height: 36px;
     }
-    
+
     .username {
         font-size: 14px;
     }
-    
+
     .post-content p {
         font-size: 14px;
     }
-    
+
     .comments-title {
         font-size: 16px;
     }
-    
+
     .comment-item {
         padding: 10px;
     }
-    
+
     .comment-text {
         font-size: 13px;
     }

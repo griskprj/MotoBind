@@ -3,6 +3,7 @@ AuthService — вся бизнес-логика аутентификации.
 
 API-слой (app/api/auth.py) — тонкие контроллеры, вся работа с БД здесь.
 """
+
 from datetime import datetime, timezone
 from typing import Optional
 

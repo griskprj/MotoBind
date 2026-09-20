@@ -1,16 +1,16 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="loading" text="Загрузка ленты..."/>
-        
+
         <Header
             title="MotoSocial"
             subtitle="Общайтесь с мотоциклистами, делитесь опытом и вдохновением"
         />
-        
+
         <div class="social-feed">
             <!-- Создание поста -->
             <PostCreator @post-created="handlePostCreated" />
-            
+
             <!-- Лента постов -->
             <div v-if="posts.length > 0" class="posts-feed">
                 <PostCard
@@ -23,17 +23,17 @@
                     @post-updated="handlePostUpdated"
                 />
             </div>
-            
+
             <!-- Пустое состояние -->
             <div v-else-if="!loading" class="empty-state">
                 <i class="fa fa-users" style="font-size: 48px; color: var(--text-muted);"></i>
                 <p>Пока нет постов</p>
                 <p class="empty-hint">Будьте первым, кто поделится новостью!</p>
             </div>
-            
+
             <!-- Пагинация -->
             <div v-if="pagination.total > pagination.per_page" class="pagination">
-                <button 
+                <button
                     @click="loadPosts(pagination.current_page - 1)"
                     :disabled="!pagination.has_prev"
                     class="btn btn-secondary"
@@ -41,7 +41,7 @@
                     <i class="fa fa-arrow-left"></i> Назад
                 </button>
                 <span>Страница {{ pagination.current_page }} из {{ pagination.pages }}</span>
-                <button 
+                <button
                     @click="loadPosts(pagination.current_page + 1)"
                     :disabled="!pagination.has_next"
                     class="btn btn-secondary"
@@ -103,27 +103,27 @@ export default {
                 this.loading = false
             }
         },
-        
+
         handlePostCreated() {
             this.loadPosts(1)
         },
-        
+
         handlePostDeleted(postId) {
             this.posts = this.posts.filter(p => p.id !== postId)
             this.pagination.total = Math.max(0, this.pagination.total - 1)
-            
+
             if (this.posts.length === 0 && this.pagination.current_page > 1) {
                 this.loadPosts(this.pagination.current_page - 1)
             }
         },
-        
+
         handlePostUpdated(updatedPost) {
             const index = this.posts.findIndex(p => p.id === updatedPost.id)
             if (index !== -1) {
                 this.posts[index] = updatedPost
             }
         },
-        
+
         handleLikeUpdated(postId, data) {
             const post = this.posts.find(p => p.id === postId)
             if (post) {

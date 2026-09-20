@@ -81,14 +81,14 @@ export default {
   methods: {
     async checkToken() {
       this.token = this.$route.params.token
-      
+
       if (!this.token) {
         this.valid = false
         this.checking = false
         this.errorMessage = 'Неверная ссылка сброса.'
         return
       }
-      
+
       try {
         const response = await api.get(`/auth/check-reset-token/${this.token}`)
         this.email = response.data.email
@@ -103,25 +103,25 @@ export default {
     async submit() {
       this.error = null
       this.success = null
-      
+
       if (this.newPassword.length < 6) {
         this.error = 'Пароль должен быть минимум 6 символов'
         return
       }
-      
+
       if (this.newPassword !== this.confirmPassword) {
         this.error = 'Пароли не совпадают'
         return
       }
-      
+
       this.loading = true
-      
+
       try {
         const response = await api.post('/auth/reset-password', {
           token: this.token,
           new_password: this.newPassword
         })
-        
+
         if (response.data.access_token) {
           const auth = useAuthStore()
           auth.setTokens(response.data.access_token, response.data.refresh_token)

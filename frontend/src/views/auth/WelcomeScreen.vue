@@ -3,13 +3,13 @@
     <div class="welcome-card animate-slide-in">
       <!-- Фоновое изображение на весь экран -->
       <div class="background-image"></div>
-      
+
       <!-- Контент поверх фона -->
       <div class="content-wrapper">
         <div class="top-content">
           <p class="right-title">MotoBind</p>
         </div>
-        
+
         <div class="bottom-content">
           <h1 class="welcome-title">
             Добро пожаловать <br />в MotoBind

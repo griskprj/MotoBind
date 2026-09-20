@@ -11,29 +11,29 @@
         <!-- === TABS & FILTERS === -->
         <div class="controls-wrapper">
             <div class="tabs">
-                <div 
-                    @click="changeTab('all')" 
+                <div
+                    @click="changeTab('all')"
                     class="tab"
                     :class="selectedTab === 'all' ? 'active' : ''"
-                >   
+                >
                     <p>Все <span class="tab-count">{{ getTabCount('all') }}</span></p>
                 </div>
                 <div
                     @click="changeTab('moderate')"
-                    class="tab" 
+                    class="tab"
                     :class="selectedTab === 'moderate' ? 'active' : ''"
                 >
                     <p>На проверке <span class="tab-count">{{ getTabCount('moderate') }}</span></p>
                 </div>
-                <div 
-                    @click="changeTab('approved')" 
+                <div
+                    @click="changeTab('approved')"
                     class="tab"
                     :class="selectedTab === 'approved' ? 'active' : ''"
                 >
                     <p>Одобренные <span class="tab-count">{{ getTabCount('approved') }}</span></p>
                 </div>
-                <div 
-                    @click="changeTab('rejected')" 
+                <div
+                    @click="changeTab('rejected')"
                     class="tab"
                     :class="selectedTab === 'rejected' ? 'active' : ''"
                 >
@@ -43,15 +43,15 @@
 
             <div class="filters">
                 <div class="filter-group">
-                    <input 
-                        type="text" 
-                        v-model="searchQuery" 
+                    <input
+                        type="text"
+                        v-model="searchQuery"
                         placeholder="Поиск по названию, автору..."
                         class="search-input"
                         @input="debouncedSearch"
                     >
                 </div>
-                
+
                 <select v-model="filterCategory" class="filter-select" @change="applyFilters">
                     <option value="">Все категории</option>
                     <option value="engine">Двигатель</option>
@@ -98,15 +98,15 @@
 
         <!-- === GRID OF MANUALS === -->
         <div v-if="filteredManuals && filteredManuals.length > 0" class="manuals-grid">
-            <div 
-                class="manual-card" 
-                v-for="manual in filteredManuals" 
+            <div
+                class="manual-card"
+                v-for="manual in filteredManuals"
                 :key="manual.id"
                 @click="openDetailsModal(manual)"
             >
                 <div class="card-header">
                     <span class="card-title">{{ manual.title }}</span>
-                    <span 
+                    <span
                         class="status-badge"
                         :class="{
                             'badge-green': manual.status === 'approved',
@@ -204,7 +204,7 @@ export default {
             loading: false,
             manuals: [],
             motorcycles: [],
-            
+
             selectedManual: null,
             showDetailsModal: false,
 
@@ -215,7 +215,7 @@ export default {
             filterDifficulty: '',
             sortBy: 'created_at_desc',
             selectedTab: 'moderate',
-            
+
             searchTimeout: null
         }
     },
@@ -223,7 +223,7 @@ export default {
     computed: {
         filteredManuals() {
             let items = [...this.manuals]
-            
+
             // Таб фильтр
             if (this.selectedTab === 'moderate') {
                 items = items.filter(m => m.status === 'moderate')
@@ -232,43 +232,43 @@ export default {
             } else if (this.selectedTab === 'rejected') {
                 items = items.filter(m => m.status === 'rejected')
             }
-            
+
             // Поиск
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
-                items = items.filter(m => 
+                items = items.filter(m =>
                     m.title?.toLowerCase().includes(query) ||
                     m.motorcycle?.toLowerCase().includes(query) ||
                     m.author?.username?.toLowerCase().includes(query) ||
                     m.description?.toLowerCase().includes(query)
                 )
             }
-            
+
             // Категория
             if (this.filterCategory) {
                 items = items.filter(m => m.category === this.filterCategory)
             }
-            
+
             // Мотоцикл
             if (this.filterMotorcycle) {
                 items = items.filter(m => m.motorcycle === this.filterMotorcycle)
             }
-            
+
             // Сложность
             if (this.filterDifficulty) {
                 items = items.filter(m => m.difficult === this.filterDifficulty)
             }
-            
+
             // Сортировка
             items = this.sortItems(items)
-            
+
             return items
         },
-        
+
         hasActiveFilters() {
-            return this.searchQuery || 
-                   this.filterCategory || 
-                   this.filterMotorcycle || 
+            return this.searchQuery ||
+                   this.filterCategory ||
+                   this.filterMotorcycle ||
                    this.filterDifficulty ||
                    this.sortBy !== 'created_at_desc'
         }
@@ -278,7 +278,7 @@ export default {
         async loadData() {
             try {
                 this.loading = true
-                
+
                 // Загружаем все мануалы (без пагинации для админки)
                 const manualsRes = await api.get('/manual/list?per_page=1000')
                 this.manuals = manualsRes.data.manuals || []
@@ -378,7 +378,7 @@ export default {
 
         async handleDelete(manualId) {
             if (!confirm('Вы уверены, что хотите удалить этот мануал?')) return
-            
+
             try {
                 await api.delete(`/admin/manual/${manualId}`)
                 this.manuals = this.manuals.filter(m => m.id !== manualId)
@@ -496,12 +496,12 @@ export default {
     transition: 0.2s;
 }
 
-.tab:hover { 
-    color: var(--text-primary); 
+.tab:hover {
+    color: var(--text-primary);
 }
 
-.tab.active { 
-    color: var(--accent-text); 
+.tab.active {
+    color: var(--accent-text);
 }
 
 .tab.active::after {
@@ -556,12 +556,12 @@ export default {
     transition: border 0.2s;
 }
 
-.search-input:focus { 
-    border-color: var(--accent); 
+.search-input:focus {
+    border-color: var(--accent);
 }
 
-.search-input::placeholder { 
-    color: var(--text-muted); 
+.search-input::placeholder {
+    color: var(--text-muted);
 }
 
 .filter-select {
@@ -583,11 +583,11 @@ export default {
     padding-right: 36px;
 }
 
-.filter-select:focus { 
-    border-color: var(--accent); 
+.filter-select:focus {
+    border-color: var(--accent);
 }
 
-.filter-select option { 
+.filter-select option {
     background: var(--bg-input);
     color: var(--text-primary);
 }
@@ -613,8 +613,8 @@ export default {
     transition: color 0.2s;
 }
 
-.clear-filters:hover { 
-    color: var(--accent); 
+.clear-filters:hover {
+    color: var(--accent);
 }
 
 /* ===== GRID ===== */
@@ -667,19 +667,19 @@ export default {
     flex-shrink: 0;
 }
 
-.badge-green { 
-    background: var(--success-trans); 
-    color: var(--success-text); 
+.badge-green {
+    background: var(--success-trans);
+    color: var(--success-text);
 }
 
-.badge-warning { 
-    background: var(--warning-trans); 
-    color: var(--warning-text); 
+.badge-warning {
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
-.badge-danger { 
-    background: var(--danger-trans); 
-    color: var(--danger-text); 
+.badge-danger {
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .card-body {
@@ -721,8 +721,8 @@ export default {
     color: var(--text-muted);
 }
 
-.steps-count i { 
-    margin-right: 6px; 
+.steps-count i {
+    margin-right: 6px;
 }
 
 .click-hint {
@@ -734,8 +734,8 @@ export default {
     transition: color 0.2s;
 }
 
-.manual-card:hover .click-hint { 
-    color: var(--accent-text); 
+.manual-card:hover .click-hint {
+    color: var(--accent-text);
 }
 
 /* ===== EMPTY STATE ===== */
@@ -772,11 +772,11 @@ export default {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .filters {
         flex-wrap: wrap;
     }
-    
+
     .filter-select {
         flex: 1;
         min-width: 120px;
@@ -791,11 +791,11 @@ export default {
         white-space: nowrap;
         scrollbar-width: none;
     }
-    
-    .tabs::-webkit-scrollbar { 
-        display: none; 
+
+    .tabs::-webkit-scrollbar {
+        display: none;
     }
-    
+
     .card-meta {
         grid-template-columns: 1fr;
     }
@@ -805,16 +805,16 @@ export default {
     .filters {
         flex-direction: column;
     }
-    
+
     .filter-select {
         width: 100%;
         min-width: unset;
     }
-    
+
     .manuals-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .manual-card {
         padding: 14px 16px;
     }

@@ -5,12 +5,12 @@
                 <!-- Шапка -->
                 <div class="modal-header">
                     <div class="modal-header-left">
-                        <div 
-                            v-if="icon" 
-                            class="modal-icon" 
-                            :style="{ 
-                                background: bgIconColor || 'var(--accent-trans)', 
-                                color: iconColor || 'var(--accent-text)' 
+                        <div
+                            v-if="icon"
+                            class="modal-icon"
+                            :style="{
+                                background: bgIconColor || 'var(--accent-trans)',
+                                color: iconColor || 'var(--accent-text)'
                             }"
                         >
                             <i class="fa" :class="'fa-' + icon"></i>
@@ -42,7 +42,7 @@
 <script>
 export default {
     name: 'ModalWrapper',
-    
+
     props: {
         isOpen: {
             type: Boolean,

@@ -5,6 +5,7 @@
 - Sprint 6.1: hardcoded admin check (current_user_id == 1) в get_manual_by_id
 - Sprint 6.1: user cannot filter own moderate/rejected manuals out (missing status filter)
 """
+
 import json
 
 import pytest
@@ -12,8 +13,8 @@ import pytest
 from app.models.manual import Manual, ManualStep
 from app.models.user import User
 
-
 # ---- Helpers ----
+
 
 def _create_manual_payload(**overrides):
     """Payload для CreateManualSchema."""
@@ -52,15 +53,19 @@ def _make_admin(client, make_user, db_session):
     db_user.role = "admin"
     db_session.session.commit()
 
-    login = client.post("/api/auth/login", json={
-        "email": admin["email"],
-        "password": admin["password"],
-        "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": admin["email"],
+            "password": admin["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     return {"Authorization": f"Bearer {login['access_token']}"}, db_user.id
 
 
 # ---- POST /api/manual/new-manual ----
+
 
 @pytest.mark.manuals
 def test_create_manual_success(client, auth_headers):
@@ -126,10 +131,12 @@ def test_create_manual_invalid_difficult(client, auth_headers):
 @pytest.mark.manuals
 def test_create_manual_non_sequential_steps(client, auth_headers):
     """Порядок шагов не 1,2,3... → 400."""
-    payload = _create_manual_payload(steps=[
-        {"order": 1, "title": "First"},
-        {"order": 3, "title": "Third"},
-    ])
+    payload = _create_manual_payload(
+        steps=[
+            {"order": 1, "title": "First"},
+            {"order": 3, "title": "Third"},
+        ]
+    )
     response = client.post(
         "/api/manual/new-manual",
         data={"data": json.dumps(payload)},
@@ -140,6 +147,7 @@ def test_create_manual_non_sequential_steps(client, auth_headers):
 
 
 # ---- GET /api/manual/list ----
+
 
 @pytest.mark.manuals
 def test_list_manuals_empty(client, auth_headers):
@@ -155,9 +163,14 @@ def test_list_manuals_empty(client, auth_headers):
 def test_list_manuals_all(client, auth_headers, make_user, db_session):
     """Список всех approved мануалов."""
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     manual = _create_manual(client, other_headers, title="Other manual")
@@ -179,9 +192,14 @@ def test_list_manuals_tab_my(client, auth_headers, make_user):
     _create_manual(client, auth_headers, title="Mine")
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     _create_manual(client, other_headers, title="Theirs")
 
@@ -220,13 +238,19 @@ def test_list_manuals_filter_by_category(client, auth_headers):
 
 # ---- GET /api/manual/<id> ----
 
+
 @pytest.mark.manuals
 def test_get_approved_manual_by_any_user(client, auth_headers, make_user, db_session):
     """Approved мануал виден всем."""
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     manual = _create_manual(client, other_headers)
 
@@ -254,9 +278,14 @@ def test_get_foreign_moderate_manual_forbidden(client, auth_headers, make_user):
     manual = _create_manual(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.get(f"/api/manual/{manual['id']}", headers=other_headers)
@@ -272,9 +301,14 @@ def test_admin_can_see_any_moderate_manual(client, make_user, db_session):
     """
     # Автор — обычный юзер
     author = make_user(verified=True)
-    login_author = client.post("/api/auth/login", json={
-        "email": author["email"], "password": author["password"], "rememberMe": True,
-    }).get_json()
+    login_author = client.post(
+        "/api/auth/login",
+        json={
+            "email": author["email"],
+            "password": author["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     author_headers = {"Authorization": f"Bearer {login_author['access_token']}"}
     manual = _create_manual(client, author_headers)
 
@@ -298,6 +332,7 @@ def test_get_nonexistent_manual_404(client, auth_headers):
 
 # ---- PUT /api/manual/<id> ----
 
+
 @pytest.mark.manuals
 def test_update_own_moderate_manual(client, auth_headers):
     """Автор не может редактировать moderate мануал."""
@@ -309,6 +344,7 @@ def test_update_own_moderate_manual(client, auth_headers):
         headers=auth_headers,
     )
     assert response.status_code == 403
+
 
 @pytest.mark.manuals
 def test_update_own_approved_manual_forbidden(client, auth_headers):
@@ -344,6 +380,7 @@ def test_update_own_rejected_manual_resets_to_moderate(client, auth_headers, db_
 
 # ---- DELETE /api/manual/<id> ----
 
+
 @pytest.mark.manuals
 def test_delete_own_manual(client, auth_headers, db_session):
     """Удаление своего мануала."""
@@ -360,9 +397,14 @@ def test_delete_foreign_manual_forbidden(client, auth_headers, make_user):
     manual = _create_manual(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.delete(f"/api/manual/{manual['id']}", headers=other_headers)
@@ -370,6 +412,7 @@ def test_delete_foreign_manual_forbidden(client, auth_headers, make_user):
 
 
 # ---- Steps ----
+
 
 @pytest.mark.manuals
 def test_update_manual_replaces_steps(client, auth_headers, db_session):
@@ -387,11 +430,13 @@ def test_update_manual_replaces_steps(client, auth_headers, db_session):
 
     response = client.put(
         f"/api/manual/{manual['id']}",
-        json={"steps": [
-            {"order": 1, "title": "Новый шаг 1"},
-            {"order": 2, "title": "Новый шаг 2"},
-            {"order": 3, "title": "Новый шаг 3"},
-        ]},
+        json={
+            "steps": [
+                {"order": 1, "title": "Новый шаг 1"},
+                {"order": 2, "title": "Новый шаг 2"},
+                {"order": 3, "title": "Новый шаг 3"},
+            ]
+        },
         headers=auth_headers,
     )
     assert response.status_code == 200
@@ -402,6 +447,7 @@ def test_update_manual_replaces_steps(client, auth_headers, db_session):
 
 
 # ---- Auth ----
+
 
 @pytest.mark.manuals
 def test_manuals_endpoints_require_auth(client):

@@ -59,10 +59,10 @@
                 <div class="tabs-wrapper">
                     <div class="tabs">
                         <div class="tabs-btn">
-                            <button 
-                                v-for="tab in tabs" 
+                            <button
+                                v-for="tab in tabs"
                                 :key="tab.value"
-                                @click="changeTab(tab.value)" 
+                                @click="changeTab(tab.value)"
                                 class="tab"
                                 :class="{ active: selectedTab === tab.value }"
                             >
@@ -73,7 +73,7 @@
                                 <span class="tab-count" v-else-if="tab.value === 'history'">{{ completedMaintenances.length }}</span>
                             </button>
                         </div>
-                        <button 
+                        <button
                             class="outline-btn"
                             style="padding: 10px 24px;"
                             @click="showAddMaintenanceModal = true"
@@ -88,9 +88,9 @@
                     <div class="filter-group">
                         <div class="search-wrapper">
                             <i class="fa fa-search"></i>
-                            <input 
-                                type="text" 
-                                v-model="searchQuery" 
+                            <input
+                                type="text"
+                                v-model="searchQuery"
                                 placeholder="Поиск по названию, описанию, мотоциклу..."
                                 class="search-input"
                             >
@@ -136,7 +136,7 @@
 
             <!-- === MAINTENANCE LIST === -->
             <div v-if="filteredMaintenances && filteredMaintenances.length > 0" class="maintenance-list">
-                <div 
+                <div
                     v-for="maintenance in filteredMaintenances"
                     :key="maintenance.id"
                     class="maintenance-card"
@@ -246,16 +246,16 @@ export default {
         return {
             motorcycles: [],
             allMaintenances: [],
-            
+
             selectedMaintenance: null,
             selectedMotorcycle: null,
-            
+
             // Фильтры
             searchQuery: '',
             filterMotorcycle: '',
             filterStatus: '',
             sortBy: 'date_desc',
-            
+
             // Статистика
             allMaintenancesCount: 0,
             selectedTab: 'all',
@@ -289,11 +289,11 @@ export default {
 
         filteredMaintenances() {
             let items = [...this.allMaintenances]
-            
+
             // Поиск
             if (this.searchQuery.trim()) {
                 const query = this.searchQuery.toLowerCase().trim()
-                items = items.filter(m => 
+                items = items.filter(m =>
                     m.title?.toLowerCase().includes(query) ||
                     m.description?.toLowerCase().includes(query) ||
                     m.moto_name?.toLowerCase().includes(query)
@@ -306,22 +306,22 @@ export default {
             } else if (this.selectedTab === 'history') {
                 items = items.filter(m => m.status === 'completed')
             }
-            
+
             // Фильтры
             if (this.filterMotorcycle) {
                 items = items.filter(m => m.moto_id === this.filterMotorcycle)
             }
-            
+
             if (this.filterStatus) {
                 items = items.filter(m => m.status === this.filterStatus)
             }
-            
+
             // Сортировка
             items = this.sortItems(items)
-            
+
             return items
         },
-        
+
         hasActiveFilters() {
             return this.searchQuery || this.filterMotorcycle || this.filterStatus || this.selectedTab !== 'all'
         }
@@ -333,15 +333,15 @@ export default {
                 this.loading = true
 
                 const response = await api.get('/statistic/maintenance')
-                
+
                 this.motorcycles = response.data.motorcycles || []
-                
+
                 const history = response.data.history_maintenances || []
                 const planned = response.data.planned_maintenances || []
                 this.allMaintenances = [...history, ...planned]
-                
+
                 this.allMaintenancesCount = response.data.all_maintenances_count || 0
-                
+
             } catch (err) {
                 console.error('Failed load maintenance data:', err)
                 alert('Ошибка загрузки данных')
@@ -396,10 +396,10 @@ export default {
                 };
 
                 await api.post(`/maintenance/${formData.id}/complete`, payload);
-                
+
                 this.$toast?.success('Обслуживание успешно завершено!');
                 await this.loadData();
-                
+
                 this.selectedMaintenance = null;
                 this.selectedMotorcycle = null;
             } catch (err) {
@@ -1040,11 +1040,11 @@ export default {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .filters {
         flex-direction: column;
     }
@@ -1078,15 +1078,15 @@ export default {
     .container {
         padding: 0 12px;
     }
-    
+
     .maintenance-page {
         padding: 12px 0 24px;
     }
-    
+
     .page-title {
         font-size: 20px;
     }
-    
+
     .page-subtitle {
         font-size: 13px;
     }

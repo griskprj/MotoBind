@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="isSubmitting" text="Создание мануала..."/>
-        
+
         <!-- === HEADER === -->
         <Header
             title="Конструктор мануалов"
@@ -14,7 +14,7 @@
                 <i class="fa fa-info-circle"></i>
                 <span>Правила оформления мануалов <a href='/manual/rules' target='_blank'>здесь</a>.</span>
             </div>
-            
+
             <form @submit.prevent="submitManual" enctype="multipart/form-data">
                 <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
                 <div class="form-card">
@@ -45,18 +45,18 @@
                         <div class="form-group">
                             <label>
                                 Название процедуры*
-                                
+
                                 <!-- Выпадающий список шаблонов -->
-                                <select 
+                                <select
                                     v-if="!form.customTitle && form.category"
-                                    v-model="form.templateId" 
+                                    v-model="form.templateId"
                                     @change="onTemplateChange"
                                     :class="{ 'error': errors.title }"
                                 >
                                     <option value="">Выберите процедуру</option>
-                                    <option 
-                                        v-for="tpl in availableTemplates" 
-                                        :key="tpl.id" 
+                                    <option
+                                        v-for="tpl in availableTemplates"
+                                        :key="tpl.id"
                                         :value="tpl.id"
                                     >
                                         {{ tpl.label }}
@@ -71,16 +71,16 @@
 
                                 <!-- Ручной ввод (если выбрано "Своё название" или категория не выбрана) -->
                                 <div v-if="form.customTitle || !form.category" class="custom-title-wrapper">
-                                    <input 
-                                        type="text" 
-                                        v-model="form.title" 
+                                    <input
+                                        type="text"
+                                        v-model="form.title"
                                         placeholder="Введите своё название процедуры"
                                         :class="{ 'error': errors.title }"
                                         maxLength="200"
                                     >
-                                    <button 
+                                    <button
                                         v-if="form.customTitle && form.category"
-                                        type="button" 
+                                        type="button"
                                         class="btn-back-to-templates"
                                         @click="backToTemplates"
                                         title="Вернуться к списку"
@@ -96,8 +96,8 @@
                         <div class="form-group">
                             <label>
                                 Краткое описание*
-                                <textarea 
-                                    v-model="form.description" 
+                                <textarea
+                                    v-model="form.description"
                                     required
                                     rows="2"
                                     placeholder="Краткое описание процедуры, её важность и интервалы"
@@ -112,9 +112,9 @@
                             <div class="form-group">
                                 <label>
                                     Модель мотоцикла*
-                                    <input 
-                                        type="text" 
-                                        v-model="form.motorcycle" 
+                                    <input
+                                        type="text"
+                                        v-model="form.motorcycle"
                                         required
                                         placeholder="Например: BMW S1000RR (2018+)"
                                         :class="{ 'error': errors.motorcycle }"
@@ -141,9 +141,9 @@
                             <div class="form-group">
                                 <label>
                                     Ориентировочное время
-                                    <input 
-                                        type="text" 
-                                        v-model="form.time_estimate" 
+                                    <input
+                                        type="text"
+                                        v-model="form.time_estimate"
                                         placeholder="Например: 15–20 минут"
                                         maxLength="64"
                                     >
@@ -153,9 +153,9 @@
                             <div class="form-group">
                                 <label>
                                     Периодичность
-                                    <input 
-                                        type="text" 
-                                        v-model="form.interval" 
+                                    <input
+                                        type="text"
+                                        v-model="form.interval"
                                         placeholder="Например: каждые 10 000 км или раз в год"
                                         maxLength="64"
                                     >
@@ -176,8 +176,8 @@
                         <div class="form-group">
                             <label>
                                 Общие рекомендации
-                                <textarea 
-                                    v-model="form.safety_tip" 
+                                <textarea
+                                    v-model="form.safety_tip"
                                     rows="2"
                                     placeholder="Общие рекомендации по выполнению процедуры"
                                     maxLength="1000"
@@ -188,8 +188,8 @@
                         <div class="form-group">
                             <label>
                                 ⚠️ Предупреждения (что категорически нельзя делать)
-                                <textarea 
-                                    v-model="form.warnings" 
+                                <textarea
+                                    v-model="form.warnings"
                                     rows="2"
                                     placeholder="Например: Не запускайте двигатель без масла"
                                     maxLength="1000"
@@ -200,8 +200,8 @@
                         <div class="form-group">
                             <label>
                                 Необходимые условия
-                                <textarea 
-                                    v-model="form.conditions" 
+                                <textarea
+                                    v-model="form.conditions"
                                     rows="2"
                                     placeholder="Например: Двигатель холодный, мотоцикл на центральной подставке"
                                     maxLength="1000"
@@ -222,9 +222,9 @@
                         <div class="form-group">
                             <label>
                                 Инструменты
-                                <input 
-                                    type="text" 
-                                    v-model="form.instruments" 
+                                <input
+                                    type="text"
+                                    v-model="form.instruments"
                                     placeholder="Ключ на 18мм, ветошь, динамометрический ключ, ёмкость для слива"
                                     maxLength="500"
                                 >
@@ -234,9 +234,9 @@
                         <div class="form-group">
                             <label>
                                 Материалы и запчасти
-                                <input 
-                                    type="text" 
-                                    v-model="form.parts" 
+                                <input
+                                    type="text"
+                                    v-model="form.parts"
                                     placeholder="Масло моторное 10W-40 (3.2L), масляный фильтр, уплотнительное кольцо"
                                     maxLength="500"
                                 >
@@ -257,20 +257,20 @@
                             <label>
                                 Ссылки на документацию
                                 <div class="links-list">
-                                    <div 
-                                        v-for="(link, index) in form.docs_links" 
-                                        :key="index" 
+                                    <div
+                                        v-for="(link, index) in form.docs_links"
+                                        :key="index"
                                         class="link-item"
                                     >
-                                        <input 
-                                            type="url" 
-                                            v-model="form.docs_links[index]" 
+                                        <input
+                                            type="url"
+                                            v-model="form.docs_links[index]"
                                             placeholder="https://example.com/manual.pdf"
                                             class="link-input"
                                         >
-                                        <button 
-                                            type="button" 
-                                            class="btn-remove-link" 
+                                        <button
+                                            type="button"
+                                            class="btn-remove-link"
                                             @click="removeLink(index)"
                                         >
                                             <i class="fa fa-times"></i>
@@ -296,8 +296,8 @@
                         <div class="form-group">
                             <label>
                                 Моменты затяжки (JSON)
-                                <textarea 
-                                    v-model="form.specs_json" 
+                                <textarea
+                                    v-model="form.specs_json"
                                     rows="6"
                                     placeholder='{
   "torque": [
@@ -321,30 +321,30 @@
                         <div class="form-group">
                             <label>Быстрый редактор моментов затяжки</label>
                             <div class="torque-editor">
-                                <div 
-                                    v-for="(item, index) in torqueItems" 
-                                    :key="index" 
+                                <div
+                                    v-for="(item, index) in torqueItems"
+                                    :key="index"
                                     class="torque-row"
                                 >
-                                    <input 
-                                        v-model="item.name" 
+                                    <input
+                                        v-model="item.name"
                                         placeholder="Название болта"
                                         class="torque-name"
                                     >
-                                    <input 
-                                        v-model="item.nm" 
+                                    <input
+                                        v-model="item.nm"
                                         placeholder="Н·м"
                                         type="number"
                                         class="torque-nm"
                                     >
-                                    <input 
-                                        v-model="item.note" 
+                                    <input
+                                        v-model="item.note"
                                         placeholder="Примечание"
                                         class="torque-note"
                                     >
-                                    <button 
-                                        type="button" 
-                                        class="btn-remove-torque" 
+                                    <button
+                                        type="button"
+                                        class="btn-remove-torque"
                                         @click="removeTorqueItem(index)"
                                     >
                                         <i class="fa fa-times"></i>
@@ -379,14 +379,14 @@
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="step-content">
                                 <div class="form-group">
                                     <label>
                                         Заголовок шага*
-                                        <input 
-                                            type="text" 
-                                            v-model="step.title" 
+                                        <input
+                                            type="text"
+                                            v-model="step.title"
                                             required
                                             :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
                                             :class="{ 'error': step.errors && step.errors.title }"
@@ -399,8 +399,8 @@
                                 <div class="form-group">
                                     <label>
                                         Описание шага
-                                        <textarea 
-                                            v-model="step.text" 
+                                        <textarea
+                                            v-model="step.text"
                                             rows="3"
                                             :placeholder="`Подробное описание шага ${index + 1}`"
                                             maxLength="5000"
@@ -412,7 +412,7 @@
                                     <div class="form-group">
                                         <label>
                                             ⚠️ Предупреждение
-                                            <input 
+                                            <input
                                                 type="text"
                                                 v-model="step.warning"
                                                 placeholder="Чего нельзя делать на этом шаге"
@@ -424,7 +424,7 @@
                                     <div class="form-group">
                                         <label>
                                             💡 Совет
-                                            <input 
+                                            <input
                                                 type="text"
                                                 v-model="step.tip"
                                                 placeholder="Лайфхак или рекомендация"
@@ -437,7 +437,7 @@
                                 <div class="form-group">
                                     <label>
                                         🎯 Результат шага
-                                        <input 
+                                        <input
                                             type="text"
                                             v-model="step.result"
                                             placeholder="Как понять, что шаг выполнен правильно"
@@ -450,9 +450,9 @@
                                     <label>
                                         📷 Изображение шага
                                         <div class="image-upload" @click="$refs['fileInput' + index].click()">
-                                            <input 
+                                            <input
                                                 :ref="'fileInput' + index"
-                                                type="file" 
+                                                type="file"
                                                 accept="image/*"
                                                 @change="handleImageUpload(index, $event)"
                                                 class="file-input"
@@ -464,10 +464,10 @@
                                                 Изображение загружено
                                             </span>
                                             <span class="file-name" v-else>Выберите файл</span>
-                                            <button 
-                                                v-if="step.imageFile || (isEditMode && step.existingImage)" 
-                                                type="button" 
-                                                class="btn-remove-image" 
+                                            <button
+                                                v-if="step.imageFile || (isEditMode && step.existingImage)"
+                                                type="button"
+                                                class="btn-remove-image"
                                                 @click.stop="removeImage(index)"
                                             >
                                                 <i class="fa fa-times"></i>
@@ -498,8 +498,8 @@
                         <div class="form-group">
                             <label>
                                 Финальная проверка
-                                <textarea 
-                                    v-model="form.aftercare" 
+                                <textarea
+                                    v-model="form.aftercare"
                                     rows="3"
                                     placeholder="Что проверить после работы: уровень масла, отсутствие течей, затяжку болтов..."
                                     maxLength="2000"
@@ -515,7 +515,7 @@
                     <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                         <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
                         <span v-else>
-                            <i class="fa fa-check"></i> 
+                            <i class="fa fa-check"></i>
                             {{ isEditMode ? 'Сохранить изменения' : 'Создать мануал' }}
                         </span>
                     </button>
@@ -534,7 +534,7 @@ import { getTemplatesByCategory } from '../constants/maintenanceTemplates'
 export default {
     name: 'ManualCreator',
     components: { Header, LoadingOverlay },
-    
+
     data() {
         return {
             form: {
@@ -563,7 +563,7 @@ export default {
             isSubmitting: false,
             stepIdCounter: 0,
             torqueItems: [],
-            
+
             editingManualId: null,
             isEditMode: false,
         };
@@ -595,7 +595,7 @@ export default {
             deep: true
         }
     },
-    
+
     computed: {
         availableTemplates() {
             if (!this.form.category) return []
@@ -624,7 +624,7 @@ export default {
             const tpl = this.availableTemplates.find(t => t.id === this.form.templateId)
             this.form.title = tpl ? tpl.label : ''
         },
-        
+
         backToTemplates() {
             this.form.customTitle = false
             this.form.templateId = ''

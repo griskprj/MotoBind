@@ -20,9 +20,9 @@
                         <i :class="statusIcon"></i>
                         {{ getStatusLabel(manual.status) }}
                     </span>
-                    <router-link 
-                        v-if="isAuthor && manual.status === 'rejected'" 
-                        :to="`/manual-creator?edit=${manual.id}`" 
+                    <router-link
+                        v-if="isAuthor && manual.status === 'rejected'"
+                        :to="`/manual-creator?edit=${manual.id}`"
                         class="btn btn-warning btn-sm"
                     >
                         <i class="fa fa-edit"></i> Редактировать
@@ -33,7 +33,7 @@
             <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
             <div class="block block-about">
                 <h1 class="manual-title">{{ manual.title }}</h1>
-                
+
                 <p v-if="manual.description" class="manual-description">
                     {{ manual.description }}
                 </p>
@@ -53,7 +53,7 @@
                     </div>
                     <div v-if="manual.difficult" class="about-item">
                         <i class="fa fa-signal"></i>
-                        <span><strong>Сложность:</strong> 
+                        <span><strong>Сложность:</strong>
                             <span class="difficulty-dots">
                                 <span class="dot" :class="{ filled: ['easy', 'medium', 'hard'].includes(manual.difficult) }"></span>
                                 <span class="dot" :class="{ filled: ['medium', 'hard'].includes(manual.difficult) }"></span>
@@ -82,17 +82,17 @@
                 <h3 class="block-title">
                     <i class="fa fa-shield"></i> Безопасность и подготовка
                 </h3>
-                
+
                 <div v-if="manual.safety_tip" class="safety-item safety-tip">
                     <i class="fa fa-lightbulb"></i>
                     <span>{{ manual.safety_tip }}</span>
                 </div>
-                
+
                 <div v-if="manual.warnings" class="safety-item safety-warning">
                     <i class="fa fa-exclamation-triangle"></i>
                     <span>{{ manual.warnings }}</span>
                 </div>
-                
+
                 <div v-if="manual.conditions" class="safety-item safety-condition">
                     <i class="fa fa-check-circle"></i>
                     <span>{{ manual.conditions }}</span>
@@ -104,7 +104,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-wrench"></i> Инструменты и материалы
                 </h3>
-                
+
                 <div class="tools-grid">
                     <div v-if="manual.instruments" class="tools-item">
                         <i class="fa fa-wrench"></i>
@@ -113,7 +113,7 @@
                             <span class="tools-value">{{ manual.instruments }}</span>
                         </div>
                     </div>
-                    
+
                     <div v-if="manual.parts" class="tools-item">
                         <i class="fa fa-cogs"></i>
                         <div>
@@ -129,10 +129,10 @@
                 <h3 class="block-title">
                     <i class="fa fa-link"></i> Ссылки на документацию
                 </h3>
-                
+
                 <div class="docs-list">
-                    <a 
-                        v-for="(link, index) in manual.docs_links" 
+                    <a
+                        v-for="(link, index) in manual.docs_links"
                         :key="index"
                         :href="link"
                         target="_blank"
@@ -161,8 +161,8 @@
                             <span>Момент (Н·м)</span>
                             <span>Примечание</span>
                         </div>
-                        <div 
-                            v-for="(item, index) in manual.specs.torque" 
+                        <div
+                            v-for="(item, index) in manual.specs.torque"
                             :key="index"
                             class="torque-row"
                         >
@@ -177,8 +177,8 @@
                 <div v-if="manual.specs.fluids" class="specs-section">
                     <h4 class="specs-subtitle">Объёмы жидкостей</h4>
                     <div class="fluids-grid">
-                        <div 
-                            v-for="(value, key) in manual.specs.fluids" 
+                        <div
+                            v-for="(value, key) in manual.specs.fluids"
                             :key="key"
                             class="fluid-item"
                         >
@@ -192,8 +192,8 @@
                 <div v-if="manual.specs.tolerances" class="specs-section">
                     <h4 class="specs-subtitle">Допуски и зазоры</h4>
                     <div class="tolerances-grid">
-                        <div 
-                            v-for="(value, key) in manual.specs.tolerances" 
+                        <div
+                            v-for="(value, key) in manual.specs.tolerances"
                             :key="key"
                             class="tolerance-item"
                         >
@@ -214,8 +214,8 @@
                 </div>
 
                 <div class="steps-list">
-                    <div 
-                        v-for="(step, index) in manual.steps" 
+                    <div
+                        v-for="(step, index) in manual.steps"
                         :key="index"
                         class="step-item"
                         :class="{ 'step-completed': step.completed }"
@@ -224,18 +224,18 @@
                             <span class="step-number">{{ step.order || index + 1 }}</span>
                             <div class="step-line" v-if="index < manual.steps.length - 1"></div>
                         </div>
-                        
+
                         <div class="step-body">
                             <div class="step-header-inner">
                                 <span class="step-title">{{ step.title }}</span>
                             </div>
-                            
+
                             <p v-if="step.text" class="step-text">{{ step.text }}</p>
-                            
+
                             <div v-if="step.image" class="step-image">
                                 <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
                             </div>
-                            
+
                             <div class="step-meta">
                                 <div v-if="step.warning" class="step-warning">
                                     <i class="fa fa-exclamation-triangle"></i>
@@ -260,7 +260,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-check-circle"></i> После завершения
                 </h3>
-                
+
                 <div class="aftercare-content">
                     <i class="fa fa-info-circle"></i>
                     <span>{{ manual.aftercare }}</span>
@@ -272,7 +272,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-lightbulb"></i> Совет
                 </h3>
-                
+
                 <div class="tip-content">
                     <i class="fa fa-quote-left"></i>
                     <span>{{ manual.tip }}</span>
@@ -375,7 +375,7 @@ export default {
             try {
                 const response = await api.get(`/manual/${id}`);
                 this.manual = response.data;
-                
+
                 if (this.manual.steps) {
                     this.manual.steps = [...this.manual.steps].sort((a, b) => (a.order || 0) - (b.order || 0));
                 }

@@ -12,9 +12,9 @@
         <div class="modal-form-group">
             <label>
                 Имя пользователя
-                <input 
-                    v-model="form.username" 
-                    type="text" 
+                <input
+                    v-model="form.username"
+                    type="text"
                     placeholder="Введите имя пользователя"
                 />
             </label>
@@ -23,9 +23,9 @@
         <div class="modal-form-group">
             <label>
                 Email
-                <input 
-                    v-model="form.email" 
-                    type="email" 
+                <input
+                    v-model="form.email"
+                    type="email"
                     placeholder="user@example.com"
                 />
             </label>
@@ -34,8 +34,8 @@
         <div class="modal-form-group">
             <label>
                 О себе
-                <textarea 
-                    v-model="form.bio" 
+                <textarea
+                    v-model="form.bio"
                     rows="3"
                     placeholder="Расскажите немного о себе, своём опыте и мотоцикле..."
                 ></textarea>
@@ -46,9 +46,9 @@
             <div class="modal-form-group">
                 <label>
                     Город/Регион
-                    <input 
-                        v-model="form.location" 
-                        type="text" 
+                    <input
+                        v-model="form.location"
+                        type="text"
                         placeholder="Например: Москва"
                     />
                 </label>
@@ -56,9 +56,9 @@
             <div class="modal-form-group">
                 <label>
                     Мой мотоцикл
-                    <input 
-                        v-model="form.motorcycle" 
-                        type="text" 
+                    <input
+                        v-model="form.motorcycle"
+                        type="text"
                         placeholder="Например: BMW S1000RR"
                     />
                 </label>
@@ -81,18 +81,18 @@
             <label>
                 Социальные сети
                 <div class="social-links-editor">
-                    <div 
-                        v-for="platform in socialPlatforms" 
+                    <div
+                        v-for="platform in socialPlatforms"
                         :key="platform"
                         class="social-link-row"
                     >
                         <i :class="getSocialIcon(platform)" class="social-icon"></i>
-                        <input 
-                            v-model="form.social_links[platform]" 
+                        <input
+                            v-model="form.social_links[platform]"
                             :placeholder="`Ссылка на ${platform}`"
                         />
-                        <button 
-                            v-if="form.social_links[platform]" 
+                        <button
+                            v-if="form.social_links[platform]"
                             class="clear-link"
                             @click="form.social_links[platform] = ''"
                             type="button"

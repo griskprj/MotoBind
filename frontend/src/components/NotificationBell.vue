@@ -2,7 +2,7 @@
   <div class="notification-bell" @click="toggleDropdown" ref="bellRef">
     <i class="fas fa-bell"></i>
     <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
-    
+
     <Teleport to="body">
       <div v-if="dropdownOpen" class="dropdown-overlay" @click="closeDropdown">
         <div class="dropdown" @click.stop>
@@ -75,11 +75,11 @@ export default {
       const bell = this.$refs.bellRef
       const dropdown = document.querySelector('.dropdown')
       if (!bell || !dropdown) return
-      
+
       const rect = bell.getBoundingClientRect()
       const dropdownWidth = 320
       const left = Math.min(rect.right - dropdownWidth, window.innerWidth - 20)
-      
+
       dropdown.style.position = 'fixed'
       dropdown.style.top = (rect.bottom + 8) + 'px'
       dropdown.style.left = Math.max(10, left) + 'px'

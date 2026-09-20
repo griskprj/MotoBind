@@ -36,7 +36,7 @@
                         <h4 class="nav-title">Информация</h4>
                         <router-link class="nav-link" to="/landing">О сервисе</router-link>
                         <router-link class="nav-link" to="/contacts">Контакты</router-link>
-                    
+
                     </div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                 <p class="footer-copyright">
                     © {{ currentYear }} MotoBind. Все права защищены
                 </p>
-                
+
                 <div class="footer-social">
                     <a href="https://t.me/motobind" class="social-link" aria-label="Telegram">
                         <i class="fab fa-telegram"></i>
@@ -88,7 +88,7 @@ export default {
     --footer-text: var(--text-secondary);
     --footer-text-light: var(--text-muted);
     --footer-radius: 16px;
-    
+
     margin-top: 64px;
     background: var(--footer-bg);
     border-top: 1px solid var(--footer-border);
@@ -317,11 +317,11 @@ export default {
         grid-template-columns: 1fr;
         gap: 32px;
     }
-    
+
     .footer-brand {
         justify-content: center;
     }
-    
+
     .footer-nav {
         grid-template-columns: repeat(3, 1fr);
         gap: 24px;
@@ -334,39 +334,39 @@ export default {
         margin-top: 48px;
         padding: 32px 0 16px;
     }
-    
+
     .footer-container {
         padding: 0 16px;
     }
-    
+
     .footer-nav {
         grid-template-columns: 1fr 1fr;
         gap: 24px 16px;
     }
-    
+
     .footer-bottom {
         flex-direction: column;
         text-align: center;
         gap: 12px;
     }
-    
+
     .brand-logo {
         width: 44px;
         height: 44px;
     }
-    
+
     .brand-name {
         font-size: 19px;
     }
-    
+
     .brand-tagline {
         font-size: 12px;
     }
-    
+
     .footer-social {
         gap: 8px;
     }
-    
+
     .social-link {
         width: 32px;
         height: 32px;
@@ -381,30 +381,30 @@ export default {
         gap: 20px;
         text-align: center;
     }
-    
+
     .nav-link {
         width: 100%;
         text-align: center;
     }
-    
+
     .nav-link::after {
         left: 50%;
         transform: translateX(-50%);
     }
-    
+
     .nav-title {
         text-align: center;
     }
-    
+
     .footer-brand {
         text-align: center;
     }
-    
+
     .brand-link {
         flex-direction: column;
         align-items: center;
     }
-    
+
     .brand-text {
         align-items: center;
     }
@@ -435,7 +435,7 @@ export default {
         opacity: 1;
         transform: none;
     }
-    
+
     .brand-link,
     .nav-link::after,
     .social-link {

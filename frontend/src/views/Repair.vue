@@ -22,15 +22,15 @@
               Выберите мотоцикл
             </label>
             <div class="select-wrapper">
-              <select 
-                v-model="selectedMoto" 
+              <select
+                v-model="selectedMoto"
                 @change="onMotoChange"
                 class="styled-select"
               >
                 <option value="">Выберите мотоцикл</option>
-                <option 
-                  v-for="moto in motorcycles" 
-                  :key="moto.id" 
+                <option
+                  v-for="moto in motorcycles"
+                  :key="moto.id"
                   :value="moto.id"
                 >
                   {{ moto.name }}
@@ -40,11 +40,11 @@
             </div>
             <div v-if="selectedMotoData" class="moto-info">
               <span class="moto-mileage">
-                <i class="fa-solid fa-gauge-high"></i> 
+                <i class="fa-solid fa-gauge-high"></i>
                 {{ formatMileage(selectedMotoData.mileage) }}
               </span>
               <span class="moto-year" v-if="selectedMotoData.years">
-                <i class="fa fa-calendar"></i> 
+                <i class="fa fa-calendar"></i>
                 {{ selectedMotoData.years }}
               </span>
             </div>
@@ -62,16 +62,16 @@
               Выберите обслуживание
             </label>
             <div class="select-wrapper">
-              <select 
-                v-model="selectedMaintenance" 
+              <select
+                v-model="selectedMaintenance"
                 @change="onMaintenanceChange"
                 class="styled-select"
                 :disabled="!selectedMoto"
               >
                 <option value="">Выберите обслуживание</option>
-                <option 
-                  v-for="m in availableMaintenances" 
-                  :key="m.id" 
+                <option
+                  v-for="m in availableMaintenances"
+                  :key="m.id"
                   :value="m.id"
                 >
                   {{ m.title }}
@@ -85,7 +85,7 @@
                 {{ maintenanceStatusText }}
               </span>
               <span class="info-mileage" v-if="selectedMaintenanceData.planned_mileage">
-                <i class="fa fa-flag-checkered"></i> 
+                <i class="fa fa-flag-checkered"></i>
                 {{ selectedMaintenanceData.planned_mileage }} км
               </span>
             </div>
@@ -93,7 +93,7 @@
         </div>
 
         <!-- Шаг 3: Результат -->
-        <div class="selection-step result-step" :class="{ 
+        <div class="selection-step result-step" :class="{
           disabled: !selectedMoto || !selectedMaintenance,
           found: manual,
           notfound: !manual && selectedMoto && selectedMaintenance
@@ -111,7 +111,7 @@
                   'fa fa-hourglass-half': !selectedMoto || !selectedMaintenance
                 }"></i>
               </div>
-              
+
               <div class="result-text">
                 <h4 v-if="manual">Мануал найден</h4>
                 <h4 v-else-if="selectedMoto && selectedMaintenance">Мануал не найден</h4>
@@ -125,23 +125,23 @@
             </div>
 
             <div class="result-actions">
-              <button 
+              <button
                 v-if="manual"
                 @click="scrollToManual"
                 class="outline-btn"
               >
                 <i class="fa fa-arrow-down"></i> К инструкции
               </button>
-              <button 
+              <button
                 v-else-if="selectedMoto && selectedMaintenance && !manual"
-                @click="openCreateManual" 
+                @click="openCreateManual"
                 class="btn btn-outline btn-sm"
               >
                 <i class="fa fa-plus"></i> Создать мануал
               </button>
-              <button 
+              <button
                 v-else
-                class="btn btn-secondary btn-sm" 
+                class="btn btn-secondary btn-sm"
                 disabled
               >
                 <i class="fa fa-hourglass-start"></i> Ожидание
@@ -159,7 +159,7 @@
         <div class="manual-header-left">
           <h2 class="manual-title">{{ manual.title }}</h2>
           <p class="manual-description">{{ manual.description || 'Инструкция по выполнению обслуживания' }}</p>
-          
+
           <div class="manual-meta-tags">
             <span class="tag" v-if="manual.category">
               <i class="fa fa-tag"></i> {{ getCategoryName(manual.category) }}
@@ -185,17 +185,17 @@
         <h4 class="block-title">
           <i class="fa fa-shield"></i> Безопасность и подготовка
         </h4>
-        
+
         <div v-if="manual.safety_tip" class="safety-item safety-tip">
           <i class="fa fa-lightbulb"></i>
           <span>{{ manual.safety_tip }}</span>
         </div>
-        
+
         <div v-if="manual.warnings" class="safety-item safety-warning">
           <i class="fa fa-exclamation-triangle"></i>
           <span>{{ manual.warnings }}</span>
         </div>
-        
+
         <div v-if="manual.conditions" class="safety-item safety-condition">
           <i class="fa fa-check-circle"></i>
           <span>{{ manual.conditions }}</span>
@@ -207,10 +207,10 @@
         <h4 class="block-title">
           <i class="fa fa-link"></i> Ссылки на документацию
         </h4>
-        
+
         <div class="docs-list">
-          <a 
-            v-for="(link, index) in manual.docs_links" 
+          <a
+            v-for="(link, index) in manual.docs_links"
             :key="index"
             :href="link"
             target="_blank"
@@ -239,8 +239,8 @@
               <span>Момент (Н·м)</span>
               <span>Примечание</span>
             </div>
-            <div 
-              v-for="(item, index) in manual.specs.torque" 
+            <div
+              v-for="(item, index) in manual.specs.torque"
               :key="index"
               class="torque-row"
             >
@@ -255,8 +255,8 @@
         <div v-if="manual.specs.fluids && Object.keys(manual.specs.fluids).length > 0" class="specs-section">
           <h5 class="specs-subtitle">Объёмы жидкостей</h5>
           <div class="fluids-grid">
-            <div 
-              v-for="(value, key) in manual.specs.fluids" 
+            <div
+              v-for="(value, key) in manual.specs.fluids"
               :key="key"
               class="fluid-item"
             >
@@ -270,8 +270,8 @@
         <div v-if="manual.specs.tolerances && Object.keys(manual.specs.tolerances).length > 0" class="specs-section">
           <h5 class="specs-subtitle">Допуски и зазоры</h5>
           <div class="tolerances-grid">
-            <div 
-              v-for="(value, key) in manual.specs.tolerances" 
+            <div
+              v-for="(value, key) in manual.specs.tolerances"
               :key="key"
               class="tolerance-item"
             >
@@ -286,14 +286,14 @@
       <div class="manual-content">
         <div class="steps-wrapper">
           <h3 class="steps-title">
-            <i class="fa fa-list-ol"></i> 
+            <i class="fa fa-list-ol"></i>
             Инструкция по шагам
             <span class="steps-count">{{ manualSteps.length }} шаг{{ manualSteps.length > 1 ? 'а' : '' }}</span>
           </h3>
 
           <div class="steps-list">
-            <div 
-              v-for="(step, index) in manualSteps" 
+            <div
+              v-for="(step, index) in manualSteps"
               :key="step.order || index"
               class="step-item"
             >
@@ -305,24 +305,24 @@
               <div class="step-body">
                 <h4 class="step-title">{{ step.title || `Шаг ${index + 1}` }}</h4>
                 <p v-if="step.text" class="step-text">{{ step.text }}</p>
-                
+
                 <!-- Изображение шага -->
                 <div v-if="step.image" class="step-image">
                   <img :src="getImageUrl(step.image)" :alt="step.title || 'Шаг'" loading="lazy" />
                 </div>
-                
+
                 <!-- Результат шага -->
                 <div v-if="step.result" class="step-result">
                   <i class="fa fa-check-circle"></i>
                   <span>{{ step.result }}</span>
                 </div>
-                
+
                 <!-- Предупреждение -->
                 <div v-if="step.warning" class="step-tip warning">
                   <i class="fa fa-exclamation-triangle"></i>
                   <span>{{ step.warning }}</span>
                 </div>
-                
+
                 <!-- Совет -->
                 <div v-if="step.tip" class="step-tip info">
                   <i class="fa fa-lightbulb"></i>
@@ -348,7 +348,7 @@
         <h4 class="block-title">
           <i class="fa fa-check-circle"></i> После завершения
         </h4>
-        
+
         <div class="aftercare-content">
           <i class="fa fa-info-circle"></i>
           <span>{{ manual.aftercare }}</span>
@@ -443,7 +443,7 @@ import LoadingOverlay from '../components/LoadingOverlay.vue'
 
 export default {
   name: 'RepairPage',
-  
+
   components: {
     MarkPlanMaintenanceModal,
     Header,
@@ -453,20 +453,20 @@ export default {
   data() {
     return {
       loading: false,
-      
+
       // Данные
       motorcycles: [],
       maintenances: [],
       manual: null,
-      
+
       // Выбранные значения
       selectedMoto: null,
       selectedMaintenance: null,
-      
+
       // Производные данные
       selectedMotoData: null,
       selectedMaintenanceData: null,
-      
+
       // Модалки
       showCompleteModal: false,
     }
@@ -475,7 +475,7 @@ export default {
   computed: {
     availableMaintenances() {
       if (!this.selectedMoto) return []
-      return this.maintenances.filter(m => 
+      return this.maintenances.filter(m =>
         m.moto_id === this.selectedMoto &&
         (m.status === 'planned' || m.status === 'overdue')
       )
@@ -586,7 +586,7 @@ export default {
       ) || null
 
       this.manual = null
-      
+
       if (this.selectedMoto && this.selectedMaintenance) {
         await this.fetchManual()
       }
@@ -659,12 +659,12 @@ export default {
           is_repeat: formData.isRepeat,
           interval: formData.interval
         })
-        
+
         this.showCompleteModal = false
         this.$toast?.success('Обслуживание успешно завершено!')
-        
+
         await this.loadData()
-        
+
         this.selectedMaintenance = null
         this.selectedMaintenanceData = null
         this.manual = null
@@ -713,8 +713,8 @@ export default {
     hasSpecs(specs) {
       if (!specs) return false
       return !!(
-        (specs.torque && specs.torque.length > 0) || 
-        (specs.fluids && Object.keys(specs.fluids).length > 0) || 
+        (specs.torque && specs.torque.length > 0) ||
+        (specs.fluids && Object.keys(specs.fluids).length > 0) ||
         (specs.tolerances && Object.keys(specs.tolerances).length > 0)
       )
     },
@@ -744,11 +744,11 @@ export default {
 
     getImageUrl(path) {
       if (!path) return ''
-      
+
       if (path.startsWith('data:')) return path
       if (path.startsWith('http://') || path.startsWith('https://')) return path
       if (path.startsWith('/')) return path
-      
+
       const baseUrl = import.meta.env.VITE_API_URL || ''
       return `${baseUrl}/uploads/${path}`
     },

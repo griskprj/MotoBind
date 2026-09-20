@@ -54,9 +54,9 @@
             <div class="last-reg-wrapper">
                 <h3>Последние регистрации</h3>
                 <div class="last-reg-cards">
-                    <div 
+                    <div
                         class="last-reg-card"
-                        v-for="user in lastRegUserData"    
+                        v-for="user in lastRegUserData"
                     >
                         <div class="user-info">
                             <img class="user-img" :src="getAvatarUrl(user?.avatar)" alt="">
@@ -88,7 +88,7 @@
                         Добавить пользователя
                     </p>
                 </div>
-    
+
                 <router-link class="fast-action-card link" to="/manual-creator">
                     <div class="action-card-icon">
                         <i class="fa fa-tools"></i>
@@ -97,7 +97,7 @@
                         Добавить мануал
                     </p>
                 </router-link>
-    
+
                 <router-link class="fast-action-card link" to="/admin/manuals">
                     <div class="action-card-icon">
                         <i class="fa fa-pen"></i>
@@ -106,7 +106,7 @@
                         Модерация мануалов
                     </p>
                 </router-link>
-    
+
                 <div @click="showNewsletterModal = true" class="fast-action-card">
                     <div class="action-card-icon">
                         <i class="fa fa-file-text"></i>
@@ -443,7 +443,7 @@ export default {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(1, 1fr);
-    gap: 16px;  
+    gap: 16px;
 }
 
 .fast-action-card {
@@ -497,7 +497,7 @@ export default {
         grid-template-columns: repeat(1, 1fr);
         grid-template-rows: repeat(4, 1fr);
     }
-    
+
     .fast-action-card {
         min-height: 60px;
     }

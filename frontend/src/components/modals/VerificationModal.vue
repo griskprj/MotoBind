@@ -8,12 +8,12 @@
       <p class="subtitle">
         Мы отправили письмо с ссылкой для подтверждения на <strong>{{ email }}</strong>
       </p>
-      
+
       <div class="info-box">
         <i class="fa fa-info-circle"></i>
         <span>После подтверждения вы сможете пользоваться всеми функциями сервиса.</span>
       </div>
-      
+
       <div class="actions">
         <button class="btn btn-outline" @click="resend" :disabled="resending">
           <i class="fa fa-refresh" :class="{ 'fa-spin': resending }"></i>
@@ -24,11 +24,11 @@
           {{ checking ? 'Проверка...' : 'Я подтвердил' }}
         </button>
       </div>
-      
+
       <p class="hint">
         Не пришло письмо? Проверьте папку "Спам" или <a @click="resend">отправьте повторно</a>
       </p>
-      
+
       <button class="close-btn" @click="close">
         <i class="fa fa-times"></i>
       </button>

@@ -3,6 +3,7 @@ Social API — тонкие контроллеры.
 
 Вся бизнес-логика — в services/post_service.py и services/report_service.py.
 """
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
@@ -24,6 +25,7 @@ social_bp = Blueprint("social", __name__)
 
 
 # ---- Posts ----
+
 
 @social_bp.route("/posts", methods=["POST"])
 @jwt_required()
@@ -95,6 +97,7 @@ def delete_post(post_id):
 
 # ---- Likes ----
 
+
 @social_bp.route("/posts/<int:post_id>/like", methods=["POST"])
 @jwt_required()
 def toggle_like(post_id):
@@ -105,6 +108,7 @@ def toggle_like(post_id):
 
 
 # ---- Comments ----
+
 
 @social_bp.route("/posts/<int:post_id>/comments", methods=["POST"])
 @jwt_required()
@@ -128,6 +132,7 @@ def delete_comment(comment_id):
 
 # ---- Reports ----
 
+
 @social_bp.route("/posts/<int:post_id>/report", methods=["POST"])
 @jwt_required()
 def report_post(post_id):
@@ -142,17 +147,27 @@ def report_post(post_id):
         description=data.get("description"),
     )
     report_dict = report.to_dict(include_post=False)
-    return jsonify({
-        "message": "Жалоба отправлена модератору",
-        "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
-    }), 201
+    return (
+        jsonify(
+            {
+                "message": "Жалоба отправлена модератору",
+                "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
+            }
+        ),
+        201,
+    )
 
 
 @social_bp.route("/report-categories", methods=["GET"])
 @jwt_required()
 def get_report_categories():
     """Список категорий жалоб."""
-    return jsonify([
-        ReportCategorySchema.model_validate({"value": k, "label": v}).model_dump()
-        for k, v in PostReport.CATEGORIES.items()
-    ]), 200
+    return (
+        jsonify(
+            [
+                ReportCategorySchema.model_validate({"value": k, "label": v}).model_dump()
+                for k, v in PostReport.CATEGORIES.items()
+            ]
+        ),
+        200,
+    )

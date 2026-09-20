@@ -1,6 +1,7 @@
 """
 Response-схемы для домена social (posts, comments, likes, reports).
 """
+
 from datetime import datetime
 from typing import Any, Optional
 
@@ -8,11 +9,12 @@ from pydantic import BaseModel, ConfigDict
 
 from app.schemas.mixins import ISO8601Mixin
 
-
 # ---------- Comments ----------
+
 
 class CommentResponseSchema(ISO8601Mixin, BaseModel):
     """Ответ с одним комментарием."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -26,13 +28,15 @@ class CommentResponseSchema(ISO8601Mixin, BaseModel):
 
 # ---------- Posts ----------
 
+
 class PostResponseSchema(ISO8601Mixin, BaseModel):
     """
     Базовый ответ поста.
 
     Поля совпадают с Post.to_dict() + is_liked.
     """
-    model_config = ConfigDict(from_attributes=True, extra='allow')
+
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
     id: int
     author_id: int
@@ -49,11 +53,13 @@ class PostResponseSchema(ISO8601Mixin, BaseModel):
 
 class PostDetailResponseSchema(PostResponseSchema):
     """Пост с вложенными комментариями (первые 5)."""
+
     comments: list[CommentResponseSchema] = []
 
 
 class PostListResponseSchema(BaseModel):
     """Пагинированная лента постов."""
+
     posts: list[PostResponseSchema] = []
     total: int = 0
     pages: int = 0
@@ -65,16 +71,20 @@ class PostListResponseSchema(BaseModel):
 
 # ---------- Likes ----------
 
+
 class LikeToggleResponseSchema(BaseModel):
     """Ответ POST /posts/<id>/like."""
+
     liked: bool
     likes_count: int
 
 
 # ---------- Reports ----------
 
+
 class ReportCategorySchema(BaseModel):
     """Одна категория жалобы."""
+
     value: str
     label: str
 
@@ -85,6 +95,7 @@ class ReportResponseSchema(ISO8601Mixin, BaseModel):
 
     Поля совпадают с PostReport.to_dict(include_post=False).
     """
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int

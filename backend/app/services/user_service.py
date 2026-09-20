@@ -1,4 +1,5 @@
 from typing import Optional
+
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.user import User
@@ -18,10 +19,10 @@ class UserService:
             raise ValidationError("Имя пользователя занято")
 
         user = User(
-            email=email, 
-            username=username, 
-            role=role, 
-            status="active", 
+            email=email,
+            username=username,
+            role=role,
+            status="active",
         )
         user.set_password(password)
 
@@ -57,45 +58,45 @@ class UserService:
     def get_user_stats(user_id: int) -> dict:
         """Получает статистику пользователя"""
         from app.models.post import Post
-        
+
         posts = Post.query.filter_by(author_id=user_id).all()
         posts_count = len(posts)
         likes_received = sum(p.likes_count for p in posts)
         comments_received = sum(p.comments_count for p in posts)
-        
+
         return {
-            'posts_count': posts_count,
-            'likes_received': likes_received,
-            'comments_received': comments_received,
+            "posts_count": posts_count,
+            "likes_received": likes_received,
+            "comments_received": comments_received,
         }
 
     @staticmethod
     def update_avatar(user_id: int, file) -> User:
         """Обновляет аватар пользователя"""
         user = UserService.get_user_by_id(user_id)
-        
+
         if user.avatar:
             delete_file(user.avatar)
-        
+
         avatar_path = save_user_avatar(file, user_id)
         if not avatar_path:
             raise ValidationError("Недопустимый формат файла. Разрешены: jpg, jpeg, png, gif, bmp, webp")
-        
+
         user.avatar = avatar_path
         db.session.commit()
-        
+
         return user
 
     @staticmethod
     def delete_avatar(user_id: int) -> User:
         """Удаляет аватар пользователя"""
         user = UserService.get_user_by_id(user_id)
-        
+
         if user.avatar:
             delete_file(user.avatar)
             user.avatar = None
             db.session.commit()
-        
+
         return user
 
     @staticmethod

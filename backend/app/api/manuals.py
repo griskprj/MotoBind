@@ -1,13 +1,10 @@
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
 import json
 
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
 from app.exceptions import ValidationError
-from app.schemas.manual import (
-    CreateManualSchema,
-    UpdateManualSchema,
-    ManualResponseSchema,
-)
+from app.schemas.manual import CreateManualSchema, ManualResponseSchema, UpdateManualSchema
 from app.services.manual_service import ManualService
 
 manual = Blueprint("manual", __name__)
@@ -55,10 +52,7 @@ def list_manuals():
         interval=request.args.get("interval", ""),
         status=request.args.get("status", ""),
     )
-    data["manuals"] = [
-        ManualResponseSchema.model_validate(m).model_dump()
-        for m in data["manuals"]
-    ]
+    data["manuals"] = [ManualResponseSchema.model_validate(m).model_dump() for m in data["manuals"]]
     return jsonify(data), 200
 
 
@@ -117,10 +111,7 @@ def delete_manual(manual_id):
     """
     Удаление мануала
     """
-    ManualService.delete_manual(
-        manual_id=manual_id,
-        user_id=int(get_jwt_identity())
-    )
+    ManualService.delete_manual(manual_id=manual_id, user_id=int(get_jwt_identity()))
     return jsonify({"message": "Мануал успешно удален"}), 200
 
 
@@ -141,10 +132,15 @@ def upload_step_image(manual_id, step_id):
         user_id=int(get_jwt_identity()),
         file=file,
     )
-    return jsonify({
-        "message": "Изображение загружено",
-        "image_url": image_url,
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Изображение загружено",
+                "image_url": image_url,
+            }
+        ),
+        200,
+    )
 
 
 @manual.route("/<int:manual_id>/steps/<int:step_id>/image", methods=["DELETE"])

@@ -7,4 +7,5 @@ class SnoozeSchema(BaseModel):
 
     days: сколько дней отложить. Мин 1, макс 30.
     """
+
     days: int = Field(default=7, ge=1, le=30)

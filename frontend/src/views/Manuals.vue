@@ -14,10 +14,10 @@
                 <div class="tabs-wrapper">
                     <div class="tabs">
                         <div class="tabs-btn">
-                            <button 
-                                v-for="tab in tabs" 
+                            <button
+                                v-for="tab in tabs"
                                 :key="tab.value"
-                                @click="changeTab(tab.value)" 
+                                @click="changeTab(tab.value)"
                                 class="tab"
                                 :class="{ active: selectedTab === tab.value }"
                             >
@@ -38,9 +38,9 @@
                     <div class="filters-group">
                         <div class="search-wrapper">
                             <i class="fa fa-search"></i>
-                            <input 
-                                type="text" 
-                                v-model="filters.search" 
+                            <input
+                                type="text"
+                                v-model="filters.search"
                                 @input="debouncedSearch"
                                 placeholder="Поиск по названию или мотоциклу..."
                                 class="search-input"
@@ -50,14 +50,14 @@
                             </button>
                         </div>
 
-                        <select 
-                            class="filter-select" 
+                        <select
+                            class="filter-select"
                             v-model="filters.motorcycle"
                             @change="applyFilters"
                         >
                             <option value="">Все мотоциклы</option>
-                            <option 
-                                v-for="moto in motorcycles" 
+                            <option
+                                v-for="moto in motorcycles"
                                 :key="moto.id"
                                 :value="moto.name"
                             >
@@ -65,8 +65,8 @@
                             </option>
                         </select>
 
-                        <select 
-                            class="filter-select" 
+                        <select
+                            class="filter-select"
                             v-model="filters.category"
                             @change="applyFilters"
                         >
@@ -82,8 +82,8 @@
                             <option value="cooling">❄️ Система охлаждения</option>
                         </select>
 
-                        <select 
-                            class="filter-select" 
+                        <select
+                            class="filter-select"
                             v-model="filters.sort_by"
                             @change="applyFilters"
                         >
@@ -141,15 +141,15 @@
 
                 <!-- Grid -->
                 <div v-else class="manuals-grid">
-                    <div 
-                        v-for="manual in manuals" 
-                        :key="manual.id" 
+                    <div
+                        v-for="manual in manuals"
+                        :key="manual.id"
                         class="manual-card"
                         @click="viewManual(manual)"
                     >
                         <div class="manual-image-wrapper">
-                            <img 
-                                :src="getManualImage(manual)" 
+                            <img
+                                :src="getManualImage(manual)"
                                 :alt="manual.title"
                                 class="manual-img"
                                 @error="handleImageError"
@@ -159,15 +159,15 @@
                                 {{ getDifficultyName(manual.difficult) }}
                             </div>
                         </div>
-                        
+
                         <div class="manual-body">
                             <span class="manual-category">{{ getCategoryName(manual.category) }}</span>
                             <h3 class="manual-title">{{ manual.title }}</h3>
                             <p class="manual-moto">
-                                <i class="fa fa-motorcycle"></i> 
+                                <i class="fa fa-motorcycle"></i>
                                 {{ manual.motorcycle }}
                             </p>
-                            
+
                             <div class="manual-meta">
                                 <span v-if="manual.time_estimate" class="meta-tag">
                                     <i class="fa fa-clock"></i> {{ manual.time_estimate }}
@@ -190,23 +190,23 @@
                 <div class="pagination-info">
                     <span>
                         Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}—
-                        {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
+                        {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
                         из {{ pagination.total }}
                     </span>
                 </div>
-                
+
                 <div class="pagination-controls">
-                    <button 
+                    <button
                         class="pagination-btn"
                         @click="goToPage(pagination.current_page - 1)"
                         :disabled="!pagination.has_prev"
                     >
                         <i class="fa fa-chevron-left"></i>
                     </button>
-                    
+
                     <div class="pagination-pages">
-                        <button 
-                            v-for="page in visiblePages" 
+                        <button
+                            v-for="page in visiblePages"
                             :key="page"
                             class="pagination-btn page-btn"
                             :class="{ active: page === pagination.current_page }"
@@ -217,8 +217,8 @@
                         </button>
                         <span v-else class="pagination-ellipsis">…</span>
                     </div>
-                    
-                    <button 
+
+                    <button
                         class="pagination-btn"
                         @click="goToPage(pagination.current_page + 1)"
                         :disabled="!pagination.has_next"
@@ -263,19 +263,19 @@ export default {
     data() {
         return {
             loading: false,
-            
+
             selectedTab: 'all',
             selectedManual: null,
             manuals: [],
             motorcycles: [],
-            
+
             filters: {
                 search: '',
                 motorcycle: '',
                 category: '',
                 sort_by: 'created_at_desc'
             },
-            
+
             pagination: {
                 current_page: 1,
                 per_page: 6,
@@ -284,13 +284,13 @@ export default {
                 has_prev: false,
                 has_next: false
             },
-            
+
             searchTimeout: null,
 
             showManualDetailsModal: false
         }
     },
-    
+
     computed: {
         tabs() {
             return [
@@ -305,38 +305,38 @@ export default {
             const total = this.pagination.pages
             const delta = 2
             const range = []
-            
+
             for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
                 range.push(i)
             }
-            
+
             if (current - delta > 2) {
                 range.unshift('...')
             }
-            
+
             if (current + delta < total - 1) {
                 range.push('...')
             }
-            
+
             range.unshift(1)
-            
+
             if (total > 1) {
                 range.push(total)
             }
-            
+
             return range.filter((v, i, a) => a.indexOf(v) === i)
         },
-        
+
         hasActiveFilters() {
             return this.filters.search || this.filters.motorcycle || this.filters.category
         }
     },
-    
+
     created() {
         this.loadManuals()
         this.loadMotorcycles()
     },
-    
+
     methods: {
         async loadManuals() {
             this.loading = true
@@ -347,14 +347,14 @@ export default {
                     tab: this.selectedTab,
                     ...this.filters
                 }
-                
+
                 Object.keys(params).forEach(key => {
                     if (!params[key]) delete params[key]
                 })
-                
+
                 const response = await api.get('/manual/list', { params })
                 const data = response.data
-                
+
                 this.manuals = data.manuals || []
                 this.pagination = {
                     current_page: data.current_page,
@@ -373,7 +373,7 @@ export default {
                 this.loading = false
             }
         },
-        
+
         async loadMotorcycles() {
             try {
                 const response = await api.get('/motorcycle/')
@@ -382,30 +382,30 @@ export default {
                 console.error('Error loading motorcycles:', error)
             }
         },
-        
+
         changeTab(tabName) {
             this.selectedTab = tabName
             this.pagination.current_page = 1
             this.loadManuals()
         },
-        
+
         applyFilters() {
             this.pagination.current_page = 1
             this.loadManuals()
         },
-        
+
         debouncedSearch() {
             clearTimeout(this.searchTimeout)
             this.searchTimeout = setTimeout(() => {
                 this.applyFilters()
             }, 500)
         },
-        
+
         clearSearch() {
             this.filters.search = ''
             this.applyFilters()
         },
-        
+
         clearAllFilters() {
             this.filters.search = ''
             this.filters.motorcycle = ''
@@ -413,18 +413,18 @@ export default {
             this.filters.sort_by = 'created_at_desc'
             this.applyFilters()
         },
-        
+
         goToPage(page) {
             if (page < 1 || page > this.pagination.pages) return
             this.pagination.current_page = page
             this.loadManuals()
         },
-        
+
         changePerPage() {
             this.pagination.current_page = 1
             this.loadManuals()
         },
-        
+
         getCategoryName(category) {
             const categories = {
                 'engine': 'Двигатель',
@@ -439,7 +439,7 @@ export default {
             }
             return categories[category] || category || 'Другое'
         },
-        
+
         getDifficultyName(difficult) {
             const difficulties = {
                 'easy': 'Легко',
@@ -448,19 +448,19 @@ export default {
             }
             return difficulties[difficult] || difficult
         },
-        
+
         getManualImage(manual) {
             if (manual.image) {
                 return this.resolveImageUrl(manual.image)
             }
-            
+
             if (manual.steps && manual.steps.length > 0) {
                 const stepWithImage = manual.steps.find(step => step.image)
                 if (stepWithImage?.image) {
                     return this.resolveImageUrl(stepWithImage.image)
                 }
             }
-            
+
             return '/ManualImgDefault.webp'
         },
 
@@ -468,27 +468,27 @@ export default {
             if (!path || typeof path !== 'string') {
                 return '/ManualImgDefault.webp'
             }
-            
+
             if (path.startsWith('data:')) {
                 return path
             }
-            
+
             if (path.startsWith('http://') || path.startsWith('https://')) {
                 return path
             }
-            
+
             if (path.startsWith('/')) {
                 return path
             }
-            
+
             const baseUrl = import.meta.env.VITE_API_URL || ''
             return `${baseUrl}/uploads/${path}`
         },
-        
+
         handleImageError(event) {
             event.target.src = '/ManualImgDefault.webp'
         },
-        
+
         viewManual(manual) {
             this.selectedManual = manual
             this.showManualDetailsModal = true
@@ -973,11 +973,11 @@ export default {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .tabs {
         flex-wrap: wrap;
     }
@@ -1030,11 +1030,11 @@ export default {
     .container {
         padding: 0 12px;
     }
-    
+
     .page-title {
         font-size: 20px;
     }
-    
+
     .page-subtitle {
         font-size: 13px;
     }

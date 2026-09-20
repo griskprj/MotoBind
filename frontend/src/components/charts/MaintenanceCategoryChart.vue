@@ -44,7 +44,7 @@ export default {
                 },
                 colors: ['#7C3AED', '#3B82F6', '#22C55E', '#EAB308', '#EF4444', '#8B8B9E'],
                 labels: this.chartData.map(item => item.category || 'Категория'),
-                
+
                 plotOptions: {
                     pie: {
                         donut: {
@@ -81,7 +81,7 @@ export default {
                         }
                     }
                 },
-                
+
                 legend: {
                     position: 'right',
                     verticalAlign: 'middle',
@@ -100,11 +100,11 @@ export default {
                         return seriesName + "  <span style='color:#8b8b9e; margin-left:8px;'>" + opts.w.globals.series[opts.seriesIndex] + "%</span>"
                     }
                 },
-                
+
                 dataLabels: {
                     enabled: false
                 },
-                
+
                 tooltip: {
                     y: {
                         formatter: function(value) {
@@ -112,7 +112,7 @@ export default {
                         }
                     }
                 },
-                
+
                 responsive: [{
                     breakpoint: 768,
                     options: {

@@ -54,14 +54,14 @@
                     </span>
                     <span class="detail-value">{{ maintenance.completed_mileage }} <span class="unit">км</span></span>
                 </div>
-                
+
                 <div v-if="maintenance?.planned_mileage" class="detail-item">
                     <span class="detail-label">
                         <i class="fa fa-clock"></i> Плановый пробег
                     </span>
                     <span class="detail-value">{{ maintenance.planned_mileage }} <span class="unit">км</span></span>
                 </div>
-                
+
                 <div v-if="maintenance?.cost" class="detail-item">
                     <span class="detail-label">
                         <i class="fa fa-ruble-sign"></i> Стоимость
@@ -225,7 +225,7 @@ export default {
         openEditModal() {
             this.showEditModal = true
         },
-    
+
         handleEdit() {
             this.$emit('save')
         },

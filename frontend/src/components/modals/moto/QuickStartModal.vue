@@ -36,9 +36,9 @@
             <div class="field">
                 <label>Текущий пробег <span>*</span></label>
                 <div class="input-with-unit">
-                    <input 
-                        v-model.number="form.currentMileage" 
-                        type="number" 
+                    <input
+                        v-model.number="form.currentMileage"
+                        type="number"
                         min="0"
                         placeholder="0"
                         required
@@ -52,8 +52,8 @@
             <div class="field">
                 <label>Тип привода <span>*</span></label>
                 <div class="radio-group">
-                    <button 
-                        v-for="d in driveOptions" 
+                    <button
+                        v-for="d in driveOptions"
                         :key="d.value"
                         class="radio-card"
                         :class="{ active: form.driveType === d.value }"
@@ -70,8 +70,8 @@
             <div class="field">
                 <label>Стиль езды</label>
                 <div class="radio-group">
-                    <button 
-                        v-for="s in styleOptions" 
+                    <button
+                        v-for="s in styleOptions"
                         :key="s.value"
                         class="radio-card"
                         :class="{ active: form.style === s.value }"
@@ -88,8 +88,8 @@
             <div class="field">
                 <label>Условия эксплуатации</label>
                 <div class="radio-group vertical">
-                    <button 
-                        v-for="t in terrainOptions" 
+                    <button
+                        v-for="t in terrainOptions"
                         :key="t.value"
                         class="radio-card"
                         :class="{ active: form.terrain === t.value }"
@@ -112,10 +112,10 @@
                 <p class="preview-intro">
                     Мы создадим следующие работы:
                 </p>
-                
+
                 <div class="preview-list">
-                    <div 
-                        v-for="item in previewItems" 
+                    <div
+                        v-for="item in previewItems"
                         :key="item.code"
                         class="preview-item"
                     >
@@ -156,7 +156,7 @@
                 </div>
                 <h3>Готово!</h3>
                 <p>Мы создали базовое расписание обслуживания</p>
-                
+
                 <div class="success-stats">
                     <div class="success-stat">
                         <span class="stat-value">{{ createdCount }}</span>
@@ -177,33 +177,33 @@
         <!-- ===== КНОПКИ ===== -->
         <template #actions>
             <div class="actions">
-                <button 
-                    v-if="step > 1 && step < 4" 
-                    class="btn btn-secondary" 
+                <button
+                    v-if="step > 1 && step < 4"
+                    class="btn btn-secondary"
                     @click="step--"
                 >
                     <i class="fa fa-arrow-left"></i> Назад
                 </button>
-                <button 
-                    v-if="step === 1" 
-                    class="btn btn-secondary" 
+                <button
+                    v-if="step === 1"
+                    class="btn btn-secondary"
                     @click="close"
                 >
                     Позже
                 </button>
 
-                <button 
-                    v-if="step < 3" 
-                    class="btn btn-primary" 
+                <button
+                    v-if="step < 3"
+                    class="btn btn-primary"
                     :disabled="!canProceed"
                     @click="step++"
                 >
                     Далее <i class="fa fa-arrow-right"></i>
                 </button>
 
-                <button 
-                    v-if="step === 3" 
-                    class="btn btn-primary" 
+                <button
+                    v-if="step === 3"
+                    class="btn btn-primary"
                     :disabled="loading"
                     @click="submit"
                 >
@@ -215,9 +215,9 @@
                     </span>
                 </button>
 
-                <button 
-                    v-if="step === 4" 
-                    class="btn btn-success" 
+                <button
+                    v-if="step === 4"
+                    class="btn btn-success"
                     @click="finish"
                 >
                     <i class="fa fa-check"></i> Перейти в гараж
@@ -233,7 +233,7 @@ import api from '../../../api/api'
 
 export default {
     components: { ModalWrapper },
-    
+
     props: {
         isOpen: Boolean,
         motorcycle: {
@@ -241,69 +241,69 @@ export default {
             default: null
         }
     },
-    
+
     emits: ['close', 'created'],
-    
+
     data() {
         return {
             step: 1,
             loading: false,
             createdCount: 0,
-            
+
             form: {
                 currentMileage: 0,
                 driveType: 'chain',
                 style: 'normal',
                 terrain: 'mixed'
             },
-            
+
             driveOptions: [
                 { value: 'chain', label: 'Цепь', icon: 'fa fa-link' },
                 { value: 'belt', label: 'Ремень', icon: 'fa fa-circle-notch' },
                 { value: 'shaft', label: 'Кардан', icon: 'fa fa-cog' },
             ],
-            
+
             styleOptions: [
                 { value: 'calm', label: 'Спокойный', icon: 'fa fa-leaf' },
                 { value: 'normal', label: 'Обычный', icon: 'fa fa-motorcycle' },
                 { value: 'aggressive', label: 'Агрессивный', icon: 'fa fa-bolt' },
             ],
-            
+
             terrainOptions: [
-                { 
-                    value: 'city', 
-                    label: 'Город', 
+                {
+                    value: 'city',
+                    label: 'Город',
                     desc: 'Ежедневные поездки по асфальту',
                     icon: 'fa fa-city'
                 },
-                { 
-                    value: 'highway', 
-                    label: 'Трасса', 
+                {
+                    value: 'highway',
+                    label: 'Трасса',
                     desc: 'Дальние поездки, ровный асфальт',
                     icon: 'fa fa-road'
                 },
-                { 
-                    value: 'mixed', 
-                    label: 'Смешанный', 
+                {
+                    value: 'mixed',
+                    label: 'Смешанный',
                     desc: 'И город, и трасса',
                     icon: 'fa fa-random'
                 },
-                { 
-                    value: 'dusty', 
-                    label: 'Пыльная местность', 
+                {
+                    value: 'dusty',
+                    label: 'Пыльная местность',
                     desc: 'Много пыли, грунтовки',
                     icon: 'fa fa-wind'
                 },
-                { 
-                    value: 'offroad', 
-                    label: 'Бездорожье', 
+                {
+                    value: 'offroad',
+                    label: 'Бездорожье',
                     desc: 'Грязь, камни, бездорожье',
                     icon: 'fa fa-mountain'
                 },
             ]
         }
     },
-    
+
     computed: {
         stepTitle() {
             return {
@@ -313,7 +313,7 @@ export default {
                 4: 'Готово!'
             }[this.step] || 'Быстрый старт'
         },
-        
+
         stepSubtitle() {
             return {
                 1: 'Настроим базовое обслуживание за 30 секунд',
@@ -322,7 +322,7 @@ export default {
                 4: ''
             }[this.step] || ''
         },
-        
+
         stepIcon() {
             return {
                 1: 'rocket',
@@ -331,7 +331,7 @@ export default {
                 4: 'check-circle'
             }[this.step] || 'rocket'
         },
-        
+
         canProceed() {
             if (this.step === 1) return true
             if (this.step === 2) {
@@ -339,7 +339,7 @@ export default {
             }
             return true
         },
-        
+
         previewItems() {
             // Локальный расчёт для предпросмотра
             // Дублирует логику backend для UX
@@ -349,7 +349,7 @@ export default {
                 { code: 'tire_pressure', title: 'Проверка давления в шинах', category: 'wheel', km: 1000, days: 30, affects: [] },
                 { code: 'brake_check', title: 'Проверка тормозов', category: 'brakes', km: 10000, days: 180, affects: ['style'] },
             ]
-            
+
             const drivePresets = {
                 chain: [
                     { code: 'chain_lube', title: 'Смазка цепи', category: 'drive', km: 500, days: 14, affects: ['terrain'] },
@@ -362,17 +362,17 @@ export default {
                     { code: 'shaft_oil', title: 'Замена масла в редукторе', category: 'drive', km: 20000, days: 730, affects: [] },
                 ]
             }
-            
+
             const presets = [...basePresets, ...(drivePresets[this.form.driveType] || [])]
-            
+
             const styleMult = { calm: 1.2, normal: 1.0, aggressive: 0.8 }[this.form.style] || 1.0
             const terrainMult = { city: 1.0, highway: 1.1, mixed: 1.0, dusty: 0.7, offroad: 0.6 }[this.form.terrain] || 1.0
-            
+
             return presets.map(p => {
                 let mult = 1.0
                 if (p.affects.includes('style')) mult *= styleMult
                 if (p.affects.includes('terrain')) mult *= terrainMult
-                
+
                 return {
                     ...p,
                     interval_km: Math.max(Math.round(p.km * mult / 100) * 100, 100),
@@ -381,7 +381,7 @@ export default {
             })
         }
     },
-    
+
     watch: {
         isOpen(val) {
             if (val) {
@@ -397,7 +397,7 @@ export default {
             }
         }
     },
-    
+
     methods: {
         getCategoryIcon(category) {
             const icons = {
@@ -413,13 +413,13 @@ export default {
             }
             return icons[category] || 'fa fa-wrench'
         },
-        
+
         async submit() {
             if (!this.motorcycle) {
                 this.$toast?.error('Мотоцикл не выбран')
                 return
             }
-            
+
             this.loading = true
             try {
                 const { data } = await api.post('/maintenance/quick-start', {
@@ -429,7 +429,7 @@ export default {
                     style: this.form.style,
                     terrain: this.form.terrain
                 })
-                
+
                 this.createdCount = data.created?.length || 0
                 this.step = 4
                 this.$emit('created', data)
@@ -441,11 +441,11 @@ export default {
                 this.loading = false
             }
         },
-        
+
         finish() {
             this.$emit('close')
         },
-        
+
         close() {
             this.$emit('close')
         }
