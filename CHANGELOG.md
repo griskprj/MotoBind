@@ -6,6 +6,38 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.8.0] — 2026-09-20
+
+### Added
+- **frontend/tests**: инфраструктура Vitest для фронтенда
+  - `vitest`, `@vue/test-utils`, `jsdom`, `@vitest/coverage-v8`
+  - `vitest.config.js` с jsdom environment и coverage
+  - npm-скрипты: `test`, `test:watch`, `test:coverage`
+- **frontend/tests**: 53 теста
+  - `src/utils/DateFormatter.test.js` — 10 тестов
+  - `src/constants/maintenanceTemplates.test.js` — 13 тестов
+  - `src/api/api.test.js` — 11 тестов (интерцепторы, refresh, failedQueue)
+  - `src/stores/auth.test.js` — 19 тестов (hydration, tokens, getters)
+
+### Fixed
+- **frontend/utils**: `formatDate(new Date('invalid'))` возвращал строку `"Invalid Date"` вместо `"—"`
+  - причина: ветка `instanceof Date` пропускала проверку `isNaN`
+  - найдено первым же тестом Vitest
+
+### Changed
+- **frontend**: `.gitignore` дополнен `coverage/`
+
+### Notes
+- Первый релиз с покрытием тестами фронтенда
+- Итог по тестам:
+  - **Backend**: 121 тест (auth, motorcycle, maintenance, statistic, social, manuals)
+  - **Frontend**: 53 теста (utils, constants, api client, auth store)
+  - **Всего**: 174 теста
+- JSON-контракт API не изменён
+- Backend domains: все 5 отрефакторены (Sprint 1 – 6)
+- Frontend infrastructure: Pinia, split router, lazy apexcharts (Sprint 2B)
+- Frontend tests: Vitest + 53 теста (Sprint 8)
+
 ## [1.7.1] — 2026-09-20
 
 ### Fixed
