@@ -11,9 +11,9 @@
         <div class="modal-form-group">
             <label>
                 Имя <span class="required">*</span>
-                <input 
-                    v-model="form.username" 
-                    type="text" 
+                <input
+                    v-model="form.username"
+                    type="text"
                     placeholder="Введите имя пользователя"
                     required
                 />
@@ -23,9 +23,9 @@
         <div class="modal-form-group">
             <label>
                 Email <span class="required">*</span>
-                <input 
-                    v-model="form.email" 
-                    type="email" 
+                <input
+                    v-model="form.email"
+                    type="email"
                     placeholder="user@example.com"
                     required
                 />
@@ -54,9 +54,9 @@
         <div class="modal-form-group">
             <label>
                 Пароль
-                <input 
-                    v-model="form.password" 
-                    type="password" 
+                <input
+                    v-model="form.password"
+                    type="password"
                     placeholder="Оставьте пустым для генерации"
                 />
             </label>

@@ -1,8 +1,9 @@
+import os
+from typing import Any, Dict, List, Optional
+
 from flask import current_app
 from sqlalchemy import or_
-from typing import Any, Dict, List, Optional
 from werkzeug.utils import secure_filename
-import os
 
 from app.exceptions import ForbiddenError, NotFoundError
 from app.extensions import db
@@ -109,31 +110,27 @@ class ManualService:
         }
 
     @staticmethod
-    def create_manual(
-        author_id: int,
-        data: Dict[str, Any],
-        files: Dict[str, Any] = None
-    ) -> Manual:
+    def create_manual(author_id: int, data: Dict[str, Any], files: Dict[str, Any] = None) -> Manual:
         """Создает мануал с шагами и сохраняет изображения"""
-        
+
         # Извлекаем данные
-        title = data.get('title')
-        description = data.get('description')
-        category = data.get('category')
-        difficult = data.get('difficult', 'easy')
-        motorcycle = data.get('motorcycle')
-        time_estimate = data.get('time_estimate')
-        interval = data.get('interval')
-        safety_tip = data.get('safety_tip')
-        warnings = data.get('warnings')
-        conditions = data.get('conditions')
-        instruments = data.get('instruments')
-        parts = data.get('parts')
-        docs_links = data.get('docs_links')
-        specs = data.get('specs')
-        aftercare = data.get('aftercare')
-        tip = data.get('tip')
-        steps_data = data.get('steps', [])
+        title = data.get("title")
+        description = data.get("description")
+        category = data.get("category")
+        difficult = data.get("difficult", "easy")
+        motorcycle = data.get("motorcycle")
+        time_estimate = data.get("time_estimate")
+        interval = data.get("interval")
+        safety_tip = data.get("safety_tip")
+        warnings = data.get("warnings")
+        conditions = data.get("conditions")
+        instruments = data.get("instruments")
+        parts = data.get("parts")
+        docs_links = data.get("docs_links")
+        specs = data.get("specs")
+        aftercare = data.get("aftercare")
+        tip = data.get("tip")
+        steps_data = data.get("steps", [])
 
         manual = Manual(
             author_id=author_id,
@@ -162,23 +159,21 @@ class ManualService:
         for idx, step_data in enumerate(steps_data):
             image_url = None
             if files:
-                file_key = f'image_{idx + 1}'
+                file_key = f"image_{idx + 1}"
                 if file_key in files and files[file_key]:
                     image_url = ManualService._save_step_image(
-                        files[file_key],
-                        manual.id,
-                        step_data.get('order', idx + 1)
+                        files[file_key], manual.id, step_data.get("order", idx + 1)
                     )
 
             step = ManualStep(
                 manual_id=manual.id,
-                order=step_data.get('order', idx + 1),
-                title=step_data.get('title'),
-                text=step_data.get('text'),
-                tip=step_data.get('tip'),
-                warning=step_data.get('warning'),
+                order=step_data.get("order", idx + 1),
+                title=step_data.get("title"),
+                text=step_data.get("text"),
+                tip=step_data.get("tip"),
+                warning=step_data.get("warning"),
                 image=image_url,
-                result=step_data.get('result'),
+                result=step_data.get("result"),
             )
             db.session.add(step)
 
@@ -189,35 +184,30 @@ class ManualService:
     def _save_step_image(file, manual_id, step_order):
         """Сохраняет изображение шага в папку"""
         from app.utils.files import compress_image
-        
+
         if not file:
             return None
-        
-        allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
+
+        allowed_extensions = {"jpg", "jpeg", "png", "gif", "bmp", "webp"}
         filename = file.filename.lower()
         if not any(filename.endswith(ext) for ext in allowed_extensions):
             return None
-        
+
         try:
-            compressed = compress_image(
-                file,
-                max_width=1920,
-                quality=80,
-                output_format="webp"
-            )
-            
+            compressed = compress_image(file, max_width=1920, quality=80, output_format="webp")
+
             secure_name = secure_filename(f"step_{manual_id}_{step_order}.webp")
-            
+
             upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "manual_steps")
             os.makedirs(upload_dir, exist_ok=True)
-            
+
             filepath = os.path.join(upload_dir, secure_name)
-            
-            with open(filepath, 'wb') as f:
+
+            with open(filepath, "wb") as f:
                 f.write(compressed.getvalue())
-            
+
             return f"manual_steps/{secure_name}"
-            
+
         except Exception as e:
             current_app.logger.error(f"Ошибка сохранения изображения: {e}")
             return None
@@ -269,9 +259,7 @@ class ManualService:
     @staticmethod
     def _update_steps(manual_id: int, steps_data: List[Dict[str, Any]]) -> None:
         """Обновляет шаги мануала, сохраняя существующие картинки."""
-        existing_steps = {
-            s.order: s for s in ManualStep.query.filter_by(manual_id=manual_id).all()
-        }
+        existing_steps = {s.order: s for s in ManualStep.query.filter_by(manual_id=manual_id).all()}
 
         new_orders = {step_data["order"] for step_data in steps_data}
         for order, old_step in existing_steps.items():
@@ -437,7 +425,6 @@ class ManualService:
             return None
 
         return ManualService._serialize_for_maintenance(manual)
-
 
     @staticmethod
     def _serialize_for_maintenance(manual: Manual) -> dict:

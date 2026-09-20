@@ -44,21 +44,21 @@ export default {
   methods: {
     async verify() {
       this.token = this.$route.params.token
-      
+
       if (!this.token) {
         this.status = 'error'
         this.errorMessage = 'Неверная ссылка подтверждения.'
         return
       }
-      
+
       try {
         const response = await api.get(`/auth/verify-email/${this.token}`)
         const { access_token, refresh_token, user } = response.data
-        
+
         const auth = useAuthStore()
         auth.setTokens(access_token, refresh_token)
         auth.setUser(user)
-        
+
         this.status = 'success'
       } catch (err) {
         this.status = 'error'

@@ -14,9 +14,9 @@
                     Мотоцикл <span class="required">*</span>
                     <select v-model="form.motorcycleId">
                         <option value="">Выберите мотоцикл</option>
-                        <option 
-                            v-for="moto in motorcycles" 
-                            :key="moto.id" 
+                        <option
+                            v-for="moto in motorcycles"
+                            :key="moto.id"
                             :value="moto.id"
                         >
                             {{ moto.name }} ({{ moto.mileage || 0 }} км)
@@ -72,7 +72,7 @@
             <!-- Описание -->
             <div class="modal-form-group">
                 <label>Описание работы</label>
-                <textarea 
+                <textarea
                     v-model="form.description"
                     rows="2"
                     placeholder="Подробное описание работы"
@@ -205,8 +205,8 @@ export default {
 
     computed: {
         isFormValid() {
-            return this.form.motorcycleId && 
-                   this.form.category && 
+            return this.form.motorcycleId &&
+                   this.form.category &&
                    this.form.title &&
                    this.form.title.trim().length > 0
         }
@@ -253,7 +253,7 @@ export default {
 
             if (this.form.category) {
                 this.templates = getTemplatesByCategory(this.form.category)
-                
+
                 const found = this.templates.find(t => t.label === this.form.title)
                 if (found) {
                     this.form.templateId = found.id
@@ -305,7 +305,7 @@ export default {
                 }
 
                 await api.put(`/maintenance/${this.maintenance.id}`, payload)
-                
+
                 this.$emit('saved')
                 this.$emit('close')
                 this.$toast?.success('Обслуживание обновлено!')

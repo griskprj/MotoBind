@@ -4,9 +4,9 @@ from flask_jwt_extended import jwt_required
 from app.schemas.maintenance import (
     CreateMaintenanceSchema,
     MaintenanceResponseSchema,
-    UpdateMaintenanceSchema,
     MarkMaintenanceAsCompletedSchema,
     QuickStartSchema,
+    UpdateMaintenanceSchema,
 )
 from app.services.maintenance_service import MaintenanceService
 from app.utils.helpers import get_current_user_id
@@ -39,6 +39,7 @@ def create_maintenance():
     )
     return jsonify(_serialize(record)), 201
 
+
 @maintenance.route("/<int:maintenance_id>", methods=["PUT"])
 @jwt_required()
 def update_maintenance(maintenance_id):
@@ -54,6 +55,7 @@ def update_maintenance(maintenance_id):
     )
     return jsonify(_serialize(record)), 200
 
+
 @maintenance.route("/<int:maintenance_id>", methods=["DELETE"])
 @jwt_required()
 def delete_maintenance(maintenance_id):
@@ -64,13 +66,12 @@ def delete_maintenance(maintenance_id):
     )
     return jsonify({"message": "Обслуживание удалено"}), 200
 
+
 @maintenance.route("/<int:maintenance_id>/complete", methods=["POST"])
 @jwt_required()
 def mark_maintenance_as_completed(maintenance_id):
     """Отметить обслуживание как выполненное."""
-    data = MarkMaintenanceAsCompletedSchema.model_validate(
-        request.get_json() or {}
-    )
+    data = MarkMaintenanceAsCompletedSchema.model_validate(request.get_json() or {})
 
     result = MaintenanceService.mark_planned_as_done(
         planned_id=maintenance_id,
@@ -82,11 +83,17 @@ def mark_maintenance_as_completed(maintenance_id):
         interval=data.interval,
         interval_days=data.interval_days,
     )
-    return jsonify({
-        "message": "Обслуживание отмечено как выполненное",
-        "maintenance": _serialize(result["maintenance"]),
-        "new_planned": _serialize(result["new_planned"]) if result.get("new_planned") else None,
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Обслуживание отмечено как выполненное",
+                "maintenance": _serialize(result["maintenance"]),
+                "new_planned": _serialize(result["new_planned"]) if result.get("new_planned") else None,
+            }
+        ),
+        200,
+    )
+
 
 @maintenance.route("/motorcycle/<int:moto_id>", methods=["GET"])
 @jwt_required()
@@ -98,15 +105,14 @@ def get_maintenances_by_motorcycle(moto_id):
     )
     return jsonify([_serialize(r) for r in records]), 200
 
+
 @maintenance.route("/<int:maintenance_id>", methods=["GET"])
 @jwt_required()
 def get_maintenance(maintenance_id):
     """Получение конкретного обслуживания."""
-    record = MaintenanceService.get_maintenance_by_id(
-        user_id=get_current_user_id(),
-        maintenance_id=maintenance_id
-    )
+    record = MaintenanceService.get_maintenance_by_id(user_id=get_current_user_id(), maintenance_id=maintenance_id)
     return jsonify(_serialize(record)), 200
+
 
 @maintenance.route("/quick-start", methods=["POST"])
 @jwt_required()

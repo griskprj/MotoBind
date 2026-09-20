@@ -2,7 +2,7 @@
   <div class="register-wizard-container">
     <div class="wizard-card animate-slide-in">
       <div class="background-image"></div>
-      
+
       <div class="background-overlay"></div>
 
       <div class="progress-section">
@@ -20,7 +20,7 @@
         <!-- Шаг 7: Завершение -->
         <div v-if="currentStep === 7" class="step completion-step">
           <div class="completion-glow"></div>
-          
+
           <div class="particles-container">
             <div
               v-for="i in 40"
@@ -29,7 +29,7 @@
               :style="getParticleStyle(i)"
             ></div>
           </div>
-          
+
           <div class="blur-blobs">
             <div class="blob blob-1"></div>
             <div class="blob blob-2"></div>
@@ -388,7 +388,7 @@ export default {
       error: null,
       loading: false,
       skipMotorcycleMode: false,
-      
+
       showVerificationModal: false,
       pendingUser: null,
     };
@@ -450,7 +450,7 @@ export default {
       const duration = Math.random() * 20 + 15;
       const delay = Math.random() * 10;
       const opacity = Math.random() * 0.4 + 0.1;
-      
+
       return {
         width: size + 'px',
         height: size + 'px',
@@ -479,7 +479,7 @@ export default {
         if (!access_token || !refresh_token || !user) {
           throw new Error('Сервер не вернул токены авторизации');
         }
-        
+
         const auth = useAuthStore()
         auth.setTokens(access_token, refresh_token)
         auth.setUser(user)
@@ -507,7 +507,7 @@ export default {
           const motoResponse = await api.post('/motorcycle/', motoPayload, {
             headers: { Authorization: `Bearer ${access_token}` },
           });
-          
+
           motoId = motoResponse.data.id;
 
           if (this.formData.motorcycle.photo) {
@@ -515,12 +515,12 @@ export default {
               const response = await fetch(this.formData.motorcycle.photo);
               const blob = await response.blob();
               const file = new File([blob], 'motorcycle_photo.jpg', { type: 'image/jpeg' });
-              
+
               const uploadFormData = new FormData();
               uploadFormData.append('photo', file);
-              
+
               await api.post(`/motorcycle/${motoId}/photo`, uploadFormData, {
-                headers: { 
+                headers: {
                   Authorization: `Bearer ${access_token}`,
                   'Content-Type': 'multipart/form-data',
                 },

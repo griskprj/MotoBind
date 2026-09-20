@@ -1,10 +1,7 @@
 from datetime import datetime, timezone
+
+from app.exceptions import ConflictError, NotFoundError, ValidationError
 from app.extensions import db
-from app.exceptions import (
-    ConflictError,
-    NotFoundError,
-    ValidationError
-)
 from app.models.post import Post
 from app.models.post_report import PostReport
 from app.models.user import User
@@ -39,7 +36,7 @@ class ReportService:
             "author_id": post.author_id,
             "author": post.author.username if post.author else None,
             "author_avatar": post.author.avatar if post.author else None,
-            "craeted_at": post.created_at.isoformat() if post.created_at else None
+            "craeted_at": post.created_at.isoformat() if post.created_at else None,
         }
 
         report = PostReport(
@@ -97,6 +94,7 @@ class ReportService:
         if action in ("post_deleted", "both") and post:
             if post.image:
                 from app.utils.files import delete_file
+
                 delete_file(post.image)
             db.session.delete(post)
 

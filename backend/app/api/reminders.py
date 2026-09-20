@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.exceptions import ValidationError
-from app.services.reminder_service import ReminderService
 from app.models.reminder import Reminder
 from app.schemas.reminder import SnoozeSchema
+from app.services.reminder_service import ReminderService
 
 reminders_bp = Blueprint("reminders", __name__)
 
@@ -20,10 +20,15 @@ def list_reminders():
 
     items = ReminderService.get_user_reminders(user_id, status=status)
 
-    return jsonify({
-        "reminders": [r.to_dict(include_moto=True) for r in items],
-        "total": len(items),
-    }), 200
+    return (
+        jsonify(
+            {
+                "reminders": [r.to_dict(include_moto=True) for r in items],
+                "total": len(items),
+            }
+        ),
+        200,
+    )
 
 
 @reminders_bp.route("/count", methods=["GET"])
@@ -39,10 +44,15 @@ def unread_count():
 def dismiss_reminder(reminder_id):
     user_id = int(get_jwt_identity())
     reminder = ReminderService.dismiss(reminder_id, user_id)
-    return jsonify({
-        "message": "Напоминание скрыто",
-        "reminder": reminder.to_dict(),
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Напоминание скрыто",
+                "reminder": reminder.to_dict(),
+            }
+        ),
+        200,
+    )
 
 
 @reminders_bp.route("/<int:reminder_id>/snooze", methods=["PUT"])
@@ -53,7 +63,12 @@ def snooze_reminder(reminder_id):
     schema = SnoozeSchema(**data)
 
     reminder = ReminderService.snooze(reminder_id, user_id, days=schema.days)
-    return jsonify({
-        "message": f"Напоминание отложено на {schema.days} дн.",
-        "reminder": reminder.to_dict(),
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": f"Напоминание отложено на {schema.days} дн.",
+                "reminder": reminder.to_dict(),
+            }
+        ),
+        200,
+    )

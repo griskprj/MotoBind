@@ -18,7 +18,7 @@
                     Вы уверены, что хотите удалить аккаунт?
                 </p>
                 <p class="modal-info-text">
-                    Будут удалены все ваши данные: мотоциклы, записи об обслуживании, 
+                    Будут удалены все ваши данные: мотоциклы, записи об обслуживании,
                     мануалы, фотографии и личная информация. Восстановление невозможно.
                 </p>
             </div>
@@ -43,8 +43,8 @@
                 <button class="btn btn-secondary" @click="$emit('close')">
                     Отменить
                 </button>
-                <button 
-                    class="btn btn-danger" 
+                <button
+                    class="btn btn-danger"
                     :disabled="!password || password.length < 6 || loading"
                     @click="submit"
                 >

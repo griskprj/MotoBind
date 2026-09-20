@@ -1,32 +1,33 @@
+from datetime import datetime, timedelta
+
 from flask import current_app
 from flask_mail import Message
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from datetime import datetime, timedelta
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+
 from app.extensions import mail
+
 
 def generate_verification_token(email):
     """Генерация токена для подтверждения email"""
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return serializer.dumps(email, salt='email-verification-salt')
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return serializer.dumps(email, salt="email-verification-salt")
+
 
 def verify_token(token, expiration=3600):
     """Проверка токена"""
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
-        email = serializer.loads(
-            token,
-            salt='email-verification-salt',
-            max_age=expiration
-        )
+        email = serializer.loads(token, salt="email-verification-salt", max_age=expiration)
         return email
     except Exception:
         return None
+
 
 def send_verification_email(user):
     """Отправка письма с подтверждением"""
     token = generate_verification_token(user.email)
     verification_url = f"https://motobind.ru/verify-email/{token}"
-    
+
     html = f"""
     <html>
         <body style="font-family: Arial, sans-serif; background-color: #0A0A0F; padding: 40px; color: #E0E0E0;">
@@ -41,31 +42,23 @@ def send_verification_email(user):
         </body>
     </html>
     """
-    
-    msg = Message(
-        'Подтверждение email - MotoBind',
-        recipients=[user.email],
-        html=html
-    )
-    
+
+    msg = Message("Подтверждение email - MotoBind", recipients=[user.email], html=html)
+
     mail.send(msg)
 
 
 def generate_reset_token(email):
     """Генерация токена для сброса пароля"""
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return serializer.dumps(email, salt='reset-password-salt')
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return serializer.dumps(email, salt="reset-password-salt")
 
 
 def verify_reset_token(token, expiration=3600):
     """Проверка токена сброса пароля"""
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
-        email = serializer.loads(
-            token,
-            salt='reset-password-salt',
-            max_age=expiration
-        )
+        email = serializer.loads(token, salt="reset-password-salt", max_age=expiration)
         return email
     except (SignatureExpired, BadSignature):
         return None
@@ -75,7 +68,7 @@ def send_reset_email(user):
     """Отправка письма для сброса пароля"""
     token = generate_reset_token(user.email)
     reset_url = f"https://motobind.ru/reset-password/{token}"
-    
+
     html = f"""
     <html>
         <body style="font-family: Arial, sans-serif; background-color: #0A0A0F; padding: 40px; color: #E0E0E0;">
@@ -91,13 +84,9 @@ def send_reset_email(user):
         </body>
     </html>
     """
-    
-    msg = Message(
-        'Сброс пароля - MotoBind',
-        recipients=[user.email],
-        html=html
-    )
-    
+
+    msg = Message("Сброс пароля - MotoBind", recipients=[user.email], html=html)
+
     try:
         mail.send(msg)
         print(f"✅ Письмо сброса отправлено на {user.email}")

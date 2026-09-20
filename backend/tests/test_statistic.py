@@ -5,12 +5,13 @@
 - Sprint 2A.2a: selectinload(User.motorcycle) -> 500 на /api/statistic/repair
 - Sprint 3.4: MaintenanceStatus.X vs статус-строка в БД (все счётчики были 0)
 """
+
 import pytest
 
 from app.models.maintenance import MaintenanceStatus
 
-
 # ---- Helpers ----
+
 
 def _create_moto(client, headers, name="Test Moto", mileage=10000):
     response = client.post(
@@ -53,6 +54,7 @@ def _create_completed(client, headers, moto_id, cost=3000, **overrides):
 
 # ---- GET /api/statistic/garage ----
 
+
 @pytest.mark.statistic
 def test_garage_stats_empty(client, auth_headers):
     """Пустой гараж → нули."""
@@ -88,6 +90,7 @@ def test_garage_stats_with_data(client, auth_headers):
 
 
 # ---- GET /api/statistic/garage/<moto_id> ----
+
 
 @pytest.mark.statistic
 def test_moto_garage_stats_empty_maintenances(client, auth_headers):
@@ -139,9 +142,14 @@ def test_moto_garage_stats_foreign_moto_forbidden(client, auth_headers, make_use
     moto = _create_moto(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.get(
@@ -159,6 +167,7 @@ def test_moto_garage_stats_nonexistent_404(client, auth_headers):
 
 
 # ---- GET /api/statistic/maintenance ----
+
 
 @pytest.mark.statistic
 def test_maintenance_stats_empty(client, auth_headers):
@@ -201,6 +210,7 @@ def test_maintenance_stats_split(client, auth_headers):
 
 # ---- GET /api/statistic/repair ----
 
+
 @pytest.mark.statistic
 def test_repair_stats_empty(client, auth_headers):
     """
@@ -239,6 +249,7 @@ def test_repair_stats_with_data(client, auth_headers):
 
 # ---- GET /api/statistic/registrations-chart (admin only) ----
 
+
 @pytest.mark.statistic
 def test_registrations_chart_forbidden_for_user(client, auth_headers):
     """Обычный юзер → 403."""
@@ -259,11 +270,14 @@ def test_registrations_chart_for_admin(client, make_user, db_session):
     db_user.role = "admin"
     db_session.session.commit()
 
-    login = client.post("/api/auth/login", json={
-        "email": admin["email"],
-        "password": admin["password"],
-        "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": admin["email"],
+            "password": admin["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     admin_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.get("/api/statistic/registrations-chart", headers=admin_headers)
@@ -278,6 +292,7 @@ def test_registrations_chart_for_admin(client, make_user, db_session):
 
 
 # ---- Auth ----
+
 
 @pytest.mark.statistic
 def test_statistic_endpoints_require_auth(client):

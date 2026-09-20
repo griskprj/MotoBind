@@ -231,7 +231,7 @@ export default {
             if (this.form.isRepeat) {
                 const hasInterval = this.form.interval && this.form.interval > 0
                 const hasDays = this.form.interval_days && this.form.interval_days > 0
-                
+
                 if (hasInterval && hasDays) return false
                 if (!hasInterval && !hasDays) return false
             }

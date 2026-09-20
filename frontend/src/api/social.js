@@ -25,12 +25,12 @@ export default {
     deletePost(postId) {
         return api.delete(`/social/posts/${postId}`)
     },
-    
+
     // Лайки
     toggleLike(postId) {
         return api.post(`/social/posts/${postId}/like`)
     },
-    
+
     // Комментарии
     addComment(postId, content) {
         return api.post(`/social/posts/${postId}/comments`, { content })

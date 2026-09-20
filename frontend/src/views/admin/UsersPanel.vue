@@ -59,9 +59,9 @@
                 <div class="inputs-wrapper">
                     <label>
                         Поиск
-                        <input 
-                            type="search" 
-                            v-model="filters.search" 
+                        <input
+                            type="search"
+                            v-model="filters.search"
                             @input="debouncedSearch"
                             placeholder="Поиск по имени, email или ID"
                         >
@@ -118,14 +118,14 @@
                         Пользователи не найдены
                     </div>
                 </div>
-                <div 
-                    v-for="user in users" 
-                    :key="user.id" 
+                <div
+                    v-for="user in users"
+                    :key="user.id"
                     class="tr"
                 >
                     <div class="td user-cell">
-                        <img 
-                            :src="getAvatarUrl(user.avatar)" 
+                        <img
+                            :src="getAvatarUrl(user.avatar)"
                             alt=""
                             class="user-img"
                             @error="(e) => e.target.src = '/BaseAvatar.webp'"
@@ -149,24 +149,24 @@
                     </div>
                     <div class="td table-actions-wrapper">
                         <button class="btn-small" @click="openEditUserModal(user)"><i class="fa fa-pen"></i></button>
-                        <button 
-                            v-if="user.status === 'active'" 
-                            class="btn-small danger" 
+                        <button
+                            v-if="user.status === 'active'"
+                            class="btn-small danger"
                             @click="banUser(user)"
                             title="Заблокировать"
                         >
                             <i class="fa fa-ban"></i>
                         </button>
-                        <button 
-                            v-else-if="user.status === 'banned'" 
-                            class="btn-small success" 
+                        <button
+                            v-else-if="user.status === 'banned'"
+                            class="btn-small success"
                             @click="unbanUser(user)"
                             title="Разблокировать"
                         >
                             <i class="fa fa-check"></i>
                         </button>
-                        <button 
-                            class="btn-small danger" 
+                        <button
+                            class="btn-small danger"
                             @click="openDeleteUserModal(user)"
                             title="Удалить"
                         >
@@ -181,39 +181,39 @@
         <div v-if="!loading" class="table-paginate">
             <p class="paginate-show">
                 Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
-                {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
+                {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
                 из {{ pagination.total }}
             </p>
-            
+
             <div class="paginate-ui">
-                <button 
-                    class="outline-btn" 
+                <button
+                    class="outline-btn"
                     @click="goToPage(pagination.current_page - 1)"
                     :disabled="!pagination.has_prev"
                 >
                     <i class="fa fa-angle-left"></i>
                 </button>
                 <div class="paginate-btns">
-                    <button 
-                        v-for="page in visiblePages" 
+                    <button
+                        v-for="page in visiblePages"
                         :key="page"
-                        class="outline-btn paginate" 
+                        class="outline-btn paginate"
                         :class="{ active: page === pagination.current_page }"
                         @click="goToPage(page)"
                     >
                         {{ page }}
                     </button>
                     <p v-if="showEllipsisEnd">...</p>
-                    <button 
+                    <button
                         v-if="showLastPage"
-                        class="outline-btn paginate" 
+                        class="outline-btn paginate"
                         @click="goToPage(pagination.pages)"
                     >
                         {{ pagination.pages }}
                     </button>
                 </div>
-                <button 
-                    class="outline-btn" 
+                <button
+                    class="outline-btn"
                     @click="goToPage(pagination.current_page + 1)"
                     :disabled="!pagination.has_next"
                 >
@@ -269,7 +269,7 @@ export default {
         Header,
         LoadingOverlay
     },
-    
+
     data() {
         return {
             loading: false,
@@ -309,25 +309,25 @@ export default {
             const total = this.pagination.pages
             const delta = 2
             const range = []
-            
+
             for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
                 range.push(i)
             }
-            
+
             if (current - delta > 2) {
                 range.unshift('...')
             }
-            
+
             if (current + delta < total - 1) {
                 range.push('...')
             }
-            
+
             range.unshift(1)
-            
+
             if (total > 1) {
                 range.push(total)
             }
-            
+
             return range.filter((v, i, a) => a.indexOf(v) === i)
         },
         showEllipsisEnd() {
@@ -362,15 +362,15 @@ export default {
                     per_page: this.pagination.per_page,
                     ...this.filters
                 }
-                
+
                 // Убираем пустые параметры
                 Object.keys(params).forEach(key => {
                     if (!params[key]) delete params[key]
                 })
-                
+
                 const response = await api.get('/admin/users', { params })
                 const data = response.data
-                
+
                 this.users = data.users || []
                 this.pagination = {
                     current_page: data.current_page,
@@ -405,30 +405,30 @@ export default {
                 console.error(`Failed add user: ${err}`)
             }
         },
-        
+
         goToPage(page) {
             if (page < 1 || page > this.pagination.pages) return
             this.pagination.current_page = page
             this.loadUsers()
         },
-        
+
         changePerPage() {
             this.pagination.current_page = 1
             this.loadUsers()
         },
-        
+
         applyFilters() {
             this.pagination.current_page = 1
             this.loadUsers()
         },
-        
+
         debouncedSearch() {
             clearTimeout(this.searchTimeout)
             this.searchTimeout = setTimeout(() => {
                 this.applyFilters()
             }, 500)
         },
-        
+
         resetFilters() {
             this.filters = {
                 search: '',
@@ -440,13 +440,13 @@ export default {
             this.pagination.current_page = 1
             this.loadUsers()
         },
-        
+
         loadAllUsers() {
             this.pagination.per_page = 10000 // Большое число для загрузки всех
             this.pagination.current_page = 1
             this.loadUsers()
         },
-        
+
         // Вспомогательные методы
         getUserRoleName(role) {
             const roles = {
@@ -456,7 +456,7 @@ export default {
             }
             return roles[role] || role
         },
-        
+
         getUserStatusName(status) {
             const statuses = {
                 'active': 'Активен',
@@ -465,7 +465,7 @@ export default {
             }
             return statuses[status] || status
         },
-        
+
         getStatusClass(status) {
             const classes = {
                 'active': 'status-active',
@@ -474,7 +474,7 @@ export default {
             }
             return classes[status] || ''
         },
-        
+
         formatDate(date) {
             if (!date) return '-'
             const d = new Date(date)
@@ -484,7 +484,7 @@ export default {
                 year: 'numeric'
             })
         },
-        
+
         // Действия с пользователями
         async banUser(user) {
             if (!confirm(`Заблокировать пользователя ${user.username}?`)) return
@@ -496,19 +496,19 @@ export default {
                 alert(error.response?.data?.message || 'Ошибка при блокировке')
             }
         },
-        
+
         async unbanUser(user) {
             if (!confirm(`Разблокировать пользователя ${user.username}?`)) return
             try {
                 await api.post(`/admin/user/${user.id}/unban`)
                 await this.loadUsers()
-                
+
             } catch (error) {
                 console.error('Error unbanning user:', error)
                 alert(error.response?.data?.message || 'Ошибка при разблокировке')
             }
         },
-        
+
         async deleteUser(userId) {
             try {
                 await api.delete(`/admin/user/${userId}`)
@@ -527,7 +527,7 @@ export default {
             this.showDeleteUserModal = false
             this.selectedUser = null
         },
-        
+
         async editUser(formData) {
             try {
                 const { data } = await api.put(`/admin/user/${formData.id}`, formData)
@@ -551,12 +551,12 @@ export default {
             this.showEditUserModal = false
             this.selectedUser = null
         },
-        
+
         openCreateUserModal() {
             // TODO: Открыть модалку создания
             console.log('Open create user modal')
         },
-        
+
         logout() {
             // TODO: Реализовать выход
             console.log('Logout')

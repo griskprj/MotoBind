@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -11,7 +12,7 @@ class ManualStepSchema(BaseModel):
     tip: Optional[str] = Field(None, max_length=256)
     warning: Optional[str] = Field(None, max_length=256)
     text: Optional[str] = Field(None, max_length=5000)
-    
+
     image: Optional[str] = Field(None)
     result: Optional[str] = Field(None, max_length=500)
 
@@ -31,21 +32,21 @@ class CreateManualSchema(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     difficult: str = Field(default="easy")
     motorcycle: str = Field(..., min_length=1, max_length=100)
-    
+
     time_estimate: Optional[str] = Field(None, max_length=64)
     interval: Optional[str] = Field(None, max_length=64)
-    
+
     safety_tip: Optional[str] = Field(None, max_length=1000)
     warnings: Optional[str] = Field(None, max_length=1000)
     conditions: Optional[str] = Field(None, max_length=1000)
-    
+
     instruments: Optional[str] = Field(None, max_length=500)
     parts: Optional[str] = Field(None, max_length=500)
 
     docs_links: Optional[List[str]] = Field(None, max_length=10)
-    
+
     specs: Optional[Dict[str, Any]] = Field(None)
-    
+
     aftercare: Optional[str] = Field(None, max_length=2000)
     tip: Optional[str] = Field(None, max_length=256)
 
@@ -68,9 +69,7 @@ class CreateManualSchema(BaseModel):
 
         for i, step in enumerate(sorted_steps, start=1):
             if step.order != i:
-                raise ValueError(
-                    f"Порядок шагов должен быть последовательным. Ожидается {i}, получено {step.order}"
-                )
+                raise ValueError(f"Порядок шагов должен быть последовательным. Ожидается {i}, получено {step.order}")
         return v
 
     @field_validator("docs_links")
@@ -85,6 +84,7 @@ class CreateManualSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
+
 class UpdateManualSchema(BaseModel):
     """Схема для обновления мануала"""
 
@@ -93,21 +93,21 @@ class UpdateManualSchema(BaseModel):
     category: Optional[str] = Field(None, min_length=1, max_length=100)
     difficult: Optional[str] = Field(None)
     motorcycle: Optional[str] = Field(None, min_length=1, max_length=100)
-    
+
     time_estimate: Optional[str] = Field(None, max_length=64)
     interval: Optional[str] = Field(None, max_length=64)
-    
+
     safety_tip: Optional[str] = Field(None, max_length=1000)
     warnings: Optional[str] = Field(None, max_length=1000)
     conditions: Optional[str] = Field(None, max_length=1000)
-    
+
     instruments: Optional[str] = Field(None, max_length=500)
     parts: Optional[str] = Field(None, max_length=500)
-    
+
     docs_links: Optional[List[str]] = Field(None, max_length=10)
     specs: Optional[Dict[str, Any]] = Field(None)
     aftercare: Optional[str] = Field(None, max_length=2000)
-    
+
     tip: Optional[str] = Field(None, max_length=256)
 
     steps: Optional[List[ManualStepSchema]] = Field(None, min_length=1)
@@ -132,17 +132,14 @@ class UpdateManualSchema(BaseModel):
 
     def get_updates(self) -> dict:
         """Возвращает только переданные поля"""
-        return {
-            k: v
-            for k, v in self.model_dump(exclude_unset=True, exclude_none=True).items()
-            if v is not None
-        }
+        return {k: v for k, v in self.model_dump(exclude_unset=True, exclude_none=True).items() if v is not None}
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ManualStepResponseSchema(BaseModel):
     """Шаг мануала в ответе API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -158,6 +155,7 @@ class ManualStepResponseSchema(BaseModel):
 
 class ManualResponseSchema(BaseModel):
     """Мануал в ответе API. Совпадает с Manual.to_dict()."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -189,6 +187,7 @@ class ManualResponseSchema(BaseModel):
 
 class MaintenanceManualStepSchema(BaseModel):
     """Шаг мануала для ответа на /api/manual/ (без id и manual_id)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     order: int
@@ -199,8 +198,10 @@ class MaintenanceManualStepSchema(BaseModel):
     image: Optional[str] = None
     result: Optional[str] = None
 
+
 class ManualForMaintenanceResponseSchema(BaseModel):
     """Мануал для /api/manual/ (get_manual_for_maintenance_endpoint)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int

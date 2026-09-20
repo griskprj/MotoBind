@@ -7,9 +7,7 @@ class AdminService:
     """Сервис для работы с админ-панелью"""
 
     @staticmethod
-    def create_user(
-        email: str, password: str, username: str, role: str, status: str
-    ) -> User:
+    def create_user(email: str, password: str, username: str, role: str, status: str) -> User:
         """Создает нового пользователя"""
         if User.query.filter_by(email=email).first():
             raise ValidationError("Пользователь с таким email уже существует")

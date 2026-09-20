@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+
 from app.extensions import db
 
 
@@ -6,27 +7,17 @@ class Reminder(db.Model):
     """
     Напоминание пользователю.
     """
+
     __tablename__ = "reminders"
 
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     motorcycle_id = db.Column(
-        db.Integer,
-        db.ForeignKey("motorcycles.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        db.Integer, db.ForeignKey("motorcycles.id", ondelete="CASCADE"), nullable=False, index=True
     )
     maintenance_id = db.Column(
-        db.Integer,
-        db.ForeignKey("maintenances.id", ondelete="CASCADE"),
-        nullable=True,
-        index=True
+        db.Integer, db.ForeignKey("maintenances.id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     type = db.Column(db.String(32), nullable=False, index=True)
@@ -39,16 +30,12 @@ class Reminder(db.Model):
 
     dismissed_at = db.Column(db.DateTime, nullable=True)
 
-    created_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
-        nullable=False
+        nullable=False,
     )
 
     user = db.relationship(
@@ -73,7 +60,7 @@ class Reminder(db.Model):
     TYPE_LABELS = {
         TYPE_MILEAGE_UPDATE: "Обновление пробега",
         TYPE_MAINTENANCE_SOON: "Скоро ТО",
-        TYPE_MAINTENANCE_OVERDUE: "Просрочено ТО"
+        TYPE_MAINTENANCE_OVERDUE: "Просрочено ТО",
     }
 
     STATUS_PENDING = "pending"
@@ -81,7 +68,7 @@ class Reminder(db.Model):
 
     __table_args__ = (
         db.Index("ix_reminders_status_next_send", "status", "next_send_at"),
-        db.Index("ix_reminders_user_status", "user_id", "status")
+        db.Index("ix_reminders_user_status", "user_id", "status"),
     )
 
     def to_dict(self, include_moto=False):
@@ -105,7 +92,7 @@ class Reminder(db.Model):
             data["motorcycle"] = {
                 "id": self.motorcycle.id,
                 "name": self.motorcycle.name,
-                "mileage": self.motorcycle.mileage
+                "mileage": self.motorcycle.mileage,
             }
 
         return data

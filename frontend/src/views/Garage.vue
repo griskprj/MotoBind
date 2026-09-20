@@ -1,7 +1,7 @@
 <template>
     <div class="garage-page">
         <LoadingOverlay :isLoading="loading" text="Загрузка гаража..."/>
-        
+
         <div class="container">
             <!-- Header -->
             <Header
@@ -65,18 +65,18 @@
             <!-- Мотоциклы - Десктопный список -->
             <div class="motorcycles-container">
                 <div class="motorcycles-list">
-                    <div 
-                        v-for="moto in motorcycles" 
+                    <div
+                        v-for="moto in motorcycles"
                         :key="moto.id"
                         class="moto-list-item"
                         :class="{ active: selectedMotoId === moto.id }"
                         @click="selectMotorcycle(moto)"
-                    >   
+                    >
                         <div class="moto-card-wrapper">
                             <div class="moto-list-preview">
-                                <img 
-                                    v-if="moto.photo_url" 
-                                    :src="getPhotoUrl(moto.photo_url)" 
+                                <img
+                                    v-if="moto.photo_url"
+                                    :src="getPhotoUrl(moto.photo_url)"
                                     :alt="moto.name"
                                     @error="handleImageError"
                                     loading="lazy"
@@ -85,7 +85,7 @@
                                     <i class="fa fa-motorcycle"></i>
                                 </div>
                             </div>
-                            
+
                             <div class="moto-list-info">
                                 <div class="moto-list-header">
                                     <h3 class="moto-list-name">{{ moto.name }}</h3>
@@ -123,7 +123,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
                         <i class="fa fa-plus"></i>
                         <span>Добавить мотоцикл</span>
@@ -277,8 +277,8 @@
                     </div>
 
                     <div v-if="recentMaintenances.length > 0" class="maintenances-list">
-                        <div 
-                            v-for="item in recentMaintenances" 
+                        <div
+                            v-for="item in recentMaintenances"
                             :key="item.id"
                             class="maintenance-item"
                             @click="openMaintenanceDetails(item)"
@@ -321,10 +321,10 @@
             @close="showAddMotoModal = false"
         />
 
-        <EditMotoModal 
-            :isOpen="showEditMotoModal" 
+        <EditMotoModal
+            :isOpen="showEditMotoModal"
             :motorcycle="selectedMotorcycle"
-            @submit="updateMoto" 
+            @submit="updateMoto"
             @close="showEditMotoModal=false"
         />
 
@@ -342,11 +342,11 @@
             @close="showEditMotoNoteModal = false"
         />
 
-        <DeleteMotoModal 
-            :isOpen="showDeleteMotoModal" 
-            :motorcycle="selectedMotorcycle" 
-            @submit="deleteMoto" 
-            @close="showDeleteMotoModal = false" 
+        <DeleteMotoModal
+            :isOpen="showDeleteMotoModal"
+            :motorcycle="selectedMotorcycle"
+            @submit="deleteMoto"
+            @close="showDeleteMotoModal = false"
         />
 
         <MaintenanceDetailsModal
@@ -413,7 +413,7 @@ export default {
             selectedMotoId: null,
             selectedMaintenance: null,
             loading: false,
-            
+
             showAddMotoModal: false,
             showEditMotoModal: false,
             showDeleteMotoModal: false,
@@ -447,15 +447,15 @@ export default {
 
         nextMaintenance() {
             if (!this.selectedMotorcycle?.maintenances) return null;
-            
+
             const current = this.selectedMotorcycle.mileage || 0;
             const planned = this.selectedMotorcycle.maintenances
                 .filter(m => m.status === 'planned' && m.planned_mileage)
                 .sort((a, b) => a.planned_mileage - b.planned_mileage);
-            
+
             const overdue = planned.filter(m => m.planned_mileage <= current);
             const upcoming = planned.filter(m => m.planned_mileage > current);
-            
+
             if (overdue.length > 0) {
                 const item = overdue[0];
                 return {
@@ -464,7 +464,7 @@ export default {
                     distanceOverdue: current - item.planned_mileage
                 };
             }
-            
+
             if (upcoming.length > 0) {
                 const item = upcoming[0];
                 return {
@@ -473,7 +473,7 @@ export default {
                     distanceToNext: item.planned_mileage - current
                 };
             }
-            
+
             return null;
         },
 
@@ -517,10 +517,10 @@ export default {
         async loadData() {
             try {
                 this.loading = true;
-                
+
                 const res = await api.get('/motorcycle/');
                 this.motorcycles = res.data;
-                
+
                 for (const moto of this.motorcycles) {
                     try {
                         const maint = await api.get(`/maintenance/motorcycle/${moto.id}`);
@@ -529,7 +529,7 @@ export default {
                         moto.maintenances = [];
                     }
                 }
-                
+
 
                 if (this.motorcycles.length > 0 && !this.selectedMotoId) {
                     this.selectedMotoId = this.motorcycles[0].id;
@@ -607,11 +607,11 @@ export default {
             try {
                 const fd = new FormData();
                 fd.append('photo', formData.get('photo'));
-                
+
                 const { data } = await api.post(`/motorcycle/${this.selectedMotoId}/photo`, fd, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
-                
+
                 const idx = this.motorcycles.findIndex(m => m.id === data.id);
                 if (idx !== -1) this.motorcycles[idx] = data;
                 this.showPhotoModal = false;
@@ -638,7 +638,7 @@ export default {
             try {
                 const { photoFile, ...data } = formData;
                 const { data: moto } = await api.post('/motorcycle/', data);
-                
+
                 if (photoFile) {
                     const fd = new FormData();
                     fd.append('photo', photoFile);
@@ -646,7 +646,7 @@ export default {
                         headers: { 'Content-Type': 'multipart/form-data' }
                     });
                 }
-                
+
                 await this.loadData();
                 await this.loadReminders()
                 this.selectedMotoId = moto.id;
@@ -661,13 +661,13 @@ export default {
             try {
                 this.loading = true;
                 const { newPhotoFile, deleteExistingPhoto, ...data } = formData;
-                
+
                 await api.put(`/motorcycle/${data.id}`, data);
-                
+
                 if (deleteExistingPhoto) {
                     await api.delete(`/motorcycle/${data.id}/photo`);
                 }
-                
+
                 if (newPhotoFile) {
                     const fd = new FormData();
                     fd.append('photo', newPhotoFile);
@@ -675,7 +675,7 @@ export default {
                         headers: { 'Content-Type': 'multipart/form-data' }
                     });
                 }
-                
+
                 await this.loadData();
                 await this.loadReminders()
                 this.showEditMotoModal = false;
@@ -756,10 +756,10 @@ export default {
                 };
 
                 await api.post(`/maintenance/${formData.id}/complete`, payload);
-                
+
                 this.$toast?.success('Обслуживание успешно завершено!');
                 await this.loadData();
-                
+
                 this.selectedMaintenance = null;
             } catch (err) {
                 console.error('Failed to complete maintenance:', err);
@@ -961,7 +961,7 @@ export default {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .quick-start-promo .btn-primary {
         width: 100%;
         justify-content: center;
@@ -1881,21 +1881,21 @@ export default {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .btn-primary {
         width: 100%;
         justify-content: center;
         padding: 12px;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .detail-grid {
         grid-template-columns: 1fr;
     }
@@ -1941,12 +1941,12 @@ export default {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
-    
+
     .stat-card {
         padding: 12px 14px;
         gap: 10px;
     }
-    
+
     .stat-icon {
         width: 36px;
         height: 36px;
@@ -1956,16 +1956,16 @@ export default {
     .stat-value {
         font-size: 15px;
     }
-    
+
     .detail-card {
         padding: 14px 16px;
     }
-    
+
     .spec-list {
         grid-template-columns: 1fr 1fr;
         gap: 4px 12px;
     }
-    
+
     .spec-value {
         font-size: 13px;
     }
@@ -2020,13 +2020,13 @@ export default {
     .empty-state {
         padding: 40px 16px;
     }
-    
+
     .empty-icon {
         width: 60px;
         height: 60px;
         font-size: 26px;
     }
-    
+
     .empty-state h3 {
         font-size: 18px;
     }

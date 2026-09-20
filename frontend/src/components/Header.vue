@@ -8,8 +8,8 @@
 
         <div class="header-right">
             <NotificationBell />
-            <button 
-                class="theme-toggle" 
+            <button
+                class="theme-toggle"
                 @click="toggleTheme"
                 :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
             >

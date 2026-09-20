@@ -1,6 +1,7 @@
 """
 Общие helpers для расчета статистики по обслуживанию.
 """
+
 from datetime import date, datetime
 from typing import Callable, Iterable, List, Optional
 
@@ -28,6 +29,7 @@ def get_owned_motorcycle_or_403(moto_id: int, user_id: int) -> Motorcycle:
 
     return moto
 
+
 def iter_last_12_months(today: Optional[date] = None) -> List[date]:
     """
     Возвращает список из 12 первых дней месяцев,
@@ -45,6 +47,7 @@ def iter_last_12_months(today: Optional[date] = None) -> List[date]:
             year -= 1
     return list(reversed(months))
 
+
 def month_bounds(month_start: date) -> tuple[date, date]:
     """Возвращает (первый день, первый день следующего месяца)."""
     if month_start.month == 12:
@@ -52,6 +55,7 @@ def month_bounds(month_start: date) -> tuple[date, date]:
     else:
         next_month = date(month_start.year, month_start.month + 1, 1)
     return month_start, next_month
+
 
 def aggregate_by_month(
     maintenances: Iterable,
@@ -63,7 +67,7 @@ def aggregate_by_month(
     Группирует значения по месяцам за последние 12 месяцев.
     - date_getter(m) -> date | None (для фильтра)
     - value_getter(m) -> number (слагаемое или 1)
-    
+
     Возвращает [{"month": "2026-09", "value": N}, ...] - 12 точек по возрастанию.
     """
     today = today or date.today()
@@ -80,11 +84,14 @@ def aggregate_by_month(
                 d = d.date()
             if month_start <= d < next_month:
                 total += value_getter(m)
-        result.append({
-            "month": month_start.strftime("%Y-%m"),
-            "value": total,
-        })
+        result.append(
+            {
+                "month": month_start.strftime("%Y-%m"),
+                "value": total,
+            }
+        )
     return result
+
 
 def is_in_month(d: Optional[date], month_start: date) -> bool:
     """Проверяет, попадает ли дата в указанный месяц."""
@@ -94,6 +101,7 @@ def is_in_month(d: Optional[date], month_start: date) -> bool:
         d = d.date()
     _, next_month = month_bounds(month_start)
     return month_start <= d < next_month
+
 
 def first_day_of_month(d: Optional[date] = None) -> date:
     """Первый день текущего месяца."""

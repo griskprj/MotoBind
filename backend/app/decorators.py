@@ -1,8 +1,9 @@
 from functools import wraps
+
 from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
-from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
+from app.extensions import db
 from app.models.motorcycle import Motorcycle
 
 

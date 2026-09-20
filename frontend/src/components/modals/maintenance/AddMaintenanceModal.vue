@@ -11,7 +11,7 @@
     >
         <!-- Шаг 1: Выбор типа -->
         <template v-if="currentStep === 1">
-            <div 
+            <div
                 class="choice-card"
                 :class="{ selected: selectedType === 'history' }"
                 @click="selectType('history')"
@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <div 
+            <div
                 class="choice-card"
                 :class="{ selected: selectedType === 'planned' }"
                 @click="selectType('planned')"
@@ -63,9 +63,9 @@
                     Мотоцикл <span class="required">*</span>
                     <select v-model="form.motorcycleId">
                         <option value="">Выберите мотоцикл</option>
-                        <option 
-                            v-for="moto in motorcycles" 
-                            :key="moto.id" 
+                        <option
+                            v-for="moto in motorcycles"
+                            :key="moto.id"
                             :value="moto.id"
                         >
                             {{ moto.name }} ({{ moto.mileage || 0 }} км)
@@ -122,11 +122,11 @@
             <div class="modal-form-group">
                 <label>
                     Описание работы
-                    <textarea 
+                    <textarea
                         v-model="form.description"
                         rows="2"
-                        :placeholder="selectedType === 'history' 
-                            ? 'Опишите, что было сделано...' 
+                        :placeholder="selectedType === 'history'
+                            ? 'Опишите, что было сделано...'
                             : 'Опишите, что необходимо сделать...'"
                     ></textarea>
                 </label>
@@ -245,9 +245,9 @@
                 </div>
                 <h2 class="step-title">Готово!</h2>
                 <p class="step-subtitle">
-                    {{ selectedType === 'history' 
-                        ? 'Обслуживание добавлено в историю' 
-                        : 'Обслуживание запланировано' 
+                    {{ selectedType === 'history'
+                        ? 'Обслуживание добавлено в историю'
+                        : 'Обслуживание запланировано'
                     }}
                 </p>
 
@@ -287,34 +287,34 @@
         <!-- Действия -->
         <template #actions>
             <div class="step-actions">
-                <button 
+                <button
                     v-if="currentStep === 2"
-                    class="btn btn-secondary" 
+                    class="btn btn-secondary"
                     @click="prevStep"
                 >
                     <i class="fa fa-arrow-left"></i> Назад
                 </button>
 
-                <button 
+                <button
                     v-if="currentStep === 1"
-                    class="btn btn-secondary" 
+                    class="btn btn-secondary"
                     @click="closeModal"
                 >
                     Отменить
                 </button>
 
-                <button 
+                <button
                     v-if="currentStep === 1"
-                    class="btn btn-primary" 
+                    class="btn btn-primary"
                     :disabled="!selectedType"
                     @click="nextStep"
                 >
                     Продолжить <i class="fa fa-arrow-right"></i>
                 </button>
 
-                <button 
+                <button
                     v-if="currentStep === 2"
-                    class="btn btn-primary" 
+                    class="btn btn-primary"
                     :disabled="!isFormValid || loading"
                     @click="submit"
                 >
@@ -326,9 +326,9 @@
                     </span>
                 </button>
 
-                <button 
+                <button
                     v-if="currentStep === 3"
-                    class="btn btn-success" 
+                    class="btn btn-success"
                     @click="closeModal"
                 >
                     <i class="fa fa-check"></i> Закрыть
@@ -395,8 +395,8 @@ export default {
         currentStepSubtitle() {
             const subtitles = {
                 1: 'Выберите, что хотите сделать',
-                2: this.selectedType === 'history' 
-                    ? 'Заполните информацию о выполненной работе' 
+                2: this.selectedType === 'history'
+                    ? 'Заполните информацию о выполненной работе'
                     : 'Заполните информацию о плановом обслуживании',
                 3: ''
             }
@@ -427,8 +427,8 @@ export default {
         },
 
         isFormValid() {
-            const baseValid = this.form.motorcycleId && 
-                             this.form.category && 
+            const baseValid = this.form.motorcycleId &&
+                             this.form.category &&
                              this.form.title
 
             if (this.selectedType === 'history') {

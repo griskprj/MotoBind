@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
+
 from app.extensions import db
 
 
 class PostReport(db.Model):
     """Жалоба на пост"""
+
     __tablename__ = "post_reports"
 
     id = db.Column(db.Integer, primary_key=True)

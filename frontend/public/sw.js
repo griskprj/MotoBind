@@ -46,11 +46,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request
   const url = new URL(request.url)
-  
+
   // Skip API and uploads
   if (url.pathname.startsWith('/api/')) return
   if (url.pathname.startsWith('/uploads/')) return
-  
+
   // Special handling for splash page
   if (url.pathname === '/splash.html' || url.pathname === '/') {
     event.respondWith(
@@ -59,12 +59,12 @@ self.addEventListener('fetch', event => {
     )
     return
   }
-  
+
   event.respondWith(
     caches.match(request)
       .then(cached => {
         if (cached) return cached
-        
+
         return fetch(request).then(response => {
           // Cache new assets
           if (response.ok && request.method === 'GET') {

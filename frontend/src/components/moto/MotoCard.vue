@@ -1,5 +1,5 @@
 <template>
-    
+
     <div class="moto-card" :style="cardStyle">
         <div class="moto-card-header">
             <p>{{ moto.name }}</p>
@@ -116,7 +116,7 @@ p {
 .moto-img {
   width: 100%;
   height: 100%;
-  object-fit: cover; 
+  object-fit: cover;
   border-radius: 25px;
   object-position: center center;
   filter: brightness(0.5);
@@ -142,7 +142,7 @@ p {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    
+
     padding: 8px 14px 8px 14px;
 
     background-color: var(--bg-primary);
@@ -183,7 +183,7 @@ p {
     }
 
     .moto-action {
-        min-width: 100%;    
+        min-width: 100%;
     }
 }
 </style>

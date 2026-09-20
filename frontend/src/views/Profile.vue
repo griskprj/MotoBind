@@ -14,9 +14,9 @@
             <aside class="profile-sidebar">
                 <div class="profile-card">
                     <div class="profile-avatar-wrapper">
-                        <img 
-                            :src="getAvatarUrl(user?.avatar)" 
-                            alt="avatar" 
+                        <img
+                            :src="getAvatarUrl(user?.avatar)"
+                            alt="avatar"
                             class="profile-avatar"
                             @error="handleAvatarError"
                         >
@@ -31,10 +31,10 @@
                             style="display: none"
                         />
                     </div>
-                    
+
                     <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
                     <p class="profile-email">{{ user?.email || '—' }}</p>
-                    
+
                     <div class="profile-badge">
                         <span :class="getStatusClass(user?.status)">
                             {{ getStatusName(user?.status) }}
@@ -75,8 +75,8 @@
 
                     <!-- Социальные сети -->
                     <div v-if="hasSocialLinks" class="profile-social">
-                        <a 
-                            v-for="(url, platform) in user.social_links" 
+                        <a
+                            v-for="(url, platform) in user.social_links"
                             :key="platform"
                             :href="url"
                             target="_blank"
@@ -296,8 +296,8 @@
                             Ваш публичный профиль доступен по ссылке:
                         </p>
                         <div class="profile-link">
-                            <input 
-                                :value="profileUrl" 
+                            <input
+                                :value="profileUrl"
                                 readonly
                                 @click="copyProfileLink"
                             >
@@ -390,7 +390,7 @@ export default {
             return `${baseUrl}/profile/${this.user?.id || ''}`
         },
         hasSocialLinks() {
-            return this.user?.social_links && 
+            return this.user?.social_links &&
                    Object.values(this.user.social_links).some(url => url && url.trim())
         }
     },

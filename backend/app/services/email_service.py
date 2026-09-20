@@ -1,20 +1,23 @@
 import random
 from datetime import datetime, timedelta, timezone
+from threading import Thread
+
 from flask import current_app
 from flask_mail import Mail, Message
-from threading import Thread
+
 from app.extensions import mail
+
 
 class EmailService:
     """Сервис для работы с email"""
-    
+
     @staticmethod
     def generate_verification_code() -> str:
         """Генерирует 6-значный код подтверждения"""
-        return ''.join(random.choices('0123456789', k=6))
+        return "".join(random.choices("0123456789", k=6))
 
     @staticmethod
-    def can_send_email(user, email_type='newsletter'):
+    def can_send_email(user, email_type="newsletter"):
         """
         Проверяет, можно ли отправить email пользователю
         email_type: 'newsletter', 'verification', 'notification'
@@ -25,13 +28,13 @@ class EmailService:
         if not user.email_notifications_enabled:
             return False
 
-        if email_type == 'newsletter' and not user.email_newsletter_enabled:
+        if email_type == "newsletter" and not user.email_newsletter_enabled:
             return False
-        if email_type == 'verification' and not user.email_verification_enabled:
+        if email_type == "verification" and not user.email_verification_enabled:
             return False
 
         return True
-    
+
     @staticmethod
     def send_verification_email(email: str, code: str) -> bool:
         """Отправляет код подтверждения на email"""
@@ -68,21 +71,21 @@ class EmailService:
             </body>
             </html>
             """
-            
+
             msg = Message(
                 subject=subject,
                 recipients=[email],
                 html=html_body,
-                sender=current_app.config.get('MAIL_DEFAULT_SENDER')
+                sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
             )
-            
+
             mail.send(msg)
             return True
-            
+
         except Exception as e:
             print(f"Failed to send email: {e}")
             return False
-    
+
     @staticmethod
     def send_password_reset_email(email: str, code: str) -> bool:
         """Отправляет код для сброса пароля"""
@@ -117,25 +120,23 @@ class EmailService:
             </body>
             </html>
             """
-            
+
             msg = Message(
                 subject=subject,
                 recipients=[email],
                 html=html_body,
-                sender=current_app.config.get('MAIL_DEFAULT_SENDER')
+                sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
             )
-            
+
             mail.send(msg)
             return True
-            
+
         except Exception as e:
             print(f"Failed to send reset email: {e}")
             return False
 
-
     @staticmethod
-    def send_bulk_email(app, recipients: list, subject: str, html_body: str, 
-                         sender: str = None) -> dict:
+    def send_bulk_email(app, recipients: list, subject: str, html_body: str, sender: str = None) -> dict:
         """
         Отправка массовой рассылки асинхронно
         """
@@ -143,39 +144,34 @@ class EmailService:
             return {"success": False, "error": "Нет получателей"}
 
         from app.models.user import User
+
         with app.app_context():
             subscribed_users = User.query.filter(
                 User.email.in_(recipients),
-                User.email_newsletter_enabled == True,
-                User.email_notifications_enabled == True
+                User.email_newsletter_enabled,
+                User.email_notifications_enabled,
             ).all()
-
-            subscribed_email = [u.email for u in subscribed_users]
 
             if not subscribed_users:
                 return {
                     "success": False,
                     "error": "Нет подписанных пользователей",
                     "total": len(recipients),
-                    "subscribed": 0
+                    "subscribed": 0,
                 }
-        
-        thread = Thread(
-            target=EmailService._send_bulk_email_thread,
-            args=(app, recipients, subject, html_body, sender)
-        )
+
+        thread = Thread(target=EmailService._send_bulk_email_thread, args=(app, recipients, subject, html_body, sender))
         thread.daemon = True
         thread.start()
-        
+
         return {
-            "success": True, 
+            "success": True,
             "message": f"Рассылка запущена для {len(recipients)} получателей",
-            "total": len(recipients)
+            "total": len(recipients),
         }
-    
+
     @staticmethod
-    def _send_bulk_email_thread(app, recipients: list, subject: str, html_body: str, 
-                                 sender: str = None):
+    def _send_bulk_email_thread(app, recipients: list, subject: str, html_body: str, sender: str = None):
         """Фоновый поток для отправки писем с контекстом приложения"""
         with app.app_context():
             success_count = 0
@@ -183,16 +179,17 @@ class EmailService:
             failed_emails = []
 
             from itsdangerous import URLSafeTimedSerializer
-            serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+            serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
             for i, email in enumerate(recipients):
                 try:
-                    token = serializer.dumps(email, salt='unsubscribe')
+                    token = serializer.dumps(email, salt="unsubscribe")
                     unsubscribe_url = f"{app.config.get('FRONTEND_URL')}/unsubscribe/{token}"
 
                     final_html = html_body.replace(
-                        '</body>',
-                        f'''
+                        "</body>",
+                        f"""
                         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                             <p style="color: #999; font-size: 12px;">
                                 Вы получили это письмо, потому что подписаны на рассылку MotoBind.
@@ -203,29 +200,29 @@ class EmailService:
                             </p>
                         </div>
                         </body>
-                        '''
+                        """,
                     )
 
                     msg = Message(
                         subject=subject,
                         recipients=[email],
                         html=final_html,
-                        sender=sender or app.config.get('MAIL_DEFAULT_SENDER')
+                        sender=sender or app.config.get("MAIL_DEFAULT_SENDER"),
                     )
                     mail.send(msg)
                     success_count += 1
 
-                except Exception as e:
+                except Exception:
                     failed_count += 1
                     failed_emails.append(email)
-            
+
             for email in recipients:
                 try:
                     msg = Message(
                         subject=subject,
                         recipients=[email],
                         html=html_body,
-                        sender=sender or app.config.get('MAIL_DEFAULT_SENDER')
+                        sender=sender or app.config.get("MAIL_DEFAULT_SENDER"),
                     )
                     mail.send(msg)
                     success_count += 1
@@ -234,12 +231,10 @@ class EmailService:
                     failed_count += 1
                     failed_emails.append(email)
                     print(f"❌ Failed to send to {email}: {e}")
-            
+
             print(f"Bulk email completed: {success_count} sent, {failed_count} failed")
-            
+
             return {"success": success_count, "failed": failed_count, "failed_emails": failed_emails}
-
-
 
     @staticmethod
     def can_send_reminder(user, reminder_type: str) -> bool:
@@ -254,6 +249,7 @@ class EmailService:
             return False
 
         from app.models.reminder import Reminder
+
         if reminder_type == Reminder.TYPE_MILEAGE_UPDATE:
             if not user.reminders_mileage_enabled:
                 return False
@@ -299,7 +295,7 @@ class EmailService:
                 subject=subject,
                 recipients=[user.email],
                 html=html,
-                sender=current_app.config.get('MAIL_DEFAULT_SENDER'),
+                sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
             )
             mail.send(msg)
             return True
@@ -318,6 +314,7 @@ class EmailService:
         subject = f"🏍️ Обновите пробег для {moto.name}"
 
         from datetime import datetime, timezone
+
         last = moto.mileage_updated_at or moto.updated_at or moto.created_at
         if last is not None and last.tzinfo is None:
             last = last.replace(tzinfo=timezone.utc)
@@ -424,7 +421,7 @@ class EmailService:
     @staticmethod
     def _frontend_url() -> str:
         """URL фронта для ссылок в письме."""
-        return current_app.config.get('FRONTEND_URL')
+        return current_app.config.get("FRONTEND_URL")
 
     @staticmethod
     def _wrap_email(content_html: str, cta_text: str = None, cta_url: str = None, hint_html: str = None) -> str:

@@ -1,8 +1,12 @@
-from typing import Optional, Literal
-from pydantic import ConfigDict, BaseModel, Field, model_validator, field_serializer
-from datetime import datetime, date
-from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
+from datetime import date, datetime
+from typing import Literal, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
+
 from app.schemas.mixins import ISO8601Mixin
+
+from .mixins import CompletedDateValidatorMixin, DateValidatorMixin
+
 
 class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
     motorcycle_id: int = Field(..., alias="motorcycleId")
@@ -25,13 +29,13 @@ class CreateMaintenanceSchema(DateValidatorMixin, BaseModel):
         """Проверяет, что нельзя указать одновременно planned и completed поля"""
         has_planned = self.planned_mileage is not None or self.planned_date is not None
         has_completed = self.completed_mileage is not None or self.completed_date is not None
-        
+
         if has_planned and has_completed:
             raise ValueError("Нельзя одновременно указывать плановые и выполненные поля")
-        
+
         if has_completed and self.completed_date is None:
             raise ValueError("При указании completed_mileage требуется completed_date")
-        
+
         return self
 
 
@@ -72,7 +76,7 @@ class MarkMaintenanceAsCompletedSchema(CompletedDateValidatorMixin, BaseModel):
     completed_date: Optional[str] = Field(None)
     cost: Optional[int] = Field(None, ge=0)
     is_repeat: bool = Field(False)
-    
+
     interval: Optional[int] = Field(None, ge=0, le=1_000_000, description="Интервал по пробегу")
     interval_days: Optional[int] = Field(None, ge=1, le=10_000, description="Интервал по дням")
 
@@ -93,11 +97,13 @@ class MarkMaintenanceAsCompletedSchema(CompletedDateValidatorMixin, BaseModel):
 
 # --------- Response-схемы ---------
 
+
 class MaintenanceResponseSchema(ISO8601Mixin, BaseModel):
     """
     Ответ с данными обслуживания
     Поля совпадают с Maintenance.to_dict() до рефакторинга.
     """
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int

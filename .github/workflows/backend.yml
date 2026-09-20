@@ -74,7 +74,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: flake8
-        run: flake8 app/ --max-line-length=120 --extend-ignore=E203,W503
+        run: flake8 app/
         continue-on-error: true
 
       - name: ruff

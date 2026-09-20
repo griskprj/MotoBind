@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class NotificationCreateSchema(BaseModel):
     user_id: int
@@ -8,6 +10,7 @@ class NotificationCreateSchema(BaseModel):
     content: str
     link: Optional[str] = None
     extra_data: Optional[dict] = None
+
 
 class NotificationResponseSchema(BaseModel):
     id: int

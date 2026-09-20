@@ -13,7 +13,6 @@ from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 from app.models.user import User
 
-
 # ============================================================
 # КОНСТАНТЫ
 # ============================================================
@@ -27,6 +26,7 @@ MAINTENANCE_OVERDUE_REPEAT_DAYS = 7
 def _now() -> datetime:
     """Всегда UTC. Единая точка правды для тестов."""
     return datetime.now(timezone.utc)
+
 
 def _ensure_aware(dt: Optional[datetime]) -> Optional[datetime]:
     """
@@ -103,22 +103,15 @@ class ReminderService:
         users = User.query.filter(User.status == "active").all()
 
         for user in users:
-            if not (
-                user.reminders_mileage_enabled
-                or user.reminders_maintenance_enabled
-            ):
+            if not (user.reminders_mileage_enabled or user.reminders_maintenance_enabled):
                 continue
 
             motos = Motorcycle.query.filter_by(owner_id=user.id).all()
             for moto in motos:
                 if user.reminders_mileage_enabled:
-                    stats["created"] += ReminderService._ensure_mileage_reminder(
-                        user, moto
-                    )
+                    stats["created"] += ReminderService._ensure_mileage_reminder(user, moto)
                 if user.reminders_maintenance_enabled:
-                    created, dismissed = ReminderService._ensure_maintenance_reminders(
-                        user, moto
-                    )
+                    created, dismissed = ReminderService._ensure_maintenance_reminders(user, moto)
                     stats["created"] += created
                     stats["dismissed_auto"] += dismissed
 
@@ -131,9 +124,7 @@ class ReminderService:
         Создаёт reminder типа 'mileage_update', если пробег устарел.
         Возвращает 1 если создан, иначе 0.
         """
-        last_touch = _ensure_aware(
-            moto.mileage_updated_at or moto.updated_at or moto.created_at
-        )
+        last_touch = _ensure_aware(moto.mileage_updated_at or moto.updated_at or moto.created_at)
         if not last_touch:
             return 0
 
@@ -192,10 +183,12 @@ class ReminderService:
             for r in Reminder.query.filter(
                 Reminder.motorcycle_id == moto.id,
                 Reminder.status == Reminder.STATUS_PENDING,
-                Reminder.type.in_([
-                    Reminder.TYPE_MAINTENANCE_SOON,
-                    Reminder.TYPE_MAINTENANCE_OVERDUE,
-                ]),
+                Reminder.type.in_(
+                    [
+                        Reminder.TYPE_MAINTENANCE_SOON,
+                        Reminder.TYPE_MAINTENANCE_OVERDUE,
+                    ]
+                ),
             ).all()
         }
 
@@ -218,13 +211,15 @@ class ReminderService:
                     dismissed_auto += 1
 
                 if key not in existing:
-                    db.session.add(Reminder(
-                        user_id=user.id,
-                        motorcycle_id=moto.id,
-                        maintenance_id=maint.id,
-                        type=Reminder.TYPE_MAINTENANCE_OVERDUE,
-                        status=Reminder.STATUS_PENDING,
-                    ))
+                    db.session.add(
+                        Reminder(
+                            user_id=user.id,
+                            motorcycle_id=moto.id,
+                            maintenance_id=maint.id,
+                            type=Reminder.TYPE_MAINTENANCE_OVERDUE,
+                            status=Reminder.STATUS_PENDING,
+                        )
+                    )
                     created += 1
 
             elif km_left <= MAINTENANCE_SOON_THRESHOLD_KM:
@@ -232,13 +227,15 @@ class ReminderService:
                 active_keys.add(key)
 
                 if key not in existing:
-                    db.session.add(Reminder(
-                        user_id=user.id,
-                        motorcycle_id=moto.id,
-                        maintenance_id=maint.id,
-                        type=Reminder.TYPE_MAINTENANCE_SOON,
-                        status=Reminder.STATUS_PENDING,
-                    ))
+                    db.session.add(
+                        Reminder(
+                            user_id=user.id,
+                            motorcycle_id=moto.id,
+                            maintenance_id=maint.id,
+                            type=Reminder.TYPE_MAINTENANCE_SOON,
+                            status=Reminder.STATUS_PENDING,
+                        )
+                    )
                     created += 1
 
         for key, reminder in existing.items():
@@ -334,8 +331,7 @@ class ReminderService:
             maint = reminder.maintenance
             title = f"🔧 Скоро ТО: {maint.title if maint else 'обслуживание'}"
             content = (
-                f"Для {moto_name} приближается обслуживание. "
-                f"План: {maint.planned_mileage if maint else '—'} км."
+                f"Для {moto_name} приближается обслуживание. " f"План: {maint.planned_mileage if maint else '—'} км."
             )
             return title, content, "/maintenance"
 
@@ -343,8 +339,7 @@ class ReminderService:
             maint = reminder.maintenance
             title = f"⚠️ Просрочено ТО: {maint.title if maint else 'обслуживание'}"
             content = (
-                f"Для {moto_name} просрочено обслуживание. "
-                f"План: {maint.planned_mileage if maint else '—'} км."
+                f"Для {moto_name} просрочено обслуживание. " f"План: {maint.planned_mileage if maint else '—'} км."
             )
             return title, content, "/maintenance"
 
@@ -388,7 +383,7 @@ class ReminderService:
     @staticmethod
     def dismiss(reminder_id: int, user_id: int) -> Reminder:
         """Скрывает напоминание навсегда."""
-        from app.exceptions import NotFoundError, ForbiddenError
+        from app.exceptions import ForbiddenError, NotFoundError
 
         reminder = db.session.get(Reminder, reminder_id)
         if not reminder:
@@ -404,7 +399,7 @@ class ReminderService:
     @staticmethod
     def snooze(reminder_id: int, user_id: int, days: int = 7) -> Reminder:
         """Откладывает напоминание на N дней."""
-        from app.exceptions import NotFoundError, ForbiddenError
+        from app.exceptions import ForbiddenError, NotFoundError
 
         reminder = db.session.get(Reminder, reminder_id)
         if not reminder:

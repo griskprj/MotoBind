@@ -115,7 +115,7 @@
                 Фото мотоцикла
             </div>
 
-            <div 
+            <div
                 class="drop-zone"
                 :class="{ 'drag-over': isDragging, 'has-file': form.photoFile }"
                 @dragover.prevent="isDragging = true"
@@ -130,14 +130,14 @@
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
-                
+
                 <!-- Плейсхолдер -->
                 <div v-else class="drop-zone-content">
                     <i class="fa fa-cloud-upload-alt"></i>
                     <p>Нажмите или перетащите фото</p>
                     <span>JPG, PNG, GIF, BMP, WEBP до 10 МБ</span>
                 </div>
-                
+
                 <input
                     ref="fileInput"
                     type="file"
@@ -215,7 +215,7 @@ export default {
 
     computed: {
         isFormValid() {
-            return this.form.name && 
+            return this.form.name &&
                    this.form.name.trim().length >= 2 &&
                    this.form.mileage !== null &&
                    this.form.mileage >= 0

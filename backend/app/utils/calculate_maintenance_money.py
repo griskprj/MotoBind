@@ -15,6 +15,7 @@ def _calculate_change_percent(current: float, previous: float) -> float:
         return 100.0
     return 0.0
 
+
 def calculate_maintenance_money(moto_id: int, user_id: int) -> dict:
     """
     Возвращает статистику затрат на обслуживание:
@@ -46,11 +47,7 @@ def calculate_maintenance_money(moto_id: int, user_id: int) -> dict:
         average_cost = round(total_cost / len(completed), 2)
 
         month_start = first_day_of_month()
-        month_cost = sum(
-            (m.cost or 0)
-            for m in completed
-            if is_in_month(m.completed_date, month_start)
-        )
+        month_cost = sum((m.cost or 0) for m in completed if is_in_month(m.completed_date, month_start))
 
         chart_data = aggregate_by_month(
             completed,
@@ -67,6 +64,4 @@ def calculate_maintenance_money(moto_id: int, user_id: int) -> dict:
         }
 
     except (ValueError, KeyError) as e:
-        raise BusinessLogicError(
-            f"Ошибка при расчете затрат: {str(e)}"
-        )
+        raise BusinessLogicError(f"Ошибка при расчете затрат: {str(e)}")

@@ -20,8 +20,8 @@
 
                 <div class="contacts-list">
                     <!-- Telegram -->
-                    <a 
-                        :href="telegramLink" 
+                    <a
+                        :href="telegramLink"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="contact-item telegram"
@@ -38,8 +38,8 @@
                     </a>
 
                     <!-- Email -->
-                    <a 
-                        :href="emailLink" 
+                    <a
+                        :href="emailLink"
                         class="contact-item email"
                     >
                         <div class="contact-icon">
@@ -54,9 +54,9 @@
                     </a>
 
                     <!-- GitHub (опционально) -->
-                    <a 
+                    <a
                         v-if="github"
-                        :href="github" 
+                        :href="github"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="contact-item github"
@@ -82,10 +82,10 @@
                 </div>
                 <div class="info-body">
                     <p class="info-text">
-                        Если у вас есть вопросы, предложения или вы нашли ошибку — 
+                        Если у вас есть вопросы, предложения или вы нашли ошибку —
                         напишите нам. Мы постараемся ответить как можно быстрее!
                     </p>
-                    
+
                     <div class="info-features">
                         <div class="feature-item">
                             <i class="fa fa-clock"></i>
@@ -135,7 +135,7 @@ import Header from '../components/Header.vue'
 export default {
     name: 'Contacts',
     components: { Header },
-    
+
     data() {
         return {
             telegramUsername: 'griskyy',
@@ -144,7 +144,7 @@ export default {
             githubUsername: 'motobind'
         }
     },
-    
+
     computed: {
         telegramLink() {
             return `https://t.me/${this.telegramUsername}`

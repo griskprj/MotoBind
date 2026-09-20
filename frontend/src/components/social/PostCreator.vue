@@ -4,15 +4,15 @@
             <img :src="userAvatar || '/BaseAvatar.webp'" alt="Avatar" class="avatar">
             <span class="username">{{ userName }}</span>
         </div>
-        
+
         <div class="creator-body">
-            <textarea 
-                v-model="content" 
+            <textarea
+                v-model="content"
                 placeholder="Что нового в мире мотоциклов? 🏍️"
                 rows="3"
                 class="content-input"
             ></textarea>
-            
+
             <div v-if="imagePreview" class="image-preview">
                 <img :src="imagePreview" alt="Preview">
                 <button class="remove-image" @click="removeImage">
@@ -20,7 +20,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="creator-footer">
             <div class="actions">
                 <label class="image-upload-btn">
@@ -28,10 +28,10 @@
                     <input type="file" accept="image/*" @change="handleImageUpload" hidden>
                 </label>
             </div>
-            
-            <button 
-                class="btn btn-primary" 
-                @click="submitPost" 
+
+            <button
+                class="btn btn-primary"
+                @click="submitPost"
                 :disabled="!content.trim() || isSubmitting"
             >
                 <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
@@ -76,17 +76,17 @@ export default {
         handleImageUpload(event) {
             const file = event.target.files[0]
             if (!file) return
-            
+
             if (file.size > 5 * 1024 * 1024) {
                 alert('Размер файла не должен превышать 5MB')
                 return
             }
-            
+
             if (!file.type.startsWith('image/')) {
                 alert('Пожалуйста, загрузите изображение')
                 return
             }
-            
+
             this.imageFile = file
             const reader = new FileReader()
             reader.onload = (e) => {
@@ -100,7 +100,7 @@ export default {
         },
         async submitPost() {
             if (!this.content.trim() || this.isSubmitting) return
-            
+
             this.isSubmitting = true
             try {
                 const formData = new FormData()
@@ -108,7 +108,7 @@ export default {
                 if (this.imageFile) {
                     formData.append('image', this.imageFile)
                 }
-                
+
                 await socialApi.createPost(formData)
                 this.content = ''
                 this.removeImage()

@@ -1,16 +1,13 @@
-from datetime import datetime, date, timedelta, timezone
-from typing import Any, Dict, Optional, List
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
+from app.constants.maintenance_presets import calculate_interval, get_presets_for_motorcycle
 from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.maintenance import Maintenance, MaintenanceStatus
 from app.models.motorcycle import Motorcycle
-from app.services.notification_service import NotificationService
 from app.services.motorcycle_service import MotorcycleService
-from app.constants.maintenance_presets import (
-    get_presets_for_motorcycle,
-    calculate_interval,
-)
+from app.services.notification_service import NotificationService
 
 
 class MaintenanceService:
@@ -43,7 +40,7 @@ class MaintenanceService:
                 planned_date_obj = datetime.strptime(planned_date, "%Y-%m-%d").date()
             except ValueError:
                 raise ValidationError("Неверный формат даты. Используйте ГГГГ-ММ-ДД")
-        
+
         completed_date_obj = None
         if completed_date:
             try:
@@ -120,12 +117,14 @@ class MaintenanceService:
             )
 
             db.session.add(record)
-            created.append({
-                "title": preset["title"],
-                "planned_mileage": planned_mileage,
-                "planned_date": planned_date.isoformat(),
-                "interval_km": interval["interval_km"],
-            })
+            created.append(
+                {
+                    "title": preset["title"],
+                    "planned_mileage": planned_mileage,
+                    "planned_date": planned_date.isoformat(),
+                    "interval_km": interval["interval_km"],
+                }
+            )
 
         db.session.commit()
 
@@ -185,19 +184,19 @@ class MaintenanceService:
         new_planned = None
         if repeat:
             new_planned_data = {
-                'author_id': author_id,
-                'moto_id': moto.id,
-                'category': planned.category,
-                'title': planned.title,
-                'description': planned.description,
-                'status': MaintenanceStatus.PLANNED.value,
+                "author_id": author_id,
+                "moto_id": moto.id,
+                "category": planned.category,
+                "title": planned.title,
+                "description": planned.description,
+                "status": MaintenanceStatus.PLANNED.value,
             }
 
             if interval:
-                new_planned_data['planned_mileage'] = moto.mileage + interval
+                new_planned_data["planned_mileage"] = moto.mileage + interval
             elif interval_days:
                 today = date.today()
-                new_planned_data['planned_date'] = today + timedelta(days=interval_days)
+                new_planned_data["planned_date"] = today + timedelta(days=interval_days)
             else:
                 raise ValidationError("Укажите интервал (пробег или дни)")
 
@@ -209,15 +208,11 @@ class MaintenanceService:
         return {"maintenance": planned, "new_planned": new_planned}
 
     @staticmethod
-    def update_maintenance(
-        maintenance_id: int, user_id: int, **kwargs
-    ) -> Maintenance:
+    def update_maintenance(maintenance_id: int, user_id: int, **kwargs) -> Maintenance:
         """
         Обновляет данные обслуживания
         """
-        maintenance = MaintenanceService.get_maintenance_by_id(
-            user_id, maintenance_id
-        )
+        maintenance = MaintenanceService.get_maintenance_by_id(user_id, maintenance_id)
 
         if "moto_id" in kwargs and kwargs["moto_id"] is not None:
             moto = db.session.get(Motorcycle, kwargs["moto_id"])
@@ -251,9 +246,7 @@ class MaintenanceService:
     @staticmethod
     def delete_maintenance(maintenance_id: int, user_id: int) -> None:
         """Удаляет обслуживание"""
-        maintenance = MaintenanceService.get_maintenance_by_id(
-            user_id, maintenance_id
-        )
+        maintenance = MaintenanceService.get_maintenance_by_id(user_id, maintenance_id)
         db.session.delete(maintenance)
         db.session.commit()
 

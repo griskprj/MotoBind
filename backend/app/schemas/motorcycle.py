@@ -1,11 +1,13 @@
 import re
-from datetime import datetime, date
-from typing import Optional, List
+from datetime import date, datetime
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.schemas.mixins import ISO8601Mixin
 
 # --------- Request-схемы ---------
+
 
 class MotorcycleValidatorMixin:
     """Общие валидаторы для схем мотоцикла"""

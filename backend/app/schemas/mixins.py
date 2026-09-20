@@ -1,6 +1,8 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Any, Optional
+
 from pydantic import BaseModel, field_serializer, field_validator
+
 
 class DateValidatorMixin:
     @field_validator("planned_date", "completed_date", mode="before", check_fields=False)
@@ -52,6 +54,7 @@ class ISO8601Mixin(BaseModel):
     Сериализует datetime/date как .isoformat() - сохраняет формат,
     который отдавал Maintenance.to_dict() до рефакторинга.
     """
+
     @field_serializer(
         "created_at",
         "updated_at",

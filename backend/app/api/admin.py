@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import desc, or_
 
@@ -7,14 +7,14 @@ from app.exceptions import NotFoundError, ValidationError
 from app.extensions import db
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
-from app.models.user import User
 from app.models.post_report import PostReport
+from app.models.user import User
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.services.admin_service import AdminService
-from app.services.notification_service import NotificationService
 from app.services.email_service import EmailService
-from app.services.report_service import ReportService
+from app.services.notification_service import NotificationService
 from app.services.reminder_service import ReminderService
+from app.services.report_service import ReportService
 
 admin = Blueprint("admin", __name__)
 
@@ -145,11 +145,11 @@ def approve_manual(manual_id):
 
     NotificationService.send_notification(
         user_id=manual.author_id,
-        type='manual_status',
-        title='Мануал одобрен',
+        type="manual_status",
+        title="Мануал одобрен",
         content=f'Ваш мануал "{manual.title}" был одобрен и опубликован.',
-        link=f'/manual/{manual.id}',
-        extra_data={'manual_id': manual.id, 'status': 'approved'}
+        link=f"/manual/{manual.id}",
+        extra_data={"manual_id": manual.id, "status": "approved"},
     )
 
     return (
@@ -186,11 +186,11 @@ def reject_manual(manual_id):
 
     NotificationService.send_notification(
         user_id=manual.author_id,
-        type='manual_status',
-        title='Мануал отклонен',
+        type="manual_status",
+        title="Мануал отклонен",
         content=f'Ваш мануал "{manual.title}" был отклонен. Причина: {reason}',
-        link=f'/manual/{manual.id}',
-        extra_data={'manual_id': manual.id, 'status': 'rejected', 'reason': reason}
+        link=f"/manual/{manual.id}",
+        extra_data={"manual_id": manual.id, "status": "rejected", "reason": reason},
     )
 
     return jsonify({"message": "Мануал отклонен", "manual": manual.to_dict()}), 200
@@ -217,17 +217,15 @@ def reconsider_manual(manual_id):
 
     NotificationService.send_notification(
         user_id=manual.author_id,
-        type='manual_status',
-        title='Мануал отправлен на повторную проверку',
+        type="manual_status",
+        title="Мануал отправлен на повторную проверку",
         content=f'Ваш мануал "{manual.title}" отправлен на повторную проверку.',
-        link=f'/manual/{manual.id}',
-        extra_data={'manual_id': manual.id, 'status': 'moderate'}
+        link=f"/manual/{manual.id}",
+        extra_data={"manual_id": manual.id, "status": "moderate"},
     )
 
     return (
-        jsonify(
-            {"message": "Мануал возвращен на проверку", "manual": manual.to_dict()}
-        ),
+        jsonify({"message": "Мануал возвращен на проверку", "manual": manual.to_dict()}),
         200,
     )
 
@@ -412,27 +410,25 @@ def get_motorcycles():
     with_maintenance = Motorcycle.query.filter(Motorcycle.maintenances.any()).count()
     without_maintenance = total_motorcycles - with_maintenance
 
-    return jsonify(
-        {
-            "motorcycles": [
-                moto.to_dict(
-                    include_owner=True,
-                    include_maintenance=True
-                ) for moto in paginated.items
-            ],
-            "total": paginated.total,
-            "pages": paginated.pages,
-            "current_page": paginated.page,
-            "per_page": paginated.per_page,
-            "has_prev": paginated.has_prev,
-            "has_next": paginated.has_next,
-            "stats": {
-                "total": total_motorcycles,
-                "with_maintenance": with_maintenance,
-                "without_maintenance": without_maintenance,
+    return (
+        jsonify(
+            {
+                "motorcycles": [moto.to_dict(include_owner=True, include_maintenance=True) for moto in paginated.items],
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_prev": paginated.has_prev,
+                "has_next": paginated.has_next,
+                "stats": {
+                    "total": total_motorcycles,
+                    "with_maintenance": with_maintenance,
+                    "without_maintenance": without_maintenance,
+                },
             }
-        }
-    ), 200
+        ),
+        200,
+    )
 
 
 @admin.route("/motorcycle/<int:moto_id>", methods=["DELETE"])
@@ -448,6 +444,7 @@ def admin_delete_motorcycle(moto_id):
 
     if moto.photo_url:
         from app.utils.files import delete_file
+
         delete_file(moto.photo_url)
 
     db.session.delete(moto)
@@ -466,27 +463,27 @@ def send_newsletter():
     data = request.get_json()
     if not data:
         raise ValidationError("Нет данных")
-    
+
     subject = data.get("subject")
     content = data.get("content")
     target = data.get("target", "all")
-    
+
     if not subject or not content:
         raise ValidationError("Тема и содержание обязательны")
-    
+
     query = User.query.filter(User.email.isnot(None))
-    
+
     if target == "active":
         query = query.filter(User.status == "active")
     elif target == "admins":
         query = query.filter(User.role == "admin")
-    
+
     users = query.all()
     if not users:
         raise ValidationError("Нет получателей")
-    
+
     emails = [user.email for user in users if user.email]
-    
+
     html_body = f"""
     <html>
     <head>
@@ -512,16 +509,11 @@ def send_newsletter():
     </body>
     </html>
     """
-    
+
     app = current_app._get_current_object()
     result = EmailService.send_bulk_email(app, emails, subject, html_body)
-    
-    return jsonify({
-        "message": "Рассылка запущена",
-        "total": len(emails),
-        "target": target,
-        "result": result
-    }), 200
+
+    return jsonify({"message": "Рассылка запущена", "total": len(emails), "target": target, "result": result}), 200
 
 
 @admin.route("/reports", methods=["GET"])
@@ -566,10 +558,15 @@ def resolve_report(report_id):
     else:
         report = ReportService.resolve_report(report_id, admin_id, action, note)
 
-    return jsonify({
-        "message": "Жалоба рассмотрена",
-        "report": report.to_dict(),
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Жалоба рассмотрена",
+                "report": report.to_dict(),
+            }
+        ),
+        200,
+    )
 
 
 @admin.route("/reports/<int:report_id>", methods=["DELETE"])
@@ -601,6 +598,7 @@ def cron_run_reminders():
                  -H "X-Cron-Secret: ВАШ_СЕКРЕТ"
     """
     import os
+
     from flask import current_app
 
     secret = current_app.config.get("CRON_SECRET")
@@ -616,13 +614,23 @@ def cron_run_reminders():
     try:
         stats = ReminderService.run_daily_check()
         current_app.logger.info(f"[Cron] run_daily_check: {stats}")
-        return jsonify({
-            "message": "Cron задача выполнена",
-            "stats": stats,
-        }), 200
+        return (
+            jsonify(
+                {
+                    "message": "Cron задача выполнена",
+                    "stats": stats,
+                }
+            ),
+            200,
+        )
     except Exception as e:
         current_app.logger.exception("[Cron] run_daily_check failed")
-        return jsonify({
-            "error": "Внутренняя ошибка",
-            "detail": str(e),
-        }), 500
+        return (
+            jsonify(
+                {
+                    "error": "Внутренняя ошибка",
+                    "detail": str(e),
+                }
+            ),
+            500,
+        )

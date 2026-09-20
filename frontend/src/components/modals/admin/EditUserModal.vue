@@ -24,9 +24,9 @@
         <div class="modal-form-group">
             <label>
                 Имя пользователя <span class="required">*</span>
-                <input 
-                    v-model="form.username" 
-                    type="text" 
+                <input
+                    v-model="form.username"
+                    type="text"
                     placeholder="Введите имя пользователя"
                     required
                 />
@@ -36,9 +36,9 @@
         <div class="modal-form-group">
             <label>
                 Email <span class="required">*</span>
-                <input 
-                    v-model="form.email" 
-                    type="email" 
+                <input
+                    v-model="form.email"
+                    type="email"
                     placeholder="user@example.com"
                     required
                 />

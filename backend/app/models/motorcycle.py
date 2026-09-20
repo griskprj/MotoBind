@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+
 from app.extensions import db
+
 
 class Motorcycle(db.Model):
     """Motorcycle model"""
@@ -12,7 +14,7 @@ class Motorcycle(db.Model):
     years = db.Column(db.Integer)
     volume = db.Column(db.Integer)
     mileage = db.Column(db.Integer, default=0)
-    drive_type = db.Column(db.String(20), default='chain')
+    drive_type = db.Column(db.String(20), default="chain")
     color = db.Column(db.String(16), default="#FFFFFF")
     license_plate = db.Column(db.String(10))
     vin = db.Column(db.String(64))
@@ -30,16 +32,10 @@ class Motorcycle(db.Model):
         nullable=True,
     )
 
-    maintenances = db.relationship(
-        "Maintenance", lazy="select", cascade="all, delete-orphan"
-    )
-    owner = db.relationship('User', back_populates='motorcycles')
+    maintenances = db.relationship("Maintenance", lazy="select", cascade="all, delete-orphan")
+    owner = db.relationship("User", back_populates="motorcycles")
     reminders = db.relationship(
-        "Reminder",
-        back_populates="motorcycle",
-        lazy="dynamic",
-        cascade="all, delete-orphan",
-        passive_deletes=True
+        "Reminder", back_populates="motorcycle", lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True
     )
 
     def to_dict(
@@ -69,10 +65,10 @@ class Motorcycle(db.Model):
         }
 
         if include_owner and self.owner_id:
-            data['owner'] = {
-                'id': self.owner.id,
-                'username': self.owner.username,
-                'email': self.owner.email,
+            data["owner"] = {
+                "id": self.owner.id,
+                "username": self.owner.username,
+                "email": self.owner.email,
             }
 
         if include_maintenance:

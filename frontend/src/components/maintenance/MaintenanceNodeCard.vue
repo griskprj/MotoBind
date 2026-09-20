@@ -36,7 +36,7 @@ export default {
                 <h3 class="node-title">{{ node.title }}</h3>
                 <span class="node-maintenance-count">{{ node.maintenances_count }}</span>
             </div>
-            
+
             <button class="btn-small node-action-btn"><i class="fa fa-arrow-right"></i></button>
         </div>
 
@@ -69,7 +69,7 @@ export default {
                         <i class="fa fa-wrench"></i>
                         <p class="empty-state-p">Нет запланированного обслуживания для этого узла</p>
                     </div>
-                    
+
                     <MaintenanceCard
                         v-for="(maintenance, index) in node.planned_maintenances"
                         :key="index"

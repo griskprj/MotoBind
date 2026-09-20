@@ -6,14 +6,15 @@
 - Sprint 2A.2: mark_planned_as_done обновляет moto.mileage через set_mileage
 - Sprint 2A.3: quick_start идёт через MotorcycleService.set_mileage
 """
+
 import pytest
 
 from app.models.maintenance import Maintenance, MaintenanceStatus
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 
-
 # ---- Helpers ----
+
 
 def _create_moto(client, headers, mileage=10000):
     """Создаёт мотоцикл, возвращает JSON."""
@@ -43,6 +44,7 @@ def _create_planned(client, headers, moto_id, **overrides):
 
 # ---- POST /api/maintenance/ ----
 
+
 @pytest.mark.maintenance
 def test_create_planned_maintenance(client, auth_headers):
     """Создание планового ТО."""
@@ -60,14 +62,18 @@ def test_create_planned_maintenance(client, auth_headers):
 def test_create_completed_maintenance(client, auth_headers):
     """Создание уже выполненного ТО."""
     moto = _create_moto(client, auth_headers)
-    response = client.post("/api/maintenance/", json={
-        "motorcycleId": moto["id"],
-        "category": "engine",
-        "title": "Oil changed",
-        "completed_mileage": 12000,
-        "completed_date": "2026-09-01",
-        "cost": 3000,
-    }, headers=auth_headers)
+    response = client.post(
+        "/api/maintenance/",
+        json={
+            "motorcycleId": moto["id"],
+            "category": "engine",
+            "title": "Oil changed",
+            "completed_mileage": 12000,
+            "completed_date": "2026-09-01",
+            "cost": 3000,
+        },
+        headers=auth_headers,
+    )
     assert response.status_code == 201
     data = response.get_json()
     assert data["status"] == "completed"
@@ -79,14 +85,18 @@ def test_create_completed_maintenance(client, auth_headers):
 def test_create_with_both_planned_and_completed_fails(client, auth_headers):
     """Нельзя одновременно planned и completed → 400."""
     moto = _create_moto(client, auth_headers)
-    response = client.post("/api/maintenance/", json={
-        "motorcycleId": moto["id"],
-        "category": "engine",
-        "title": "Bad",
-        "planned_mileage": 15000,
-        "completed_mileage": 12000,
-        "completed_date": "2026-09-01",
-    }, headers=auth_headers)
+    response = client.post(
+        "/api/maintenance/",
+        json={
+            "motorcycleId": moto["id"],
+            "category": "engine",
+            "title": "Bad",
+            "planned_mileage": 15000,
+            "completed_mileage": 12000,
+            "completed_date": "2026-09-01",
+        },
+        headers=auth_headers,
+    )
     assert response.status_code == 400
 
 
@@ -94,12 +104,16 @@ def test_create_with_both_planned_and_completed_fails(client, auth_headers):
 def test_create_completed_without_date_fails(client, auth_headers):
     """completed_mileage без completed_date → 400."""
     moto = _create_moto(client, auth_headers)
-    response = client.post("/api/maintenance/", json={
-        "motorcycleId": moto["id"],
-        "category": "engine",
-        "title": "Bad",
-        "completed_mileage": 12000,
-    }, headers=auth_headers)
+    response = client.post(
+        "/api/maintenance/",
+        json={
+            "motorcycleId": moto["id"],
+            "category": "engine",
+            "title": "Bad",
+            "completed_mileage": 12000,
+        },
+        headers=auth_headers,
+    )
     assert response.status_code == 400
 
 
@@ -109,21 +123,31 @@ def test_create_for_foreign_moto_forbidden(client, auth_headers, make_user):
     moto = _create_moto(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
-    response = client.post("/api/maintenance/", json={
-        "motorcycleId": moto["id"],
-        "category": "engine",
-        "title": "Hack",
-        "planned_mileage": 15000,
-    }, headers=other_headers)
+    response = client.post(
+        "/api/maintenance/",
+        json={
+            "motorcycleId": moto["id"],
+            "category": "engine",
+            "title": "Hack",
+            "planned_mileage": 15000,
+        },
+        headers=other_headers,
+    )
     assert response.status_code == 403
 
 
 # ---- GET ----
+
 
 @pytest.mark.maintenance
 def test_get_maintenances_by_motorcycle(client, auth_headers):
@@ -158,6 +182,7 @@ def test_get_nonexistent_maintenance_404(client, auth_headers):
 
 
 # ---- PUT ----
+
 
 @pytest.mark.maintenance
 def test_update_maintenance_title_and_cost(client, auth_headers):
@@ -202,6 +227,7 @@ def test_update_maintenance_as_completed(client, auth_headers):
 
 # ---- DELETE ----
 
+
 @pytest.mark.maintenance
 def test_delete_maintenance(client, auth_headers, db_session):
     """DELETE → 200, запись удалена."""
@@ -215,6 +241,7 @@ def test_delete_maintenance(client, auth_headers, db_session):
 
 
 # ---- POST /complete ----
+
 
 @pytest.mark.maintenance
 def test_mark_planned_as_completed(client, auth_headers, db_session):
@@ -278,9 +305,7 @@ def test_mark_already_completed_fails(client, auth_headers):
 
 
 @pytest.mark.maintenance
-def test_complete_updates_moto_mileage_and_clears_reminders(
-    client, auth_headers, db_session
-):
+def test_complete_updates_moto_mileage_and_clears_reminders(client, auth_headers, db_session):
     """
     Регрессия Sprint 2A.2: при отметке ТО с пробегом > текущего
     moto.mileage обновляется, а pending-напоминания mileage_update
@@ -311,25 +336,34 @@ def test_complete_updates_moto_mileage_and_clears_reminders(
     assert db_moto.mileage == 15000
     assert db_moto.mileage_updated_at is not None
 
-    remaining = db_session.session.query(Reminder).filter_by(
-        motorcycle_id=moto["id"],
-        type=Reminder.TYPE_MILEAGE_UPDATE,
-        status=Reminder.STATUS_PENDING,
-    ).count()
+    remaining = (
+        db_session.session.query(Reminder)
+        .filter_by(
+            motorcycle_id=moto["id"],
+            type=Reminder.TYPE_MILEAGE_UPDATE,
+            status=Reminder.STATUS_PENDING,
+        )
+        .count()
+    )
     assert remaining == 0
 
 
 # ---- POST /quick-start ----
+
 
 @pytest.mark.maintenance
 def test_quick_start_success(client, auth_headers, db_session):
     """quick-start создаёт базовый набор плановых ТО."""
     moto = _create_moto(client, auth_headers, mileage=5000)
 
-    response = client.post("/api/maintenance/quick-start", json={
-        "moto_id": moto["id"],
-        "current_mileage": 5000,
-    }, headers=auth_headers)
+    response = client.post(
+        "/api/maintenance/quick-start",
+        json={
+            "moto_id": moto["id"],
+            "current_mileage": 5000,
+        },
+        headers=auth_headers,
+    )
 
     assert response.status_code == 201
     data = response.get_json()
@@ -338,9 +372,11 @@ def test_quick_start_success(client, auth_headers, db_session):
     assert "message" in data
     assert data["moto"] is not None
 
-    count = db_session.session.query(Maintenance).filter_by(
-        moto_id=moto["id"], status=MaintenanceStatus.PLANNED.value
-    ).count()
+    count = (
+        db_session.session.query(Maintenance)
+        .filter_by(moto_id=moto["id"], status=MaintenanceStatus.PLANNED.value)
+        .count()
+    )
     assert count == 7
 
 
@@ -350,9 +386,13 @@ def test_quick_start_on_moto_with_existing_fails(client, auth_headers):
     moto = _create_moto(client, auth_headers)
     _create_planned(client, auth_headers, moto["id"])
 
-    response = client.post("/api/maintenance/quick-start", json={
-        "moto_id": moto["id"],
-        "current_mileage": 5000,
-    }, headers=auth_headers)
+    response = client.post(
+        "/api/maintenance/quick-start",
+        json={
+            "moto_id": moto["id"],
+            "current_mileage": 5000,
+        },
+        headers=auth_headers,
+    )
 
     assert response.status_code == 400

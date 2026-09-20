@@ -5,6 +5,7 @@
 - Sprint 5.1: verify actual URL prefix (possible double prefix bug)
 - Sprint 5.1: report snapshot has typo 'craeted_at' instead of 'created_at'
 """
+
 import pytest
 
 from app.models.post import Post
@@ -12,8 +13,8 @@ from app.models.post_comment import PostComment
 from app.models.post_like import PostLike
 from app.models.post_report import PostReport
 
-
 # ---- Helpers ----
+
 
 def _create_post(client, headers, content="Hello, moto world!"):
     response = client.post(
@@ -26,6 +27,7 @@ def _create_post(client, headers, content="Hello, moto world!"):
 
 
 # ---- POST /api/social/posts ----
+
 
 @pytest.mark.social
 def test_create_post_success(client, auth_headers):
@@ -59,6 +61,7 @@ def test_create_post_requires_auth(client):
 
 # ---- GET /api/social/posts ----
 
+
 @pytest.mark.social
 def test_get_posts_empty(client, auth_headers):
     """Пустая лента."""
@@ -91,9 +94,14 @@ def test_get_posts_by_user_id(client, auth_headers, make_user):
     _create_post(client, auth_headers, content="Mine")
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     _create_post(client, other_headers, content="Theirs")
 
@@ -110,6 +118,7 @@ def test_get_posts_by_user_id(client, auth_headers, make_user):
 
 
 # ---- GET /api/social/posts/<id> ----
+
 
 @pytest.mark.social
 def test_get_single_post(client, auth_headers):
@@ -132,6 +141,7 @@ def test_get_nonexistent_post_404(client, auth_headers):
 
 # ---- PUT /api/social/posts/<id> ----
 
+
 @pytest.mark.social
 def test_update_post_content(client, auth_headers):
     """Обновление контента."""
@@ -152,9 +162,14 @@ def test_update_foreign_post_forbidden(client, auth_headers, make_user):
     post = _create_post(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.put(
@@ -166,6 +181,7 @@ def test_update_foreign_post_forbidden(client, auth_headers, make_user):
 
 
 # ---- DELETE /api/social/posts/<id> ----
+
 
 @pytest.mark.social
 def test_delete_post(client, auth_headers, db_session):
@@ -183,9 +199,14 @@ def test_delete_foreign_post_forbidden(client, auth_headers, make_user):
     post = _create_post(client, auth_headers)
 
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.delete(f"/api/social/posts/{post['id']}", headers=other_headers)
@@ -193,6 +214,7 @@ def test_delete_foreign_post_forbidden(client, auth_headers, make_user):
 
 
 # ---- POST /api/social/posts/<id>/like ----
+
 
 @pytest.mark.social
 def test_toggle_like_on(client, auth_headers, db_session):
@@ -208,9 +230,7 @@ def test_toggle_like_on(client, auth_headers, db_session):
     assert data["liked"] is True
     assert data["likes_count"] == 1
 
-    assert db_session.session.query(PostLike).filter_by(
-        post_id=post["id"]
-    ).count() == 1
+    assert db_session.session.query(PostLike).filter_by(post_id=post["id"]).count() == 1
 
 
 @pytest.mark.social
@@ -240,6 +260,7 @@ def test_like_on_nonexistent_post_404(client, auth_headers):
 
 
 # ---- POST /api/social/posts/<id>/comments ----
+
 
 @pytest.mark.social
 def test_add_comment(client, auth_headers, db_session):
@@ -286,6 +307,7 @@ def test_add_comment_to_nonexistent_post_404(client, auth_headers):
 
 # ---- DELETE /api/social/comments/<id> ----
 
+
 @pytest.mark.social
 def test_delete_own_comment(client, auth_headers, db_session):
     """Удаление своего комментария."""
@@ -310,13 +332,19 @@ def test_delete_own_comment(client, auth_headers, db_session):
 
 # ---- POST /api/social/posts/<id>/report ----
 
+
 @pytest.mark.social
 def test_report_post(client, auth_headers, make_user, db_session):
     """Жалоба на чужой пост."""
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     post = _create_post(client, other_headers)
 
@@ -348,9 +376,14 @@ def test_report_own_post_fails(client, auth_headers):
 def test_report_invalid_category(client, auth_headers, make_user):
     """Невалидная категория → 400."""
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     post = _create_post(client, other_headers)
 
@@ -366,9 +399,14 @@ def test_report_invalid_category(client, auth_headers, make_user):
 def test_duplicate_report_conflict(client, auth_headers, make_user):
     """Повторная жалоба → 409."""
     other = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other["email"], "password": other["password"], "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other["email"],
+            "password": other["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
     post = _create_post(client, other_headers)
 
@@ -386,6 +424,7 @@ def test_duplicate_report_conflict(client, auth_headers, make_user):
 
 
 # ---- GET /api/social/report-categories ----
+
 
 @pytest.mark.social
 def test_report_categories(client, auth_headers):

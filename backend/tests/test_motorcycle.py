@@ -5,14 +5,15 @@
 - Sprint 0: owner_required (несуществующий объект → 404, не 500)
 - Sprint 1: licensePlate (camelCase в схеме, snake_case в модели)
 """
+
 import pytest
 
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 from app.models.user import User
 
-
 # ---- Helpers ----
+
 
 def _create_moto(client, headers, **overrides):
     """Создаёт мотоцикл через API, возвращает JSON."""
@@ -32,6 +33,7 @@ def _create_moto(client, headers, **overrides):
 
 
 # ---- CRUD ----
+
 
 @pytest.mark.motorcycle
 def test_create_motorcycle_minimal(client, auth_headers):
@@ -165,11 +167,15 @@ def test_update_mileage_clears_pending_reminder(client, auth_headers, db_session
     )
     assert response.status_code == 200
 
-    remaining = db_session.session.query(Reminder).filter_by(
-        motorcycle_id=moto["id"],
-        type=Reminder.TYPE_MILEAGE_UPDATE,
-        status=Reminder.STATUS_PENDING,
-    ).count()
+    remaining = (
+        db_session.session.query(Reminder)
+        .filter_by(
+            motorcycle_id=moto["id"],
+            type=Reminder.TYPE_MILEAGE_UPDATE,
+            status=Reminder.STATUS_PENDING,
+        )
+        .count()
+    )
     assert remaining == 0
 
 
@@ -212,17 +218,21 @@ def test_delete_motorcycle(client, auth_headers, db_session):
 
 # ---- Permissions ----
 
+
 @pytest.mark.motorcycle
 def test_get_other_user_motorcycle_forbidden(client, auth_headers, make_user):
     """Обновление чужого мото → 403."""
     moto = _create_moto(client, auth_headers)
 
     other_user = make_user(verified=True)
-    login = client.post("/api/auth/login", json={
-        "email": other_user["email"],
-        "password": other_user["password"],
-        "rememberMe": True,
-    }).get_json()
+    login = client.post(
+        "/api/auth/login",
+        json={
+            "email": other_user["email"],
+            "password": other_user["password"],
+            "rememberMe": True,
+        },
+    ).get_json()
     other_headers = {"Authorization": f"Bearer {login['access_token']}"}
 
     response = client.put(
@@ -264,6 +274,7 @@ def test_motorcycle_requires_auth(client):
 
 # ---- Валидация ----
 
+
 @pytest.mark.motorcycle
 def test_create_invalid_vin(client, auth_headers):
     """VIN != 17 символов → 400."""
@@ -295,6 +306,7 @@ def test_create_invalid_license_plate(client, auth_headers):
         headers=auth_headers,
     )
     assert response.status_code == 400
+
 
 @pytest.mark.motorcycle
 def test_validation_error_is_json_serializable(client, auth_headers):
