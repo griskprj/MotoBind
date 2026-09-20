@@ -49,7 +49,7 @@ class User(db.Model):
 
     motorcycles = db.relationship(
         "Motorcycle",
-        backref="motorcycle_owner",
+        back_populates="owner",
         lazy=True,
         cascade="all, delete-orphan",
     )
@@ -62,9 +62,22 @@ class User(db.Model):
         passive_deletes=True
     )
 
-    maintenances = db.relationship('Maintenance', back_populates='author', lazy='dynamic')
-    notifications = db.relationship('Notification', back_populates='user', cascade='all, delete-orphan')  
-    posts = db.relationship('Post', back_populates='author', cascade='all, delete-orphan')
+    maintenances = db.relationship(
+        'Maintenance', 
+        back_populates='author', 
+        lazy='dynamic'
+    )
+    notifications = db.relationship(
+        'Notification', 
+        back_populates='user', 
+        cascade='all, delete-orphan'
+    )
+
+    posts = db.relationship(
+        'Post', 
+        back_populates='author', 
+        cascade='all, delete-orphan'
+    )
     
     def set_password(self, password):
         """Set hash password"""
