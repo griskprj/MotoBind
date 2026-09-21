@@ -6,6 +6,28 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.9.0] — 2026-09-21
+
+### Added
+- **styles**: дизайн-токены для spacing (`--space-*`), typography (`--text-*`, `--fw-*`),
+  motion (`--transition-*`) и z-index (`--z-*`)
+- **styles**: палитра `--info` (заменяет хардкод `rgba(59, 130, 246, ...)` в info-блоках)
+
+### Changed
+- **styles**: `style.scss` разбит на модули
+  - `styles/tokens.scss` — все CSS-переменные
+  - `styles/reset.scss` — обнуление
+  - `styles/base.scss` — типографика
+  - `styles/components.scss` — переиспользуемые классы
+  - `styles/utilities.scss` — задел на будущее
+  - `styles/print.scss` — печать
+  - `styles/index.scss` — точка входа
+
+### Notes
+- Визуальных изменений нет — только структурные
+- JSON-контракт API не изменился
+- Подготовка к UI-kit (Sprint 2)
+
 ## [1.8.0] — 2026-09-20
 
 ### Added

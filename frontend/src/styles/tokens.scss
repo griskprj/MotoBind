@@ -1,0 +1,177 @@
+/* ============================================
+   Design Tokens — MotoBind
+   В компонентах использовать только var(--*), не хардкодить.
+   ============================================ */
+
+:root {
+  /* ===== ПАЛИТРА (тёмная тема — по умолчанию) ===== */
+
+  /* Фоны */
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #111118;
+  --bg-card: #1A1A24;
+  --bg-card-hover: #202036;
+  --bg-input: #0f0f1a;
+  --bg-dropdown: #0f0f1a;
+
+  /* Текст */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
+  --text-inverse: #0A0A0F;
+
+  /* Границы */
+  --border-color: #2D2D3A;
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-input: rgba(255, 255, 255, 0.08);
+
+  /* Акцент */
+  --accent: #8B5CF6;
+  --accent-hover: #7C3AED;
+  --accent-light: #2D2A3E;
+  --accent-trans: rgba(138, 92, 246, 0.2);
+  --accent-text: #a78bfa;
+
+  /* Danger */
+  --danger: #EF4444;
+  --danger-hover: #DC2626;
+  --danger-trans: rgba(240, 69, 69, 0.2);
+  --danger-text: #ef4444;
+
+  /* Success */
+  --success: #10B981;
+  --success-hover: #10cb8d;
+  --success-trans: rgba(16, 185, 129, 0.2);
+  --success-text: #4ade80;
+
+  /* Warning */
+  --warning: #F59E0B;
+  --warning-hover: #c97704;
+  --warning-trans: rgba(245, 159, 11, 0.1);
+  --warning-text: #fbbf24;
+
+  /* Info */
+  --info: #3B82F6;
+  --info-hover: #2563EB;
+  --info-trans: rgba(59, 130, 246, 0.1);
+  --info-text: #60A5FA;
+
+  /* ===== SPACING SCALE =====
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+
+  /* ===== TYPOGRAPHY ===== */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: 'Courier New', ui-monospace, monospace;
+
+  --text-xs: 0.75rem;   /* 12px */
+  --text-sm: 0.875rem;  /* 14px */
+  --text-base: 1rem;    /* 16px */
+  --text-lg: 1.125rem;  /* 18px */
+  --text-xl: 1.25rem;   /* 20px */
+  --text-2xl: 1.5rem;   /* 24px */
+  --text-3xl: 2rem;     /* 32px */
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-base: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* ===== RADIUS ===== */
+  --radius-sm: 6px;
+  --radius: 0.75rem;
+  --radius-md: 10px;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-focus: 0 0 0 3px var(--accent-trans);
+
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+  --transition-bounce: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ===== Z-INDEX ===== */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 1000;
+  --z-modal: 1100;
+  --z-popover: 1200;
+  --z-toast: 9999;
+}
+
+/* ===== СВЕТЛАЯ ТЕМА ===== */
+[data-theme="light"] {
+  /* Фоны */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --bg-input: #FFFFFF;
+  --bg-dropdown: #FFFFFF;
+
+  /* Текст */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
+
+  /* Границы */
+  --border-color: #E2E8F0;
+  --border-light: rgba(0, 0, 0, 0.05);
+  --border-input: #E2E8F0;
+
+  /* Акцент */
+  --accent: #7C3AED;
+  --accent-hover: #6D28D9;
+  --accent-light: #EDE9FE;
+  --accent-trans: rgba(124, 58, 237, 0.1);
+  --accent-text: #7C3AED;
+
+  /* Danger */
+  --danger: #EF4444;
+  --danger-hover: #DC2626;
+  --danger-trans: rgba(239, 68, 68, 0.1);
+  --danger-text: #DC2626;
+
+  /* Success */
+  --success: #10B981;
+  --success-hover: #059669;
+  --success-trans: rgba(16, 185, 129, 0.1);
+  --success-text: #059669;
+
+  /* Warning */
+  --warning: #F59E0B;
+  --warning-hover: #D97706;
+  --warning-trans: rgba(245, 159, 11, 0.1);
+  --warning-text: #D97706;
+
+  /* Info */
+  --info: #3B82F6;
+  --info-hover: #2563EB;
+  --info-trans: rgba(59, 130, 246, 0.1);
+  --info-text: #2563EB;
+
+  /* Тени */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.15);
+}

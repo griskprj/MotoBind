@@ -1,0 +1,80 @@
+/* ============================================
+   Base — типографика и базовые элементы
+   ============================================ */
+
+section {
+  margin-bottom: var(--space-5);
+}
+
+i {
+  min-width: 14px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--fw-semibold);
+  line-height: var(--leading-tight);
+  margin-bottom: 0.5em;
+  color: var(--text-primary);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-base);
+
+  &:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+  }
+}
+
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  transition: border var(--transition-fast), box-shadow var(--transition-fast);
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+  }
+
+  &:disabled {
+    background-color: var(--bg-primary);
+    cursor: not-allowed;
+  }
+}
+
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 20px;
+  height: 20px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
