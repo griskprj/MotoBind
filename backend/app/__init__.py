@@ -6,7 +6,7 @@ from app.scheduler import start_scheduler
 from config import settings
 from flask import Flask, jsonify, send_from_directory
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 
 
 def create_app(config_override=None):
