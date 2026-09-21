@@ -19,3 +19,4 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
+        args: ["--config=backend/.flake8"]
