@@ -11,6 +11,11 @@ app.use(pinia)
 app.use(router)
 app.mount('#app')
 
+import { useToast } from './composables/useToast'
+if (import.meta.env.DEV) {
+  window.__toast = useToast
+}
+
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
