@@ -1,0 +1,27 @@
+/* ============================================
+   Print — стили для печати
+   ============================================ */
+
+@media print {
+  .modal-overlay,
+  .loading-overlay {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+    padding: 0;
+  }
+
+  .modal-container {
+    max-height: none;
+    box-shadow: none;
+    border: 1px solid #ddd;
+    border-radius: 0;
+  }
+
+  .modal-close-btn,
+  .sidebar,
+  .header-right,
+  .footer {
+    display: none;
+  }
+}
