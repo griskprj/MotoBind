@@ -1,910 +1,738 @@
 <template>
-    <div class="garage-page">
-        <LoadingOverlay :isLoading="loading" text="Загрузка гаража..."/>
-        
-        <div class="container">
-            <!-- Header -->
-            <Header
-                title="Мой гараж"
-                subtitle="Управляйте своими мотоциклами и следите за их состоянием"
-            />
+  <div class="garage-page">
+    <LoadingOverlay :isLoading="loading" text="Загрузка гаража..."/>
 
-            <!-- Напоминания -->
-            <div v-if="hasActiveReminders" class="reminders-banner">
-                <div
-                    v-for="reminder in activeRemindersForSelected"
-                    :key="reminder.id"
-                    class="reminder-item"
-                    :class="'reminder-' + reminderBannerInfo(reminder).variant"
+    <div class="container">
+      <Header
+        title="Мой гараж"
+        subtitle="Управляйте своими мотоциклами и следите за их состоянием"
+      />
+
+      <!-- Напоминания -->
+      <div v-if="hasActiveReminders" class="reminders-banner">
+        <div
+          v-for="reminder in activeRemindersForSelected"
+          :key="reminder.id"
+          class="reminder-item"
+          :class="'reminder-' + reminderBannerInfo(reminder).variant"
+        >
+          <div class="reminder-icon">
+            <i :class="reminderBannerInfo(reminder).icon"></i>
+          </div>
+          <div class="reminder-body">
+            <div class="reminder-title">{{ reminderBannerInfo(reminder).title }}</div>
+            <div class="reminder-text">{{ reminderBannerInfo(reminder).text }}</div>
+          </div>
+          <div class="reminder-actions">
+            <button class="reminder-btn primary" @click="handleReminderAction(reminder)">
+              {{ reminderBannerInfo(reminder).cta }}
+            </button>
+            <button class="reminder-btn ghost danger" @click="dismissReminder(reminder)" title="Скрыть навсегда">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Статистика гаража -->
+      <div v-if="motorcycles.length > 0" class="garage-stats">
+        <div class="stat-chip">
+          <i class="fa fa-motorcycle"></i>
+          <span>{{ motorcycles.length }}</span>
+          {{ declensionMotorcycles(motorcycles.length) }}
+        </div>
+        <div class="stat-chip">
+          <i class="fa fa-wrench"></i>
+          <span>{{ totalMaintenances }}</span>
+          обслуживаний
+        </div>
+        <div class="stat-chip">
+          <i class="fa fa-ruble-sign"></i>
+          <span>{{ formatCost(totalCosts) }}</span>
+        </div>
+      </div>
+
+      <!-- Мотоциклы -->
+      <div class="motorcycles-container">
+        <div class="motorcycles-list">
+          <div
+            v-for="moto in motorcycles"
+            :key="moto.id"
+            class="moto-list-item"
+            :class="{ active: selectedMotoId === moto.id }"
+            @click="selectMotorcycle(moto)"
+          >
+            <div class="moto-card-wrapper">
+              <div class="moto-list-preview">
+                <img
+                  v-if="moto.photo_url"
+                  :src="getMotoPhotoUrl(moto.photo_url)"
+                  :alt="moto.name"
+                  @error="handleImageError"
+                  loading="lazy"
                 >
-                    <div class="reminder-icon">
-                        <i :class="reminderBannerInfo(reminder).icon"></i>
-                    </div>
-
-                    <div class="reminder-body">
-                        <div class="reminder-title">{{ reminderBannerInfo(reminder).title }}</div>
-                        <div class="reminder-text">{{ reminderBannerInfo(reminder).text }}</div>
-                    </div>
-
-                    <div class="reminder-actions">
-                        <button
-                            class="reminder-btn primary"
-                            @click="handleReminderAction(reminder)"
-                        >
-                            {{ reminderBannerInfo(reminder).cta }}
-                        </button>
-                        <button
-                            class="reminder-btn ghost danger"
-                            @click="dismissReminder(reminder)"
-                            title="Скрыть навсегда"
-                        >
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
+                <div v-else class="moto-list-placeholder">
+                  <i class="fa fa-motorcycle"></i>
                 </div>
-            </div>
+              </div>
 
-            <!-- Статистика гаража -->
-            <div v-if="motorcycles.length > 0" class="garage-stats">
-                <div class="stat-chip">
-                    <i class="fa fa-motorcycle"></i>
-                    <span>{{ motorcycles.length }}</span>
-                    {{ declensionMotorcycles(motorcycles.length) }}
+              <div class="moto-list-info">
+                <div class="moto-list-header">
+                  <h3 class="moto-list-name">{{ moto.name }}</h3>
+                  <span class="moto-list-year">{{ moto.years }}</span>
+                  <span class="moto-list-volume">{{ moto.volume }} см³</span>
                 </div>
-                <div class="stat-chip">
+                <div class="moto-list-meta">
+                  <span class="moto-list-mileage">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    {{ formatMileage(moto.mileage) }}
+                  </span>
+                  <span class="moto-list-color">
+                    <span class="color-dot-sm" :style="{ background: moto.color }"></span>
+                  </span>
+                  <span v-if="moto.maintenances?.length" class="moto-list-maintenances">
                     <i class="fa fa-wrench"></i>
-                    <span>{{ totalMaintenances }}</span>
-                    обслуживаний
+                    {{ moto.maintenances.length }}
+                  </span>
                 </div>
-                <div class="stat-chip">
-                    <i class="fa fa-ruble-sign"></i>
-                    <span>{{ formatCost(totalCosts) }}</span>
-                </div>
+              </div>
             </div>
 
-            <!-- Мотоциклы - Десктопный список -->
-            <div class="motorcycles-container">
-                <div class="motorcycles-list">
-                    <div 
-                        v-for="moto in motorcycles" 
-                        :key="moto.id"
-                        class="moto-list-item"
-                        :class="{ active: selectedMotoId === moto.id }"
-                        @click="selectMotorcycle(moto)"
-                    >   
-                        <div class="moto-card-wrapper">
-                            <div class="moto-list-preview">
-                                <img 
-                                    v-if="moto.photo_url" 
-                                    :src="getPhotoUrl(moto.photo_url)" 
-                                    :alt="moto.name"
-                                    @error="handleImageError"
-                                    loading="lazy"
-                                >
-                                <div v-else class="moto-list-placeholder">
-                                    <i class="fa fa-motorcycle"></i>
-                                </div>
-                            </div>
-                            
-                            <div class="moto-list-info">
-                                <div class="moto-list-header">
-                                    <h3 class="moto-list-name">{{ moto.name }}</h3>
-                                    <span class="moto-list-year">{{ moto.years }}</span>
-                                    <span class="moto-list-volume">{{ moto.volume }} см³</span>
-                                </div>
-                                <div class="moto-list-meta">
-                                    <span class="moto-list-mileage">
-                                        <i class="fa-solid fa-gauge-high"></i>
-                                        {{ formatMileage(moto.mileage) }}
-                                    </span>
-                                    <span class="moto-list-color">
-                                        <span class="color-dot-sm" :style="{ background: moto.color }"></span>
-                                    </span>
-                                    <span v-if="moto.maintenances?.length" class="moto-list-maintenances">
-                                        <i class="fa fa-wrench"></i>
-                                        {{ moto.maintenances.length }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="moto-list-actions" @click.stop>
-                            <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
-                                <i class="fa fa-pen"></i>
-                            </button>
-                            <button @click="selectMotorcycle(moto); showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
-                                <i class="fa-solid fa-gauge-high"></i>
-                            </button>
-                            <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
-                                <i class="fa fa-camera"></i>
-                            </button>
-                            <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
-                        <i class="fa fa-plus"></i>
-                        <span>Добавить мотоцикл</span>
-                    </button>
-                </div>
+            <div class="moto-list-actions" @click.stop>
+              <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
+                <i class="fa fa-pen"></i>
+              </button>
+              <button @click="selectMotorcycle(moto); showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
+                <i class="fa-solid fa-gauge-high"></i>
+              </button>
+              <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
+                <i class="fa fa-camera"></i>
+              </button>
+              <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
+                <i class="fa fa-trash"></i>
+              </button>
             </div>
+          </div>
 
-            <!-- Empty State -->
-            <div v-if="motorcycles.length === 0" class="empty-state">
-                <div class="empty-icon">
-                    <i class="fa fa-motorcycle"></i>
-                </div>
-                <h3>Ваш гараж пуст</h3>
-                <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
-                <button @click="showAddMotoModal = true" class="btn-primary">
-                    Добавить мотоцикл
-                </button>
+          <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
+            <i class="fa fa-plus"></i>
+            <span>Добавить мотоцикл</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="motorcycles.length === 0 && !loading" class="empty-state">
+        <div class="empty-icon">
+          <i class="fa fa-motorcycle"></i>
+        </div>
+        <h3>Ваш гараж пуст</h3>
+        <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
+        <button @click="showAddMotoModal = true" class="btn-primary">
+          Добавить мотоцикл
+        </button>
+      </div>
+
+      <!-- Quick Start Promo -->
+      <div v-if="selectedMotorcycle && !selectedMotorcycle.maintenances?.length" class="quick-start-promo">
+        <div class="promo-icon">
+          <i class="fa fa-rocket"></i>
+        </div>
+        <div class="promo-content">
+          <h4>Настройте обслуживание за 30 секунд</h4>
+          <p>Мы автоматически создадим базовое расписание на основе пробега и условий эксплуатации</p>
+        </div>
+        <button @click="showQuickStartModal = true" class="btn-primary">
+          <i class="fa fa-bolt"></i>
+          Быстрый старт
+        </button>
+      </div>
+
+      <!-- Детальная информация -->
+      <div v-if="selectedMotorcycle" class="moto-detail">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fa-solid fa-gauge-high"></i>
             </div>
-
-            <div v-if="selectedMotorcycle && !selectedMotorcycle.maintenances?.length" class="quick-start-promo">
-                <div class="promo-icon">
-                    <i class="fa fa-rocket"></i>
-                </div>
-                <div class="promo-content">
-                    <h4>Настройте обслуживание за 30 секунд</h4>
-                    <p>Мы автоматически создадим базовое расписание на основе пробега и условий эксплуатации</p>
-                </div>
-                <button @click="showQuickStartModal = true" class="btn-primary">
-                    <i class="fa fa-bolt"></i>
-                    Быстрый старт
-                </button>
+            <div class="stat-info">
+              <span class="stat-label">Пробег</span>
+              <span class="stat-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
             </div>
+          </div>
 
-            <!-- Детальная информация -->
-            <div v-if="selectedMotorcycle" class="moto-detail">
-                <!-- Статистика -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa-solid fa-gauge-high"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-label">Пробег</span>
-                            <span class="stat-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa fa-wrench"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-label">Обслуживаний</span>
-                            <span class="stat-value">{{ selectedMotorcycle.maintenances?.length || 0 }}</span>
-                        </div>
-                    </div>
-
-                    <div class="stat-card" :class="{ 'stat-warning': nextMaintenance?.isOverdue }">
-                        <div class="stat-icon">
-                            <i class="fa fa-calendar-check"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-label">Следующее ТО</span>
-                            <span class="stat-value">
-                                <template v-if="nextMaintenance">
-                                    <span v-if="nextMaintenance.isOverdue" class="text-danger">
-                                        <i class="fa fa-exclamation-triangle"></i>
-                                        {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
-                                    </span>
-                                    <span v-else>
-                                        через {{ Math.round(nextMaintenance.distanceToNext) }} км
-                                    </span>
-                                </template>
-                                <span v-else class="text-muted">Все выполнены</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fa fa-ruble-sign"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-label">Расходы на ТО</span>
-                            <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Характеристики и заметки -->
-                <div class="detail-grid">
-                    <div class="detail-card">
-                        <h4 class="detail-title">Характеристики</h4>
-                        <div class="spec-list">
-                            <div class="spec-item">
-                                <span class="spec-label">Год выпуска</span>
-                                <span class="spec-value">{{ selectedMotorcycle.years }}</span>
-                            </div>
-                            <div class="spec-item">
-                                <span class="spec-label">Двигатель</span>
-                                <span class="spec-value">{{ selectedMotorcycle.volume }} см³</span>
-                            </div>
-                            <div class="spec-item">
-                                <span class="spec-label">Цвет</span>
-                                <span class="spec-value">
-                                    <span class="color-dot" :style="{ background: selectedMotorcycle.color }"></span>
-                                </span>
-                            </div>
-                            <div class="spec-item">
-                                <span class="spec-label">Пробег</span>
-                                <span class="spec-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
-                            </div>
-                            <div class="spec-item full" v-if="selectedMotorcycle.vin">
-                                <span class="spec-label">VIN</span>
-                                <span class="spec-value spec-code">{{ selectedMotorcycle.vin }}</span>
-                            </div>
-                            <div class="spec-item full" v-if="selectedMotorcycle.license_plate">
-                                <span class="spec-label">Гос. номер</span>
-                                <span class="spec-value spec-code">{{ selectedMotorcycle.license_plate }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="detail-card notes-card">
-                        <div class="detail-header">
-                            <h4 class="detail-title">Заметки</h4>
-                            <button @click="showEditMotoNoteModal = true" class="icon-btn small" title="Редактировать заметку">
-                                <i class="fa fa-pen"></i>
-                            </button>
-                        </div>
-                        <div class="notes-content">
-                            <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
-                            <p v-else class="notes-empty">
-                                <i class="fa fa-pen"></i>
-                                Добавьте заметку о мотоцикле
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Обслуживания -->
-                <div class="maintenances-section">
-                    <div class="section-header">
-                        <div class="section-header-left">
-                            <i class="fa fa-wrench"></i>
-                            <h4>Последние обслуживания</h4>
-                        </div>
-                        <button @click="$router.push('/maintenance')" class="btn-link">
-                            Все записи <i class="fa fa-arrow-right"></i>
-                        </button>
-                    </div>
-
-                    <div v-if="recentMaintenances.length > 0" class="maintenances-list">
-                        <div 
-                            v-for="item in recentMaintenances" 
-                            :key="item.id"
-                            class="maintenance-item"
-                            @click="openMaintenanceDetails(item)"
-                        >
-                            <div class="maint-icon" :class="'maint-icon-' + item.status">
-                                <i class="fa fa-wrench"></i>
-                            </div>
-                            <div class="maint-info">
-                                <div class="maint-title">{{ item.title }}</div>
-                                <div class="maint-meta">
-                                    <span>{{ formatDate(item.completed_date || item.planned_date) }}</span>
-                                    <span class="dot">•</span>
-                                    <span>{{ item.completed_mileage || item.planned_mileage || '—' }} км</span>
-                                    <span class="dot">•</span>
-                                    <span>{{ item.cost ? formatCost(item.cost) : '—' }}</span>
-                                </div>
-                            </div>
-                            <div class="maint-status">
-                                <span :class="'badge ' + getStatusClass(item.status)">
-                                    {{ getStatusLabel(item.status) }}
-                                </span>
-                                <i class="fa fa-chevron-right"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-else class="empty-small">
-                        <i class="fa fa-wrench"></i>
-                        <p>Нет записей обслуживания</p>
-                        <span class="hint">Перейдите в раздел "Обслуживание" чтобы добавить</span>
-                    </div>
-                </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fa fa-wrench"></i>
             </div>
+            <div class="stat-info">
+              <span class="stat-label">Обслуживаний</span>
+              <span class="stat-value">{{ selectedMotorcycle.maintenances?.length || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="stat-card" :class="{ 'stat-warning': nextMaintenance?.isOverdue }">
+            <div class="stat-icon">
+              <i class="fa fa-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Следующее ТО</span>
+              <span class="stat-value">
+                <template v-if="nextMaintenance">
+                  <span v-if="nextMaintenance.isOverdue" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
+                  </span>
+                  <span v-else>
+                    через {{ Math.round(nextMaintenance.distanceToNext) }} км
+                  </span>
+                </template>
+                <span v-else class="text-muted">Все выполнены</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fa fa-ruble-sign"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Расходы на ТО</span>
+              <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
+            </div>
+          </div>
         </div>
 
-        <!-- MODALS -->
-        <AddMotoModal
-            :isOpen="showAddMotoModal"
-            @submit="addMoto"
-            @close="showAddMotoModal = false"
-        />
+        <div class="detail-grid">
+          <div class="detail-card">
+            <h4 class="detail-title">Характеристики</h4>
+            <div class="spec-list">
+              <div class="spec-item">
+                <span class="spec-label">Год выпуска</span>
+                <span class="spec-value">{{ selectedMotorcycle.years }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Двигатель</span>
+                <span class="spec-value">{{ selectedMotorcycle.volume }} см³</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Цвет</span>
+                <span class="spec-value">
+                  <span class="color-dot" :style="{ background: selectedMotorcycle.color }"></span>
+                </span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Пробег</span>
+                <span class="spec-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
+              </div>
+              <div class="spec-item full" v-if="selectedMotorcycle.vin">
+                <span class="spec-label">VIN</span>
+                <span class="spec-value spec-code">{{ selectedMotorcycle.vin }}</span>
+              </div>
+              <div class="spec-item full" v-if="selectedMotorcycle.license_plate">
+                <span class="spec-label">Гос. номер</span>
+                <span class="spec-value spec-code">{{ selectedMotorcycle.license_plate }}</span>
+              </div>
+            </div>
+          </div>
 
-        <EditMotoModal 
-            :isOpen="showEditMotoModal" 
-            :motorcycle="selectedMotorcycle"
-            @submit="updateMoto" 
-            @close="showEditMotoModal=false"
-        />
+          <div class="detail-card notes-card">
+            <div class="detail-header">
+              <h4 class="detail-title">Заметки</h4>
+              <button @click="showEditMotoNoteModal = true" class="icon-btn small" title="Редактировать заметку">
+                <i class="fa fa-pen"></i>
+              </button>
+            </div>
+            <div class="notes-content">
+              <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
+              <p v-else class="notes-empty">
+                <i class="fa fa-pen"></i>
+                Добавьте заметку о мотоцикле
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <UpdateMileageModal
-            :isOpen="showUpdateMotoMileageModal"
-            :motorcycle="selectedMotorcycle"
-            @submit="updateMotoMileage"
-            @close="showUpdateMotoMileageModal = false"
-        />
+        <div class="maintenances-section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <i class="fa fa-wrench"></i>
+              <h4>Последние обслуживания</h4>
+            </div>
+            <button @click="$router.push('/maintenance')" class="btn-link">
+              Все записи <i class="fa fa-arrow-right"></i>
+            </button>
+          </div>
 
-        <EditMotoNoteModal
-            :isOpen="showEditMotoNoteModal"
-            :motorcycle="selectedMotorcycle"
-            @submit="updateMotoNote"
-            @close="showEditMotoNoteModal = false"
-        />
+          <div v-if="recentMaintenances.length > 0" class="maintenances-list">
+            <div
+              v-for="item in recentMaintenances"
+              :key="item.id"
+              class="maintenance-item"
+              @click="openMaintenanceDetails(item)"
+            >
+              <div class="maint-icon" :class="'maint-icon-' + item.status">
+                <i class="fa fa-wrench"></i>
+              </div>
+              <div class="maint-info">
+                <div class="maint-title">{{ item.title }}</div>
+                <div class="maint-meta">
+                  <span>{{ formatDate(item.completed_date || item.planned_date) }}</span>
+                  <span class="dot">•</span>
+                  <span>{{ item.completed_mileage || item.planned_mileage || '—' }} км</span>
+                  <span class="dot">•</span>
+                  <span>{{ item.cost ? formatCost(item.cost) : '—' }}</span>
+                </div>
+              </div>
+              <div class="maint-status">
+                <span :class="'badge badge-' + getStatusBadgeVariant(item.status)">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+                <i class="fa fa-chevron-right"></i>
+              </div>
+            </div>
+          </div>
 
-        <DeleteMotoModal 
-            :isOpen="showDeleteMotoModal" 
-            :motorcycle="selectedMotorcycle" 
-            @submit="deleteMoto" 
-            @close="showDeleteMotoModal = false" 
-        />
-
-        <MaintenanceDetailsModal
-            v-if="selectedMotorcycle"
-            :isOpen="showDetailsMaintenanceModal"
-            :maintenance="selectedMaintenance"
-            :motorcycle="selectedMotorcycle"
-            @mark="markMaintenance"
-            @save="saveMaintenance"
-            @delete="deleteMaintenance"
-            @close="closeMaintenanceDetails"
-        />
-
-        <PhotoModal
-            :isOpen="showPhotoModal"
-            :motorcycle="selectedMotorcycle"
-            @upload="uploadPhoto"
-            @delete="deletePhoto"
-            @close="showPhotoModal = false"
-        />
-
-        <QuickStartModal
-            :isOpen="showQuickStartModal"
-            :motorcycle="selectedMotorcycle"
-            @close="showQuickStartModal = false"
-            @created="onQuickStartCreated"
-        />
+          <div v-else class="empty-small">
+            <i class="fa fa-wrench"></i>
+            <p>Нет записей обслуживания</p>
+            <span class="hint">Перейдите в раздел "Обслуживание" чтобы добавить</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- MODALS -->
+    <AddMotoModal
+      :isOpen="showAddMotoModal"
+      @submit="addMoto"
+      @close="showAddMotoModal = false"
+    />
+
+    <EditMotoModal
+      :isOpen="showEditMotoModal"
+      :motorcycle="selectedMotorcycle"
+      @submit="updateMoto"
+      @close="showEditMotoModal = false"
+    />
+
+    <UpdateMileageModal
+      :isOpen="showUpdateMotoMileageModal"
+      :motorcycle="selectedMotorcycle"
+      @submit="updateMotoMileage"
+      @close="showUpdateMotoMileageModal = false"
+    />
+
+    <EditMotoNoteModal
+      :isOpen="showEditMotoNoteModal"
+      :motorcycle="selectedMotorcycle"
+      @submit="updateMotoNote"
+      @close="showEditMotoNoteModal = false"
+    />
+
+    <DeleteMotoModal
+      :isOpen="showDeleteMotoModal"
+      :motorcycle="selectedMotorcycle"
+      @submit="deleteMoto"
+      @close="showDeleteMotoModal = false"
+    />
+
+    <MaintenanceDetailsModal
+      v-if="selectedMotorcycle"
+      :isOpen="showDetailsMaintenanceModal"
+      :maintenance="selectedMaintenance"
+      :motorcycle="selectedMotorcycle"
+      @mark="markMaintenance"
+      @save="saveMaintenance"
+      @delete="deleteMaintenance"
+      @close="closeMaintenanceDetails"
+    />
+
+    <PhotoModal
+      :isOpen="showPhotoModal"
+      :motorcycle="selectedMotorcycle"
+      @upload="uploadPhoto"
+      @delete="deletePhoto"
+      @close="showPhotoModal = false"
+    />
+
+    <QuickStartModal
+      :isOpen="showQuickStartModal"
+      :motorcycle="selectedMotorcycle"
+      @close="showQuickStartModal = false"
+      @created="onQuickStartCreated"
+    />
+  </div>
 </template>
 
 <script>
-import Header from '../components/Header.vue';
-import AddMotoModal from '../components/modals/moto/AddMotoModal.vue';
-import EditMotoModal from '../components/modals/moto/EditMotoModal.vue';
-import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue';
-import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue';
-import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue';
-import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue';
-import PhotoModal from '../components/modals/moto/PhotoModal.vue';
-import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue';
+import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
-import api from '../api/api.js';
-import remindersApi from '../api/reminders.js';
-import formatDate from '../utils/DateFormatter.js';
+import Header from '../components/Header.vue'
+import AddMotoModal from '../components/modals/moto/AddMotoModal.vue'
+import EditMotoModal from '../components/modals/moto/EditMotoModal.vue'
+import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue'
+import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue'
+import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue'
+import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
+import PhotoModal from '../components/modals/moto/PhotoModal.vue'
+import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue'
+
+import { useMotorcyclesStore, useRemindersStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import {
+  formatMileage,
+  formatCost,
+  declensionMotorcycles,
+  getStatusLabel,
+  getStatusBadgeVariant,
+} from '@/utils/formatters'
+import { getMotoPhotoUrl } from '@/utils/mediaUrl'
+import formatDate from '@/utils/DateFormatter.js'
 
 export default {
-    components: {
-        Header,
-        AddMotoModal,
-        EditMotoModal,
-        DeleteMotoModal,
-        UpdateMileageModal,
-        EditMotoNoteModal,
-        MaintenanceDetailsModal,
-        PhotoModal,
-        QuickStartModal,
-        LoadingOverlay,
-    },
+  name: 'GaragePage',
 
-    data() {
-        return {
-            motorcycles: [],
-            selectedMotoId: null,
-            selectedMaintenance: null,
-            loading: false,
-            
-            showAddMotoModal: false,
-            showEditMotoModal: false,
-            showDeleteMotoModal: false,
-            showUpdateMotoMileageModal: false,
-            showEditMotoNoteModal: false,
-            showDetailsMaintenanceModal: false,
-            showPhotoModal: false,
-            showQuickStartModal: false,
+  components: {
+    Header,
+    AddMotoModal,
+    EditMotoModal,
+    DeleteMotoModal,
+    UpdateMileageModal,
+    EditMotoNoteModal,
+    MaintenanceDetailsModal,
+    PhotoModal,
+    QuickStartModal,
+    LoadingOverlay,
+  },
 
-            reminders: [],
-            loadingReeminders: false,
-        }
-    },
+  setup() {
+    const router = useRouter()
+    const toast = useToast()
 
-    computed: {
-        selectedMotorcycle() {
-            if (!this.selectedMotoId || !this.motorcycles.length) return null;
-            return this.motorcycles.find(m => m.id === this.selectedMotoId) || null;
-        },
+    const motorcyclesStore = useMotorcyclesStore()
+    const remindersStore = useRemindersStore()
 
-        recentMaintenances() {
-            if (!this.selectedMotorcycle?.maintenances) return [];
-            return [...this.selectedMotorcycle.maintenances]
-                .sort((a, b) => {
-                    const da = a.completed_date || a.planned_date || a.created_at;
-                    const db = b.completed_date || b.planned_date || b.created_at;
-                    return new Date(db) - new Date(da);
-                })
-                .slice(0, 5);
-        },
+    // ===== Store refs =====
+    const { items: motorcycles, selectedId: selectedMotoId, loading } = storeToRefs(motorcyclesStore)
 
-        nextMaintenance() {
-            if (!this.selectedMotorcycle?.maintenances) return null;
-            
-            const current = this.selectedMotorcycle.mileage || 0;
-            const planned = this.selectedMotorcycle.maintenances
-                .filter(m => m.status === 'planned' && m.planned_mileage)
-                .sort((a, b) => a.planned_mileage - b.planned_mileage);
-            
-            const overdue = planned.filter(m => m.planned_mileage <= current);
-            const upcoming = planned.filter(m => m.planned_mileage > current);
-            
-            if (overdue.length > 0) {
-                const item = overdue[0];
-                return {
-                    ...item,
-                    isOverdue: true,
-                    distanceOverdue: current - item.planned_mileage
-                };
-            }
-            
-            if (upcoming.length > 0) {
-                const item = upcoming[0];
-                return {
-                    ...item,
-                    isOverdue: false,
-                    distanceToNext: item.planned_mileage - current
-                };
-            }
-            
-            return null;
-        },
+    // ===== Computed =====
+    const selectedMotorcycle = computed(() => motorcyclesStore.selected)
+    const recentMaintenances = computed(() => motorcyclesStore.recentMaintenances)
+    const nextMaintenance = computed(() => motorcyclesStore.nextMaintenance)
+    const totalMaintenances = computed(() => motorcyclesStore.totalMaintenances)
+    const totalCosts = computed(() => motorcyclesStore.totalCosts)
+    const maintenanceSpends = computed(() => motorcyclesStore.maintenanceSpends)
 
-        maintenanceSpends() {
-            if (!this.selectedMotorcycle?.maintenances) return 0;
-            return this.selectedMotorcycle.maintenances
-                .filter(m => m.status === 'completed')
-                .reduce((sum, m) => sum + (m.cost || 0), 0);
-        },
+    const activeRemindersForSelected = computed(() => {
+      if (!selectedMotoId.value) return []
+      return remindersStore.forMotorcycle(selectedMotoId.value)
+    })
+    const hasActiveReminders = computed(() => activeRemindersForSelected.value.length > 0)
 
-        totalMaintenances() {
-            return this.motorcycles.reduce((sum, m) => sum + (m.maintenances?.length || 0), 0);
-        },
+    // ===== Local UI state =====
+    const selectedMaintenance = ref(null)
+    const showAddMotoModal = ref(false)
+    const showEditMotoModal = ref(false)
+    const showDeleteMotoModal = ref(false)
+    const showUpdateMotoMileageModal = ref(false)
+    const showEditMotoNoteModal = ref(false)
+    const showDetailsMaintenanceModal = ref(false)
+    const showPhotoModal = ref(false)
+    const showQuickStartModal = ref(false)
 
-        totalCosts() {
-            return this.motorcycles.reduce((sum, m) => {
-                return sum + (m.maintenances || [])
-                    .filter(mt => mt.status === 'completed')
-                    .reduce((s, mt) => s + (mt.cost || 0), 0);
-            }, 0);
-        },
+    // ===== Lifecycle =====
+    onMounted(async () => {
+      try {
+        await Promise.all([
+          motorcyclesStore.loadAll(),
+          remindersStore.loadPending(),
+        ])
+      } catch (err) {
+        console.error('Failed to load garage data:', err)
+        toast.error('Не удалось загрузить гараж')
+      }
+    })
 
-        activeRemindersForSelected() {
-            if (!this.selectedMotoId) return []
-            const priority = {
-                maintenance_overdue: 0,
-                maintenance_soon: 1,
-                mileage_update: 2,
-            }
-            return this.reminders
-                .filter(r => r.motorcycle_id === this.selectedMotoId)
-                .sort((a, b) => (priority[a.type] ?? 99) - (priority[b.type] ?? 99))
-        },
-
-        hasActiveReminders() {
-            return this.activeRemindersForSelected.length > 0
-        },
-    },
-
-    methods: {
-        async loadData() {
-            try {
-                this.loading = true;
-                
-                const res = await api.get('/motorcycle/');
-                this.motorcycles = res.data;
-                
-                for (const moto of this.motorcycles) {
-                    try {
-                        const maint = await api.get(`/maintenance/motorcycle/${moto.id}`);
-                        moto.maintenances = maint.data || [];
-                    } catch {
-                        moto.maintenances = [];
-                    }
-                }
-                
-
-                if (this.motorcycles.length > 0 && !this.selectedMotoId) {
-                    this.selectedMotoId = this.motorcycles[0].id;
-                }
-
-                if (this.selectedMotoId && !this.motorcycles.find(m => m.id === this.selectedMotoId)) {
-                    this.selectedMotoId = this.motorcycles[0]?.id || null;
-                }
-
-            } catch (err) {
-                console.error(err);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        selectMotorcycle(moto) {
-            if (!moto || !moto.id) return;
-            this.selectedMotoId = moto.id;
-        },
-
-        getPhotoUrl(path) {
-            if (!path) return null;
-            if (path.startsWith('http')) return path;
-            return `${import.meta.env.VITE_API_URL || ''}/uploads/${path}`;
-        },
-
-        handleImageError(e) {
-            e.target.src = '';
-            e.target.style.display = 'none';
-            const placeholder = e.target.parentElement?.querySelector('.moto-placeholder, .moto-list-placeholder');
-            if (placeholder) placeholder.classList.remove('hidden');
-        },
-
-        formatMileage(value) {
-            if (!value && value !== 0) return '—';
-            if (value >= 1000) {
-                return (value / 1000).toFixed(1) + ' тыс. км';
-            }
-            return value + ' км';
-        },
-
-        formatCost(value) {
-            if (!value) return '0 ₽';
-            if (value >= 1000) {
-                return (value / 1000).toFixed(1) + ' тыс. ₽';
-            }
-            return Math.round(value) + ' ₽';
-        },
-
-        declensionMotorcycles(count) {
-            const last = count % 10;
-            const last2 = count % 100;
-            if (last2 >= 11 && last2 <= 19) return 'мотоциклов';
-            if (last === 1) return 'мотоцикл';
-            if (last >= 2 && last <= 4) return 'мотоцикла';
-            return 'мотоциклов';
-        },
-
-        getMotoStatusClass(moto) {
-            if (!moto?.maintenances?.length) return 'status-ok';
-            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
-            if (hasOverdue) return 'status-warning';
-            return 'status-ok';
-        },
-
-        getMotoStatusLabel(moto) {
-            if (!moto?.maintenances?.length) return 'Нет ТО';
-            const hasOverdue = moto.maintenances.some(m => m.status === 'overdue');
-            if (hasOverdue) return 'Просрочка';
-            return 'В порядке';
-        },
-
-        async uploadPhoto(formData) {
-            try {
-                const fd = new FormData();
-                fd.append('photo', formData.get('photo'));
-                
-                const { data } = await api.post(`/motorcycle/${this.selectedMotoId}/photo`, fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                
-                const idx = this.motorcycles.findIndex(m => m.id === data.id);
-                if (idx !== -1) this.motorcycles[idx] = data;
-                this.showPhotoModal = false;
-                alert('Фото загружено');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка загрузки фото');
-            }
-        },
-
-        async deletePhoto() {
-            if (!confirm('Удалить фото?')) return;
-            try {
-                const { data } = await api.delete(`/motorcycle/${this.selectedMotoId}/photo`);
-                const idx = this.motorcycles.findIndex(m => m.id === data.id);
-                if (idx !== -1) this.motorcycles[idx] = data;
-                this.showPhotoModal = false;
-                alert('Фото удалено');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка удаления фото');
-            }
-        },
-
-        async addMoto(formData) {
-            try {
-                const { photoFile, ...data } = formData;
-                const { data: moto } = await api.post('/motorcycle/', data);
-                
-                if (photoFile) {
-                    const fd = new FormData();
-                    fd.append('photo', photoFile);
-                    await api.post(`/motorcycle/${moto.id}/photo`, fd, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-                }
-                
-                await this.loadData();
-                await this.loadReminders()
-                this.selectedMotoId = moto.id;
-                this.showAddMotoModal = false;
-                alert('Мотоцикл добавлен');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка добавления');
-            }
-        },
-
-        async updateMoto(formData) {
-            try {
-                this.loading = true;
-                const { newPhotoFile, deleteExistingPhoto, ...data } = formData;
-                
-                await api.put(`/motorcycle/${data.id}`, data);
-                
-                if (deleteExistingPhoto) {
-                    await api.delete(`/motorcycle/${data.id}/photo`);
-                }
-                
-                if (newPhotoFile) {
-                    const fd = new FormData();
-                    fd.append('photo', newPhotoFile);
-                    await api.post(`/motorcycle/${data.id}/photo`, fd, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-                }
-                
-                await this.loadData();
-                await this.loadReminders()
-                this.showEditMotoModal = false;
-                alert('Мотоцикл обновлен');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка обновления');
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async updateMotoMileage(formData) {
-            try {
-                await api.patch(`/motorcycle/${formData.id}`, formData);
-                await this.loadData();
-                await this.loadReminders()
-                this.showUpdateMotoMileageModal = false;
-                alert('Пробег обновлен');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка обновления пробега');
-            }
-        },
-
-        async updateMotoNote(formData) {
-            try {
-                await api.patch(`/motorcycle/${formData.id}/note`, formData);
-                await this.loadData();
-                this.showEditMotoNoteModal = false;
-                alert('Заметка обновлена');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка обновления заметки');
-            }
-        },
-
-        async deleteMoto(id) {
-            try {
-                await api.delete(`/motorcycle/${id}`);
-                await this.loadData();
-                await this.loadReminders()
-                if (this.motorcycles.length > 0) {
-                    this.selectedMotoId = this.motorcycles[0].id;
-                } else {
-                    this.selectedMotoId = null;
-                }
-                this.showDeleteMotoModal = false;
-                alert('Мотоцикл удален');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка удаления');
-            }
-        },
-
-        async deleteMaintenance(id) {
-            try {
-                await api.delete(`/maintenance/${id}`);
-                await this.loadData();
-                this.showDetailsMaintenanceModal = false;
-                alert('Обслуживание удалено');
-            } catch (err) {
-                alert(err.response?.data?.error || 'Ошибка удаления');
-            }
-        },
-
-        async markMaintenance(formData) {
-            try {
-                if (!formData || !formData.id) {
-                    console.error('No maintenance ID provided');
-                    this.$toast?.error('Ошибка: отсутствует ID обслуживания');
-                    return;
-                }
-
-                const payload = {
-                    completed_mileage: formData.completed_mileage || formData.mileage || 0,
-                    completed_date: formData.completed_date || new Date().toISOString().split('T')[0],
-                    cost: formData.cost || 0,
-                    is_repeat: formData.is_repeat || false,
-                    interval: formData.interval || null,
-                    interval_days: formData.interval_days || null
-                };
-
-                await api.post(`/maintenance/${formData.id}/complete`, payload);
-                
-                this.$toast?.success('Обслуживание успешно завершено!');
-                await this.loadData();
-                
-                this.selectedMaintenance = null;
-            } catch (err) {
-                console.error('Failed to complete maintenance:', err);
-                const errorMsg = err.response?.data?.error || 'Ошибка при завершении обслуживания';
-                this.$toast?.error(errorMsg);
-            }
-        },
-
-        onQuickStartCreated() {
-            this.loadData()
-            this.showQuickStartModal = false
-        },
-
-        saveMaintenance() {
-            this.loadData();
-        },
-
-        openMaintenanceDetails(item) {
-            this.selectedMaintenance = item;
-            this.showDetailsMaintenanceModal = true;
-        },
-
-        closeMaintenanceDetails() {
-            this.selectedMaintenance = null;
-            this.showDetailsMaintenanceModal = false;
-        },
-
-        getStatusClass(status) {
-            return {
-                completed: 'badge-success',
-                planned: 'badge-warning',
-                overdue: 'badge-danger'
-            }[status] || 'badge-gray';
-        },
-
-        getStatusLabel(status) {
-            return {
-                completed: 'Выполнено',
-                planned: 'Запланировано',
-                overdue: 'Просрочено'
-            }[status] || status;
-        },
-
-        formatDate(date) {
-            return formatDate(date);
-        },
-
-
-
-        async loadReminders() {
-            try {
-                this.loadingReminders = true
-                const { data } = await remindersApi.getReminders('pending')
-                this.reminders = data.reminders || []
-            } catch (err) {
-                console.error('Failed to load reminders:', err)
-            } finally {
-                this.loadingReminders = false
-            }
-        },
-
-        async dismissReminder(reminder) {
-            try {
-                await remindersApi.dismiss(reminder.id)
-                this.reminders = this.reminders.filter(r => r.id !== reminder.id)
-            } catch (err) {
-                console.error('Failed to dismiss reminder:', err)
-                alert('Не удалось скрыть напоминание')
-            }
-        },
-
-        async snoozeReminder(reminder, days = 7) {
-            try {
-                const { data } = await remindersApi.snooze(reminder.id, days)
-                const idx = this.reminders.findIndex(r => r.id === reminder.id)
-                if (idx !== -1) this.reminders[idx] = data.reminder
-            } catch (err) {
-                console.error('Failed to snooze reminder:', err)
-                alert('Не удалось отложить напоминание')
-            }
-        },
-
-        reminderBannerInfo(reminder) {
-            const moto = this.motorcycles.find(m => m.id === reminder.motorcycle_id)
-            const motoName = moto?.name || 'мотоцикл'
-
-            switch (reminder.type) {
-                case 'mileage_update': {
-                    const last = reminder.motorcycle?.mileage || moto?.mileage || 0
-                    return {
-                        icon: 'fa-solid fa-gauge-high',
-                        iconColor: 'warning',
-                        title: `Обновите пробег для ${motoName}`,
-                        text: `Текущий: ${last} км. Свежие данные помогают точнее напоминать о ТО.`,
-                        cta: 'Обновить',
-                    }
-                }
-                case 'maintenance_soon': {
-                    const maint = reminder.maintenance
-                    return {
-                        icon: 'fa fa-wrench',
-                        iconColor: 'accent',
-                        title: `Скоро ТО: ${maint?.title || 'обслуживание'}`,
-                        text: `Запланировано на ${maint?.planned_mileage || '—'} км.`,
-                        cta: 'Открыть',
-                    }
-                }
-                case 'maintenance_overdue': {
-                    const maint = reminder.maintenance
-                    return {
-                        icon: 'fa fa-exclamation-triangle',
-                        iconColor: 'danger',
-                        title: `Просрочено ТО: ${maint?.title || 'обслуживание'}`,
-                        text: `Планировалось на ${maint?.planned_mileage || '—'} км.`,
-                        cta: 'Открыть',
-                    }
-                }
-                default:
-                    return {
-                        icon: 'fa fa-bell',
-                        iconColor: 'accent',
-                        title: 'Напоминание',
-                        text: '',
-                        cta: 'Открыть',
-                    }
-            }
-        },
-
-        handleReminderAction(reminder) {
-            if (reminder.type === 'mileage_update') {
-                const moto = this.motorcycles.find(m => m.id === reminder.motorcycle_id)
-                if (moto) {
-                    this.selectMotorcycle(moto)
-                    this.showUpdateMotoMileageModal = true
-                }
-            } else {
-                this.$router.push('/maintenance')
-            }
-        },
-    },
-
-    mounted() {
-        this.loadData()
-        this.loadReminders()
+    // ===== Helpers =====
+    function selectMotorcycle(moto) {
+      if (!moto?.id) return
+      motorcyclesStore.select(moto.id)
     }
+
+    function handleImageError(e) {
+      e.target.src = ''
+      e.target.style.display = 'none'
+      const placeholder = e.target.parentElement?.querySelector('.moto-list-placeholder')
+      if (placeholder) placeholder.classList.remove('hidden')
+    }
+
+    // ===== Motorcycle CRUD =====
+    async function addMoto(formData) {
+      try {
+        const { photoFile, ...data } = formData
+        await motorcyclesStore.create(data, photoFile)
+        await remindersStore.loadPending()
+        showAddMotoModal.value = false
+        toast.success('Мотоцикл добавлен')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка добавления')
+      }
+    }
+
+    async function updateMoto(formData) {
+      try {
+        const { id, newPhotoFile, deleteExistingPhoto, ...data } = formData
+        await motorcyclesStore.update(id, data, { newPhotoFile, deleteExistingPhoto })
+        await remindersStore.loadPending()
+        showEditMotoModal.value = false
+        toast.success('Мотоцикл обновлён')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка обновления')
+      }
+    }
+
+    async function updateMotoMileage(formData) {
+      try {
+        await motorcyclesStore.updateMileage(formData.id, formData.mileage)
+        await remindersStore.loadPending()
+        showUpdateMotoMileageModal.value = false
+        toast.success('Пробег обновлён')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка обновления пробега')
+      }
+    }
+
+    async function updateMotoNote(formData) {
+      try {
+        await motorcyclesStore.updateNote(formData.id, formData.note)
+        showEditMotoNoteModal.value = false
+        toast.success('Заметка обновлена')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка обновления заметки')
+      }
+    }
+
+    async function deleteMoto(id) {
+      try {
+        await motorcyclesStore.remove(id)
+        await remindersStore.loadPending()
+        showDeleteMotoModal.value = false
+        toast.success('Мотоцикл удалён')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка удаления')
+      }
+    }
+
+    async function uploadPhoto(formData) {
+      try {
+        const file = formData.get('photo')
+        if (!file) return
+        await motorcyclesStore.uploadPhoto(selectedMotoId.value, file)
+        showPhotoModal.value = false
+        toast.success('Фото загружено')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка загрузки фото')
+      }
+    }
+
+    async function deletePhoto() {
+      if (!confirm('Удалить фото?')) return
+      try {
+        await motorcyclesStore.deletePhoto(selectedMotoId.value)
+        showPhotoModal.value = false
+        toast.success('Фото удалено')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка удаления фото')
+      }
+    }
+
+    // ===== Maintenance =====
+    async function deleteMaintenance(id) {
+      try {
+        const { useMaintenancesStore } = await import('@/stores')
+        await useMaintenancesStore().remove(id)
+        await motorcyclesStore.loadAll()
+        showDetailsMaintenanceModal.value = false
+        toast.success('Обслуживание удалено')
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка удаления')
+      }
+    }
+
+    async function markMaintenance(formData) {
+      try {
+        if (!formData?.id) {
+          toast.error('Ошибка: отсутствует ID обслуживания')
+          return
+        }
+
+        const payload = {
+          completed_mileage: formData.completed_mileage || formData.mileage || 0,
+          completed_date: formData.completed_date || new Date().toISOString().split('T')[0],
+          cost: formData.cost || 0,
+          is_repeat: formData.is_repeat || false,
+          interval: formData.interval || null,
+          interval_days: formData.interval_days || null,
+        }
+
+        const { useMaintenancesStore } = await import('@/stores')
+        await useMaintenancesStore().complete(formData.id, payload)
+        await motorcyclesStore.loadAll()
+        await remindersStore.loadPending()
+
+        toast.success('Обслуживание завершено')
+        selectedMaintenance.value = null
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Ошибка завершения обслуживания')
+      }
+    }
+
+    function saveMaintenance() {
+      motorcyclesStore.loadAll()
+    }
+
+    function openMaintenanceDetails(item) {
+      selectedMaintenance.value = item
+      showDetailsMaintenanceModal.value = true
+    }
+
+    function closeMaintenanceDetails() {
+      selectedMaintenance.value = null
+      showDetailsMaintenanceModal.value = false
+    }
+
+    function onQuickStartCreated() {
+      motorcyclesStore.loadAll()
+      showQuickStartModal.value = false
+    }
+
+    // ===== Reminders =====
+    async function dismissReminder(reminder) {
+      try {
+        await remindersStore.dismiss(reminder.id)
+      } catch (err) {
+        toast.error('Не удалось скрыть напоминание')
+      }
+    }
+
+    function reminderBannerInfo(reminder) {
+      const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
+      const motoName = moto?.name || 'мотоцикл'
+
+      switch (reminder.type) {
+        case 'mileage_update': {
+          const last = reminder.motorcycle?.mileage || moto?.mileage || 0
+          return {
+            icon: 'fa-solid fa-gauge-high',
+            variant: 'warning',
+            title: `Обновите пробег для ${motoName}`,
+            text: `Текущий: ${last} км. Свежие данные помогают точнее напоминать о ТО.`,
+            cta: 'Обновить',
+          }
+        }
+        case 'maintenance_soon': {
+          const maint = reminder.maintenance
+          return {
+            icon: 'fa fa-wrench',
+            variant: 'accent',
+            title: `Скоро ТО: ${maint?.title || 'обслуживание'}`,
+            text: `Запланировано на ${maint?.planned_mileage || '—'} км.`,
+            cta: 'Открыть',
+          }
+        }
+        case 'maintenance_overdue': {
+          const maint = reminder.maintenance
+          return {
+            icon: 'fa fa-exclamation-triangle',
+            variant: 'danger',
+            title: `Просрочено ТО: ${maint?.title || 'обслуживание'}`,
+            text: `Планировалось на ${maint?.planned_mileage || '—'} км.`,
+            cta: 'Открыть',
+          }
+        }
+        default:
+          return {
+            icon: 'fa fa-bell',
+            variant: 'accent',
+            title: 'Напоминание',
+            text: '',
+            cta: 'Открыть',
+          }
+      }
+    }
+
+    function handleReminderAction(reminder) {
+      if (reminder.type === 'mileage_update') {
+        const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
+        if (moto) {
+          motorcyclesStore.select(moto.id)
+          showUpdateMotoMileageModal.value = true
+        }
+      } else {
+        router.push('/maintenance')
+      }
+    }
+
+    return {
+      // stores
+      motorcyclesStore,
+      remindersStore,
+      // store refs
+      motorcycles,
+      selectedMotoId,
+      loading,
+      // computed
+      selectedMotorcycle,
+      recentMaintenances,
+      nextMaintenance,
+      totalMaintenances,
+      totalCosts,
+      maintenanceSpends,
+      activeRemindersForSelected,
+      hasActiveReminders,
+      // local state
+      selectedMaintenance,
+      showAddMotoModal,
+      showEditMotoModal,
+      showDeleteMotoModal,
+      showUpdateMotoMileageModal,
+      showEditMotoNoteModal,
+      showDetailsMaintenanceModal,
+      showPhotoModal,
+      showQuickStartModal,
+      // utils
+      formatMileage,
+      formatCost,
+      declensionMotorcycles,
+      getStatusLabel,
+      getStatusBadgeVariant,
+      getMotoPhotoUrl,
+      formatDate,
+      // methods
+      selectMotorcycle,
+      handleImageError,
+      addMoto,
+      updateMoto,
+      updateMotoMileage,
+      updateMotoNote,
+      deleteMoto,
+      uploadPhoto,
+      deletePhoto,
+      deleteMaintenance,
+      markMaintenance,
+      saveMaintenance,
+      openMaintenanceDetails,
+      closeMaintenanceDetails,
+      onQuickStartCreated,
+      dismissReminder,
+      reminderBannerInfo,
+      handleReminderAction,
+    }
+  },
 }
 </script>
 
@@ -961,7 +789,7 @@ export default {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .quick-start-promo .btn-primary {
         width: 100%;
         justify-content: center;
@@ -1881,21 +1709,21 @@ export default {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .btn-primary {
         width: 100%;
         justify-content: center;
         padding: 12px;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .detail-grid {
         grid-template-columns: 1fr;
     }
@@ -1941,12 +1769,12 @@ export default {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
-    
+
     .stat-card {
         padding: 12px 14px;
         gap: 10px;
     }
-    
+
     .stat-icon {
         width: 36px;
         height: 36px;
@@ -1956,16 +1784,16 @@ export default {
     .stat-value {
         font-size: 15px;
     }
-    
+
     .detail-card {
         padding: 14px 16px;
     }
-    
+
     .spec-list {
         grid-template-columns: 1fr 1fr;
         gap: 4px 12px;
     }
-    
+
     .spec-value {
         font-size: 13px;
     }
@@ -2020,13 +1848,13 @@ export default {
     .empty-state {
         padding: 40px 16px;
     }
-    
+
     .empty-icon {
         width: 60px;
         height: 60px;
         font-size: 26px;
     }
-    
+
     .empty-state h3 {
         font-size: 18px;
     }

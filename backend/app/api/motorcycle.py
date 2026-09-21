@@ -1,6 +1,3 @@
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-
 from app.decorators import moto_owner_required
 from app.schemas.motorcycle import (
     CreateMotorcycleSchema,
@@ -10,6 +7,8 @@ from app.schemas.motorcycle import (
 )
 from app.services.motorcycle_service import MotorcycleService
 from app.utils.helpers import get_current_user_id
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 
 motorcycle = Blueprint("motorcycle", __name__)
 
@@ -18,6 +17,7 @@ def _serialize_short(moto) -> dict:
     """Базовый ответ без ТО."""
     return MotorcycleShortSchema.model_validate(moto).model_dump()
 
+
 def _serialize_detail(moto) -> dict:
     """Ответ с вложенным ТО."""
     return MotorcycleDetailSchema.model_validate(moto).model_dump()
@@ -25,13 +25,25 @@ def _serialize_detail(moto) -> dict:
 
 @motorcycle.route("/", methods=["GET"])
 @jwt_required()
-def get_user_moto():
+def get_user_motos():
     """
     Получение данных о мотоциклах пользователя.
     """
     user_id = get_current_user_id()
     motorcycles = MotorcycleService.get_user_motorcycles(user_id)
     return jsonify([_serialize_detail(m) for m in motorcycles]), 200
+
+
+@motorcycle.route("/<int:moto_id>", methods=["GET"])
+@jwt_required()
+def get_user_moto(moto_id):
+    """
+    Получение данных о конкретном мотоцикле пользователя.
+    """
+    user_id = get_current_user_id()
+    motorcycle = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+    return jsonify(_serialize_detail(motorcycle)), 200
+
 
 @motorcycle.route("/", methods=["POST"])
 @jwt_required()
@@ -99,16 +111,15 @@ def update_note(moto_id):
 @moto_owner_required
 def upload_moto_photo(moto_id):
     """Загрузка фото мотоцикла."""
-    if 'photo' not in request.files:
+    if "photo" not in request.files:
         return jsonify({"error": "Файл не найден"}), 400
-    
-    file = request.files['photo']
-    if file.filename == '':
+
+    file = request.files["photo"]
+    if file.filename == "":
         return jsonify({"error": "Файл не выбран"}), 400
 
-    updated = MotorcycleService.update_moto_photo(
-        moto_id, get_current_user_id(), file
-    )
+    updated = MotorcycleService.update_moto_photo(moto_id, get_current_user_id(), file)
+
     return jsonify(_serialize_detail(updated)), 200
 
 
@@ -117,9 +128,8 @@ def upload_moto_photo(moto_id):
 @moto_owner_required
 def delete_moto_photo(moto_id):
     """Удаление фото мотоцикла."""
-    updated = MotorcycleService.delete_moto_photo(
-        moto_id, get_current_user_id()
-    )
+    updated = MotorcycleService.delete_moto_photo(moto_id, get_current_user_id())
+
     return jsonify(_serialize_detail(updated)), 200
 
 
