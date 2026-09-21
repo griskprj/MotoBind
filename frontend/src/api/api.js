@@ -97,13 +97,15 @@ api.interceptors.response.use(
   (response) => {
     const { config } = response
 
-    if (config.method === 'get' && config.cache) {
-      const key = cacheKey(config.url, config.params)
-      setCache(key, response.data, config.cache)
-    }
+    if (config && config.method) {
+      if (config.method === 'get' && config.cache) {
+        const key = cacheKey(config.url, config.params)
+        setCache(key, response.data, config.cache)
+      }
 
-    if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
-      invalidateCache()
+      if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
+        invalidateCache()
+      }
     }
 
     return response

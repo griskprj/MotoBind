@@ -6,6 +6,63 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.11.0] — 2026-09-21
+
+### Added
+- **frontend/stores**: Pinia-сторы для всех доменов
+  - `useUserStore` — профиль, настройки уведомлений, аватар (upload/delete)
+  - `useMotorcyclesStore` — список мотоциклов, выбор, CRUD, пробег, заметка, фото
+  - `useMaintenancesStore` — список ТО, фильтры, сортировка, counts
+  - `useNotificationsStore` — список, unread count, polling, mark read
+  - `useRemindersStore` — напоминания, dismiss, snooze
+  - `useModalsStore` — глобальный реестр модалок (задел на Sprint 4)
+- **frontend/stores/index.js**: единый экспорт всех сторов
+- **frontend/utils/formatters.js**: общие форматтеры и лейблы
+  - `formatMileage`, `formatCost`, `declensionMotorcycles`
+  - `getStatusLabel`, `getStatusBadgeVariant`, `getCategoryLabel`
+  - словари `STATUS_LABELS`, `STATUS_BADGE_VARIANT`, `CATEGORY_LABELS`
+- **frontend/utils/mediaUrl.js**: единый резолвер URL для медиа
+  - `getUploadUrl`, `getMotoPhotoUrl`, `getAvatarUrl`, `getManualImageUrl`
+- **frontend/api/api.js**: in-memory HTTP-кеш для GET-запросов
+  - opt-in через `{ cache: <TTL> }` в config запроса
+  - автоматическая инвалидация кеша при `POST`, `PUT`, `PATCH`, `DELETE`
+  - экспорт `clearApiCache()` для ручной инвалидации
+
+### Changed
+- **frontend/Garage.vue**: мигрирован на `useMotorcyclesStore` + `useRemindersStore`
+  - `<script>`: ~340 строк → ~90 строк setup-функции
+  - удалены локальные копии `formatMileage`, `formatCost`, `declensionMotorcycles`, `getStatusLabel`
+  - `alert()` заменены на `toast.error()` / `toast.success()` через `useToast()`
+  - ручная загрузка ТО (цикл `for … await api.get`) убрана
+- **frontend/stores/motorcycles.js**: `loadAll` использует один запрос к `/motorcycle/`
+  - бэкенд уже возвращает вложенные `maintenances` (selectinload закрыт в 1.1.0)
+  - мутации (`update`, `updateMileage`, `updateNote`, `uploadPhoto`, `deletePhoto`) используют response напрямую — без повторного GET
+
+### Fixed
+- **backend/api/motorcycle.py**: `GET /motorcycle/<id>` теперь проверяет владельца
+  - `MotorcycleService.get_motorcycle_by_id` принимает `user_id` и возвращает 404 для чужого мотоцикла
+  - ранее любой авторизованный пользователь мог получить мотоцикл по id
+- **frontend/api/api.js**: response-interceptor не падает, если `response.config` отсутствует
+  - защита `if (config && config.method)` вокруг логики кеша
+  - чинён упавший тест `passes successful response through`
+- **pre-commit**: `flake8` теперь читает параметры из `args`, а не ищет `.flake8` относительно CWD
+  - устранён конфликт `flake8` (дефолт 79) и `black`/`isort` (line-length 120)
+  - версия flake8 в pre-commit поднята до 7.1.1 (синхронизация с CI)
+
+### Performance
+- **Garage**: загрузка страницы — 6 HTTP-запросов → 2
+  - 1 × `GET /motorcycle/` (список с maintenances) + 1 × `GET /reminders/?status=pending`
+  - при 5 мотоциклах бывший N+1 (1 + N) давал 6 запросов только на гараж
+- **stores**: повторный `loadAll()` в пределах 30 секунд берётся из кеша (19 ms → 1 ms)
+- **utils**: `formatMileage`/`formatCost`/`getStatusLabel` больше не дублируются в 5+ компонентах
+
+### Notes
+- JSON-контракт API не изменился (кроме багфикса в `GET /motorcycle/<id>` — теперь 404 для чужих)
+- Визуал `/garage` идентичен до/после миграции — проверено по скриншотам
+- Модалки в `Garage.vue` пока на локальных флагах (`showAddMotoModal` и т.п.);
+  перевод на `useModalsStore` — Sprint 4
+- Остальные views (`Maintenance`, `Manuals`, `Repair`, `Profile`, `Social`) — Sprint 4
+
 ## [1.10.0] — 2026-09-21
 
 ### Added
