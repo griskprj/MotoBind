@@ -8,30 +8,34 @@
 
   <div v-if="$route.meta.showHeader" class="app-with-sidebar">
     <Sidebar ref="sidebar" />
-    
+
     <div class="app-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <div class="page-content">
         <router-view />
       </div>
-      
+
       <Footer v-if="$route.meta.showFooter" />
     </div>
   </div>
-  
+
   <template v-else>
     <router-view />
     <Footer v-if="$route.meta.showFooter" />
   </template>
+
+  <ToastContainer/>
 </template>
 
 <script>
 import Sidebar from './components/Sidebar.vue';
 import Footer from './components/Footer.vue';
+import ToastContainer from './components/ui/ToastContainer.vue';
 
 export default {
   components: {
     Sidebar,
     Footer,
+    ToastContainer
   },
 
   data() {
@@ -75,17 +79,16 @@ export default {
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  overflow-x: hidden;
 }
 
 html {
   touch-action: manipulation;
 }
 
-button, 
-a, 
-input, 
-select, 
+button,
+a,
+input,
+select,
 textarea {
   touch-action: manipulation;
   min-height: 44px;
@@ -138,7 +141,7 @@ textarea {
         margin-left: 280px; /* Ширина развернутого сайдбара */
         padding: 0;
     }
-    
+
     /* Когда сайдбар свернут */
     .app-content.sidebar-collapsed {
         margin-left: 64px; /* Ширина свернутого сайдбара */

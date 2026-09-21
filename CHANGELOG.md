@@ -6,6 +6,40 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.10.0] — 2026-09-21
+
+### Added
+- **frontend/ui**: UI-kit — базовые компоненты
+  - `BaseButton` (7 вариантов: primary, secondary, outline, ghost, danger, success, warning; размеры sm/md/lg; loading; icon; block)
+  - `BaseInput`, `BaseTextarea` (label, error, hint, counter)
+  - `BaseBadge` (6 вариантов + dot)
+  - `BaseCard` (header/body/footer слоты, interactive, flat)
+  - `BaseModal` (variant вместо bg-icon-color/icon-color, size sm/md/lg/xl, loading)
+  - `BaseEmptyState` (icon, title, description, actions slot)
+  - `ToastContainer` — глобальный контейнер уведомлений
+- **frontend/composables**: `useToast` — toast-сервис (success/error/warning/info)
+- **frontend/composables**: `useForm` — composable для форм (values, errors, validate, loading, submit, reset)
+- **frontend**: алиас `@` → `src` в `vite.config.js`
+
+### Changed
+- **ChangePasswordModal**, **DeleteAccountModal**: мигрированы на UI-kit как примеры
+  - ~150 строк CSS → ~20 в каждой
+  - `alert()` → `toast.error()`
+  - валидация → `useForm.validate`
+- **reset.scss**: `overflow-x: hidden` убран с `html`/`body`
+- **App.vue**: `overflow-x: hidden` убран из глобальных стилей
+- **tokens.scss**: активированы токены spacing/typography/motion/z-index
+
+### Fixed
+- **position: fixed** на всех оверлеях (toast, модалки, sidebar, dropdown) — работал некорректно на длинных страницах
+  - причина: `overflow-x: hidden` на `html`/`body` создавал containing block для `fixed`-потомков
+- **tokens**: `--space-*`, `--text-*`, `--transition-*`, `--z-*` были закомментированы → `var()` резолвился в пустое значение
+
+### Notes
+- JSON-контракт API не изменился
+- Остальные 25 модалок будут мигрированы на UI-kit в Sprint 4
+- Формы: пока мигрированы 2 модалки, остальные — по мере рефакторинга views
+
 ## [1.9.0] — 2026-09-21
 
 ### Added
