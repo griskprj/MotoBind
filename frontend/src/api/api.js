@@ -8,16 +8,43 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 })
 
+// ===== In-memory HTTP cache для GET =====
+// Кеш по умолчанию выключен: чтобы закешировать — передать { cache: 30_000 } в config
+// TTL в миллисекундах. 30_000 = 30 секунд.
+const cache = new Map()
+const CACHE_PREFIX = '__cache__:'
+
+function cacheKey(url, params) {
+  const p = params ? JSON.stringify(params) : ''
+  return `${url}?${p}`
+}
+
+function getFromCache(key) {
+  const entry = cache.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key)
+    return null
+  }
+  return entry.data
+}
+
+function setCache(key, data, ttl) {
+  cache.set(key, { data, expiresAt: Date.now() + ttl })
+}
+
+function invalidateCache() {
+  cache.clear()
+}
+
+// ===== Refresh-queue =====
 let isRefreshing = false
 let failedQueue = []
 
 function processQueue(error, token = null) {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error)
-    } else {
-      prom.resolve(token)
-    }
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error)
+    else prom.resolve(token)
   })
   failedQueue = []
 }
@@ -26,23 +53,36 @@ async function syncStoreAfterLogout() {
   try {
     const { useAuthStore } = await import('../stores/auth')
     useAuthStore().logout()
-  } catch {
-
-  }
+  } catch {}
 }
 
 async function syncStoreAfterRefresh(accessToken, refreshToken) {
   try {
     const { useAuthStore } = await import('../stores/auth')
     useAuthStore().setTokensFromRefresh(accessToken, refreshToken)
-  } catch {
-
-  }
+  } catch {}
 }
 
-
+// ===== Request interceptor =====
 api.interceptors.request.use(
   (config) => {
+    if (config.method === 'get' && config.cache) {
+      const key = cacheKey(config.url, config.params)
+      const cached = getFromCache(key)
+      if (cached) {
+        config.adapter = () => {
+          return Promise.resolve({
+            data: cached,
+            status: 200,
+            statusText: 'OK (from cache)',
+            headers: {},
+            config,
+            request: null,
+          })
+        }
+      }
+    }
+
     const token = localStorage.getItem(TOKEN_KEY)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -52,8 +92,22 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// ===== Response interceptor =====
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const { config } = response
+
+    if (config.method === 'get' && config.cache) {
+      const key = cacheKey(config.url, config.params)
+      setCache(key, response.data, config.cache)
+    }
+
+    if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
+      invalidateCache()
+    }
+
+    return response
+  },
   async (error) => {
     const originalRequest = error.config
 
@@ -66,11 +120,11 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
-          .then(token => {
+          .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`
             return api(originalRequest)
           })
-          .catch(err => Promise.reject(err))
+          .catch((err) => Promise.reject(err))
       }
 
       originalRequest._retry = true
@@ -78,9 +132,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
-        if (!refreshToken) {
-          throw new Error('No refresh token')
-        }
+        if (!refreshToken) throw new Error('No refresh token')
 
         const response = await api.post('/auth/refresh', {
           refresh_token: refreshToken,
@@ -120,5 +172,9 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+export function clearApiCache() {
+  invalidateCache()
+}
 
 export default api
