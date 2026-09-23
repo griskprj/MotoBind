@@ -143,6 +143,51 @@ export const useManualsStore = defineStore('manuals', () => {
     pagination.value.total = Math.max(0, pagination.value.total - 1)
   }
 
+  async function create(payload, files = {}) {
+    const formData = new FormData()
+    formData.append('data', JSON.stringify(payload))
+
+    Object.entries(files).forEach(([key, file]) => {
+      if (file) formData.append(key, file)
+    })
+
+    const { data } = await api.post('/manual/new-manual', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+
+    items.value.unshift(data)
+    pagination.value.total += 1
+    return data
+  }
+
+  async function update(id, payload) {
+    const { data } = await api.put(`/manual/${id}`, payload)
+
+    const idx = items.value.findIndex((m) => m.id === id)
+    if (idx !== -1) items.value[idx] = data
+
+    if (current.value?.id === id) {
+      current.value = data
+    }
+
+    return data
+  }
+
+  async function uploadStepImage(manualId, stepId, file) {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { data } = await api.post(
+      `/manual/${manualId}/steps/${stepId}/image`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return data.image_url
+  }
+
+  async function deleteStepImage(manualId, stepId) {
+    await api.delete(`/manual/${manualId}/steps/${stepId}/image`)
+  }
+
   function reset() {
     items.value = []
     current.value = null
@@ -176,6 +221,10 @@ export const useManualsStore = defineStore('manuals', () => {
     clearFilters,
     clearAll,
     remove,
+    update,
+    uploadStepImage,
+    deleteStepImage,
     reset,
+    create,
   }
 })

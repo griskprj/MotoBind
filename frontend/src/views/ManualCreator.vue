@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="isSubmitting" text="Создание мануала..."/>
-        
+
         <!-- === HEADER === -->
         <Header
             title="Конструктор мануалов"
@@ -14,7 +14,7 @@
                 <i class="fa fa-info-circle"></i>
                 <span>Правила оформления мануалов <a href='/manual/rules' target='_blank'>здесь</a>.</span>
             </div>
-            
+
             <form @submit.prevent="submitManual" enctype="multipart/form-data">
                 <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
                 <div class="form-card">
@@ -45,18 +45,18 @@
                         <div class="form-group">
                             <label>
                                 Название процедуры*
-                                
+
                                 <!-- Выпадающий список шаблонов -->
-                                <select 
+                                <select
                                     v-if="!form.customTitle && form.category"
-                                    v-model="form.templateId" 
+                                    v-model="form.templateId"
                                     @change="onTemplateChange"
                                     :class="{ 'error': errors.title }"
                                 >
                                     <option value="">Выберите процедуру</option>
-                                    <option 
-                                        v-for="tpl in availableTemplates" 
-                                        :key="tpl.id" 
+                                    <option
+                                        v-for="tpl in availableTemplates"
+                                        :key="tpl.id"
                                         :value="tpl.id"
                                     >
                                         {{ tpl.label }}
@@ -71,16 +71,16 @@
 
                                 <!-- Ручной ввод (если выбрано "Своё название" или категория не выбрана) -->
                                 <div v-if="form.customTitle || !form.category" class="custom-title-wrapper">
-                                    <input 
-                                        type="text" 
-                                        v-model="form.title" 
+                                    <input
+                                        type="text"
+                                        v-model="form.title"
                                         placeholder="Введите своё название процедуры"
                                         :class="{ 'error': errors.title }"
                                         maxLength="200"
                                     >
-                                    <button 
+                                    <button
                                         v-if="form.customTitle && form.category"
-                                        type="button" 
+                                        type="button"
                                         class="btn-back-to-templates"
                                         @click="backToTemplates"
                                         title="Вернуться к списку"
@@ -96,8 +96,8 @@
                         <div class="form-group">
                             <label>
                                 Краткое описание*
-                                <textarea 
-                                    v-model="form.description" 
+                                <textarea
+                                    v-model="form.description"
                                     required
                                     rows="2"
                                     placeholder="Краткое описание процедуры, её важность и интервалы"
@@ -112,9 +112,9 @@
                             <div class="form-group">
                                 <label>
                                     Модель мотоцикла*
-                                    <input 
-                                        type="text" 
-                                        v-model="form.motorcycle" 
+                                    <input
+                                        type="text"
+                                        v-model="form.motorcycle"
                                         required
                                         placeholder="Например: BMW S1000RR (2018+)"
                                         :class="{ 'error': errors.motorcycle }"
@@ -141,9 +141,9 @@
                             <div class="form-group">
                                 <label>
                                     Ориентировочное время
-                                    <input 
-                                        type="text" 
-                                        v-model="form.time_estimate" 
+                                    <input
+                                        type="text"
+                                        v-model="form.time_estimate"
                                         placeholder="Например: 15–20 минут"
                                         maxLength="64"
                                     >
@@ -153,9 +153,9 @@
                             <div class="form-group">
                                 <label>
                                     Периодичность
-                                    <input 
-                                        type="text" 
-                                        v-model="form.interval" 
+                                    <input
+                                        type="text"
+                                        v-model="form.interval"
                                         placeholder="Например: каждые 10 000 км или раз в год"
                                         maxLength="64"
                                     >
@@ -176,8 +176,8 @@
                         <div class="form-group">
                             <label>
                                 Общие рекомендации
-                                <textarea 
-                                    v-model="form.safety_tip" 
+                                <textarea
+                                    v-model="form.safety_tip"
                                     rows="2"
                                     placeholder="Общие рекомендации по выполнению процедуры"
                                     maxLength="1000"
@@ -188,8 +188,8 @@
                         <div class="form-group">
                             <label>
                                 ⚠️ Предупреждения (что категорически нельзя делать)
-                                <textarea 
-                                    v-model="form.warnings" 
+                                <textarea
+                                    v-model="form.warnings"
                                     rows="2"
                                     placeholder="Например: Не запускайте двигатель без масла"
                                     maxLength="1000"
@@ -200,8 +200,8 @@
                         <div class="form-group">
                             <label>
                                 Необходимые условия
-                                <textarea 
-                                    v-model="form.conditions" 
+                                <textarea
+                                    v-model="form.conditions"
                                     rows="2"
                                     placeholder="Например: Двигатель холодный, мотоцикл на центральной подставке"
                                     maxLength="1000"
@@ -222,9 +222,9 @@
                         <div class="form-group">
                             <label>
                                 Инструменты
-                                <input 
-                                    type="text" 
-                                    v-model="form.instruments" 
+                                <input
+                                    type="text"
+                                    v-model="form.instruments"
                                     placeholder="Ключ на 18мм, ветошь, динамометрический ключ, ёмкость для слива"
                                     maxLength="500"
                                 >
@@ -234,9 +234,9 @@
                         <div class="form-group">
                             <label>
                                 Материалы и запчасти
-                                <input 
-                                    type="text" 
-                                    v-model="form.parts" 
+                                <input
+                                    type="text"
+                                    v-model="form.parts"
                                     placeholder="Масло моторное 10W-40 (3.2L), масляный фильтр, уплотнительное кольцо"
                                     maxLength="500"
                                 >
@@ -257,20 +257,20 @@
                             <label>
                                 Ссылки на документацию
                                 <div class="links-list">
-                                    <div 
-                                        v-for="(link, index) in form.docs_links" 
-                                        :key="index" 
+                                    <div
+                                        v-for="(link, index) in form.docs_links"
+                                        :key="index"
                                         class="link-item"
                                     >
-                                        <input 
-                                            type="url" 
-                                            v-model="form.docs_links[index]" 
+                                        <input
+                                            type="url"
+                                            v-model="form.docs_links[index]"
                                             placeholder="https://example.com/manual.pdf"
                                             class="link-input"
                                         >
-                                        <button 
-                                            type="button" 
-                                            class="btn-remove-link" 
+                                        <button
+                                            type="button"
+                                            class="btn-remove-link"
                                             @click="removeLink(index)"
                                         >
                                             <i class="fa fa-times"></i>
@@ -296,8 +296,8 @@
                         <div class="form-group">
                             <label>
                                 Моменты затяжки (JSON)
-                                <textarea 
-                                    v-model="form.specs_json" 
+                                <textarea
+                                    v-model="form.specs_json"
                                     rows="6"
                                     placeholder='{
   "torque": [
@@ -321,30 +321,30 @@
                         <div class="form-group">
                             <label>Быстрый редактор моментов затяжки</label>
                             <div class="torque-editor">
-                                <div 
-                                    v-for="(item, index) in torqueItems" 
-                                    :key="index" 
+                                <div
+                                    v-for="(item, index) in torqueItems"
+                                    :key="index"
                                     class="torque-row"
                                 >
-                                    <input 
-                                        v-model="item.name" 
+                                    <input
+                                        v-model="item.name"
                                         placeholder="Название болта"
                                         class="torque-name"
                                     >
-                                    <input 
-                                        v-model="item.nm" 
+                                    <input
+                                        v-model="item.nm"
                                         placeholder="Н·м"
                                         type="number"
                                         class="torque-nm"
                                     >
-                                    <input 
-                                        v-model="item.note" 
+                                    <input
+                                        v-model="item.note"
                                         placeholder="Примечание"
                                         class="torque-note"
                                     >
-                                    <button 
-                                        type="button" 
-                                        class="btn-remove-torque" 
+                                    <button
+                                        type="button"
+                                        class="btn-remove-torque"
                                         @click="removeTorqueItem(index)"
                                     >
                                         <i class="fa fa-times"></i>
@@ -379,14 +379,14 @@
                                     <i class="fa fa-times"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="step-content">
                                 <div class="form-group">
                                     <label>
                                         Заголовок шага*
-                                        <input 
-                                            type="text" 
-                                            v-model="step.title" 
+                                        <input
+                                            type="text"
+                                            v-model="step.title"
                                             required
                                             :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
                                             :class="{ 'error': step.errors && step.errors.title }"
@@ -399,8 +399,8 @@
                                 <div class="form-group">
                                     <label>
                                         Описание шага
-                                        <textarea 
-                                            v-model="step.text" 
+                                        <textarea
+                                            v-model="step.text"
                                             rows="3"
                                             :placeholder="`Подробное описание шага ${index + 1}`"
                                             maxLength="5000"
@@ -412,7 +412,7 @@
                                     <div class="form-group">
                                         <label>
                                             ⚠️ Предупреждение
-                                            <input 
+                                            <input
                                                 type="text"
                                                 v-model="step.warning"
                                                 placeholder="Чего нельзя делать на этом шаге"
@@ -424,7 +424,7 @@
                                     <div class="form-group">
                                         <label>
                                             💡 Совет
-                                            <input 
+                                            <input
                                                 type="text"
                                                 v-model="step.tip"
                                                 placeholder="Лайфхак или рекомендация"
@@ -437,7 +437,7 @@
                                 <div class="form-group">
                                     <label>
                                         🎯 Результат шага
-                                        <input 
+                                        <input
                                             type="text"
                                             v-model="step.result"
                                             placeholder="Как понять, что шаг выполнен правильно"
@@ -450,9 +450,9 @@
                                     <label>
                                         📷 Изображение шага
                                         <div class="image-upload" @click="$refs['fileInput' + index].click()">
-                                            <input 
+                                            <input
                                                 :ref="'fileInput' + index"
-                                                type="file" 
+                                                type="file"
                                                 accept="image/*"
                                                 @change="handleImageUpload(index, $event)"
                                                 class="file-input"
@@ -464,10 +464,10 @@
                                                 Изображение загружено
                                             </span>
                                             <span class="file-name" v-else>Выберите файл</span>
-                                            <button 
-                                                v-if="step.imageFile || (isEditMode && step.existingImage)" 
-                                                type="button" 
-                                                class="btn-remove-image" 
+                                            <button
+                                                v-if="step.imageFile || (isEditMode && step.existingImage)"
+                                                type="button"
+                                                class="btn-remove-image"
                                                 @click.stop="removeImage(index)"
                                             >
                                                 <i class="fa fa-times"></i>
@@ -498,8 +498,8 @@
                         <div class="form-group">
                             <label>
                                 Финальная проверка
-                                <textarea 
-                                    v-model="form.aftercare" 
+                                <textarea
+                                    v-model="form.aftercare"
                                     rows="3"
                                     placeholder="Что проверить после работы: уровень масла, отсутствие течей, затяжку болтов..."
                                     maxLength="2000"
@@ -515,7 +515,7 @@
                     <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                         <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
                         <span v-else>
-                            <i class="fa fa-check"></i> 
+                            <i class="fa fa-check"></i>
                             {{ isEditMode ? 'Сохранить изменения' : 'Создать мануал' }}
                         </span>
                     </button>
@@ -525,485 +525,455 @@
     </div>
 </template>
 
-<script>
-import api from '../api/api';
-import Header from '../components/Header.vue';
-import LoadingOverlay from '../components/LoadingOverlay.vue';
-import { getTemplatesByCategory } from '../constants/maintenanceTemplates'
+<script setup>
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useManualsStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import { getTemplatesByCategory } from '@/constants/maintenanceTemplates'
+import { getManualImageUrl } from '@/utils/mediaUrl'
 
-export default {
-    name: 'ManualCreator',
-    components: { Header, LoadingOverlay },
-    
-    data() {
-        return {
-            form: {
-                title: '',
-                customTitle: false,
-                description: '',
-                motorcycle: '',
-                difficult: '',
-                time_estimate: '',
-                interval: '',
-                category: '',
-                templateId: '',
-                safety_tip: '',
-                warnings: '',
-                conditions: '',
-                instruments: '',
-                parts: '',
-                docs_links: [],
-                specs: {},
-                specs_json: '',
-                steps: [],
-                aftercare: '',
-                tip: ''
-            },
-            errors: {},
-            isSubmitting: false,
-            stepIdCounter: 0,
-            torqueItems: [],
-            
-            editingManualId: null,
-            isEditMode: false,
-        };
-    },
+import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue'
 
-    watch: {
-        torqueItems: {
-            handler(newVal) {
-                if (newVal.length > 0) {
-                    const torque = newVal.filter(item => item.name || item.nm).map(item => ({
-                        name: item.name || 'Болт',
-                        nm: item.nm ? Number(item.nm) : 0,
-                        note: item.note || ''
-                    }));
-                    this.updateSpecs('torque', torque);
-                }
-            },
-            deep: true
-        },
-        specs_json: {
-            handler(newVal) {
-                try {
-                    if (newVal && newVal.trim()) {
-                        this.form.specs = JSON.parse(newVal);
-                    }
-                } catch (e) {
-                }
-            },
-            deep: true
-        }
-    },
-    
-    computed: {
-        availableTemplates() {
-            if (!this.form.category) return []
-            return getTemplatesByCategory(this.form.category)
-        }
-    },
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
+const manualsStore = useManualsStore()
 
-    methods: {
-        onCategoryChange() {
-            this.form.templateId = ''
-            this.form.title = ''
-            this.form.customTitle = false
-        },
+// ===== Local state =====
+const isSubmitting = ref(false)
+const errors = ref({})
+const stepIdCounter = ref(0)
+const editingManualId = ref(null)
+const isEditMode = ref(false)
 
-        onTemplateChange() {
-            if (this.form.templateId === '__custom__') {
-                this.form.customTitle = true
-                this.form.title = ''
-                this.$nextTick(() => {
-                    const input = this.$el.querySelector('.custom-title-wrapper input')
-                    if (input) input.focus()
-                })
-                return
-            }
+const form = reactive({
+  title: '',
+  customTitle: false,
+  description: '',
+  motorcycle: '',
+  difficult: '',
+  time_estimate: '',
+  interval: '',
+  category: '',
+  templateId: '',
+  safety_tip: '',
+  warnings: '',
+  conditions: '',
+  instruments: '',
+  parts: '',
+  docs_links: [],
+  specs: {},
+  specs_json: '',
+  steps: [],
+  aftercare: '',
+  tip: '',
+})
 
-            const tpl = this.availableTemplates.find(t => t.id === this.form.templateId)
-            this.form.title = tpl ? tpl.label : ''
-        },
-        
-        backToTemplates() {
-            this.form.customTitle = false
-            this.form.templateId = ''
-            this.form.title = ''
-        },
+const torqueItems = ref([])
 
-        addStep() {
-            this.form.steps.push({
-                id: null,
-                localId: ++this.stepIdCounter,
-                title: '',
-                text: '',
-                warning: '',
-                tip: '',
-                result: '',
-                imageFile: null,
-                imagePreview: null,
-                errors: {}
-            });
-        },
+// ===== Computed =====
+const availableTemplates = computed(() => {
+  if (!form.category) return []
+  return getTemplatesByCategory(form.category)
+})
 
-        removeStep(index) {
-            if (this.form.steps.length <= 1) {
-                alert('Мануал должен содержать хотя бы один шаг');
-                return;
-            }
-            this.form.steps.splice(index, 1);
-        },
-
-        handleImageUpload(index, event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Размер файла не должен превышать 5MB');
-                event.target.value = '';
-                return;
-            }
-
-            if (!file.type.startsWith('image/')) {
-                alert('Пожалуйста, загрузите изображение');
-                event.target.value = '';
-                return;
-            }
-
-            const step = this.form.steps[index]
-            if (this.isEditMode) {
-                this.uploadStepImage(index, file)
-                event.target.value = ''
-            } else {
-                step.imageFile = file
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    step.imagePreview = e.target.result
-                }
-                reader.readAsDataURL(file);
-            }
-        },
-
-        removeImage(index) {
-            const step = this.form.steps[index]
-            if (this.isEditMode) {
-                this.deleteStepImage(index)
-            } else {
-                step.imageFile = null
-                step.imagePreview = null
-                const input = this.$refs['fileInput' + index]
-                if (input) input.value = ''
-            }
-        },
-
-        addLink() {
-            this.form.docs_links.push('');
-        },
-
-        removeLink(index) {
-            this.form.docs_links.splice(index, 1);
-        },
-
-        updateSpecs(key, value) {
-            if (!this.form.specs) {
-                this.form.specs = {};
-            }
-            this.form.specs[key] = value;
-            this.specs_json = JSON.stringify(this.form.specs, null, 2);
-        },
-
-        addTorqueItem() {
-            this.torqueItems.push({ name: '', nm: '', note: '' });
-        },
-
-        removeTorqueItem(index) {
-            this.torqueItems.splice(index, 1);
-        },
-
-        validateForm() {
-            this.errors = {};
-            let isValid = true;
-
-            if (!this.form.title || this.form.title.trim().length < 3) {
-                this.errors.title = 'Название должно содержать минимум 3 символа';
-                isValid = false;
-            }
-
-            if (!this.form.description || this.form.description.trim().length < 10) {
-                this.errors.description = 'Описание должно содержать минимум 10 символов';
-                isValid = false;
-            }
-
-            if (!this.form.motorcycle || this.form.motorcycle.trim().length < 2) {
-                this.errors.motorcycle = 'Укажите модель мотоцикла';
-                isValid = false;
-            }
-
-            if (!this.form.difficult) {
-                this.errors.difficult = 'Выберите сложность';
-                isValid = false;
-            }
-
-            this.form.steps.forEach((step, index) => {
-                step.errors = {};
-                if (!step.title || step.title.trim().length < 2) {
-                    step.errors.title = 'Заголовок шага обязателен';
-                    isValid = false;
-                }
-            });
-
-            if (this.form.steps.length === 0) {
-                isValid = false;
-            }
-
-            return isValid;
-        },
-
-        async submitManual() {
-            if (!this.validateForm()) {
-                const firstError = document.querySelector('.error');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
-                }
-                return;
-            }
-
-            this.isSubmitting = true;
-
-            try {
-                if (this.isEditMode) {
-                    // === РЕДАКТИРОВАНИЕ ===
-                    const payload = this.buildPayload();
-                    const response = await api.put(`/manual/${this.editingManualId}`, payload);
-                    if (response.status === 200) {
-                        alert('Мануал обновлён и отправлен на повторную проверку!');
-                        this.$router.push(`/manual/${this.editingManualId}`);
-                    }
-                } else {
-                    // === СОЗДАНИЕ ===
-                    const formData = new FormData();
-                    const payload = this.buildPayload();
-                    formData.append('data', JSON.stringify(payload));
-
-                    this.form.steps.forEach((step, index) => {
-                        if (step.imageFile) {
-                            formData.append(`image_${index + 1}`, step.imageFile);
-                        }
-                    });
-
-                    const response = await api.post('/manual/new-manual', formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-
-                    if (response.status === 201) {
-                        alert('Мануал успешно создан!');
-                        this.resetForm();
-                        this.$router.push('/manuals');
-                    }
-                }
-            } catch (error) {
-                console.error('Ошибка сохранения мануала:', error);
-                let errorMessage = 'Произошла ошибка';
-                if (error.response?.data?.message) errorMessage = error.response.data.message;
-                else if (error.response?.data?.error) errorMessage = error.response.data.error;
-                else if (error.message) errorMessage = error.message;
-                alert(`Ошибка: ${errorMessage}`);
-            } finally {
-                this.isSubmitting = false;
-            }
-        },
-
-        async loadManualForEdit(id) {
-            try {
-                const response = await api.get(`/manual/${id}`)
-                const manual = response.data
-                this.editingManualId = id
-                this.isEditMode = true
-
-                this.form.title = manual.title || '';
-                this.form.description = manual.description || '';
-                this.form.motorcycle = manual.motorcycle || '';
-                this.form.difficult = manual.difficult || '';
-                this.form.time_estimate = manual.time_estimate || '';
-                this.form.interval = manual.interval || '';
-                this.form.category = manual.category || '';
-                this.form.safety_tip = manual.safety_tip || '';
-                this.form.warnings = manual.warnings || '';
-                this.form.conditions = manual.conditions || '';
-                this.form.instruments = manual.instruments || '';
-                this.form.parts = manual.parts || '';
-                this.form.docs_links = manual.docs_links || [];
-                this.form.aftercare = manual.aftercare || '';
-                this.form.tip = manual.tip || '';
-
-                if (manual.specs) {
-                    this.form.specs = manual.specs;
-                    this.specs_json = JSON.stringify(manual.specs, null, 2);
-                    if (manual.specs.torque) {
-                        this.torqueItems = manual.specs.torque.map(item => ({ ...item }));
-                    }
-                }
-
-                this.form.steps = manual.steps.map((step, index) => ({
-                    id: step.id,
-                    localId: ++this.stepIdCounter,
-                    order: step.order || index + 1,
-                    title: step.title || '',
-                    text: step.text || '',
-                    warning: step.warning || '',
-                    tip: step.tip || '',
-                    result: step.result || '',
-                    imageFile: null,
-                    imagePreview: step.image ? this.getImageUrl(step.image) : null,
-                    existingImage: step.image || null,
-                    errors: {}
-                }));
-
-                if (this.form.category && manual.title) {
-                    const templates = getTemplatesByCategory(this.form.category)
-                    const match = templates.find(t => t.label.toLowerCase() === manual.title.toLowerCase())
-
-                    if (match) {
-                        this.form.templateId = match.id
-                        this.form.customTitle = false
-                        this.form.title = match.label
-                    } else {
-                        this.form.customTitle = true
-                        this.form.title = manual.title
-                    }
-                } else {
-                    this.form.customTitle = true
-                    this.form.title = manual.title || ''
-                }
-
-                if (this.form.steps.length === 0) {
-                    this.addStep();
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки мануала для редакитрования:', error)
-                alert('Не удалось загрузить мануал для редактирования')
-                this.$router.push('/manuals')
-            }
-        },
-
-        async uploadStepImage(stepIndex, file) {
-            const step = this.form.steps[stepIndex]
-            if (!step.id) {
-                alert('Сначала сохраните мануал, чтобы загрузить изображения')
-                return
-            }
-            try {
-                const formData = new FormData()
-                formData.append('image', file)
-                const response = await api.post(
-                    `/manual/${this.editingManualId}/steps/${step.id}/image`,
-                    formData,
-                    { headers: { 'Content-Type': 'multipart/form-data' } }
-                )
-                const imageUrl = response.data.image_url
-                step.existingImage = imageUrl
-                step.imagePreview = this.getImageUrl(imageUrl)
-                step.imageFile = null
-                alert('Изображение загружено')
-            } catch (error) {
-                console.error('Ошибка загрузки изображения:', error)
-                alert('Не удалось загрузить изображение')
-            }
-        },
-
-        async deleteStepImage(stepIndex) {
-            const step = this.form.steps[stepIndex]
-            if (!step.id || !step.existingImage) return
-            if (!confirm('Удалить изображение?')) return
-            try {
-                await api.delete(`/manual/${this.editingManualId}/steps/${step.id}/image`)
-                step.existingImage = null
-                step.imagePreview = null
-                alert('Изображение удалено')
-            } catch (error) {
-                console.error('Ошибка удаления изображения:', error)
-                alert('Не удалось удалить изображение')
-            }
-        },
-
-        resetForm() {
-            this.form = {
-                title: '',
-                description: '',
-                motorcycle: '',
-                difficult: '',
-                time_estimate: '',
-                interval: '',
-                category: '',
-                templateId: '',
-                customTitle: false,
-                safety_tip: '',
-                warnings: '',
-                conditions: '',
-                instruments: '',
-                parts: '',
-                docs_links: [],
-                specs: {},
-                specs_json: '',
-                steps: [],
-                aftercare: '',
-                tip: ''
-            };
-            this.errors = {};
-            this.stepIdCounter = 0;
-            this.torqueItems = [];
-            this.editingManualId = null
-            this.isEditMode = false
-            this.addStep();
-        },
-
-        buildPayload() {
-            return {
-                title: this.form.title.trim(),
-                description: this.form.description.trim(),
-                category: this.form.category || 'general',
-                difficult: this.form.difficult,
-                motorcycle: this.form.motorcycle.trim(),
-                time_estimate: this.form.time_estimate.trim() || null,
-                interval: this.form.interval.trim() || null,
-                safety_tip: this.form.safety_tip.trim() || null,
-                warnings: this.form.warnings.trim() || null,
-                conditions: this.form.conditions.trim() || null,
-                docs_links: this.form.docs_links.filter(link => link.trim()),
-                specs: this.form.specs || null,
-                aftercare: this.form.aftercare.trim() || null,
-                instruments: this.form.instruments.trim() || null,
-                parts: this.form.parts.trim() || null,
-                tip: this.form.tip.trim() || null,
-                steps: this.form.steps.map((step, index) => ({
-                    order: index + 1,
-                    title: step.title.trim(),
-                    text: step.text.trim() || null,
-                    warning: step.warning.trim() || null,
-                    tip: step.tip.trim() || null,
-                    result: step.result.trim() || null,
-                }))
-            };
-        },
-
-        getImageUrl(path) {
-            if (!path) return '';
-            if (path.startsWith('http://') || path.startsWith('https://')) return path;
-            if (path.startsWith('/')) return path;
-            return `/uploads/${path}`;
-        },
-    },
-
-    mounted() {
-        const editId = this.$route.query.edit
-        if (editId) {
-            this.loadManualForEdit(editId)
-        } else {
-            this.addStep
-        }
+// ===== Watchers =====
+watch(
+  torqueItems,
+  (newVal) => {
+    if (newVal.length > 0) {
+      const torque = newVal
+        .filter((item) => item.name || item.nm)
+        .map((item) => ({
+          name: item.name || 'Болт',
+          nm: item.nm ? Number(item.nm) : 0,
+          note: item.note || '',
+        }))
+      updateSpecs('torque', torque)
     }
-};
+  },
+  { deep: true }
+)
+
+watch(
+  () => form.specs_json,
+  (newVal) => {
+    try {
+      if (newVal && newVal.trim()) {
+        form.specs = JSON.parse(newVal)
+      }
+    } catch {
+      // ignore parse errors
+    }
+  },
+  { deep: true }
+)
+
+// ===== Lifecycle =====
+onMounted(() => {
+  const editId = route.query.edit
+  if (editId) {
+    loadManualForEdit(editId)
+  } else {
+    addStep()
+  }
+})
+
+// ===== Category / Template =====
+function onCategoryChange() {
+  form.templateId = ''
+  form.title = ''
+  form.customTitle = false
+}
+
+function onTemplateChange() {
+  if (form.templateId === '__custom__') {
+    form.customTitle = true
+    form.title = ''
+    return
+  }
+
+  const tpl = availableTemplates.value.find((t) => t.id === form.templateId)
+  form.title = tpl ? tpl.label : ''
+}
+
+function backToTemplates() {
+  form.customTitle = false
+  form.templateId = ''
+  form.title = ''
+}
+
+// ===== Steps =====
+function addStep() {
+  form.steps.push({
+    id: null,
+    localId: ++stepIdCounter.value,
+    title: '',
+    text: '',
+    warning: '',
+    tip: '',
+    result: '',
+    imageFile: null,
+    imagePreview: null,
+    errors: {},
+  })
+}
+
+function removeStep(index) {
+  if (form.steps.length <= 1) {
+    toast.warning('Мануал должен содержать хотя бы один шаг')
+    return
+  }
+  form.steps.splice(index, 1)
+}
+
+async function handleImageUpload(index, event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error('Размер файла не должен превышать 5MB')
+    event.target.value = ''
+    return
+  }
+
+  if (!file.type.startsWith('image/')) {
+    toast.error('Пожалуйста, загрузите изображение')
+    event.target.value = ''
+    return
+  }
+
+  const step = form.steps[index]
+  if (isEditMode.value && step.id) {
+    try {
+      const imageUrl = await manualsStore.uploadStepImage(
+        editingManualId.value,
+        step.id,
+        file
+      )
+      step.existingImage = imageUrl
+      step.imagePreview = getManualImageUrl(imageUrl)
+      step.imageFile = null
+      toast.success('Изображение загружено')
+    } catch (err) {
+      console.error('Failed to upload step image:', err)
+      toast.error('Не удалось загрузить изображение')
+    } finally {
+      event.target.value = ''
+    }
+  } else {
+    step.imageFile = file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      step.imagePreview = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+async function removeImage(index) {
+  const step = form.steps[index]
+  if (isEditMode.value && step.id && step.existingImage) {
+    try {
+      await manualsStore.deleteStepImage(editingManualId.value, step.id)
+      step.existingImage = null
+      step.imagePreview = null
+      toast.success('Изображение удалено')
+    } catch (err) {
+      console.error('Failed to delete step image:', err)
+      toast.error('Не удалось удалить изображение')
+    }
+  } else {
+    step.imageFile = null
+    step.imagePreview = null
+    const input = document.querySelectorAll('.step-card input[type="file"]')[index]
+    if (input) input.value = ''
+  }
+}
+
+// ===== Docs / Specs =====
+function addLink() {
+  form.docs_links.push('')
+}
+
+function removeLink(index) {
+  form.docs_links.splice(index, 1)
+}
+
+function updateSpecs(key, value) {
+  if (!form.specs) form.specs = {}
+  form.specs[key] = value
+  form.specs_json = JSON.stringify(form.specs, null, 2)
+}
+
+function addTorqueItem() {
+  torqueItems.value.push({ name: '', nm: '', note: '' })
+}
+
+function removeTorqueItem(index) {
+  torqueItems.value.splice(index, 1)
+}
+
+// ===== Validation =====
+function validateForm() {
+  errors.value = {}
+  let isValid = true
+
+  if (!form.title || form.title.trim().length < 3) {
+    errors.value.title = 'Название должно содержать минимум 3 символа'
+    isValid = false
+  }
+
+  if (!form.description || form.description.trim().length < 10) {
+    errors.value.description = 'Описание должно содержать минимум 10 символов'
+    isValid = false
+  }
+
+  if (!form.motorcycle || form.motorcycle.trim().length < 2) {
+    errors.value.motorcycle = 'Укажите модель мотоцикла'
+    isValid = false
+  }
+
+  if (!form.difficult) {
+    errors.value.difficult = 'Выберите сложность'
+    isValid = false
+  }
+
+  form.steps.forEach((step) => {
+    step.errors = {}
+    if (!step.title || step.title.trim().length < 2) {
+      step.errors.title = 'Заголовок шага обязателен'
+      isValid = false
+    }
+  })
+
+  if (form.steps.length === 0) {
+    isValid = false
+  }
+
+  return isValid
+}
+
+// ===== Payload =====
+function buildPayload() {
+  return {
+    title: form.title.trim(),
+    description: form.description.trim(),
+    category: form.category || 'general',
+    difficult: form.difficult,
+    motorcycle: form.motorcycle.trim(),
+    time_estimate: form.time_estimate.trim() || null,
+    interval: form.interval.trim() || null,
+    safety_tip: form.safety_tip.trim() || null,
+    warnings: form.warnings.trim() || null,
+    conditions: form.conditions.trim() || null,
+    docs_links: form.docs_links.filter((link) => link.trim()),
+    specs: form.specs || null,
+    aftercare: form.aftercare.trim() || null,
+    instruments: form.instruments.trim() || null,
+    parts: form.parts.trim() || null,
+    tip: form.tip.trim() || null,
+    steps: form.steps.map((step, index) => ({
+      order: index + 1,
+      title: step.title.trim(),
+      text: step.text.trim() || null,
+      warning: step.warning.trim() || null,
+      tip: step.tip.trim() || null,
+      result: step.result.trim() || null,
+    })),
+  }
+}
+
+// ===== Submit =====
+async function submitManual() {
+  if (!validateForm()) {
+    toast.warning('Проверьте заполненные поля')
+    const firstError = document.querySelector('.error')
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      firstError.focus()
+    }
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    if (isEditMode.value) {
+      await manualsStore.update(editingManualId.value, buildPayload())
+      toast.success('Мануал обновлён и отправлен на повторную проверку')
+      router.push(`/manual/${editingManualId.value}`)
+    } else {
+      const files = {}
+      form.steps.forEach((step, index) => {
+        if (step.imageFile) {
+          files[`image_${index + 1}`] = step.imageFile
+        }
+      })
+
+      const created = await manualsStore.create(buildPayload(), files)
+      toast.success('Мануал успешно создан')
+      resetForm()
+      router.push(`/manual/${created.id}`)
+    }
+  } catch (err) {
+    console.error('Failed to save manual:', err)
+    const message =
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      'Произошла ошибка'
+    toast.error(message)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// ===== Load for edit =====
+async function loadManualForEdit(id) {
+  try {
+    const manual = await manualsStore.loadOne(id)
+    editingManualId.value = id
+    isEditMode.value = true
+
+    form.title = manual.title || ''
+    form.description = manual.description || ''
+    form.motorcycle = manual.motorcycle || ''
+    form.difficult = manual.difficult || ''
+    form.time_estimate = manual.time_estimate || ''
+    form.interval = manual.interval || ''
+    form.category = manual.category || ''
+    form.safety_tip = manual.safety_tip || ''
+    form.warnings = manual.warnings || ''
+    form.conditions = manual.conditions || ''
+    form.instruments = manual.instruments || ''
+    form.parts = manual.parts || ''
+    form.docs_links = manual.docs_links || []
+    form.aftercare = manual.aftercare || ''
+    form.tip = manual.tip || ''
+
+    if (manual.specs) {
+      form.specs = manual.specs
+      form.specs_json = JSON.stringify(manual.specs, null, 2)
+      if (manual.specs.torque) {
+        torqueItems.value = manual.specs.torque.map((item) => ({ ...item }))
+      }
+    }
+
+    form.steps = manual.steps.map((step, index) => ({
+      id: step.id,
+      localId: ++stepIdCounter.value,
+      order: step.order || index + 1,
+      title: step.title || '',
+      text: step.text || '',
+      warning: step.warning || '',
+      tip: step.tip || '',
+      result: step.result || '',
+      imageFile: null,
+      imagePreview: step.image ? getManualImageUrl(step.image) : null,
+      existingImage: step.image || null,
+      errors: {},
+    }))
+
+    if (form.category && manual.title) {
+      const templates = getTemplatesByCategory(form.category)
+      const match = templates.find(
+        (t) => t.label.toLowerCase() === manual.title.toLowerCase()
+      )
+
+      if (match) {
+        form.templateId = match.id
+        form.customTitle = false
+        form.title = match.label
+      } else {
+        form.customTitle = true
+        form.title = manual.title
+      }
+    } else {
+      form.customTitle = true
+      form.title = manual.title || ''
+    }
+
+    if (form.steps.length === 0) addStep()
+  } catch (err) {
+    console.error('Failed to load manual for edit:', err)
+    toast.error('Не удалось загрузить мануал для редактирования')
+    router.push('/manuals')
+  }
+}
+
+// ===== Reset =====
+function resetForm() {
+  Object.assign(form, {
+    title: '',
+    customTitle: false,
+    description: '',
+    motorcycle: '',
+    difficult: '',
+    time_estimate: '',
+    interval: '',
+    category: '',
+    templateId: '',
+    safety_tip: '',
+    warnings: '',
+    conditions: '',
+    instruments: '',
+    parts: '',
+    docs_links: [],
+    specs: {},
+    specs_json: '',
+    steps: [],
+    aftercare: '',
+    tip: '',
+  })
+  errors.value = {}
+  stepIdCounter.value = 0
+  torqueItems.value = []
+  editingManualId.value = null
+  isEditMode.value = false
+  addStep()
+}
 </script>
 
 <style scoped>
