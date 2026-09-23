@@ -58,6 +58,42 @@ export const DIFFICULTY_LABELS = {
   hard: 'Сложно',
 }
 
+export const FLUID_LABELS = {
+  oil: 'Моторное масло',
+  coolant: 'Охлаждающая жидкость',
+  brake: 'Тормозная жидкость',
+  fork: 'Масло в вилке',
+  gear: 'Масло в КПП',
+  chain: 'Смазка цепи',
+}
+
+export const TOLERANCE_LABELS = {
+  chain: 'Зазор цепи',
+  valve: 'Зазор клапанов',
+  spark: 'Зазор свечи',
+  brake: 'Толщина колодок',
+  tire: 'Давление в шинах',
+}
+
+export const MANUAL_STATUS_LABELS = {
+  approved: 'Одобрен',
+  moderate: 'На проверке',
+  rejected: 'Отклонён',
+  draft: 'Черновик',
+}
+
+export function getFluidLabel(key) {
+  return FLUID_LABELS[key] || key
+}
+
+export function getToleranceLabel(key) {
+  return TOLERANCE_LABELS[key] || key
+}
+
+export function getManualStatusLabel(status) {
+  return MANUAL_STATUS_LABELS[status] || status || '—'
+}
+
 export function getDifficultyLabel(difficulty) {
   return DIFFICULTY_LABELS[difficulty] || difficulty || '—'
 }

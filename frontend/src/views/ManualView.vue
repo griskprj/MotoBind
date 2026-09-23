@@ -20,9 +20,9 @@
                         <i :class="statusIcon"></i>
                         {{ getStatusLabel(manual.status) }}
                     </span>
-                    <router-link 
-                        v-if="isAuthor && manual.status === 'rejected'" 
-                        :to="`/manual-creator?edit=${manual.id}`" 
+                    <router-link
+                        v-if="isAuthor && manual.status === 'rejected'"
+                        :to="`/manual-creator?edit=${manual.id}`"
                         class="btn btn-warning btn-sm"
                     >
                         <i class="fa fa-edit"></i> Редактировать
@@ -33,7 +33,7 @@
             <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
             <div class="block block-about">
                 <h1 class="manual-title">{{ manual.title }}</h1>
-                
+
                 <p v-if="manual.description" class="manual-description">
                     {{ manual.description }}
                 </p>
@@ -53,7 +53,7 @@
                     </div>
                     <div v-if="manual.difficult" class="about-item">
                         <i class="fa fa-signal"></i>
-                        <span><strong>Сложность:</strong> 
+                        <span><strong>Сложность:</strong>
                             <span class="difficulty-dots">
                                 <span class="dot" :class="{ filled: ['easy', 'medium', 'hard'].includes(manual.difficult) }"></span>
                                 <span class="dot" :class="{ filled: ['medium', 'hard'].includes(manual.difficult) }"></span>
@@ -82,17 +82,17 @@
                 <h3 class="block-title">
                     <i class="fa fa-shield"></i> Безопасность и подготовка
                 </h3>
-                
+
                 <div v-if="manual.safety_tip" class="safety-item safety-tip">
                     <i class="fa fa-lightbulb"></i>
                     <span>{{ manual.safety_tip }}</span>
                 </div>
-                
+
                 <div v-if="manual.warnings" class="safety-item safety-warning">
                     <i class="fa fa-exclamation-triangle"></i>
                     <span>{{ manual.warnings }}</span>
                 </div>
-                
+
                 <div v-if="manual.conditions" class="safety-item safety-condition">
                     <i class="fa fa-check-circle"></i>
                     <span>{{ manual.conditions }}</span>
@@ -104,7 +104,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-wrench"></i> Инструменты и материалы
                 </h3>
-                
+
                 <div class="tools-grid">
                     <div v-if="manual.instruments" class="tools-item">
                         <i class="fa fa-wrench"></i>
@@ -113,7 +113,7 @@
                             <span class="tools-value">{{ manual.instruments }}</span>
                         </div>
                     </div>
-                    
+
                     <div v-if="manual.parts" class="tools-item">
                         <i class="fa fa-cogs"></i>
                         <div>
@@ -129,10 +129,10 @@
                 <h3 class="block-title">
                     <i class="fa fa-link"></i> Ссылки на документацию
                 </h3>
-                
+
                 <div class="docs-list">
-                    <a 
-                        v-for="(link, index) in manual.docs_links" 
+                    <a
+                        v-for="(link, index) in manual.docs_links"
                         :key="index"
                         :href="link"
                         target="_blank"
@@ -161,8 +161,8 @@
                             <span>Момент (Н·м)</span>
                             <span>Примечание</span>
                         </div>
-                        <div 
-                            v-for="(item, index) in manual.specs.torque" 
+                        <div
+                            v-for="(item, index) in manual.specs.torque"
                             :key="index"
                             class="torque-row"
                         >
@@ -177,8 +177,8 @@
                 <div v-if="manual.specs.fluids" class="specs-section">
                     <h4 class="specs-subtitle">Объёмы жидкостей</h4>
                     <div class="fluids-grid">
-                        <div 
-                            v-for="(value, key) in manual.specs.fluids" 
+                        <div
+                            v-for="(value, key) in manual.specs.fluids"
                             :key="key"
                             class="fluid-item"
                         >
@@ -192,8 +192,8 @@
                 <div v-if="manual.specs.tolerances" class="specs-section">
                     <h4 class="specs-subtitle">Допуски и зазоры</h4>
                     <div class="tolerances-grid">
-                        <div 
-                            v-for="(value, key) in manual.specs.tolerances" 
+                        <div
+                            v-for="(value, key) in manual.specs.tolerances"
                             :key="key"
                             class="tolerance-item"
                         >
@@ -214,8 +214,8 @@
                 </div>
 
                 <div class="steps-list">
-                    <div 
-                        v-for="(step, index) in manual.steps" 
+                    <div
+                        v-for="(step, index) in manual.steps"
                         :key="index"
                         class="step-item"
                         :class="{ 'step-completed': step.completed }"
@@ -224,18 +224,18 @@
                             <span class="step-number">{{ step.order || index + 1 }}</span>
                             <div class="step-line" v-if="index < manual.steps.length - 1"></div>
                         </div>
-                        
+
                         <div class="step-body">
                             <div class="step-header-inner">
                                 <span class="step-title">{{ step.title }}</span>
                             </div>
-                            
+
                             <p v-if="step.text" class="step-text">{{ step.text }}</p>
-                            
+
                             <div v-if="step.image" class="step-image">
                                 <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
                             </div>
-                            
+
                             <div class="step-meta">
                                 <div v-if="step.warning" class="step-warning">
                                     <i class="fa fa-exclamation-triangle"></i>
@@ -260,7 +260,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-check-circle"></i> После завершения
                 </h3>
-                
+
                 <div class="aftercare-content">
                     <i class="fa fa-info-circle"></i>
                     <span>{{ manual.aftercare }}</span>
@@ -272,7 +272,7 @@
                 <h3 class="block-title">
                     <i class="fa fa-lightbulb"></i> Совет
                 </h3>
-                
+
                 <div class="tip-content">
                     <i class="fa fa-quote-left"></i>
                     <span>{{ manual.tip }}</span>
@@ -312,177 +312,114 @@
     </div>
 </template>
 
-<script>
-import api from '../api/api';
-import Header from '../components/Header.vue';
-import LoadingOverlay from '../components/LoadingOverlay.vue';
+<script setup>
+import { computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useManualsStore, useAuthStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import {
+  getCategoryLabel,
+  getDifficultyLabel,
+  getFluidLabel,
+  getToleranceLabel,
+  getManualStatusLabel,
+} from '@/utils/formatters'
+import { getManualImageUrl } from '@/utils/mediaUrl'
+import formatDate from '@/utils/DateFormatter.js'
 
-export default {
-    name: 'ManualView',
-    components: { Header, LoadingOverlay },
+import Header from '../components/Header.vue'
+import LoadingOverlay from '../components/LoadingOverlay.vue'
 
-    data() {
-        return {
-            loading: true,
-            manual: null,
-            error: null
-        };
-    },
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
 
-    computed: {
-        statusClass() {
-            if (!this.manual) return '';
-            const classes = {
-                'approved': 'status-approved',
-                'moderate': 'status-moderate',
-                'rejected': 'status-rejected',
-                'draft': 'status-draft'
-            };
-            return classes[this.manual.status] || '';
-        },
+const manualsStore = useManualsStore()
+const authStore = useAuthStore()
 
-        statusIcon() {
-            if (!this.manual) return 'fa-circle';
-            const icons = {
-                'approved': 'fa fa-check-circle',
-                'moderate': 'fa fa-hourglass-half',
-                'rejected': 'fa fa-times-circle',
-                'draft': 'fa fa-pencil'
-            };
-            return icons[this.manual.status] || 'fa-circle';
-        },
+const { current: manual, loadingCurrent: loading } = storeToRefs(manualsStore)
 
-        isAuthor() {
-            if (!this.manual) return false
-            const user = JSON.parse(localStorage.getItem('user') || '{}')
-            return this.manual.author_id === user.id
-        }
-    },
+// ===== Computed =====
+const statusClass = computed(() => {
+  if (!manual.value) return ''
+  const classes = {
+    approved: 'status-approved',
+    moderate: 'status-moderate',
+    rejected: 'status-rejected',
+    draft: 'status-draft',
+  }
+  return classes[manual.value.status] || ''
+})
 
-    mounted() {
-        const manualId = this.$route.params.id;
-        if (manualId) {
-            this.loadManual(manualId);
-        } else {
-            this.loading = false;
-            this.error = 'ID мануала не указан';
-        }
-    },
+const statusIcon = computed(() => {
+  if (!manual.value) return 'fa-circle'
+  const icons = {
+    approved: 'fa fa-check-circle',
+    moderate: 'fa fa-hourglass-half',
+    rejected: 'fa fa-times-circle',
+    draft: 'fa fa-pencil',
+  }
+  return icons[manual.value.status] || 'fa fa-circle'
+})
 
-    methods: {
-        async loadManual(id) {
-            this.loading = true;
-            try {
-                const response = await api.get(`/manual/${id}`);
-                this.manual = response.data;
-                
-                if (this.manual.steps) {
-                    this.manual.steps = [...this.manual.steps].sort((a, b) => (a.order || 0) - (b.order || 0));
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки мануала:', error);
-                this.error = error.response?.data?.message || 'Мануал не найден';
-                if (error.response?.status === 401) {
-                    this.$router.push('/login');
-                }
-            } finally {
-                this.loading = false;
-            }
-        },
+const isAuthor = computed(() => {
+  if (!manual.value || !authStore.user) return false
+  return manual.value.author_id === authStore.user.id
+})
 
-        goBack() {
-            this.$router.back();
-        },
+// ===== Lifecycle =====
+onMounted(() => {
+  loadManualFromRoute()
+})
 
-        formatDate(dateString) {
-            if (!dateString) return '—';
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return '—';
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                });
-            } catch {
-                return '—';
-            }
-        },
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId && newId !== oldId) loadManualFromRoute()
+})
 
-        getStatusLabel(status) {
-            const labels = {
-                'approved': 'Одобрен',
-                'moderate': 'На проверке',
-                'rejected': 'Отклонён',
-                'draft': 'Черновик'
-            };
-            return labels[status] || status || '—';
-        },
-
-        getCategory(category) {
-            const categories = {
-                'engine': 'Двигатель',
-                'drive': 'Привод',
-                'steering': 'Рулевое управление',
-                'suspension': 'Подвеска',
-                'electronics': 'Электроника',
-                'wheel': 'Колеса / Шины',
-                'brakes': 'Тормозная система',
-                'fuel': 'Топливная система',
-                'cooling': 'Система охлаждения'
-            };
-            return categories[category] || category;
-        },
-
-        getDifficulty(difficult) {
-            const difficulties = {
-                'easy': 'Лёгкая',
-                'medium': 'Средняя',
-                'hard': 'Сложная'
-            };
-            return difficulties[difficult] || difficult;
-        },
-
-        hasSpecs(specs) {
-            if (!specs) return false;
-            return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances);
-        },
-
-        getFluidLabel(key) {
-            const labels = {
-                'oil': 'Моторное масло',
-                'coolant': 'Охлаждающая жидкость',
-                'brake': 'Тормозная жидкость',
-                'fork': 'Масло в вилке',
-                'gear': 'Масло в КПП',
-                'chain': 'Смазка цепи'
-            };
-            return labels[key] || key;
-        },
-
-        getToleranceLabel(key) {
-            const labels = {
-                'chain': 'Зазор цепи',
-                'valve': 'Зазор клапанов',
-                'spark': 'Зазор свечи',
-                'brake': 'Толщина колодок',
-                'tire': 'Давление в шинах'
-            };
-            return labels[key] || key;
-        },
-
-        getImageUrl(path) {
-            if (!path) return '';
-            if (path.startsWith('http://') || path.startsWith('https://')) {
-                return path;
-            }
-            if (path.startsWith('/')) {
-                return path;
-            }
-            return `/uploads/${path}`;
-        }
+async function loadManualFromRoute() {
+  const id = route.params.id
+  if (!id) {
+    toast.error('ID мануала не указан')
+    return
+  }
+  try {
+    await manualsStore.loadOne(id)
+  } catch (err) {
+    console.error('Ошибка загрузки мануала:', err)
+    if (err.response?.status === 401) {
+      router.push('/login')
+      return
     }
-};
+    toast.error(err.response?.data?.message || 'Мануал не найден')
+  }
+}
+
+// ===== UI helpers =====
+function goBack() {
+  router.back()
+}
+
+function getStatusLabel(status) {
+  return getManualStatusLabel(status)
+}
+
+function getCategory(category) {
+  return getCategoryLabel(category)
+}
+
+function getDifficulty(difficulty) {
+  return getDifficultyLabel(difficulty)
+}
+
+function hasSpecs(specs) {
+  if (!specs) return false
+  return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances)
+}
+
+function getImageUrl(path) {
+  return getManualImageUrl(path)
+}
 </script>
 
 <style scoped>
