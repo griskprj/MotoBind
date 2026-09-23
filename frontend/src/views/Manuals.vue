@@ -1,499 +1,379 @@
 <template>
-    <div class="manuals-page">
-        <LoadingOverlay :isLoading="loading" text="Загрузка мануалов..."/>
+  <div class="manuals-page">
+    <LoadingOverlay :isLoading="loading" text="Загрузка мануалов..." />
 
-        <div class="container">
-            <!-- === HEADER === -->
-            <Header
-                title="Мануалы"
-                subtitle="База инструкций по ремонту и обслуживанию мотоциклов"
-            />
+    <div class="container">
+      <!-- === HEADER === -->
+      <Header
+        title="Мануалы"
+        subtitle="База инструкций по ремонту и обслуживанию мотоциклов"
+      />
 
-            <!-- === FILTERS AND TABS === -->
-            <div class="filters-section">
-                <div class="tabs-wrapper">
-                    <div class="tabs">
-                        <div class="tabs-btn">
-                            <button 
-                                v-for="tab in tabs" 
-                                :key="tab.value"
-                                @click="changeTab(tab.value)" 
-                                class="tab"
-                                :class="{ active: selectedTab === tab.value }"
-                            >
-                                <i :class="tab.icon"></i>
-                                {{ tab.label }}
-                                <span class="tab-count" v-if="tab.value === 'all'">{{ pagination.total }}</span>
-                            </button>
-                        </div>
-
-                        <button @click="$router.push('/manual-creator')" class="outline-btn">
-                            <i class="fa fa-plus"></i>
-                            <span>Создать мануал</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="filters">
-                    <div class="filters-group">
-                        <div class="search-wrapper">
-                            <i class="fa fa-search"></i>
-                            <input 
-                                type="text" 
-                                v-model="filters.search" 
-                                @input="debouncedSearch"
-                                placeholder="Поиск по названию или мотоциклу..."
-                                class="search-input"
-                            >
-                            <button v-if="filters.search" @click="clearSearch" class="clear-search">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-
-                        <select 
-                            class="filter-select" 
-                            v-model="filters.motorcycle"
-                            @change="applyFilters"
-                        >
-                            <option value="">Все мотоциклы</option>
-                            <option 
-                                v-for="moto in motorcycles" 
-                                :key="moto.id"
-                                :value="moto.name"
-                            >
-                                {{ moto.name }}
-                            </option>
-                        </select>
-
-                        <select 
-                            class="filter-select" 
-                            v-model="filters.category"
-                            @change="applyFilters"
-                        >
-                            <option value="">Все системы</option>
-                            <option value="engine">⚙️ Двигатель</option>
-                            <option value="drive">🔗 Привод</option>
-                            <option value="steering">🔄 Рулевое управление</option>
-                            <option value="suspension">🛞 Подвеска</option>
-                            <option value="electronics">💡 Электроника</option>
-                            <option value="wheel">⚡ Колеса/Шины</option>
-                            <option value="brakes">🛑 Тормозная система</option>
-                            <option value="fuel">⛽ Топливная система</option>
-                            <option value="cooling">❄️ Система охлаждения</option>
-                        </select>
-
-                        <select 
-                            class="filter-select" 
-                            v-model="filters.sort_by"
-                            @change="applyFilters"
-                        >
-                            <option value="created_at_desc">📅 По дате (новые)</option>
-                            <option value="created_at_asc">📅 По дате (старые)</option>
-                            <option value="title_asc">🔤 По названию (А-Я)</option>
-                            <option value="title_desc">🔤 По названию (Я-А)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filter-results" v-if="manuals.length > 0 && hasActiveFilters">
-                    <span>
-                        <i class="fa fa-filter"></i>
-                        Найдено: {{ manuals.length }} мануалов
-                    </span>
-                    <button class="clear-filters" @click="clearAllFilters">
-                        <i class="fa fa-times"></i> Очистить фильтры
-                    </button>
-                </div>
+      <!-- === FILTERS AND TABS === -->
+      <div class="filters-section">
+        <div class="tabs-wrapper">
+          <div class="tabs">
+            <div class="tabs-btn">
+              <button
+                v-for="tabItem in tabs"
+                :key="tabItem.value"
+                class="tab"
+                :class="{ active: tab === tabItem.value }"
+                @click="changeTab(tabItem.value)"
+              >
+                <i :class="tabItem.icon"></i>
+                {{ tabItem.label }}
+                <span class="tab-count" v-if="tabItem.value === 'all'">
+                  {{ pagination.total }}
+                </span>
+              </button>
             </div>
 
-            <!-- === MANUALS GRID === -->
-            <div class="manuals-section">
-                <!-- Loading state -->
-                <div v-if="loading" class="loading-state">
-                    <i class="fa fa-spinner fa-spin"></i>
-                    <span>Загрузка мануалов...</span>
-                </div>
-
-                <!-- Empty state -->
-                <div v-else-if="manuals.length === 0" class="empty-state-wrapper">
-                    <div class="empty-state">
-                        <div class="empty-icon" :class="{ warning: hasActiveFilters }">
-                            <i :class="hasActiveFilters ? 'fa fa-search' : 'fa fa-book'"></i>
-                        </div>
-                        <h3 v-if="hasActiveFilters">Мануалы не найдены</h3>
-                        <h3 v-else>Мануалов пока нет</h3>
-                        <p class="empty-text" v-if="hasActiveFilters">
-                            Попробуйте изменить параметры фильтрации
-                        </p>
-                        <p class="empty-text" v-else>
-                            Создайте свой первый мануал и помогите сообществу
-                        </p>
-                        <div class="empty-actions">
-                            <button v-if="hasActiveFilters" @click="clearAllFilters" class="btn-secondary">
-                                Сбросить фильтры
-                            </button>
-                            <button v-else @click="$router.push('/manual-creator')" class="btn-primary">
-                                Создать мануал
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Grid -->
-                <div v-else class="manuals-grid">
-                    <div 
-                        v-for="manual in manuals" 
-                        :key="manual.id" 
-                        class="manual-card"
-                        @click="viewManual(manual)"
-                    >
-                        <div class="manual-image-wrapper">
-                            <img 
-                                :src="getManualImage(manual)" 
-                                :alt="manual.title"
-                                class="manual-img"
-                                @error="handleImageError"
-                                loading="lazy"
-                            >
-                            <div class="manual-badge" v-if="manual.difficult">
-                                {{ getDifficultyName(manual.difficult) }}
-                            </div>
-                        </div>
-                        
-                        <div class="manual-body">
-                            <span class="manual-category">{{ getCategoryName(manual.category) }}</span>
-                            <h3 class="manual-title">{{ manual.title }}</h3>
-                            <p class="manual-moto">
-                                <i class="fa fa-motorcycle"></i> 
-                                {{ manual.motorcycle }}
-                            </p>
-                            
-                            <div class="manual-meta">
-                                <span v-if="manual.time_estimate" class="meta-tag">
-                                    <i class="fa fa-clock"></i> {{ manual.time_estimate }}
-                                </span>
-                                <span v-if="manual.steps?.length" class="meta-tag">
-                                    <i class="fa fa-list-ol"></i> {{ manual.steps.length }} шаг{{ manual.steps.length > 1 ? 'а' : '' }}
-                                </span>
-                            </div>
-
-                            <button class="btn-outline view-btn">
-                                Подробнее <i class="fa fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- === PAGINATION === -->
-            <div v-if="!loading && manuals.length > 0 && pagination.pages > 1" class="pagination-section">
-                <div class="pagination-info">
-                    <span>
-                        Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}—
-                        {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
-                        из {{ pagination.total }}
-                    </span>
-                </div>
-                
-                <div class="pagination-controls">
-                    <button 
-                        class="pagination-btn"
-                        @click="goToPage(pagination.current_page - 1)"
-                        :disabled="!pagination.has_prev"
-                    >
-                        <i class="fa fa-chevron-left"></i>
-                    </button>
-                    
-                    <div class="pagination-pages">
-                        <button 
-                            v-for="page in visiblePages" 
-                            :key="page"
-                            class="pagination-btn page-btn"
-                            :class="{ active: page === pagination.current_page }"
-                            @click="goToPage(page)"
-                            v-if="page !== '...'"
-                        >
-                            {{ page }}
-                        </button>
-                        <span v-else class="pagination-ellipsis">…</span>
-                    </div>
-                    
-                    <button 
-                        class="pagination-btn"
-                        @click="goToPage(pagination.current_page + 1)"
-                        :disabled="!pagination.has_next"
-                    >
-                        <i class="fa fa-chevron-right"></i>
-                    </button>
-                </div>
-
-                <div class="pagination-per-page">
-                    <select v-model="pagination.per_page" @change="changePerPage">
-                        <option :value="6">6</option>
-                        <option :value="12">12</option>
-                        <option :value="24">24</option>
-                        <option :value="48">48</option>
-                    </select>
-                    <span>на странице</span>
-                </div>
-            </div>
+            <button @click="$router.push('/manual-creator')" class="outline-btn">
+              <i class="fa fa-plus"></i>
+              <span>Создать мануал</span>
+            </button>
+          </div>
         </div>
-    </div>
 
-    <!-- MODALS -->
-    <ManualDetailsModal
-        :is-open="showManualDetailsModal"
-        :manual="selectedManual"
-        @close="showManualDetailsModal = false"
-    />
+        <div class="filters">
+          <div class="filters-group">
+            <div class="search-wrapper">
+              <i class="fa fa-search"></i>
+              <input
+                type="text"
+                :value="filters.search"
+                @input="debouncedSearch"
+                placeholder="Поиск по названию или мотоциклу..."
+                class="search-input"
+              >
+              <button v-if="filters.search" @click="clearSearch" class="clear-search">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+
+            <select
+              class="filter-select"
+              :value="filters.motorcycle"
+              @change="onMotorcycleChange($event.target.value)"
+            >
+              <option value="">Все мотоциклы</option>
+              <option
+                v-for="moto in motorcycles"
+                :key="moto.id"
+                :value="moto.name"
+              >
+                {{ moto.name }}
+              </option>
+            </select>
+
+            <select
+              class="filter-select"
+              :value="filters.category"
+              @change="onCategoryChange($event.target.value)"
+            >
+              <option value="">Все системы</option>
+              <option value="engine">⚙️ Двигатель</option>
+              <option value="drive">🔗 Привод</option>
+              <option value="steering">🔄 Рулевое управление</option>
+              <option value="suspension">🛞 Подвеска</option>
+              <option value="electronics">💡 Электроника</option>
+              <option value="wheel">⚡ Колеса/Шины</option>
+              <option value="brakes">🛑 Тормозная система</option>
+              <option value="fuel">⛽ Топливная система</option>
+              <option value="cooling">❄️ Система охлаждения</option>
+            </select>
+
+            <select
+              class="filter-select"
+              :value="filters.sort_by"
+              @change="onSortChange($event.target.value)"
+            >
+              <option value="created_at_desc">📅 По дате (новые)</option>
+              <option value="created_at_asc">📅 По дате (старые)</option>
+              <option value="title_asc">🔤 По названию (А-Я)</option>
+              <option value="title_desc">🔤 По названию (Я-А)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-results" v-if="items.length > 0 && hasActiveFilters">
+          <span>
+            <i class="fa fa-filter"></i>
+            Найдено: {{ items.length }} мануалов
+          </span>
+          <button class="clear-filters" @click="clearAllFilters">
+            <i class="fa fa-times"></i> Очистить фильтры
+          </button>
+        </div>
+      </div>
+
+      <!-- === MANUALS GRID === -->
+      <div class="manuals-section">
+        <div v-if="loading" class="loading-state">
+          <i class="fa fa-spinner fa-spin"></i>
+          <span>Загрузка мануалов...</span>
+        </div>
+
+        <div v-else-if="items.length === 0" class="empty-state-wrapper">
+          <div class="empty-state">
+            <div class="empty-icon" :class="{ warning: hasActiveFilters }">
+              <i :class="hasActiveFilters ? 'fa fa-search' : 'fa fa-book'"></i>
+            </div>
+            <h3 v-if="hasActiveFilters">Мануалы не найдены</h3>
+            <h3 v-else>Мануалов пока нет</h3>
+            <p class="empty-text" v-if="hasActiveFilters">
+              Попробуйте изменить параметры фильтрации
+            </p>
+            <p class="empty-text" v-else>
+              Создайте свой первый мануал и помогите сообществу
+            </p>
+            <div class="empty-actions">
+              <button v-if="hasActiveFilters" @click="clearAllFilters" class="btn-secondary">
+                Сбросить фильтры
+              </button>
+              <button v-else @click="$router.push('/manual-creator')" class="btn-primary">
+                Создать мануал
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="manuals-grid">
+          <div
+            v-for="manual in items"
+            :key="manual.id"
+            class="manual-card"
+            @click="viewManual(manual)"
+          >
+            <div class="manual-image-wrapper">
+              <img
+                :src="getManualImage(manual)"
+                :alt="manual.title"
+                class="manual-img"
+                @error="handleImageError"
+                loading="lazy"
+              >
+              <div class="manual-badge" v-if="manual.difficult">
+                {{ getDifficultyLabel(manual.difficult) }}
+              </div>
+            </div>
+
+            <div class="manual-body">
+              <span class="manual-category">{{ getCategoryLabel(manual.category) }}</span>
+              <h3 class="manual-title">{{ manual.title }}</h3>
+              <p class="manual-moto">
+                <i class="fa fa-motorcycle"></i>
+                {{ manual.motorcycle }}
+              </p>
+
+              <div class="manual-meta">
+                <span v-if="manual.time_estimate" class="meta-tag">
+                  <i class="fa fa-clock"></i> {{ manual.time_estimate }}
+                </span>
+                <span v-if="manual.steps?.length" class="meta-tag">
+                  <i class="fa fa-list-ol"></i> {{ manual.steps.length }} шаг{{ manual.steps.length > 1 ? 'а' : '' }}
+                </span>
+              </div>
+
+              <button class="btn-outline view-btn">
+                Подробнее <i class="fa fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === PAGINATION === -->
+      <div v-if="!loading && items.length > 0 && pagination.pages > 1" class="pagination-section">
+        <div class="pagination-info">
+          <span>
+            Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}—
+            {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
+            из {{ pagination.total }}
+          </span>
+        </div>
+
+        <div class="pagination-controls">
+          <button
+            class="pagination-btn"
+            @click="goToPage(pagination.current_page - 1)"
+            :disabled="!pagination.has_prev"
+          >
+            <i class="fa fa-chevron-left"></i>
+          </button>
+
+          <div class="pagination-pages">
+            <template v-for="page in visiblePages" :key="page">
+              <button
+                v-if="page !== '...'"
+                class="pagination-btn page-btn"
+                :class="{ active: page === pagination.current_page }"
+                @click="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+              <span v-else class="pagination-ellipsis">…</span>
+            </template>
+          </div>
+
+          <button
+            class="pagination-btn"
+            @click="goToPage(pagination.current_page + 1)"
+            :disabled="!pagination.has_next"
+          >
+            <i class="fa fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="pagination-per-page">
+          <select :value="pagination.per_page" @change="onPerPageChange($event.target.value)">
+            <option :value="6">6</option>
+            <option :value="12">12</option>
+            <option :value="24">24</option>
+            <option :value="48">48</option>
+          </select>
+          <span>на странице</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ManualDetailsModal
+    :is-open="showManualDetailsModal"
+    :manual="selectedManual"
+    @close="showManualDetailsModal = false"
+  />
 </template>
 
-<script>
-import api from '../api/api'
-import ManualDetailsModal from '../components/modals/manual/ManualDetailsModal.vue';
+<script setup>
+import { onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useManualsStore, useMotorcyclesStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import { getCategoryLabel, getDifficultyLabel } from '@/utils/formatters'
+import { getManualImageUrl } from '@/utils/mediaUrl'
+
+import ManualDetailsModal from '../components/modals/manual/ManualDetailsModal.vue'
 import Header from '../components/Header.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue';
+import LoadingOverlay from '../components/LoadingOverlay.vue'
 
-export default {
-    components: {
-        ManualDetailsModal,
-        Header,
-        LoadingOverlay
-    },
-    data() {
-        return {
-            loading: false,
-            
-            selectedTab: 'all',
-            selectedManual: null,
-            manuals: [],
-            motorcycles: [],
-            
-            filters: {
-                search: '',
-                motorcycle: '',
-                category: '',
-                sort_by: 'created_at_desc'
-            },
-            
-            pagination: {
-                current_page: 1,
-                per_page: 6,
-                total: 0,
-                pages: 0,
-                has_prev: false,
-                has_next: false
-            },
-            
-            searchTimeout: null,
+const toast = useToast()
+const manualsStore = useManualsStore()
+const motorcyclesStore = useMotorcyclesStore()
 
-            showManualDetailsModal: false
-        }
-    },
-    
-    computed: {
-        tabs() {
-            return [
-                { value: 'all', label: 'Все мануалы', icon: 'fa fa-book' },
-                { value: 'my', label: 'Мои мануалы', icon: 'fa fa-user' },
-                { value: 'myMotos', label: 'Для моих мотоциклов', icon: 'fa fa-motorcycle' },
-            ]
-        },
+const {
+  items,
+  loading,
+  filters,
+  tab,
+  pagination,
+  hasActiveFilters,
+  visiblePages,
+} = storeToRefs(manualsStore)
 
-        visiblePages() {
-            const current = this.pagination.current_page
-            const total = this.pagination.pages
-            const delta = 2
-            const range = []
-            
-            for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-                range.push(i)
-            }
-            
-            if (current - delta > 2) {
-                range.unshift('...')
-            }
-            
-            if (current + delta < total - 1) {
-                range.push('...')
-            }
-            
-            range.unshift(1)
-            
-            if (total > 1) {
-                range.push(total)
-            }
-            
-            return range.filter((v, i, a) => a.indexOf(v) === i)
-        },
-        
-        hasActiveFilters() {
-            return this.filters.search || this.filters.motorcycle || this.filters.category
-        }
-    },
-    
-    created() {
-        this.loadManuals()
-        this.loadMotorcycles()
-    },
-    
-    methods: {
-        async loadManuals() {
-            this.loading = true
-            try {
-                const params = {
-                    page: this.pagination.current_page,
-                    per_page: this.pagination.per_page,
-                    tab: this.selectedTab,
-                    ...this.filters
-                }
-                
-                Object.keys(params).forEach(key => {
-                    if (!params[key]) delete params[key]
-                })
-                
-                const response = await api.get('/manual/list', { params })
-                const data = response.data
-                
-                this.manuals = data.manuals || []
-                this.pagination = {
-                    current_page: data.current_page,
-                    per_page: data.per_page,
-                    total: data.total,
-                    pages: data.pages,
-                    has_prev: data.has_prev,
-                    has_next: data.has_next
-                }
-            } catch (error) {
-                console.error('Error loading manuals:', error)
-                if (error.response?.status === 401) {
-                    this.$router.push('/login')
-                }
-            } finally {
-                this.loading = false
-            }
-        },
-        
-        async loadMotorcycles() {
-            try {
-                const response = await api.get('/motorcycle/')
-                this.motorcycles = response.data || []
-            } catch (error) {
-                console.error('Error loading motorcycles:', error)
-            }
-        },
-        
-        changeTab(tabName) {
-            this.selectedTab = tabName
-            this.pagination.current_page = 1
-            this.loadManuals()
-        },
-        
-        applyFilters() {
-            this.pagination.current_page = 1
-            this.loadManuals()
-        },
-        
-        debouncedSearch() {
-            clearTimeout(this.searchTimeout)
-            this.searchTimeout = setTimeout(() => {
-                this.applyFilters()
-            }, 500)
-        },
-        
-        clearSearch() {
-            this.filters.search = ''
-            this.applyFilters()
-        },
-        
-        clearAllFilters() {
-            this.filters.search = ''
-            this.filters.motorcycle = ''
-            this.filters.category = ''
-            this.filters.sort_by = 'created_at_desc'
-            this.applyFilters()
-        },
-        
-        goToPage(page) {
-            if (page < 1 || page > this.pagination.pages) return
-            this.pagination.current_page = page
-            this.loadManuals()
-        },
-        
-        changePerPage() {
-            this.pagination.current_page = 1
-            this.loadManuals()
-        },
-        
-        getCategoryName(category) {
-            const categories = {
-                'engine': 'Двигатель',
-                'drive': 'Привод',
-                'steering': 'Рулевое управление',
-                'suspension': 'Подвеска',
-                'electronics': 'Электроника',
-                'wheel': 'Колеса и шины',
-                'brakes': 'Тормозная система',
-                'fuel': 'Топливная система',
-                'cooling': 'Система охлаждения'
-            }
-            return categories[category] || category || 'Другое'
-        },
-        
-        getDifficultyName(difficult) {
-            const difficulties = {
-                'easy': 'Легко',
-                'medium': 'Средне',
-                'hard': 'Сложно'
-            }
-            return difficulties[difficult] || difficult
-        },
-        
-        getManualImage(manual) {
-            if (manual.image) {
-                return this.resolveImageUrl(manual.image)
-            }
-            
-            if (manual.steps && manual.steps.length > 0) {
-                const stepWithImage = manual.steps.find(step => step.image)
-                if (stepWithImage?.image) {
-                    return this.resolveImageUrl(stepWithImage.image)
-                }
-            }
-            
-            return '/ManualImgDefault.webp'
-        },
+const {
+  loadList,
+  setFilter,
+  setTab,
+  setSortBy,
+  setPage,
+  setPerPage,
+  clearAll,
+} = manualsStore
 
-        resolveImageUrl(path) {
-            if (!path || typeof path !== 'string') {
-                return '/ManualImgDefault.webp'
-            }
-            
-            if (path.startsWith('data:')) {
-                return path
-            }
-            
-            if (path.startsWith('http://') || path.startsWith('https://')) {
-                return path
-            }
-            
-            if (path.startsWith('/')) {
-                return path
-            }
-            
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${path}`
-        },
-        
-        handleImageError(event) {
-            event.target.src = '/ManualImgDefault.webp'
-        },
-        
-        viewManual(manual) {
-            this.selectedManual = manual
-            this.showManualDetailsModal = true
-        }
-    }
+const motorcycles = storeToRefs(motorcyclesStore).items
+
+// ===== Local UI state =====
+const selectedManual = ref(null)
+const showManualDetailsModal = ref(false)
+let searchTimeout = null
+
+// ===== Tabs =====
+const tabs = [
+  { value: 'all', label: 'Все мануалы', icon: 'fa fa-book' },
+  { value: 'my', label: 'Мои мануалы', icon: 'fa fa-user' },
+  { value: 'myMotos', label: 'Для моих мотоциклов', icon: 'fa fa-motorcycle' },
+]
+
+// ===== Lifecycle =====
+onMounted(async () => {
+  const promises = [loadList()]
+  if (!motorcycles.value.length) {
+    promises.push(motorcyclesStore.loadAll())
+  }
+  await Promise.all(promises).catch((err) => {
+    console.error('Failed to load manuals:', err)
+    toast.error('Не удалось загрузить мануалы')
+  })
+})
+
+// ===== Filters / tabs / pagination =====
+function changeTab(value) {
+  setTab(value)
+  loadList().catch(() => {})
+}
+
+function debouncedSearch(event) {
+  setFilter('search', event.target.value)
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    loadList().catch(() => {})
+  }, 500)
+}
+
+function clearSearch() {
+  setFilter('search', '')
+  loadList().catch(() => {})
+}
+
+function onMotorcycleChange(value) {
+  setFilter('motorcycle', value)
+  loadList().catch(() => {})
+}
+
+function onCategoryChange(value) {
+  setFilter('category', value)
+  loadList().catch(() => {})
+}
+
+function onSortChange(value) {
+  setSortBy(value)
+  loadList().catch(() => {})
+}
+
+function onPerPageChange(value) {
+  setPerPage(Number(value))
+  loadList().catch(() => {})
+}
+
+function goToPage(page) {
+  setPage(page)
+  loadList().catch(() => {})
+}
+
+function clearAllFilters() {
+  clearAll()
+  loadList().catch(() => {})
+}
+
+// ===== Cards =====
+function viewManual(manual) {
+  selectedManual.value = manual
+  showManualDetailsModal.value = true
+}
+
+function getManualImage(manual) {
+  if (manual.image) return getManualImageUrl(manual.image)
+  if (manual.steps?.length) {
+    const stepWithImage = manual.steps.find((s) => s.image)
+    if (stepWithImage?.image) return getManualImageUrl(stepWithImage.image)
+  }
+  return '/ManualImgDefault.webp'
+}
+
+function handleImageError(event) {
+  event.target.src = '/ManualImgDefault.webp'
 }
 </script>
 
@@ -973,11 +853,11 @@ export default {
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .tabs {
         flex-wrap: wrap;
     }
@@ -1030,11 +910,11 @@ export default {
     .container {
         padding: 0 12px;
     }
-    
+
     .page-title {
         font-size: 20px;
     }
-    
+
     .page-subtitle {
         font-size: 13px;
     }

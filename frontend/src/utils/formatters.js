@@ -52,6 +52,16 @@ export const CATEGORY_LABELS = {
   other: 'Другое',
 }
 
+export const DIFFICULTY_LABELS = {
+  easy: 'Легко',
+  medium: 'Средне',
+  hard: 'Сложно',
+}
+
+export function getDifficultyLabel(difficulty) {
+  return DIFFICULTY_LABELS[difficulty] || difficulty || '—'
+}
+
 export function getStatusLabel(status) {
   return STATUS_LABELS[status] || status || '—'
 }
