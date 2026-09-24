@@ -82,6 +82,61 @@ export const MANUAL_STATUS_LABELS = {
   draft: 'Черновик',
 }
 
+// ===== User-related labels =====
+export const USER_STATUS_LABELS = {
+  active: 'Активен',
+  banned: 'Заблокирован',
+  pending: 'Ожидает',
+}
+
+export const USER_STATUS_CLASSES = {
+  active: 'status-active',
+  banned: 'status-banned',
+  pending: 'status-pending',
+}
+
+export const USER_ROLE_LABELS = {
+  admin: 'Администратор',
+  motorcyclist: 'Мотоциклист',
+  motoclub: 'Мотоклуб',
+}
+
+export const USER_EXPERIENCE_LABELS = {
+  beginner: 'Новичок',
+  intermediate: 'Опытный',
+  expert: 'Эксперт',
+}
+
+export const SOCIAL_ICONS = {
+  instagram: 'fa fa-instagram',
+  youtube: 'fa fa-youtube',
+  telegram: 'fa fa-telegram',
+  vk: 'fa fa-vk',
+  facebook: 'fa fa-facebook',
+  twitter: 'fa fa-twitter',
+  tiktok: 'fa fa-tiktok',
+}
+
+export function getUserStatusLabel(status) {
+  return USER_STATUS_LABELS[status] || status || '—'
+}
+
+export function getUserStatusClass(status) {
+  return USER_STATUS_CLASSES[status] || ''
+}
+
+export function getUserRoleLabel(role) {
+  return USER_ROLE_LABELS[role] || role || '—'
+}
+
+export function getUserExperienceLabel(experience) {
+  return USER_EXPERIENCE_LABELS[experience] || experience || 'Не указан'
+}
+
+export function getSocialIcon(platform) {
+  return SOCIAL_ICONS[platform] || 'fa fa-link'
+}
+
 export function getFluidLabel(key) {
   return FLUID_LABELS[key] || key
 }
