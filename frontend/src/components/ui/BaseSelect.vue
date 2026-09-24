@@ -12,6 +12,7 @@
         :disabled="disabled"
         :required="required"
         class="base-select__field"
+        ref="selectEl"
         v-bind="$attrs"
         @change="handleChange"
         @blur="$emit('blur', $event)"
@@ -38,30 +39,16 @@ export default {
 
   props: {
     modelValue: {
-      type: [String, Number, null],
+      type: [String, Number, Boolean, null],
       default: '',
     },
-    label: {
-      type: String,
-      default: '',
-    },
-    placeholder: {
-      type: String,
-      default: '',
-    },
-    description: {
-      type: String,
-      default: '',
-    },
-    error: {
-      type: String,
-      default: '',
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    required: {
+    label: { type: String, default: '' },
+    placeholder: { type: String, default: '' },
+    description: { type: String, default: '' },
+    error: { type: String, default: '' },
+    disabled: { type: Boolean, default: false },
+    required: { type: Boolean, default: false },
+    raw: {
       type: Boolean,
       default: false,
     },
@@ -76,9 +63,55 @@ export default {
     }
   },
 
+  mounted() {
+    this.$nextTick(() => this.patchOptionValues())
+  },
+
+  updated() {
+    this.$nextTick(() => this.patchOptionValues())
+  },
+
   methods: {
+    patchOptionValues() {
+      const select = this.$refs.selectEl
+      if (!select) return
+      Array.from(select.options).forEach((opt) => {
+        if (!opt.dataset.rawValue) {
+          opt.dataset.rawValue = opt.value
+        }
+      })
+    },
+
     handleChange(event) {
-      this.$emit('update:modelValue', event.target.value)
+      const select = event.target
+      const selectedIndex = select.selectedIndex
+      const selectedOption = select.options[selectedIndex]
+
+      if (!selectedOption) {
+        this.$emit('update:modelValue', '')
+        this.$emit('change', event)
+        return
+      }
+
+      const rawAttr = selectedOption.getAttribute('data-raw-value')
+
+      let value = selectedOption.value
+
+      if (rawAttr !== null && rawAttr !== undefined && rawAttr !== '') {
+        if (/^-?\d+(\.\d+)?$/.test(rawAttr)) {
+          value = Number(rawAttr)
+        } else if (rawAttr === 'true') {
+          value = true
+        } else if (rawAttr === 'false') {
+          value = false
+        } else {
+          value = rawAttr
+        }
+      } else if (value !== '' && /^-?\d+(\.\d+)?$/.test(value)) {
+        value = Number(value)
+      }
+
+      this.$emit('update:modelValue', value)
       this.$emit('change', event)
     },
   },
@@ -86,6 +119,7 @@ export default {
 </script>
 
 <style scoped>
+/* тот же CSS, без изменений */
 .base-select {
   display: flex;
   flex-direction: column;
@@ -130,10 +164,7 @@ export default {
   box-shadow: var(--shadow-focus);
 }
 
-.base-select--error .base-select__field {
-  border-color: var(--danger);
-}
-
+.base-select--error .base-select__field { border-color: var(--danger); }
 .base-select--disabled .base-select__field {
   background: var(--bg-primary);
   cursor: not-allowed;
