@@ -14,32 +14,32 @@
             <aside class="profile-sidebar">
                 <div class="profile-card">
                     <div class="profile-avatar-wrapper">
-                        <img 
-                            :src="getAvatarUrl(user?.avatar)" 
-                            alt="avatar" 
+                        <img
+                            :src="getAvatarUrl(user?.avatar)"
+                            alt="avatar"
                             class="profile-avatar"
                             @error="handleAvatarError"
                         >
-                        <button class="avatar-edit-btn" @click="$refs.avatarInput.click()" title="Изменить аватар">
+                        <button class="avatar-edit-btn" @click="triggerAvatarInput" title="Изменить аватар">
                             <i class="fa fa-camera"></i>
                         </button>
                         <input
-                            ref="avatarInput"
+                            :ref="(el) => (avatarInputRef = el)"
                             type="file"
                             accept="image/*"
                             @change="handleAvatarUpload"
                             style="display: none"
                         />
                     </div>
-                    
+
                     <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
                     <p class="profile-email">{{ user?.email || '—' }}</p>
-                    
+
                     <div class="profile-badge">
-                        <span :class="getStatusClass(user?.status)">
-                            {{ getStatusName(user?.status) }}
+                        <span :class="getUserStatusClass(user?.status)">
+                            {{ getUserStatusLabel(user?.status) }}
                         </span>
-                        <span class="role-badge">{{ getRoleName(user?.role) }}</span>
+                        <span class="role-badge">{{ getUserRoleLabel(user?.role) }}</span>
                     </div>
 
                     <div v-if="user?.avatar" class="avatar-actions">
@@ -60,7 +60,7 @@
                         </div>
                         <div v-if="user?.experience" class="info-item">
                             <i class="fa fa-signal"></i>
-                            <span>{{ getExperienceLabel(user.experience) }}</span>
+                            <span>{{ getUserExperienceLabel(user.experience) }}</span>
                         </div>
                         <div class="info-item">
                             <i class="fa fa-calendar"></i>
@@ -75,8 +75,8 @@
 
                     <!-- Социальные сети -->
                     <div v-if="hasSocialLinks" class="profile-social">
-                        <a 
-                            v-for="(url, platform) in user.social_links" 
+                        <a
+                            v-for="(url, platform) in user.social_links"
                             :key="platform"
                             :href="url"
                             target="_blank"
@@ -143,17 +143,17 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Опыт вождения</span>
-                            <span class="info-value">{{ getExperienceLabel(user?.experience) || 'Не указан' }}</span>
+                            <span class="info-value">{{ getUserExperienceLabel(user?.experience) || 'Не указан' }}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Роль</span>
-                            <span class="info-value">{{ getRoleName(user?.role) }}</span>
+                            <span class="info-value">{{ getUserRoleLabel(user?.role) }}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Статус</span>
                             <span class="info-value">
-                                <span :class="getStatusClass(user?.status)">
-                                    {{ getStatusName(user?.status) }}
+                                <span :class="getUserStatusClass(user?.status)">
+                                    {{ getUserStatusLabel(user?.status) }}
                                 </span>
                             </span>
                         </div>
@@ -296,8 +296,8 @@
                             Ваш публичный профиль доступен по ссылке:
                         </p>
                         <div class="profile-link">
-                            <input 
-                                :value="profileUrl" 
+                            <input
+                                :value="profileUrl"
                                 readonly
                                 @click="copyProfileLink"
                             >
@@ -337,322 +337,183 @@
     />
 </template>
 
-<script>
-import api from '../api/api'
-import { useAuthStore } from '../stores/auth.js'
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useUserStore, useAuthStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import {
+  getUserStatusLabel,
+  getUserStatusClass,
+  getUserRoleLabel,
+  getUserExperienceLabel,
+  getSocialIcon,
+} from '@/utils/formatters'
+import { getAvatarUrl } from '@/utils/mediaUrl'
+import formatDate from '@/utils/DateFormatter.js'
+
 import EditProfileModal from '../components/modals/user/EditProfileModal.vue'
 import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue'
 import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue'
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 
-export default {
-    name: 'ProfilePage',
+const router = useRouter()
+const toast = useToast()
 
-    components: {
-        EditProfileModal,
-        ChangePasswordModal,
-        DeleteAccountModal,
-        Header,
-        LoadingOverlay
-    },
+const userStore = useUserStore()
+const authStore = useAuthStore()
 
-    data() {
-        return {
-            loading: false,
-            uploadingAvatar: false,
+const {
+  profile: user,
+  notificationSettings,
+  loading,
+  uploadingAvatar,
+  stats,
+  hasSocialLinks,
+} = storeToRefs(userStore)
 
-            user: null,
-            stats: {
-                posts: 0,
-                likes: 0,
-                comments: 0,
-                motorcycles: 0
-            },
+// ===== Local UI state =====
+const showEditProfile = ref(false)
+const showChangePassword = ref(false)
+const showDeleteAccount = ref(false)
+const avatarInputRef = ref(null)
 
-            notificationSettings: {
-                email_notifications_enabled: true,
-                email_newsletter_enabled: true,
-                email_verification_enabled: true,
-                reminders_mileage_enabled: true,
-                reminders_maintenance_enabled: true,
-            },
+// ===== Computed =====
+const profileUrl = computed(() => {
+  return `${window.location.origin}/profile/${user.value?.id || ''}`
+})
 
-            showEditProfile: false,
-            showChangePassword: false,
-            showDeleteAccount: false
-        }
-    },
-
-    computed: {
-        profileUrl() {
-            const baseUrl = window.location.origin
-            return `${baseUrl}/profile/${this.user?.id || ''}`
-        },
-        hasSocialLinks() {
-            return this.user?.social_links && 
-                   Object.values(this.user.social_links).some(url => url && url.trim())
-        }
-    },
-
-    methods: {
-        // ===== АВАТАР =====
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.webp'
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${avatarPath}`
-        },
-
-        handleAvatarError(event) {
-            event.target.src = '/BaseAvatar.webp'
-        },
-
-        async handleAvatarUpload(event) {
-            const file = event.target.files[0]
-            if (!file) return
-
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Файл слишком большой. Максимальный размер 5 МБ.')
-                this.$refs.avatarInput.value = ''
-                return
-            }
-
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
-            if (!allowedTypes.includes(file.type)) {
-                alert('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
-                this.$refs.avatarInput.value = ''
-                return
-            }
-
-            this.uploadingAvatar = true
-            try {
-                const formData = new FormData()
-                formData.append('avatar', file)
-
-                const { data } = await api.post('/user/avatar', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                })
-
-                localStorage.setItem('user', JSON.stringify(data))
-                this.user = data
-                alert('Аватар успешно обновлен!')
-            } catch (error) {
-                console.error('Error uploading avatar:', error)
-                alert(error.response?.data?.error || 'Ошибка загрузки аватара')
-            } finally {
-                this.uploadingAvatar = false
-                this.$refs.avatarInput.value = ''
-            }
-        },
-
-        async deleteAvatar() {
-            if (!confirm('Удалить аватар?')) return
-
-            try {
-                const { data } = await api.delete('/user/avatar')
-                this.user = data
-                alert('Аватар удален')
-            } catch (error) {
-                console.error('Error deleting avatar:', error)
-                alert(error.response?.data?.error || 'Ошибка удаления аватара')
-            }
-        },
-
-        // ===== ЗАГРУЗКА ПРОФИЛЯ =====
-        async loadProfile() {
-            this.loading = true
-            try {
-                const response = await api.get('/user/profile/me')
-                this.user = response.data.user
-                this.stats = {
-                    posts: response.data.user.stats?.posts_count || 0,
-                    likes: response.data.user.stats?.likes_received || 0,
-                    comments: response.data.user.stats?.comments_received || 0,
-                    motorcycles: response.data.user.motorcycles?.length || 0
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error)
-                if (error.response?.status === 401) {
-                    this.$router.push('/login')
-                }
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async loadNotificationSettings() {
-            try {
-                const { data } = await api.get('/user/notification-settings');
-                this.notificationSettings = {
-                    email_notifications_enabled: data.email_notifications_enabled ?? true,
-                    email_newsletter_enabled: data.email_newsletter_enabled ?? true,
-                    email_verification_enabled: data.email_verification_enabled ?? true,
-                    reminders_mileage_enabled: data.reminders_mileage_enabled ?? true,
-                    reminders_maintenance_enabled: data.reminders_maintenance_enabled ?? true,
-                };
-            } catch (err) {
-                console.error('Failed to load notification settings:', err);
-            }
-        },
-
-        // ===== ОБНОВЛЕНИЕ ПРОФИЛЯ =====
-        async updateProfile(formData) {
-            try {
-                const response = await api.put('/user/profile', formData)
-                localStorage.setItem('user', JSON.stringify(response.data))
-                this.user = response.data
-                this.showEditProfile = false
-                alert('Профиль обновлен!')
-            } catch (error) {
-                console.error('Error updating profile:', error)
-                alert(error.response?.data?.message || 'Ошибка при обновлении профиля')
-            }
-        },
-
-        async updateNotificationSettings() {
-            try {
-                await api.put('/user/notification-settings', this.notificationSettings);
-                this.$toast?.success('Настройки уведомлений обновлены');
-            } catch (err) {
-                console.error('Failed to update notification settings:', err);
-                this.$toast?.error('Ошибка обновления настроек');
-            }
-        },
-
-        // ===== БЕЗОПАСНОСТЬ =====
-        async changePassword(formData) {
-            try {
-                if (formData.newPassword !== formData.repeatPassword) {
-                    alert('Пароли не совпадают')
-                    return
-                }
-
-                await api.patch('/user/change-password', formData)
-                this.showChangePassword = false
-                alert('Пароль успешно изменен!')
-            } catch (error) {
-                console.error('Error changing password:', error)
-                alert(error.response?.data?.message || 'Ошибка при смене пароля')
-            }
-        },
-
-        async deleteAccount(password) {
-            try {
-                await api.delete('/user/account', {
-                    data: { password }
-                })
-                this.showDeleteAccount = false
-                useAuthStore().logout()
-                this.$router.push('/login')
-            } catch (error) {
-                console.error('Error deleting account:', error)
-                alert(error.response?.data?.message || 'Ошибка при удалении аккаунта')
-            }
-        },
-
-        // ===== ПУБЛИЧНЫЙ ПРОФИЛЬ =====
-        viewPublicProfile() {
-            this.$router.push(`/profile/${this.user.id}`)
-        },
-
-        copyProfileLink() {
-            navigator.clipboard.writeText(this.profileUrl).then(() => {
-                alert('Ссылка на профиль скопирована!')
-            }).catch(() => {
-                const input = document.querySelector('.profile-link input')
-                input.select()
-                document.execCommand('copy')
-                alert('Ссылка на профиль скопирована!')
-            })
-        },
-
-        // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
-        formatDate(dateString) {
-            if (!dateString) return '—'
-            try {
-                const date = new Date(dateString)
-                if (isNaN(date.getTime())) return '—'
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })
-            } catch {
-                return '—'
-            }
-        },
-
-        getStatusName(status) {
-            const map = {
-                'active': 'Активен',
-                'banned': 'Заблокирован',
-                'pending': 'Ожидает'
-            }
-            return map[status] || status || '—'
-        },
-
-        getStatusClass(status) {
-            const map = {
-                'active': 'status-active',
-                'banned': 'status-banned',
-                'pending': 'status-pending'
-            }
-            return map[status] || ''
-        },
-
-        getRoleName(role) {
-            const map = {
-                'admin': 'Администратор',
-                'motorcyclist': 'Мотоциклист',
-                'motoclub': 'Мотоклуб'
-            }
-            return map[role] || role || '—'
-        },
-
-        getExperienceLabel(experience) {
-            const map = {
-                'beginner': 'Новичок',
-                'intermediate': 'Опытный',
-                'expert': 'Эксперт'
-            }
-            return map[experience] || experience || 'Не указан'
-        },
-
-        getSocialIcon(platform) {
-            const icons = {
-                'instagram': 'fa fa-instagram',
-                'youtube': 'fa fa-youtube',
-                'telegram': 'fa fa-telegram',
-                'vk': 'fa fa-vk',
-                'facebook': 'fa fa-facebook',
-                'twitter': 'fa fa-twitter',
-                'tiktok': 'fa fa-tiktok'
-            }
-            return icons[platform] || 'fa fa-link'
-        },
-
-        async logout() {
-            try {
-                await api.post('/auth/logout')
-            } catch(err) { console.error(err) }
-            finally {
-                useAuthStore().logout()
-                this.$router.push('/login')
-            }
-        }
-    },
-
-    mounted() {
-        this.loadProfile()
-        this.loadNotificationSettings()
+// ===== Lifecycle =====
+onMounted(async () => {
+  try {
+    await Promise.all([
+      userStore.loadProfile(),
+      userStore.loadNotificationSettings(),
+    ])
+  } catch (err) {
+    console.error('Failed to load profile:', err)
+    if (err.response?.status === 401) {
+      router.push('/login')
+      return
     }
+    toast.error('Не удалось загрузить профиль')
+  }
+})
+
+// ===== Avatar =====
+function triggerAvatarInput() {
+  avatarInputRef.value?.click()
+}
+
+async function handleAvatarUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error('Файл слишком большой. Максимальный размер 5 МБ.')
+    event.target.value = ''
+    return
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
+    event.target.value = ''
+    return
+  }
+
+  try {
+    await userStore.uploadAvatar(file)
+    toast.success('Аватар успешно обновлён!')
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Ошибка загрузки аватара')
+  } finally {
+    event.target.value = ''
+  }
+}
+
+async function deleteAvatar() {
+  if (!confirm('Удалить аватар?')) return
+  try {
+    await userStore.deleteAvatar()
+    toast.success('Аватар удалён')
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Ошибка удаления аватара')
+  }
+}
+
+function handleAvatarError(event) {
+  event.target.src = '/BaseAvatar.webp'
+}
+
+// ===== Profile =====
+async function updateProfile(formData) {
+  try {
+    await userStore.updateProfile(formData)
+    showEditProfile.value = false
+    toast.success('Профиль обновлён!')
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Ошибка при обновлении профиля')
+  }
+}
+
+// ===== Notifications =====
+async function updateNotificationSettings() {
+  try {
+    await userStore.updateNotificationSettings(notificationSettings.value)
+    toast.success('Настройки уведомлений обновлены')
+  } catch (err) {
+    toast.error('Ошибка обновления настроек')
+  }
+}
+
+// ===== Security =====
+async function changePassword(formData) {
+  try {
+    if (formData.newPassword !== formData.repeatPassword) {
+      toast.error('Пароли не совпадают')
+      return
+    }
+    await userStore.changePassword(formData)
+    showChangePassword.value = false
+    toast.success('Пароль успешно изменён!')
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Ошибка при смене пароля')
+  }
+}
+
+async function deleteAccount(password) {
+  try {
+    await userStore.deleteAccount(password)
+    showDeleteAccount.value = false
+    authStore.logout()
+    router.push('/login')
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Ошибка при удалении аккаунта')
+  }
+}
+
+// ===== Public profile =====
+function viewPublicProfile() {
+  if (!user.value?.id) return
+  router.push(`/profile/${user.value.id}`)
+}
+
+async function copyProfileLink() {
+  try {
+    await navigator.clipboard.writeText(profileUrl.value)
+    toast.success('Ссылка на профиль скопирована!')
+  } catch {
+    // fallback для старых браузеров
+    const input = document.querySelector('.profile-link input')
+    if (input) {
+      input.select()
+      document.execCommand('copy')
+      toast.success('Ссылка на профиль скопирована!')
+    }
+  }
 }
 </script>
 
