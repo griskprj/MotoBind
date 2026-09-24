@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <LoadingOverlay :isLoading="loading" text="Загрузка поста..."/>
-        
+
         <!-- === HEADER === -->
         <Header
             title="Пост"
@@ -21,9 +21,9 @@
                 <!-- Шапка поста -->
                 <div class="post-header">
                     <div class="post-author-info" @click="goToProfile(post.author_id)">
-                        <img 
-                            :src="getAvatarUrl(post.author_avatar)" 
-                            alt="Avatar" 
+                        <img
+                            :src="getAvatarUrl(post.author_avatar)"
+                            alt="Avatar"
                             class="avatar"
                             @error="handleAvatarError"
                         >
@@ -44,20 +44,20 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Контент -->
                 <div class="post-content">
                     <p>{{ post.content }}</p>
-                    <img v-if="post.image" :src="getImageUrl(post.image)" alt="Post image" class="post-image">
+                    <img v-if="post.image" :src="getManualImageUrl(post.image)" alt="Post image" class="post-image">
                 </div>
-                
+
                 <!-- Футер с лайками и комментариями -->
                 <div class="post-footer">
                     <button class="like-btn" @click="toggleLike" :class="{ liked: post.is_liked }">
                         <i class="fa fa-heart"></i>
                         <span>{{ post.likes_count || 0 }}</span>
                     </button>
-                    
+
                     <button class="comment-btn">
                         <i class="fa fa-comment"></i>
                         <span>{{ post.comments_count || 0 }}</span>
@@ -68,27 +68,27 @@
             <!-- === КОММЕНТАРИИ === -->
             <div class="comments-section">
                 <h3 class="comments-title">
-                    <i class="fa fa-comments"></i> 
+                    <i class="fa fa-comments"></i>
                     Комментарии ({{ post.comments_count || 0 }})
                 </h3>
-                
+
                 <!-- Форма добавления комментария -->
                 <div class="comment-input-wrapper">
-                    <img 
-                        :src="getAvatarUrl(currentUser?.avatar)" 
-                        alt="Your avatar" 
+                    <img
+                        :src="getAvatarUrl(currentUser?.avatar)"
+                        alt="Your avatar"
                         class="avatar-small"
                         @error="handleAvatarError"
                     >
                     <div class="comment-input-group">
-                        <input 
-                            v-model="commentText" 
+                        <input
+                            v-model="commentText"
                             placeholder="Написать комментарий..."
                             @keyup.enter="submitComment"
                             :disabled="isSubmittingComment"
                         >
-                        <button 
-                            @click="submitComment" 
+                        <button
+                            @click="submitComment"
                             :disabled="!commentText.trim() || isSubmittingComment"
                             class="btn-send"
                         >
@@ -97,17 +97,17 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Список комментариев -->
                 <div v-if="comments.length > 0" class="comments-list">
-                    <div 
-                        v-for="comment in comments" 
-                        :key="comment.id" 
+                    <div
+                        v-for="comment in comments"
+                        :key="comment.id"
                         class="comment-item"
                     >
-                        <img 
-                            :src="getAvatarUrl(comment.author_avatar)" 
-                            alt="Avatar" 
+                        <img
+                            :src="getAvatarUrl(comment.author_avatar)"
+                            alt="Avatar"
                             class="avatar-small"
                             @error="handleAvatarError"
                         >
@@ -120,8 +120,8 @@
                             </div>
                             <p class="comment-text">{{ comment.content }}</p>
                         </div>
-                        <button 
-                            v-if="comment.user_id === currentUserId" 
+                        <button
+                            v-if="comment.user_id === currentUserId"
                             class="delete-comment"
                             @click="deleteComment(comment.id)"
                             title="Удалить комментарий"
@@ -130,7 +130,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Пустое состояние комментариев -->
                 <div v-else class="empty-comments">
                     <i class="fa fa-comment-o"></i>
@@ -138,7 +138,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- === ПОСТ НЕ НАЙДЕН === -->
         <div v-else-if="!loading && error" class="error-state">
             <i class="fa fa-exclamation-triangle"></i>
@@ -156,22 +156,22 @@
                         <i class="fa fa-times"></i>
                     </button>
                 </div>
-                
+
                 <div class="edit-modal-body">
-                    <textarea 
-                        v-model="editContent" 
+                    <textarea
+                        v-model="editContent"
                         placeholder="Что нового в мире мотоциклов?"
                         rows="4"
                         class="edit-textarea"
                     ></textarea>
-                    
+
                     <div v-if="editImagePreview" class="edit-image-preview">
                         <img :src="editImagePreview" alt="Preview">
                         <button class="remove-edit-image" @click="removeEditImage">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
-                    
+
                     <div class="edit-actions">
                         <label class="image-upload-btn">
                             <i class="fa fa-image"></i>
@@ -180,7 +180,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="edit-modal-footer">
                     <button class="btn btn-secondary" @click="closeEditModal">Отмена</button>
                     <button class="btn btn-primary" @click="saveEdit" :disabled="isSaving">
@@ -200,242 +200,212 @@
     />
 </template>
 
-<script>
-import socialApi from '../api/social'
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useSocialStore, useAuthStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import { getAvatarUrl, getManualImageUrl } from '@/utils/mediaUrl'
+import formatDate from '@/utils/DateFormatter.js'
+
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
-import ReportModal from '../components/modals/social/ReportModal.vue';
+import ReportModal from '../components/modals/social/ReportModal.vue'
 
-export default {
-    name: 'PostView',
-    components: { Header, LoadingOverlay, ReportModal },
-    
-    data() {
-        return {
-            loading: true,
-            error: null,
-            post: null,
-            comments: [],
-            currentUser: null,
-            currentUserId: null,
-            
-            commentText: '',
-            isSubmittingComment: false,
-            
-            showEditModal: false,
-            editContent: '',
-            editImageFile: null,
-            editImagePreview: null,
-            isSaving: false
-        }
-    },
-    
-    computed: {
-        isAuthor() {
-            return this.post?.author_id === this.currentUserId
-        }
-    },
-    
-    mounted() {
-        const userId = JSON.parse(localStorage.getItem('user') || '{}')
-        this.currentUserId = userId.id
-        this.currentUser = userId
-        
-        const postId = this.$route.params.id
-        if (postId) {
-            this.loadPost(postId)
-        } else {
-            this.error = 'ID поста не указан'
-            this.loading = false
-        }
-    },
-    
-    methods: {
-        async loadPost(postId) {
-            this.loading = true
-            try {
-                const response = await socialApi.getPost(postId, true)
-                this.post = response.data
-                this.comments = this.post.comments || []
-            } catch (error) {
-                console.error('Ошибка загрузки поста:', error)
-                this.error = error.response?.data?.error || 'Пост не найден'
-            } finally {
-                this.loading = false
-            }
-        },
-        
-        async toggleLike() {
-            try {
-                const result = await socialApi.toggleLike(this.post.id)
-                this.post.likes_count = result.data.likes_count
-                this.post.is_liked = result.data.liked
-            } catch (error) {
-                console.error('Ошибка лайка:', error)
-            }
-        },
-        
-        async submitComment() {
-            if (!this.commentText.trim() || this.isSubmittingComment) return
-            
-            this.isSubmittingComment = true
-            try {
-                const response = await socialApi.addComment(this.post.id, this.commentText)
-                const newComment = response.data
-                this.comments.push(newComment)
-                this.post.comments_count = (this.post.comments_count || 0) + 1
-                this.commentText = ''
-            } catch (error) {
-                console.error('Ошибка добавления комментария:', error)
-                alert('Не удалось добавить комментарий')
-            } finally {
-                this.isSubmittingComment = false
-            }
-        },
-        
-        async deleteComment(commentId) {
-            if (!confirm('Удалить комментарий?')) return
-            try {
-                await socialApi.deleteComment(commentId)
-                this.comments = this.comments.filter(c => c.id !== commentId)
-                this.post.comments_count = Math.max(0, (this.post.comments_count || 0) - 1)
-            } catch (error) {
-                console.error('Ошибка удаления комментария:', error)
-                alert('Не удалось удалить комментарий')
-            }
-        },
-        
-        // ===== РЕДАКТИРОВАНИЕ ПОСТА =====
-        openEditModal() {
-            this.editContent = this.post.content
-            this.editImagePreview = this.post.image ? this.getImageUrl(this.post.image) : null
-            this.editImageFile = null
-            this.showEditModal = true
-        },
-        
-        closeEditModal() {
-            this.showEditModal = false
-            this.editContent = ''
-            this.editImageFile = null
-            this.editImagePreview = null
-        },
-        
-        handleEditImage(event) {
-            const file = event.target.files[0]
-            if (!file) return
-            
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Размер файла не должен превышать 5MB')
-                return
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                alert('Пожалуйста, загрузите изображение')
-                return
-            }
-            
-            this.editImageFile = file
-            const reader = new FileReader()
-            reader.onload = (e) => {
-                this.editImagePreview = e.target.result
-            }
-            reader.readAsDataURL(file)
-        },
-        
-        removeEditImage() {
-            this.editImageFile = null
-            this.editImagePreview = null
-        },
-        
-        async saveEdit() {
-            if (!this.editContent.trim()) {
-                alert('Содержимое поста не может быть пустым')
-                return
-            }
-            
-            this.isSaving = true
-            try {
-                const formData = new FormData()
-                formData.append('content', this.editContent.trim())
-                if (this.editImageFile) {
-                    formData.append('image', this.editImageFile)
-                }
-                
-                const response = await socialApi.updatePost(this.post.id, formData)
-                
-                this.post.content = response.data.content
-                this.post.image = response.data.image
-                
-                if (!this.post.image) {
-                    this.post.image = null
-                }
-                
-                this.closeEditModal()
-            } catch (error) {
-                console.error('Ошибка редактирования поста:', error)
-                alert('Не удалось обновить пост')
-            } finally {
-                this.isSaving = false
-            }
-        },
-        
-        // ===== УДАЛЕНИЕ ПОСТА =====
-        confirmDelete() {
-            if (confirm('Вы уверены, что хотите удалить этот пост?')) {
-                this.deletePost()
-            }
-        },
-        
-        async deletePost() {
-            try {
-                await socialApi.deletePost(this.post.id)
-                this.$router.push('/social')
-            } catch (error) {
-                console.error('Ошибка удаления поста:', error)
-                alert('Не удалось удалить пост')
-            }
-        },
-        
-        // ===== НАВИГАЦИЯ =====
-        goToProfile(userId) {
-            this.$router.push(`/profile/${userId}`)
-        },
-        
-        // ===== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =====
-        getImageUrl(path) {
-            if (!path) return ''
-            if (path.startsWith('http://') || path.startsWith('https://')) return path
-            if (path.startsWith('/')) return path
-            return `/uploads/${path}`
-        },
-        
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.webp'
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${avatarPath}`
-        },
-        
-        handleAvatarError(event) {
-            event.target.src = '/default-avatar.png'
-        },
-        
-        formatDate(dateStr) {
-            if (!dateStr) return ''
-            const date = new Date(dateStr)
-            return date.toLocaleDateString('ru-RU', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            })
-        }
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
+
+const socialStore = useSocialStore()
+const authStore = useAuthStore()
+
+const {
+  current: post,
+  currentComments: comments,
+  loadingCurrent: loading,
+} = storeToRefs(socialStore)
+
+// ===== Local state =====
+const error = ref(null)
+const commentText = ref('')
+const isSubmittingComment = ref(false)
+const showReportModal = ref(false)
+
+const showEditModal = ref(false)
+const editContent = ref('')
+const editImageFile = ref(null)
+const editImagePreview = ref(null)
+const isSaving = ref(false)
+
+// ===== Computed =====
+const currentUserId = computed(() => authStore.user?.id || null)
+const currentUser = computed(() => authStore.user)
+
+const isAuthor = computed(() => {
+  if (!post.value || !currentUserId.value) return false
+  return post.value.author_id === currentUserId.value
+})
+
+// ===== Lifecycle =====
+onMounted(() => {
+  loadPostFromRoute()
+})
+
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId && newId !== oldId) loadPostFromRoute()
+  }
+)
+
+async function loadPostFromRoute() {
+  error.value = null
+  const id = route.params.id
+  if (!id) {
+    error.value = 'ID поста не указан'
+    return
+  }
+  try {
+    await socialStore.loadOne(id)
+  } catch (err) {
+    console.error('Failed to load post:', err)
+    error.value = err.response?.data?.error || 'Пост не найден'
+    if (err.response?.status === 401) {
+      router.push('/login')
     }
+  }
+}
+
+// ===== Likes =====
+async function toggleLike() {
+  try {
+    await socialStore.toggleLike(post.value.id)
+  } catch (err) {
+    console.error('Failed to toggle like:', err)
+    toast.error('Не удалось поставить лайк')
+  }
+}
+
+// ===== Comments =====
+async function submitComment() {
+  if (!commentText.value.trim() || isSubmittingComment.value) return
+
+  isSubmittingComment.value = true
+  try {
+    await socialStore.addComment(post.value.id, commentText.value)
+    commentText.value = ''
+  } catch (err) {
+    console.error('Failed to add comment:', err)
+    toast.error('Не удалось добавить комментарий')
+  } finally {
+    isSubmittingComment.value = false
+  }
+}
+
+async function deleteComment(commentId) {
+  if (!confirm('Удалить комментарий?')) return
+  try {
+    await socialStore.removeComment(commentId)
+  } catch (err) {
+    console.error('Failed to delete comment:', err)
+    toast.error('Не удалось удалить комментарий')
+  }
+}
+
+// ===== Edit post =====
+function openEditModal() {
+  editContent.value = post.value.content
+  editImagePreview.value = post.value.image
+    ? getManualImageUrl(post.value.image)
+    : null
+  editImageFile.value = null
+  showEditModal.value = true
+}
+
+function closeEditModal() {
+  showEditModal.value = false
+  editContent.value = ''
+  editImageFile.value = null
+  editImagePreview.value = null
+}
+
+function handleEditImage(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error('Размер файла не должен превышать 5MB')
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    toast.error('Пожалуйста, загрузите изображение')
+    return
+  }
+
+  editImageFile.value = file
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    editImagePreview.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+function removeEditImage() {
+  editImageFile.value = null
+  editImagePreview.value = null
+}
+
+async function saveEdit() {
+  if (!editContent.value.trim()) {
+    toast.error('Содержимое поста не может быть пустым')
+    return
+  }
+
+  isSaving.value = true
+  try {
+    const formData = new FormData()
+    formData.append('content', editContent.value.trim())
+    if (editImageFile.value) {
+      formData.append('image', editImageFile.value)
+    }
+
+    await socialStore.updatePost(post.value.id, formData)
+    closeEditModal()
+    toast.success('Пост обновлён')
+  } catch (err) {
+    console.error('Failed to update post:', err)
+    toast.error('Не удалось обновить пост')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+// ===== Delete post =====
+function confirmDelete() {
+  if (!confirm('Вы уверены, что хотите удалить этот пост?')) return
+  deletePost()
+}
+
+async function deletePost() {
+  try {
+    await socialStore.removePost(post.value.id)
+    toast.success('Пост удалён')
+    router.push('/social')
+  } catch (err) {
+    console.error('Failed to delete post:', err)
+    toast.error('Не удалось удалить пост')
+  }
+}
+
+// ===== Navigation =====
+function goToProfile(userId) {
+  router.push(`/profile/${userId}`)
+}
+
+// ===== Helpers =====
+function handleAvatarError(event) {
+  event.target.src = '/BaseAvatar.webp'
 }
 </script>
 
@@ -1021,37 +991,37 @@ export default {
     .container {
         padding: 12px;
     }
-    
+
     .post-card {
         padding: 16px;
     }
-    
+
     .comments-section {
         padding: 16px;
     }
-    
+
     .post-content p {
         font-size: 15px;
     }
-    
+
     .comment-input-wrapper {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .avatar-small {
         display: none;
     }
-    
+
     .edit-modal {
         padding: 20px;
         width: 95%;
     }
-    
+
     .edit-modal-footer {
         flex-direction: column;
     }
-    
+
     .edit-modal-footer .btn {
         width: 100%;
         justify-content: center;
@@ -1062,33 +1032,33 @@ export default {
     .post-header {
         flex-wrap: wrap;
     }
-    
+
     .post-author-info {
         flex: 1;
         min-width: 0;
     }
-    
+
     .avatar {
         width: 36px;
         height: 36px;
     }
-    
+
     .username {
         font-size: 14px;
     }
-    
+
     .post-content p {
         font-size: 14px;
     }
-    
+
     .comments-title {
         font-size: 16px;
     }
-    
+
     .comment-item {
         padding: 10px;
     }
-    
+
     .comment-text {
         font-size: 13px;
     }

@@ -3,9 +3,6 @@ Social API — тонкие контроллеры.
 
 Вся бизнес-логика — в services/post_service.py и services/report_service.py.
 """
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-
 from app.models.post_report import PostReport
 from app.schemas.social import (
     CommentResponseSchema,
@@ -19,11 +16,14 @@ from app.schemas.social import (
 from app.services.post_service import PostService
 from app.services.report_service import ReportService
 from app.utils.helpers import get_current_user_id
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 
 social_bp = Blueprint("social", __name__)
 
 
 # ---- Posts ----
+
 
 @social_bp.route("/posts", methods=["POST"])
 @jwt_required()
@@ -79,8 +79,9 @@ def update_post(post_id):
     user_id = get_current_user_id()
     content = request.form.get("content")
     image = request.files.get("image")
+    delete_image = request.form.get("delete_image", "false").lower() == "true"
 
-    result = PostService.update_post(post_id, user_id, content, image)
+    result = PostService.update_post(post_id, user_id, content, image, delete_image)
     return jsonify(PostResponseSchema.model_validate(result).model_dump()), 200
 
 
@@ -95,6 +96,7 @@ def delete_post(post_id):
 
 # ---- Likes ----
 
+
 @social_bp.route("/posts/<int:post_id>/like", methods=["POST"])
 @jwt_required()
 def toggle_like(post_id):
@@ -106,6 +108,7 @@ def toggle_like(post_id):
 
 # ---- Comments ----
 
+
 @social_bp.route("/posts/<int:post_id>/comments", methods=["POST"])
 @jwt_required()
 def add_comment(post_id):
@@ -114,7 +117,10 @@ def add_comment(post_id):
     data = request.get_json() or {}
 
     comment = PostService.add_comment(post_id, user_id, data.get("content"))
-    return jsonify(CommentResponseSchema.model_validate(comment.to_dict()).model_dump()), 201
+    return (
+        jsonify(CommentResponseSchema.model_validate(comment.to_dict()).model_dump()),
+        201,
+    )
 
 
 @social_bp.route("/comments/<int:comment_id>", methods=["DELETE"])
@@ -127,6 +133,7 @@ def delete_comment(comment_id):
 
 
 # ---- Reports ----
+
 
 @social_bp.route("/posts/<int:post_id>/report", methods=["POST"])
 @jwt_required()
@@ -142,17 +149,29 @@ def report_post(post_id):
         description=data.get("description"),
     )
     report_dict = report.to_dict(include_post=False)
-    return jsonify({
-        "message": "Жалоба отправлена модератору",
-        "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
-    }), 201
+    return (
+        jsonify(
+            {
+                "message": "Жалоба отправлена модератору",
+                "report": ReportResponseSchema.model_validate(report_dict).model_dump(),
+            }
+        ),
+        201,
+    )
 
 
 @social_bp.route("/report-categories", methods=["GET"])
 @jwt_required()
 def get_report_categories():
     """Список категорий жалоб."""
-    return jsonify([
-        ReportCategorySchema.model_validate({"value": k, "label": v}).model_dump()
-        for k, v in PostReport.CATEGORIES.items()
-    ]), 200
+    return (
+        jsonify(
+            [
+                ReportCategorySchema.model_validate(
+                    {"value": k, "label": v}
+                ).model_dump()
+                for k, v in PostReport.CATEGORIES.items()
+            ]
+        ),
+        200,
+    )
