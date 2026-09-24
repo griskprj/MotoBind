@@ -132,6 +132,19 @@ export const useMaintenancesStore = defineStore('maintenances', () => {
     await loadAll()
   }
 
+  async function loadForRepair() {
+    loading.value = true
+    try {
+      const { data } = await api.get('/statistic/repair')
+      return {
+        motorcycles: data.motorcycles || [],
+        maintenances: data.maintenances || [],
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
   function reset() {
     all.value = []
     motorcycles.value = []
@@ -167,6 +180,7 @@ export const useMaintenancesStore = defineStore('maintenances', () => {
     update,
     remove,
     complete,
+    loadForRepair,
     reset,
   }
 })

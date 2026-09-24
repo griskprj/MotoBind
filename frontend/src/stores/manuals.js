@@ -188,6 +188,20 @@ export const useManualsStore = defineStore('manuals', () => {
     await api.delete(`/manual/${manualId}/steps/${stepId}/image`)
   }
 
+  async function loadForMaintenance(maintenanceId, motoId) {
+    const { data } = await api.get('/manual/', {
+      params: {
+        maintenance_id: maintenanceId,
+        moto_id: motoId,
+      },
+    })
+
+    if (!data) return null
+    if (Array.isArray(data)) return data.length > 0 ? data[0] : null
+    if (data.id) return data
+    return null
+  }
+
   function reset() {
     items.value = []
     current.value = null
@@ -224,6 +238,7 @@ export const useManualsStore = defineStore('manuals', () => {
     update,
     uploadStepImage,
     deleteStepImage,
+    loadForMaintenance,
     reset,
     create,
   }
