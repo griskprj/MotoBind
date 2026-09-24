@@ -1,528 +1,420 @@
 <template>
-    <div class="container">
-        <LoadingOverlay :isLoading="isSubmitting" text="Создание мануала..."/>
+  <div class="container">
+    <LoadingOverlay :isLoading="isSubmitting" text="Сохранение мануала..." />
 
-        <!-- === HEADER === -->
-        <Header
-            title="Конструктор мануалов"
-            subtitle="Создание подробной инструкции по ремонту и обслуживанию"
-        />
+    <!-- === HEADER === -->
+    <Header
+      title="Конструктор мануалов"
+      subtitle="Создание подробной инструкции по ремонту и обслуживанию"
+    />
 
-        <!-- === FORM === -->
-        <section class="form-section">
-            <div class="info-banner">
-                <i class="fa fa-info-circle"></i>
-                <span>Правила оформления мануалов <a href='/manual/rules' target='_blank'>здесь</a>.</span>
+    <!-- === FORM === -->
+    <section class="form-section">
+      <div class="info-banner">
+        <i class="fa fa-info-circle"></i>
+        <span>Правила оформления мануалов <a href="/manual/rules" target="_blank">здесь</a>.</span>
+      </div>
+
+      <form @submit.prevent="submitManual" enctype="multipart/form-data">
+        <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
+        <BaseCard title="1. О мануале" icon="fa fa-info-circle" class="form-card">
+          <div class="form-fields">
+            <BaseSelect
+              v-model="form.category"
+              label="Категория / Система"
+              placeholder="Выберите категорию"
+              required
+              @change="onCategoryChange"
+            >
+              <option value="engine">⚙️ Двигатель</option>
+              <option value="drive">🔗 Привод</option>
+              <option value="steering">🔄 Рулевое управление</option>
+              <option value="suspension">🛞 Подвеска</option>
+              <option value="electronics">💡 Электроника</option>
+              <option value="wheel">⚡ Колёса / Шины</option>
+              <option value="brakes">🛑 Тормозная система</option>
+              <option value="fuel">⛽ Топливная система</option>
+              <option value="cooling">❄️ Система охлаждения</option>
+            </BaseSelect>
+
+            <!-- Выпадающий список шаблонов -->
+            <BaseSelect
+              v-if="!form.customTitle && form.category"
+              v-model="form.templateId"
+              label="Название процедуры"
+              placeholder="Выберите процедуру"
+              :error="errors.title"
+              required
+              @change="onTemplateChange"
+            >
+              <option
+                v-for="tpl in availableTemplates"
+                :key="tpl.id"
+                :value="tpl.id"
+              >
+                {{ tpl.label }}
+              </option>
+              <option value="__custom__">✏️ Своё название...</option>
+            </BaseSelect>
+
+            <!-- Подсказка: сначала выберите категорию -->
+            <div v-else-if="!form.customTitle" class="field-placeholder">
+              Сначала выберите категорию
             </div>
 
-            <form @submit.prevent="submitManual" enctype="multipart/form-data">
-                <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-info-circle"></i>
-                        <h3>1. О мануале</h3>
-                    </div>
+            <!-- Ручной ввод названия -->
+            <div v-if="form.customTitle || !form.category" class="custom-title-wrapper">
+              <BaseInput
+                v-model="form.title"
+                label="Название процедуры"
+                placeholder="Введите своё название процедуры"
+                :error="errors.title"
+                :maxlength="200"
+                required
+              />
+              <BaseButton
+                v-if="form.customTitle && form.category"
+                variant="secondary"
+                icon="fa fa-list"
+                :block="false"
+                class="btn-back-to-templates"
+                @click="backToTemplates"
+              />
+            </div>
 
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Категория / Система*
-                                <select v-model="form.category" @change="onCategoryChange" required>
-                                    <option value="">Выберите категорию</option>
-                                    <option value="engine">⚙️ Двигатель</option>
-                                    <option value="drive">🔗 Привод</option>
-                                    <option value="steering">🔄 Рулевое управление</option>
-                                    <option value="suspension">🛞 Подвеска</option>
-                                    <option value="electronics">💡 Электроника</option>
-                                    <option value="wheel">⚡ Колеса/Шины</option>
-                                    <option value="brakes">🛑 Тормозная система</option>
-                                    <option value="fuel">⛽ Топливная система</option>
-                                    <option value="cooling">❄️ Система охлаждения</option>
-                                </select>
-                            </label>
-                        </div>
+            <BaseTextarea
+              v-model="form.description"
+              label="Краткое описание"
+              placeholder="Краткое описание процедуры, её важность и интервалы"
+              :error="errors.description"
+              :maxlength="1000"
+              :rows="2"
+              required
+            />
 
-                        <div class="form-group">
-                            <label>
-                                Название процедуры*
+            <div class="form-row">
+              <BaseInput
+                v-model="form.motorcycle"
+                label="Модель мотоцикла"
+                placeholder="Например: BMW S1000RR (2018+)"
+                :error="errors.motorcycle"
+                :maxlength="100"
+                required
+              />
 
-                                <!-- Выпадающий список шаблонов -->
-                                <select
-                                    v-if="!form.customTitle && form.category"
-                                    v-model="form.templateId"
-                                    @change="onTemplateChange"
-                                    :class="{ 'error': errors.title }"
-                                >
-                                    <option value="">Выберите процедуру</option>
-                                    <option
-                                        v-for="tpl in availableTemplates"
-                                        :key="tpl.id"
-                                        :value="tpl.id"
-                                    >
-                                        {{ tpl.label }}
-                                    </option>
-                                    <option value="__custom__">✏️ Своё название...</option>
-                                </select>
+              <BaseSelect
+                v-model="form.difficult"
+                label="Сложность"
+                placeholder="Выберите сложность"
+                required
+              >
+                <option value="easy">Легко</option>
+                <option value="medium">Средне</option>
+                <option value="hard">Сложно</option>
+              </BaseSelect>
+            </div>
 
-                                <!-- Если категория не выбрана — подсказка -->
-                                <div v-else-if="!form.customTitle" class="field-placeholder">
-                                    Сначала выберите категорию
-                                </div>
+            <div class="form-row">
+              <BaseInput
+                v-model="form.time_estimate"
+                label="Ориентировочное время"
+                placeholder="Например: 15–20 минут"
+                :maxlength="64"
+              />
 
-                                <!-- Ручной ввод (если выбрано "Своё название" или категория не выбрана) -->
-                                <div v-if="form.customTitle || !form.category" class="custom-title-wrapper">
-                                    <input
-                                        type="text"
-                                        v-model="form.title"
-                                        placeholder="Введите своё название процедуры"
-                                        :class="{ 'error': errors.title }"
-                                        maxLength="200"
-                                    >
-                                    <button
-                                        v-if="form.customTitle && form.category"
-                                        type="button"
-                                        class="btn-back-to-templates"
-                                        @click="backToTemplates"
-                                        title="Вернуться к списку"
-                                    >
-                                        <i class="fa fa-list"></i>
-                                    </button>
-                                </div>
+              <BaseInput
+                v-model="form.interval"
+                label="Периодичность"
+                placeholder="Например: каждые 10 000 км или раз в год"
+                :maxlength="64"
+              />
+            </div>
+          </div>
+        </BaseCard>
 
-                                <span v-if="errors.title" class="error-message">{{ errors.title }}</span>
-                            </label>
-                        </div>
+        <!-- ===== БЛОК 2: БЕЗОПАСНОСТЬ И ПОДГОТОВКА ===== -->
+        <BaseCard title="2. Безопасность и подготовка" icon="fa fa-shield" class="form-card">
+          <div class="form-fields">
+            <BaseTextarea
+              v-model="form.safety_tip"
+              label="Общие рекомендации"
+              placeholder="Общие рекомендации по выполнению процедуры"
+              :maxlength="1000"
+              :rows="2"
+            />
 
-                        <div class="form-group">
-                            <label>
-                                Краткое описание*
-                                <textarea
-                                    v-model="form.description"
-                                    required
-                                    rows="2"
-                                    placeholder="Краткое описание процедуры, её важность и интервалы"
-                                    :class="{ 'error': errors.description }"
-                                    maxLength="1000"
-                                ></textarea>
-                                <span v-if="errors.description" class="error-message">{{ errors.description }}</span>
-                            </label>
-                        </div>
+            <BaseTextarea
+              v-model="form.warnings"
+              label="⚠️ Предупреждения (что категорически нельзя делать)"
+              placeholder="Например: Не запускайте двигатель без масла"
+              :maxlength="1000"
+              :rows="2"
+            />
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>
-                                    Модель мотоцикла*
-                                    <input
-                                        type="text"
-                                        v-model="form.motorcycle"
-                                        required
-                                        placeholder="Например: BMW S1000RR (2018+)"
-                                        :class="{ 'error': errors.motorcycle }"
-                                        maxLength="100"
-                                    >
-                                    <span v-if="errors.motorcycle" class="error-message">{{ errors.motorcycle }}</span>
-                                </label>
-                            </div>
+            <BaseTextarea
+              v-model="form.conditions"
+              label="Необходимые условия"
+              placeholder="Например: Двигатель холодный, мотоцикл на центральной подставке"
+              :maxlength="1000"
+              :rows="2"
+            />
+          </div>
+        </BaseCard>
 
-                            <div class="form-group">
-                                <label>
-                                    Сложность*
-                                    <select v-model="form.difficult" required>
-                                        <option value="">Выберите сложность</option>
-                                        <option value="easy">Легко</option>
-                                        <option value="medium">Средне</option>
-                                        <option value="hard">Сложно</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
+        <!-- ===== БЛОК 3: ИНСТРУМЕНТЫ И МАТЕРИАЛЫ ===== -->
+        <BaseCard title="3. Инструменты и материалы" icon="fa fa-wrench" class="form-card">
+          <div class="form-fields">
+            <BaseInput
+              v-model="form.instruments"
+              label="Инструменты"
+              placeholder="Ключ на 18мм, ветошь, динамометрический ключ, ёмкость для слива"
+              :maxlength="500"
+            />
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>
-                                    Ориентировочное время
-                                    <input
-                                        type="text"
-                                        v-model="form.time_estimate"
-                                        placeholder="Например: 15–20 минут"
-                                        maxLength="64"
-                                    >
-                                </label>
-                            </div>
+            <BaseInput
+              v-model="form.parts"
+              label="Материалы и запчасти"
+              placeholder="Масло моторное 10W-40 (3.2L), масляный фильтр, уплотнительное кольцо"
+              :maxlength="500"
+            />
+          </div>
+        </BaseCard>
 
-                            <div class="form-group">
-                                <label>
-                                    Периодичность
-                                    <input
-                                        type="text"
-                                        v-model="form.interval"
-                                        placeholder="Например: каждые 10 000 км или раз в год"
-                                        maxLength="64"
-                                    >
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+        <!-- ===== БЛОК 4: ССЫЛКИ НА ДОКУМЕНТАЦИЮ ===== -->
+        <BaseCard title="4. Ссылки на официальную документацию" icon="fa fa-link" class="form-card">
+          <div class="form-fields">
+            <div class="links-list">
+              <div
+                v-for="(link, index) in form.docs_links"
+                :key="index"
+                class="link-item"
+              >
+                <BaseInput
+                  v-model="form.docs_links[index]"
+                  type="url"
+                  placeholder="https://example.com/manual.pdf"
+                />
+                <BaseButton
+                  variant="ghost"
+                  icon="fa fa-times"
+                  :block="false"
+                  class="btn-remove-link"
+                  @click="removeLink(index)"
+                />
+              </div>
+            </div>
+            <BaseButton
+              variant="outline"
+              icon="fa fa-plus"
+              :block="false"
+              class="btn-add-link"
+              @click="addLink"
+            >
+              Добавить ссылку
+            </BaseButton>
+          </div>
+        </BaseCard>
+
+        <!-- ===== БЛОК 5: ТЕХНИЧЕСКИЕ ДАННЫЕ ===== -->
+        <BaseCard title="5. Технические данные" icon="fa fa-table" class="form-card">
+          <div class="form-fields">
+            <div class="torque-editor">
+              <label class="section-label">Моменты затяжки</label>
+              <div
+                v-for="(item, index) in torqueItems"
+                :key="index"
+                class="torque-row"
+              >
+                <BaseInput
+                  v-model="item.name"
+                  placeholder="Название болта"
+                  class="torque-name"
+                />
+                <BaseInput
+                  v-model.number="item.nm"
+                  type="number"
+                  placeholder="Н·м"
+                  class="torque-nm"
+                />
+                <BaseInput
+                  v-model="item.note"
+                  placeholder="Примечание"
+                  class="torque-note"
+                />
+                <BaseButton
+                  variant="ghost"
+                  icon="fa fa-times"
+                  :block="false"
+                  @click="removeTorqueItem(index)"
+                />
+              </div>
+              <BaseButton
+                variant="outline"
+                icon="fa fa-plus"
+                :block="false"
+                class="btn-add-torque"
+                @click="addTorqueItem"
+              >
+                Добавить момент затяжки
+              </BaseButton>
+            </div>
+
+            <BaseTextarea
+              v-model="form.specs_json"
+              label="JSON спецификации (опционально)"
+              placeholder='{"torque": [...], "fluids": {...}, "tolerances": {...}}'
+              :rows="6"
+              description="Объёмы жидкостей и допуски можно задать вручную в JSON или использовать быстрый редактор выше"
+            />
+          </div>
+        </BaseCard>
+
+        <!-- ===== БЛОК 6: ШАГИ ===== -->
+        <BaseCard
+          title="6. Шаги инструкции"
+          icon="fa fa-list-ol"
+          class="form-card"
+        >
+          <template #actions>
+            <span class="steps-count">{{ form.steps.length }} шаг(ов)</span>
+          </template>
+
+          <div v-if="form.steps.length === 0" class="empty-state">
+            <i class="fa fa-hand-pointer"></i>
+            <p>Нажмите "Добавить шаг", чтобы создать инструкцию</p>
+          </div>
+
+          <div
+            v-for="(step, index) in form.steps"
+            :key="step.localId"
+            class="step-card"
+          >
+            <div class="step-header">
+              <span class="step-number">Шаг {{ index + 1 }}</span>
+              <BaseButton
+                variant="ghost"
+                icon="fa fa-times"
+                :block="false"
+                @click="removeStep(index)"
+              />
+            </div>
+
+            <div class="form-fields">
+              <BaseInput
+                v-model="step.title"
+                label="Заголовок шага"
+                :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
+                :error="step.errors?.title"
+                :maxlength="200"
+                required
+              />
+
+              <BaseTextarea
+                v-model="step.text"
+                label="Описание шага"
+                :placeholder="`Подробное описание шага ${index + 1}`"
+                :maxlength="5000"
+                :rows="3"
+              />
+
+              <div class="form-row">
+                <BaseInput
+                  v-model="step.warning"
+                  label="⚠️ Предупреждение"
+                  placeholder="Чего нельзя делать на этом шаге"
+                  :maxlength="256"
+                />
+                <BaseInput
+                  v-model="step.tip"
+                  label="💡 Совет"
+                  placeholder="Лайфхак или рекомендация"
+                  :maxlength="256"
+                />
+              </div>
+
+              <BaseInput
+                v-model="step.result"
+                label="🎯 Результат шага"
+                placeholder="Как понять, что шаг выполнен правильно"
+                :maxlength="500"
+              />
+
+              <div class="form-group">
+                <label class="section-label">📷 Изображение шага</label>
+                <div
+                  class="image-upload"
+                  @click="stepFileInputs[index]?.click()"
+                >
+                  <input
+                    :ref="(el) => setStepFileInput(el, index)"
+                    type="file"
+                    accept="image/*"
+                    @change="handleImageUpload(index, $event)"
+                    class="file-input"
+                  >
+                  <span class="file-name" v-if="step.imageFile">
+                    {{ step.imageFile.name }}
+                  </span>
+                  <span class="file-name" v-else-if="step.imagePreview">
+                    Изображение загружено
+                  </span>
+                  <span class="file-name" v-else>Выберите файл</span>
+                  <BaseButton
+                    v-if="step.imageFile || step.existingImage"
+                    variant="ghost"
+                    icon="fa fa-times"
+                    :block="false"
+                    @click.stop="removeImage(index)"
+                  />
                 </div>
-
-                <!-- ===== БЛОК 2: БЕЗОПАСНОСТЬ И ПОДГОТОВКА ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-shield"></i>
-                        <h3>2. Безопасность и подготовка</h3>
-                    </div>
-
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Общие рекомендации
-                                <textarea
-                                    v-model="form.safety_tip"
-                                    rows="2"
-                                    placeholder="Общие рекомендации по выполнению процедуры"
-                                    maxLength="1000"
-                                ></textarea>
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                ⚠️ Предупреждения (что категорически нельзя делать)
-                                <textarea
-                                    v-model="form.warnings"
-                                    rows="2"
-                                    placeholder="Например: Не запускайте двигатель без масла"
-                                    maxLength="1000"
-                                ></textarea>
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                Необходимые условия
-                                <textarea
-                                    v-model="form.conditions"
-                                    rows="2"
-                                    placeholder="Например: Двигатель холодный, мотоцикл на центральной подставке"
-                                    maxLength="1000"
-                                ></textarea>
-                            </label>
-                        </div>
-                    </div>
+                <div v-if="step.imagePreview" class="image-preview">
+                  <img :src="step.imagePreview" :alt="step.title" />
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <!-- ===== БЛОК 3: ИНСТРУМЕНТЫ И МАТЕРИАЛЫ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-wrench"></i>
-                        <h3>3. Инструменты и материалы</h3>
-                    </div>
+          <BaseButton
+            variant="outline"
+            icon="fa fa-plus"
+            block
+            class="btn-add-step"
+            @click="addStep"
+          >
+            Добавить шаг
+          </BaseButton>
+        </BaseCard>
 
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Инструменты
-                                <input
-                                    type="text"
-                                    v-model="form.instruments"
-                                    placeholder="Ключ на 18мм, ветошь, динамометрический ключ, ёмкость для слива"
-                                    maxLength="500"
-                                >
-                            </label>
-                        </div>
+        <!-- ===== БЛОК 7: ПОСЛЕ ЗАВЕРШЕНИЯ ===== -->
+        <BaseCard title="7. После завершения" icon="fa fa-check-circle" class="form-card">
+          <div class="form-fields">
+            <BaseTextarea
+              v-model="form.aftercare"
+              label="Финальная проверка"
+              placeholder="Что проверить после работы: уровень масла, отсутствие течей, затяжку болтов..."
+              :maxlength="2000"
+              :rows="3"
+            />
+          </div>
+        </BaseCard>
 
-                        <div class="form-group">
-                            <label>
-                                Материалы и запчасти
-                                <input
-                                    type="text"
-                                    v-model="form.parts"
-                                    placeholder="Масло моторное 10W-40 (3.2L), масляный фильтр, уплотнительное кольцо"
-                                    maxLength="500"
-                                >
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== БЛОК 4: ССЫЛКИ НА ДОКУМЕНТАЦИЮ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-link"></i>
-                        <h3>4. Ссылки на официальную документацию</h3>
-                    </div>
-
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Ссылки на документацию
-                                <div class="links-list">
-                                    <div
-                                        v-for="(link, index) in form.docs_links"
-                                        :key="index"
-                                        class="link-item"
-                                    >
-                                        <input
-                                            type="url"
-                                            v-model="form.docs_links[index]"
-                                            placeholder="https://example.com/manual.pdf"
-                                            class="link-input"
-                                        >
-                                        <button
-                                            type="button"
-                                            class="btn-remove-link"
-                                            @click="removeLink(index)"
-                                        >
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn-add-link" @click="addLink">
-                                    <i class="fa fa-plus"></i> Добавить ссылку
-                                </button>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== БЛОК 5: ТЕХНИЧЕСКИЕ ДАННЫЕ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-table"></i>
-                        <h3>5. Технические данные</h3>
-                    </div>
-
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Моменты затяжки (JSON)
-                                <textarea
-                                    v-model="form.specs_json"
-                                    rows="6"
-                                    placeholder='{
-  "torque": [
-    {"name": "Болт сливной пробки", "nm": 25, "note": "сухой"},
-    {"name": "Болт крепления фильтра", "nm": 12, "note": "сухой"}
-  ],
-  "fluids": {
-    "oil": "3.2L (с фильтром)",
-    "coolant": "1.5L"
-  },
-  "tolerances": {
-    "chain": "2-5 мм"
-  }
-}'
-                                    class="code-input"
-                                ></textarea>
-                                <span class="field-hint">Введите данные в формате JSON</span>
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Быстрый редактор моментов затяжки</label>
-                            <div class="torque-editor">
-                                <div
-                                    v-for="(item, index) in torqueItems"
-                                    :key="index"
-                                    class="torque-row"
-                                >
-                                    <input
-                                        v-model="item.name"
-                                        placeholder="Название болта"
-                                        class="torque-name"
-                                    >
-                                    <input
-                                        v-model="item.nm"
-                                        placeholder="Н·м"
-                                        type="number"
-                                        class="torque-nm"
-                                    >
-                                    <input
-                                        v-model="item.note"
-                                        placeholder="Примечание"
-                                        class="torque-note"
-                                    >
-                                    <button
-                                        type="button"
-                                        class="btn-remove-torque"
-                                        @click="removeTorqueItem(index)"
-                                    >
-                                        <i class="fa fa-times"></i>
-                                    </button>
-                                </div>
-                                <button type="button" class="btn-add-torque" @click="addTorqueItem">
-                                    <i class="fa fa-plus"></i> Добавить момент затяжки
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== БЛОК 6: ШАГИ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-list-ol"></i>
-                        <h3>6. Шаги инструкции</h3>
-                        <span class="steps-count">{{ form.steps.length }} шаг(ов)</span>
-                    </div>
-
-                    <div class="form-card-body">
-                        <div v-if="form.steps.length === 0" class="empty-state">
-                            <i class="fa fa-hand-pointer"></i>
-                            <p>Нажмите "Добавить шаг", чтобы создать инструкцию</p>
-                        </div>
-
-                        <div v-for="(step, index) in form.steps" :key="step.localId" class="step-card">
-                            <div class="step-header">
-                                <span class="step-number">Шаг {{ index + 1 }}</span>
-                                <button type="button" class="btn-remove-step" @click="removeStep(index)">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            </div>
-
-                            <div class="step-content">
-                                <div class="form-group">
-                                    <label>
-                                        Заголовок шага*
-                                        <input
-                                            type="text"
-                                            v-model="step.title"
-                                            required
-                                            :placeholder="`Что нужно сделать на шаге ${index + 1}?`"
-                                            :class="{ 'error': step.errors && step.errors.title }"
-                                            maxLength="200"
-                                        >
-                                        <span v-if="step.errors && step.errors.title" class="error-message">{{ step.errors.title }}</span>
-                                    </label>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>
-                                        Описание шага
-                                        <textarea
-                                            v-model="step.text"
-                                            rows="3"
-                                            :placeholder="`Подробное описание шага ${index + 1}`"
-                                            maxLength="5000"
-                                        ></textarea>
-                                    </label>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>
-                                            ⚠️ Предупреждение
-                                            <input
-                                                type="text"
-                                                v-model="step.warning"
-                                                placeholder="Чего нельзя делать на этом шаге"
-                                                maxLength="256"
-                                            >
-                                        </label>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>
-                                            💡 Совет
-                                            <input
-                                                type="text"
-                                                v-model="step.tip"
-                                                placeholder="Лайфхак или рекомендация"
-                                                maxLength="256"
-                                            >
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>
-                                        🎯 Результат шага
-                                        <input
-                                            type="text"
-                                            v-model="step.result"
-                                            placeholder="Как понять, что шаг выполнен правильно"
-                                            maxLength="500"
-                                        >
-                                    </label>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>
-                                        📷 Изображение шага
-                                        <div class="image-upload" @click="$refs['fileInput' + index].click()">
-                                            <input
-                                                :ref="'fileInput' + index"
-                                                type="file"
-                                                accept="image/*"
-                                                @change="handleImageUpload(index, $event)"
-                                                class="file-input"
-                                            >
-                                            <span class="file-name" v-if="step.imageFile">
-                                                {{ step.imageFile.name }}
-                                            </span>
-                                            <span class="file-name" v-else-if="step.imagePreview && !step.imageFile">
-                                                Изображение загружено
-                                            </span>
-                                            <span class="file-name" v-else>Выберите файл</span>
-                                            <button
-                                                v-if="step.imageFile || (isEditMode && step.existingImage)"
-                                                type="button"
-                                                class="btn-remove-image"
-                                                @click.stop="removeImage(index)"
-                                            >
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <div v-if="step.imagePreview" class="image-preview">
-                                            <img :src="step.imagePreview" :alt="step.title" />
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="button" class="btn-add-step" @click="addStep">
-                            <i class="fa fa-plus"></i> Добавить шаг
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ===== БЛОК 7: ПОСЛЕ ЗАВЕРШЕНИЯ ===== -->
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fa fa-check-circle"></i>
-                        <h3>7. После завершения</h3>
-                    </div>
-
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label>
-                                Финальная проверка
-                                <textarea
-                                    v-model="form.aftercare"
-                                    rows="3"
-                                    placeholder="Что проверить после работы: уровень масла, отсутствие течей, затяжку болтов..."
-                                    maxLength="2000"
-                                ></textarea>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Кнопки отправки -->
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" @click="resetForm">Отменить</button>
-                    <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-                        <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
-                        <span v-else>
-                            <i class="fa fa-check"></i>
-                            {{ isEditMode ? 'Сохранить изменения' : 'Создать мануал' }}
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </section>
-    </div>
+        <!-- Кнопки отправки -->
+        <div class="form-actions">
+          <BaseButton variant="secondary" @click="resetForm">
+            Отменить
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            icon="fa fa-check"
+            type="submit"
+            :loading="isSubmitting"
+          >
+            {{ isEditMode ? 'Сохранить изменения' : 'Создать мануал' }}
+          </BaseButton>
+        </div>
+      </form>
+    </section>
+  </div>
 </template>
 
 <script setup>
@@ -535,6 +427,13 @@ import { getManualImageUrl } from '@/utils/mediaUrl'
 
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
+import {
+  BaseButton,
+  BaseInput,
+  BaseTextarea,
+  BaseSelect,
+  BaseCard,
+} from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -728,9 +627,20 @@ async function removeImage(index) {
   } else {
     step.imageFile = null
     step.imagePreview = null
-    const input = document.querySelectorAll('.step-card input[type="file"]')[index]
-    if (input) input.value = ''
+    resetStepFileInput(index)
   }
+}
+
+// ===== Refs для file-input'ов в шагах =====
+const stepFileInputs = ref([])
+
+function setStepFileInput(el, index) {
+  if (el) stepFileInputs.value[index] = el
+}
+
+function resetStepFileInput(index) {
+  const input = stepFileInputs.value[index]
+  if (input) input.value = ''
 }
 
 // ===== Docs / Specs =====
@@ -1045,88 +955,33 @@ function resetForm() {
     padding: 20px;
 }
 
-/* ===== FORM ELEMENTS ===== */
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 
-.form-group label {
-    display: block;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-size: 14px;
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 10px 14px;
-    font-size: 14px;
-    font-family: inherit;
-    background: var(--bg-input);
-    border: 1px solid var(--border-input);
-    border-radius: 10px;
-    color: var(--text-primary);
-    transition: all 0.2s;
+.section-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-    color: var(--text-muted);
-}
-
-.form-group input.error,
-.form-group textarea.error {
-    border-color: var(--danger);
-}
-
-.form-group input.error:focus,
-.form-group textarea.error:focus {
-    box-shadow: 0 0 0 3px var(--danger-trans);
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 60px;
+.form-actions .base-btn {
+  flex: 1;
 }
 
 .code-input {
     font-family: 'Courier New', monospace;
     font-size: 13px !important;
-}
-
-.error-message {
-    display: block;
-    color: var(--danger);
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-.field-hint {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
 }
 
 /* ===== LINKS ===== */
@@ -1260,20 +1115,6 @@ function resetForm() {
     width: 80px;
 }
 
-.btn-remove-torque {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.btn-remove-torque:hover {
-    background: var(--danger-trans);
-    color: var(--danger);
-}
-
 .btn-add-torque {
     padding: 6px 14px;
     font-size: 13px;
@@ -1344,22 +1185,6 @@ function resetForm() {
     border-radius: 20px;
 }
 
-.btn-remove-step {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-    font-size: 16px;
-}
-
-.btn-remove-step:hover {
-    background: var(--danger-trans);
-    color: var(--danger);
-}
-
 .step-content .form-group {
     margin-bottom: 12px;
 }
@@ -1393,20 +1218,6 @@ function resetForm() {
     flex: 1;
     font-size: 13px;
     color: var(--text-muted);
-}
-
-.btn-remove-image {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.btn-remove-image:hover {
-    background: var(--danger-trans);
-    color: var(--danger);
 }
 
 .image-preview {
@@ -1446,45 +1257,6 @@ function resetForm() {
 .btn-add-step:hover {
     background: var(--accent-trans);
     border-color: var(--accent);
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-input);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: var(--border-color);
 }
 
 /* ===== FORM ACTIONS ===== */
@@ -1563,10 +1335,6 @@ function resetForm() {
     .btn-remove-link {
         align-self: flex-end;
     }
-}
-
-.fa-spin {
-    animation: fa-spin 1s linear infinite;
 }
 
 @keyframes fa-spin {
