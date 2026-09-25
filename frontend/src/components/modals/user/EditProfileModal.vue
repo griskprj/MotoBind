@@ -1,469 +1,309 @@
 <template>
-    <ModalWrapper
-        :is-open="isOpen"
-        title="Редактирование профиля"
-        subtitle="Измените информацию о себе. Эти данные будут видны другим пользователям."
-        icon="user"
-        bg-icon-color="var(--accent-trans)"
-        icon-color="var(--accent-text)"
-        @close="$emit('close')"
-    >
-        <!-- Форма -->
-        <div class="modal-form-group">
-            <label>
-                Имя пользователя
-                <input 
-                    v-model="form.username" 
-                    type="text" 
-                    placeholder="Введите имя пользователя"
-                />
-            </label>
-        </div>
+  <BaseModal
+    :is-open="isOpen"
+    title="Редактирование профиля"
+    subtitle="Измените информацию о себе. Эти данные будут видны другим пользователям."
+    icon="user"
+    variant="default"
+    size="md"
+    @close="close"
+  >
+    <form @submit.prevent="submit" class="form-stack">
+      <BaseInput
+        v-model="form.username"
+        label="Имя пользователя"
+        placeholder="Введите имя пользователя"
+        required
+      />
 
-        <div class="modal-form-group">
-            <label>
-                Email
-                <input 
-                    v-model="form.email" 
-                    type="email" 
-                    placeholder="user@example.com"
-                />
-            </label>
-        </div>
+      <BaseInput
+        v-model="form.email"
+        type="email"
+        label="Email"
+        placeholder="user@example.com"
+        required
+      />
 
-        <div class="modal-form-group">
-            <label>
-                О себе
-                <textarea 
-                    v-model="form.bio" 
-                    rows="3"
-                    placeholder="Расскажите немного о себе, своём опыте и мотоцикле..."
-                ></textarea>
-            </label>
-        </div>
+      <BaseTextarea
+        v-model="form.bio"
+        label="О себе"
+        placeholder="Расскажите немного о себе, своём опыте и мотоцикле..."
+        :rows="3"
+        :maxlength="1000"
+      />
 
-        <div class="modal-form-row">
-            <div class="modal-form-group">
-                <label>
-                    Город/Регион
-                    <input 
-                        v-model="form.location" 
-                        type="text" 
-                        placeholder="Например: Москва"
-                    />
-                </label>
-            </div>
-            <div class="modal-form-group">
-                <label>
-                    Мой мотоцикл
-                    <input 
-                        v-model="form.motorcycle" 
-                        type="text" 
-                        placeholder="Например: BMW S1000RR"
-                    />
-                </label>
-            </div>
-        </div>
+      <div class="form-row">
+        <BaseInput
+          v-model="form.location"
+          label="Город/Регион"
+          placeholder="Например: Москва"
+        />
+        <BaseInput
+          v-model="form.motorcycle"
+          label="Мой мотоцикл"
+          placeholder="Например: BMW S1000RR"
+        />
+      </div>
 
-        <div class="modal-form-group">
-            <label>
-                Опыт вождения
-                <select v-model="form.experience">
-                    <option value="">Не указано</option>
-                    <option value="beginner">Новичок</option>
-                    <option value="intermediate">Опытный</option>
-                    <option value="expert">Эксперт</option>
-                </select>
-            </label>
-        </div>
+      <BaseSelect
+        v-model="form.experience"
+        label="Опыт вождения"
+        placeholder="Не указано"
+      >
+        <option value="beginner">Новичок</option>
+        <option value="intermediate">Опытный</option>
+        <option value="expert">Эксперт</option>
+      </BaseSelect>
 
-        <div class="modal-form-group">
-            <label>
-                Социальные сети
-                <div class="social-links-editor">
-                    <div 
-                        v-for="platform in socialPlatforms" 
-                        :key="platform"
-                        class="social-link-row"
-                    >
-                        <i :class="getSocialIcon(platform)" class="social-icon"></i>
-                        <input 
-                            v-model="form.social_links[platform]" 
-                            :placeholder="`Ссылка на ${platform}`"
-                        />
-                        <button 
-                            v-if="form.social_links[platform]" 
-                            class="clear-link"
-                            @click="form.social_links[platform] = ''"
-                            type="button"
-                        >
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </label>
+      <div class="form-field">
+        <label class="form-label">Социальные сети</label>
+        <div class="social-links-editor">
+          <div
+            v-for="platform in socialPlatforms"
+            :key="platform"
+            class="social-link-row"
+          >
+            <i :class="getSocialIcon(platform)" class="social-icon"></i>
+            <BaseInput
+              v-model="form.social_links[platform]"
+              :placeholder="`Ссылка на ${platform}`"
+            />
+            <BaseButton
+              v-if="form.social_links[platform]"
+              variant="ghost"
+              icon="fa fa-times"
+              :block="false"
+              @click="form.social_links[platform] = ''"
+            />
+          </div>
         </div>
+      </div>
 
-        <div class="modal-info-block info">
-            <div class="modal-info-icon">
-                <i class="fa fa-info-circle"></i>
-            </div>
-            <p class="modal-info-text">
-                Эти данные будут отображаться в вашем публичном профиле.
-            </p>
+      <div class="modal-info-block info">
+        <div class="modal-info-icon">
+          <i class="fa fa-info-circle"></i>
         </div>
+        <p class="modal-info-text">
+          Эти данные будут отображаться в вашем публичном профиле.
+        </p>
+      </div>
+    </form>
 
-        <template #actions>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" @click="$emit('close')">
-                    Отменить
-                </button>
-                <button class="btn btn-primary" @click="submit" :disabled="loading">
-                    <span v-if="!loading">
-                        <i class="fa fa-save"></i> Сохранить
-                    </span>
-                    <span v-else>
-                        <i class="fa fa-spinner fa-spin"></i> Сохранение...
-                    </span>
-                </button>
-            </div>
-        </template>
-    </ModalWrapper>
+    <template #actions>
+      <BaseButton variant="secondary" block type="button" @click="close">
+        Отменить
+      </BaseButton>
+      <BaseButton
+        variant="primary"
+        icon="fa fa-save"
+        block
+        type="submit"
+        :loading="loading"
+        @click="submit"
+      >
+        Сохранить
+      </BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
-<script>
-import ModalWrapper from '../ModalWrapper.vue'
+<script setup>
+import { reactive, ref, watch } from 'vue'
+import { BaseModal, BaseButton, BaseInput, BaseTextarea, BaseSelect } from '@/components/ui'
+import { useToast } from '@/composables/useToast'
+import { useUserStore } from '@/stores'
+import { getSocialIcon } from '@/utils/formatters'
 
-export default {
-    components: { ModalWrapper },
+const props = defineProps({
+  isOpen: { type: Boolean, default: false, required: true },
+  user: { type: Object, default: null },
+})
 
-    props: {
-        isOpen: {
-            type: Boolean,
-            default: false,
-            required: true
-        },
-        user: {
-            type: Object,
-            default: null,
-            required: true
-        }
+const emit = defineEmits(['close'])
+const toast = useToast()
+const userStore = useUserStore()
+
+const socialPlatforms = ['youtube', 'telegram', 'vk']
+
+const form = reactive({
+  username: '',
+  email: '',
+  bio: '',
+  location: '',
+  motorcycle: '',
+  experience: '',
+  social_links: {
+    youtube: '',
+    telegram: '',
+    vk: '',
+  },
+})
+
+const loading = ref(false)
+
+watch(
+  () => props.isOpen,
+  (newVal) => {
+    if (newVal && props.user) loadFormData()
+    if (!newVal) loading.value = false
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.user,
+  (newVal) => {
+    if (props.isOpen && newVal) loadFormData()
+  },
+  { deep: true }
+)
+
+function loadFormData() {
+  if (!props.user) return
+  Object.assign(form, {
+    username: props.user.username || '',
+    email: props.user.email || '',
+    bio: props.user.bio || '',
+    location: props.user.location || '',
+    motorcycle: props.user.motorcycle || '',
+    experience: props.user.experience || '',
+    social_links: {
+      youtube: props.user.social_links?.youtube || '',
+      telegram: props.user.social_links?.telegram || '',
+      vk: props.user.social_links?.vk || '',
     },
+  })
+}
 
-    data() {
-        return {
-            form: {
-                username: '',
-                email: '',
-                bio: '',
-                location: '',
-                motorcycle: '',
-                experience: '',
-                social_links: {
-                    youtube: '',
-                    telegram: '',
-                    vk: '',
-                }
-            },
-            loading: false,
-            socialPlatforms: ['youtube', 'telegram', 'vk']
-        }
-    },
+function close() {
+  if (loading.value) return
+  emit('close')
+}
 
-    watch: {
-        isOpen(newVal) {
-            if (newVal && this.user) {
-                this.loadFormData()
-            }
-            if (!newVal) {
-                this.loading = false
-            }
-        },
-        user: {
-            handler(newVal) {
-                if (this.isOpen && newVal) {
-                    this.loadFormData()
-                }
-            },
-            deep: true
-        }
-    },
+async function submit() {
+  if (!form.username || form.username.trim().length < 2) {
+    toast.error('Имя пользователя должно содержать минимум 2 символа')
+    return
+  }
+  if (!form.email || !form.email.includes('@')) {
+    toast.error('Введите корректный email адрес')
+    return
+  }
 
-    methods: {
-        loadFormData() {
-            if (!this.user) return
-            this.form = {
-                username: this.user.username || '',
-                email: this.user.email || '',
-                bio: this.user.bio || '',
-                location: this.user.location || '',
-                motorcycle: this.user.motorcycle || '',
-                experience: this.user.experience || '',
-                social_links: {
-                    youtube: this.user.social_links?.youtube || '',
-                    telegram: this.user.social_links?.telegram || '',
-                    vk: this.user.social_links?.vk || '',
-                }
-            }
-        },
-
-        resetForm() {
-            this.form = {
-                username: '',
-                email: '',
-                bio: '',
-                location: '',
-                motorcycle: '',
-                experience: '',
-                social_links: {
-                    youtube: '',
-                    telegram: '',
-                    vk: '',
-                }
-            }
-            this.loading = false
-        },
-
-        getSocialIcon(platform) {
-            return 'fa fa-link'
-        },
-
-        async submit() {
-            // Валидация
-            if (!this.form.username || this.form.username.trim().length < 2) {
-                alert('Имя пользователя должно содержать минимум 2 символа')
-                return
-            }
-
-            if (!this.form.email || !this.form.email.includes('@')) {
-                alert('Введите корректный email адрес')
-                return
-            }
-
-            this.loading = true
-            try {
-                await this.$emit('submit', this.form)
-                this.resetForm()
-                this.$emit('close')
-            } catch (error) {
-                console.error('Submit error:', error)
-            } finally {
-                this.loading = false
-            }
-        }
-    },
-
-    mounted() {
-        if (this.isOpen && this.user) {
-            this.loadFormData()
-        }
-    }
+  loading.value = true
+  try {
+    await userStore.updateProfile({
+      username: form.username.trim(),
+      email: form.email.trim(),
+      bio: form.bio?.trim() || '',
+      location: form.location?.trim() || '',
+      motorcycle: form.motorcycle?.trim() || '',
+      experience: form.experience || '',
+      social_links: {
+        youtube: form.social_links.youtube?.trim() || '',
+        telegram: form.social_links.telegram?.trim() || '',
+        vk: form.social_links.vk?.trim() || '',
+      },
+    })
+    emit('close')
+    toast.success('Профиль обновлён')
+  } catch (err) {
+    console.error('Failed to update profile:', err)
+    toast.error(err.response?.data?.message || 'Ошибка при обновлении профиля')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
-/* ===== ПОЛЯ ВВОДА ===== */
-.modal-form-group {
-    margin-bottom: 14px;
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.modal-form-group:last-child {
-    margin-bottom: 0;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.modal-form-group label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.modal-form-group input,
-.modal-form-group textarea,
-.modal-form-group select {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    border-radius: 10px;
-    border: 2px solid var(--border-color);
-    background-color: var(--bg-input);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    box-sizing: border-box;
-    font-family: inherit;
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
 }
 
-.modal-form-group input:focus,
-.modal-form-group textarea:focus,
-.modal-form-group select:focus {
-    border-color: var(--accent);
-    outline: none;
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.modal-form-group input::placeholder,
-.modal-form-group textarea::placeholder {
-    color: var(--text-muted);
-}
-
-.modal-form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.modal-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-/* ===== СОЦИАЛЬНЫЕ СЕТИ ===== */
 .social-links-editor {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .social-link-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.social-link-row > *:nth-child(2) {
+  flex: 1;
 }
 
 .social-icon {
-    width: 24px;
-    font-size: 18px;
-    color: var(--text-muted);
+  width: 24px;
+  font-size: 18px;
+  color: var(--text-muted);
+  padding-bottom: 10px;
 }
 
-.social-link-row input {
-    flex: 1;
-}
-
-.clear-link {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-}
-
-.clear-link:hover {
-    color: var(--danger);
-}
-
-/* ===== ИНФО-БЛОК ===== */
 .modal-info-block {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin: 12px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
 }
 
 .modal-info-block.info {
-    background: var(--accent-trans);
-    border: 1px solid var(--accent-light);
+  background: var(--accent-trans);
+  border: 1px solid var(--accent-light);
 }
 
 .modal-info-icon {
-    font-size: 18px;
-    color: var(--accent-text);
-    flex-shrink: 0;
-    margin-top: 2px;
+  font-size: 18px;
+  color: var(--accent-text);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .modal-info-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
-
-/* ===== КНОПКИ ===== */
-.modal-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.modal-actions .btn {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.modal-actions .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.modal-actions .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    color: #fff;
-}
-
-.modal-actions .btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
-}
-
-.modal-actions .btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.modal-actions .btn-secondary:hover:not(:disabled) {
-    background: var(--border-color);
-}
-
-/* ============================================ */
-/* ===== АДАПТИВНОСТЬ ===== */
-/* ============================================ */
 
 @media (max-width: 640px) {
-    .modal-form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 
-    .modal-actions {
-        flex-direction: column;
-    }
+  .modal-info-block {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 
-    .modal-actions .btn {
-        width: 100%;
-        padding: 0.8rem;
-    }
-
-    .modal-info-block {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .modal-info-icon {
-        margin-top: 0;
-    }
-}
-
-@media (max-width: 400px) {
-    .modal-form-group input,
-    .modal-form-group textarea,
-    .modal-form-group select {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.7rem;
-    }
+  .modal-info-icon {
+    margin-top: 0;
+  }
 }
 </style>

@@ -316,24 +316,21 @@
 
     <!-- === MODALS === -->
     <EditProfileModal
-        v-if="showEditProfile"
-        :isOpen="showEditProfile"
-        :user="user"
-        @submit="updateProfile"
-        @close="showEditProfile = false"
+    v-if="showEditProfile"
+    :isOpen="showEditProfile"
+    :user="user"
+    @close="showEditProfile = false"
     />
 
     <ChangePasswordModal
-        v-if="showChangePassword"
-        :isOpen="showChangePassword"
-        @submit="changePassword"
-        @close="showChangePassword = false"
+    v-if="showChangePassword"
+    :isOpen="showChangePassword"
+    @close="showChangePassword = false"
     />
 
     <DeleteAccountModal
-        :isOpen="showDeleteAccount"
-        @submit="deleteAccount"
-        @close="showDeleteAccount = false"
+    :isOpen="showDeleteAccount"
+    @close="showDeleteAccount = false"
     />
 </template>
 
@@ -341,7 +338,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useUserStore, useAuthStore } from '@/stores'
+import { useUserStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
 import {
   getUserStatusLabel,
@@ -363,7 +360,6 @@ const router = useRouter()
 const toast = useToast()
 
 const userStore = useUserStore()
-const authStore = useAuthStore()
 
 const {
   profile: user,
@@ -448,17 +444,6 @@ function handleAvatarError(event) {
   event.target.src = '/BaseAvatar.webp'
 }
 
-// ===== Profile =====
-async function updateProfile(formData) {
-  try {
-    await userStore.updateProfile(formData)
-    showEditProfile.value = false
-    toast.success('Профиль обновлён!')
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Ошибка при обновлении профиля')
-  }
-}
-
 // ===== Notifications =====
 async function updateNotificationSettings() {
   try {
@@ -466,32 +451,6 @@ async function updateNotificationSettings() {
     toast.success('Настройки уведомлений обновлены')
   } catch (err) {
     toast.error('Ошибка обновления настроек')
-  }
-}
-
-// ===== Security =====
-async function changePassword(formData) {
-  try {
-    if (formData.newPassword !== formData.repeatPassword) {
-      toast.error('Пароли не совпадают')
-      return
-    }
-    await userStore.changePassword(formData)
-    showChangePassword.value = false
-    toast.success('Пароль успешно изменён!')
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Ошибка при смене пароля')
-  }
-}
-
-async function deleteAccount(password) {
-  try {
-    await userStore.deleteAccount(password)
-    showDeleteAccount.value = false
-    authStore.logout()
-    router.push('/login')
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Ошибка при удалении аккаунта')
   }
 }
 
@@ -506,7 +465,6 @@ async function copyProfileLink() {
     await navigator.clipboard.writeText(profileUrl.value)
     toast.success('Ссылка на профиль скопирована!')
   } catch {
-    // fallback для старых браузеров
     const input = document.querySelector('.profile-link input')
     if (input) {
       input.select()
