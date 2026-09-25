@@ -1,531 +1,357 @@
 <template>
-    <ModalWrapper
-        :isOpen="isOpen"
-        title="Редактирование обслуживания"
-        subtitle="Измените данные о обслуживании"
-        icon="wrench"
-        size="md"
-        @close="$emit('close')"
-    >
-        <form @submit.prevent="submit" class="edit-form">
-            <!-- Выбор мотоцикла -->
-            <div class="modal-form-group">
-                <label>
-                    Мотоцикл <span class="required">*</span>
-                    <select v-model="form.motorcycleId">
-                        <option value="">Выберите мотоцикл</option>
-                        <option 
-                            v-for="moto in motorcycles" 
-                            :key="moto.id" 
-                            :value="moto.id"
-                        >
-                            {{ moto.name }} ({{ moto.mileage || 0 }} км)
-                        </option>
-                    </select>
-                </label>
-            </div>
+  <BaseModal
+    :is-open="isOpen"
+    title="Редактирование обслуживания"
+    subtitle="Измените данные о обслуживании"
+    icon="wrench"
+    variant="default"
+    size="md"
+    @close="$emit('close')"
+  >
+    <form @submit.prevent="submit" class="edit-form">
+      <BaseSelect
+        v-model="form.motorcycleId"
+        label="Мотоцикл"
+        placeholder="Выберите мотоцикл"
+        required
+      >
+        <option
+          v-for="moto in motorcycles"
+          :key="moto.id"
+          :value="moto.id"
+        >
+          {{ moto.name }} ({{ moto.mileage || 0 }} км)
+        </option>
+      </BaseSelect>
 
-            <!-- Категория -->
-            <div class="modal-form-group">
-                <label>
-                    Узел / Система <span class="required">*</span>
-                    <select v-model="form.category" @change="onCategoryChange">
-                        <option value="">Выберите категорию</option>
-                        <option value="engine">Двигатель</option>
-                        <option value="drive">Привод</option>
-                        <option value="steering">Рулевое управление</option>
-                        <option value="suspension">Подвеска</option>
-                        <option value="electronics">Электроника</option>
-                        <option value="wheel">Колеса / Шины</option>
-                        <option value="brakes">Тормозная система</option>
-                        <option value="fuel">Топливная система</option>
-                        <option value="cooling">Система охлаждения</option>
-                        <option value="other">Другое</option>
-                    </select>
-                </label>
-            </div>
+      <BaseSelect
+        v-model="form.category"
+        label="Узел / Система"
+        placeholder="Выберите категорию"
+        required
+        @change="onCategoryChange"
+      >
+        <option value="engine">Двигатель</option>
+        <option value="drive">Привод</option>
+        <option value="steering">Рулевое управление</option>
+        <option value="suspension">Подвеска</option>
+        <option value="electronics">Электроника</option>
+        <option value="wheel">Колёса / Шины</option>
+        <option value="brakes">Тормозная система</option>
+        <option value="fuel">Топливная система</option>
+        <option value="cooling">Система охлаждения</option>
+        <option value="other">Другое</option>
+      </BaseSelect>
 
-            <!-- Тип обслуживания (из шаблонов) -->
-            <div v-if="templates.length > 0" class="modal-form-group">
-                <label>
-                    Тип обслуживания <span class="required">*</span>
-                    <select v-model="form.templateId" @change="onTemplateChange">
-                        <option value="">Выберите тип обслуживания</option>
-                        <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">
-                            {{ tpl.label }}
-                        </option>
-                    </select>
-                </label>
-            </div>
+      <BaseSelect
+        v-if="templates.length > 0"
+        v-model="form.templateId"
+        label="Тип обслуживания"
+        placeholder="Выберите тип обслуживания"
+        required
+        @change="onTemplateChange"
+      >
+        <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">
+          {{ tpl.label }}
+        </option>
+      </BaseSelect>
 
-            <div v-if="!form.category || templates.length === 0 || form.category === 'other'" class="modal-form-group">
-                <label>
-                    Название обслуживания <span class="required">*</span>
-                    <input
-                        v-model="form.title"
-                        type="text"
-                        placeholder="Например: Замена масла"
-                    />
-                </label>
-            </div>
+      <BaseInput
+        v-if="!form.category || templates.length === 0 || form.category === 'other'"
+        v-model="form.title"
+        label="Название обслуживания"
+        placeholder="Например: Замена масла"
+        required
+      />
 
-            <!-- Описание -->
-            <div class="modal-form-group">
-                <label>Описание работы</label>
-                <textarea 
-                    v-model="form.description"
-                    rows="2"
-                    placeholder="Подробное описание работы"
-                ></textarea>
-            </div>
+      <BaseTextarea
+        v-model="form.description"
+        label="Описание работы"
+        placeholder="Подробное описание работы"
+        :rows="2"
+      />
 
-            <hr class="form-divider" />
+      <hr class="form-divider" />
 
-            <!-- Плановые поля -->
-            <div class="modal-form-row">
-                <div class="modal-form-group">
-                    <label>Плановый пробег (км)</label>
-                    <input
-                        v-model.number="form.planned_mileage"
-                        type="number"
-                        placeholder="15000"
-                        min="0"
-                    />
-                </div>
-                <div class="modal-form-group">
-                    <label>Плановая дата</label>
-                    <input
-                        v-model="form.planned_date"
-                        type="date"
-                    />
-                </div>
-            </div>
+      <div class="form-row">
+        <BaseInput
+          v-model.number="form.planned_mileage"
+          type="number"
+          label="Плановый пробег (км)"
+          placeholder="15000"
+          :min="0"
+        />
+        <BaseInput
+          v-model="form.planned_date"
+          type="date"
+          label="Плановая дата"
+        />
+      </div>
 
-            <!-- Выполненные поля -->
-            <div class="modal-form-row">
-                <div class="modal-form-group">
-                    <label>Выполненный пробег (км)</label>
-                    <input
-                        v-model.number="form.completed_mileage"
-                        type="number"
-                        placeholder="15000"
-                        min="0"
-                    />
-                </div>
-                <div class="modal-form-group">
-                    <label>Дата выполнения</label>
-                    <input
-                        v-model="form.completed_date"
-                        type="date"
-                    />
-                </div>
-            </div>
+      <div class="form-row">
+        <BaseInput
+          v-model.number="form.completed_mileage"
+          type="number"
+          label="Выполненный пробег (км)"
+          placeholder="15000"
+          :min="0"
+        />
+        <BaseInput
+          v-model="form.completed_date"
+          type="date"
+          label="Дата выполнения"
+        />
+      </div>
 
-            <!-- Стоимость -->
-            <div class="modal-form-group">
-                <label>Стоимость (₽)</label>
-                <input
-                    v-model.number="form.cost"
-                    type="number"
-                    placeholder="5000"
-                    min="0"
-                />
-            </div>
+      <BaseInput
+        v-model.number="form.cost"
+        type="number"
+        label="Стоимость (₽)"
+        placeholder="5000"
+        :min="0"
+      />
 
-            <div class="modal-info-block info" style="margin-top: 12px;">
-                <div class="modal-info-icon">
-                    <i class="fa fa-info-circle"></i>
-                </div>
-                <p class="modal-info-text">
-                    Если заполнены выполненные поля, статус изменится на "Выполнено".
-                    Если заполнены плановые поля — статус будет "Запланировано".
-                </p>
-            </div>
+      <div class="modal-info-block info">
+        <div class="modal-info-icon">
+          <i class="fa fa-info-circle"></i>
+        </div>
+        <p class="modal-info-text">
+          Если заполнены выполненные поля, статус изменится на «Выполнено».
+          Если заполнены плановые поля — статус будет «Запланировано».
+        </p>
+      </div>
 
-            <!-- Действия -->
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" @click="$emit('close')">
-                    Отмена
-                </button>
-                <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !isFormValid">
-                    <i v-if="isSubmitting" class="fa fa-spinner fa-spin"></i>
-                    <span v-else><i class="fa fa-save"></i> Сохранить</span>
-                </button>
-            </div>
-        </form>
-    </ModalWrapper>
+      <div class="modal-actions">
+        <BaseButton variant="secondary" block type="button" @click="$emit('close')">
+          Отмена
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          icon="fa fa-save"
+          block
+          type="submit"
+          :disabled="!isFormValid"
+          :loading="isSubmitting"
+        >
+          Сохранить
+        </BaseButton>
+      </div>
+    </form>
+  </BaseModal>
 </template>
 
-<script>
-import api from '../../../api/api'
-import ModalWrapper from '../ModalWrapper.vue'
-import { getTemplatesByCategory } from '../../../constants/maintenanceTemplates'
+<script setup>
+import { computed, reactive, ref, watch } from 'vue'
+import {
+  BaseModal,
+  BaseButton,
+  BaseInput,
+  BaseSelect,
+  BaseTextarea,
+} from '@/components/ui'
+import { useToast } from '@/composables/useToast'
+import { useMaintenancesStore } from '@/stores'
+import { getTemplatesByCategory } from '@/constants/maintenanceTemplates'
 
-export default {
-    components: { ModalWrapper },
+const props = defineProps({
+  isOpen: { type: Boolean, default: false },
+  maintenance: { type: Object, default: null },
+  motorcycles: { type: Array, default: () => [] },
+})
 
-    props: {
-        isOpen: {
-            type: Boolean,
-            required: true,
-            default: false
-        },
-        maintenance: {
-            type: Object,
-            required: true,
-            default: null
-        },
-        motorcycles: {
-            type: Array,
-            default: () => []
-        }
-    },
+const emit = defineEmits(['close'])
+const toast = useToast()
+const maintenancesStore = useMaintenancesStore()
 
-    emits: ['close', 'saved'],
+const form = reactive({
+  motorcycleId: null,
+  category: '',
+  templateId: '',
+  title: '',
+  description: '',
+  planned_mileage: null,
+  planned_date: null,
+  completed_mileage: null,
+  completed_date: null,
+  cost: null,
+})
 
-    data() {
-        return {
-            form: {
-                motorcycleId: null,
-                category: '',
-                templateId: '',
-                title: '',
-                description: '',
-                planned_mileage: null,
-                planned_date: null,
-                completed_mileage: null,
-                completed_date: null,
-                cost: null
-            },
-            templates: [],
-            isSubmitting: false,
-            errors: {}
-        }
-    },
+const templates = ref([])
+const isSubmitting = ref(false)
 
-    computed: {
-        isFormValid() {
-            return this.form.motorcycleId && 
-                   this.form.category && 
-                   this.form.title &&
-                   this.form.title.trim().length > 0
-        }
-    },
+const isFormValid = computed(() => {
+  return (
+    form.motorcycleId &&
+    form.category &&
+    form.title &&
+    form.title.trim().length > 0
+  )
+})
 
-    watch: {
-        maintenance: {
-            immediate: true,
-            handler(val) {
-                if (val) {
-                    this.fillForm(val)
-                }
-            }
-        },
-        'form.category'(newVal) {
-            if (newVal) {
-                this.templates = getTemplatesByCategory(newVal)
-                if (this.form.templateId) {
-                    const found = this.templates.find(t => t.id === this.form.templateId)
-                    if (!found) {
-                        this.form.templateId = ''
-                    }
-                }
-            } else {
-                this.templates = []
-            }
-        }
-    },
+watch(
+  () => props.maintenance,
+  (val) => {
+    if (val) fillForm(val)
+  },
+  { immediate: true }
+)
 
-    methods: {
-        fillForm(maintenance) {
-            this.form = {
-                motorcycleId: maintenance.moto_id || maintenance.motorcycle_id || null,
-                category: maintenance.category || '',
-                templateId: '',
-                title: maintenance.title || '',
-                description: maintenance.description || '',
-                planned_mileage: maintenance.planned_mileage || null,
-                planned_date: maintenance.planned_date || null,
-                completed_mileage: maintenance.completed_mileage || null,
-                completed_date: maintenance.completed_date || null,
-                cost: maintenance.cost || null
-            }
-
-            if (this.form.category) {
-                this.templates = getTemplatesByCategory(this.form.category)
-                
-                const found = this.templates.find(t => t.label === this.form.title)
-                if (found) {
-                    this.form.templateId = found.id
-                }
-            }
-        },
-
-        onCategoryChange() {
-            this.form.templateId = ''
-            if (this.form.category) {
-                this.templates = getTemplatesByCategory(this.form.category)
-            } else {
-                this.templates = []
-            }
-        },
-
-        onTemplateChange() {
-            const found = this.templates.find(t => t.id === this.form.templateId)
-            if (found) {
-                this.form.title = found.label
-            }
-        },
-
-        async submit() {
-            if (!this.isFormValid) {
-                this.$toast?.warning('Заполните все обязательные поля')
-                return
-            }
-
-            this.isSubmitting = true
-            this.errors = {}
-
-            try {
-                if (this.form.completed_mileage && !this.form.completed_date) {
-                    alert('Укажите дату выполнения')
-                    return
-                }
-                const payload = {
-                    maintenanceId: this.maintenance.id,
-                    motorcycleId: this.form.motorcycleId,
-                    category: this.form.category,
-                    title: this.form.title.trim(),
-                    description: this.form.description?.trim() || null,
-                    planned_mileage: this.form.planned_mileage || null,
-                    planned_date: this.form.planned_date || null,
-                    completed_mileage: this.form.completed_mileage || null,
-                    completed_date: this.form.completed_date || null,
-                    cost: this.form.cost || null
-                }
-
-                await api.put(`/maintenance/${this.maintenance.id}`, payload)
-                
-                this.$emit('saved')
-                this.$emit('close')
-                this.$toast?.success('Обслуживание обновлено!')
-            } catch (error) {
-                console.error('Ошибка обновления:', error)
-                this.errors = error
-                const msg = error.response?.data?.message || 'Ошибка при обновлении'
-                this.$toast?.error(msg)
-            } finally {
-                this.isSubmitting = false
-            }
-        }
+watch(
+  () => form.category,
+  (newVal) => {
+    if (newVal) {
+      templates.value = getTemplatesByCategory(newVal)
+      if (form.templateId) {
+        const found = templates.value.find((t) => t.id === form.templateId)
+        if (!found) form.templateId = ''
+      }
+    } else {
+      templates.value = []
     }
+  }
+)
+
+function fillForm(maintenance) {
+  form.motorcycleId = maintenance.moto_id || maintenance.motorcycle_id || null
+  form.category = maintenance.category || ''
+  form.templateId = ''
+  form.title = maintenance.title || ''
+  form.description = maintenance.description || ''
+  form.planned_mileage = maintenance.planned_mileage || null
+  form.planned_date = maintenance.planned_date || null
+  form.completed_mileage = maintenance.completed_mileage || null
+  form.completed_date = maintenance.completed_date || null
+  form.cost = maintenance.cost || null
+
+  if (form.category) {
+    templates.value = getTemplatesByCategory(form.category)
+    const found = templates.value.find((t) => t.label === form.title)
+    if (found) form.templateId = found.id
+  }
+}
+
+function onCategoryChange() {
+  form.templateId = ''
+  templates.value = form.category ? getTemplatesByCategory(form.category) : []
+}
+
+function onTemplateChange() {
+  const found = templates.value.find((t) => t.id === form.templateId)
+  if (found) form.title = found.label
+}
+
+async function submit() {
+  if (!isFormValid.value) {
+    toast.warning('Заполните все обязательные поля')
+    return
+  }
+
+  if (form.completed_mileage && !form.completed_date) {
+    toast.error('Укажите дату выполнения')
+    return
+  }
+
+  isSubmitting.value = true
+  try {
+    const payload = {
+      maintenanceId: props.maintenance.id,
+      motorcycleId: form.motorcycleId,
+      category: form.category,
+      title: form.title.trim(),
+      description: form.description?.trim() || null,
+      planned_mileage: form.planned_mileage || null,
+      planned_date: form.planned_date || null,
+      completed_mileage: form.completed_mileage || null,
+      completed_date: form.completed_date || null,
+      cost: form.cost || null,
+    }
+
+    await maintenancesStore.update(props.maintenance.id, payload)
+
+    emit('close')
+    toast.success('Обслуживание обновлено')
+  } catch (err) {
+    console.error('Failed to update maintenance:', err)
+    toast.error(err.response?.data?.message || 'Ошибка при обновлении')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <style scoped>
 .edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.modal-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 14px;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.modal-form-group:last-child {
-    margin-bottom: 0;
-}
-
-.modal-form-group label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.modal-form-group label .required {
-    color: var(--danger-text);
-    font-weight: 700;
-}
-
-.modal-form-group input,
-.modal-form-group select,
-.modal-form-group textarea {
-    padding: 0.6rem 0.8rem;
-    border-radius: 10px;
-    border: 2px solid var(--border-color);
-    background-color: var(--bg-input);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    width: 100%;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-
-.modal-form-group input:focus,
-.modal-form-group select:focus,
-.modal-form-group textarea:focus {
-    border-color: var(--accent);
-    outline: none;
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.modal-form-group input::placeholder,
-.modal-form-group textarea::placeholder {
-    color: var(--text-muted);
-}
-
-.modal-form-group textarea {
-    resize: vertical;
-    min-height: 60px;
-}
-
-.modal-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.modal-form-row:last-child {
-    margin-bottom: 0;
-}
-
-/* ===== РАЗДЕЛИТЕЛЬ ===== */
 .form-divider {
-    border: none;
-    border-top: 1px solid var(--border-light);
-    margin: 8px 0 14px;
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 4px 0;
 }
 
-/* ===== ИНФО-БЛОК ===== */
 .modal-info-block {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
 }
 
 .modal-info-block.info {
-    background: var(--accent-trans);
-    border: 1px solid var(--accent-light);
+  background: var(--accent-trans);
+  border: 1px solid var(--accent-light);
 }
 
-.modal-info-block .modal-info-icon {
-    font-size: 18px;
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: var(--accent-text);
+.modal-info-icon {
+  font-size: 18px;
+  color: var(--accent-text);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .modal-info-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
-/* ===== КНОПКИ ===== */
 .modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
 }
 
-.modal-actions .btn {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+.modal-actions > * {
+  flex: 1;
 }
-
-.modal-actions .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px var(--accent-trans);
-}
-
-.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: var(--border-color);
-}
-
-.fa-spin {
-    animation: fa-spin 1s linear infinite;
-}
-
-@keyframes fa-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* ============================================ */
-/* ===== АДАПТИВНОСТЬ ===== */
-/* ============================================ */
 
 @media (max-width: 640px) {
-    .modal-form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 
-    .modal-actions {
-        flex-direction: column;
-    }
+  .modal-info-block {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 
-    .modal-actions .btn {
-        width: 100%;
-        padding: 0.8rem;
-    }
+  .modal-info-icon {
+    margin-top: 0;
+  }
 
-    .modal-info-block {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .modal-info-icon {
-        margin-top: 0;
-    }
-}
-
-@media (max-width: 400px) {
-    .modal-form-group input,
-    .modal-form-group select,
-    .modal-form-group textarea {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.7rem;
-    }
+  .modal-actions {
+    flex-direction: column;
+  }
 }
 </style>

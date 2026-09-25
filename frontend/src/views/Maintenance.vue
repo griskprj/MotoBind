@@ -230,22 +230,44 @@
     <AddMaintenanceModal
       :isOpen="showAddMaintenanceModal"
       :motorcycles="motorcycles"
-      @submit="addMaintenance"
+      @created="onMaintenanceCreated"
       @close="showAddMaintenanceModal = false"
     />
 
     <MaintenanceDetailsModal
       v-if="selectedMaintenance"
       :isOpen="showDetailsMaintenanceModal"
-      :motoName="selectedMotorcycle?.name"
       :motorcycle="selectedMotorcycle"
-      :motorcycles="motorcycles"
       :maintenance="selectedMaintenance"
-      @delete="deleteMaintenance"
-      @save="editMaintenance"
-      @mark="markMaintenance"
-      @updateMaintenance="updateMaintenance"
+      @edit="showDetailsMaintenanceModal = false; showEditModal = true"
+      @delete="showDetailsMaintenanceModal = false; showDeleteModal = true"
+      @mark="showDetailsMaintenanceModal = false; showMarkModal = true"
       @close="closeDetailsMaintenance"
+    />
+
+    <EditMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showEditModal"
+      :maintenance="selectedMaintenance"
+      :motorcycles="motorcycles"
+      @close="showEditModal = false; closeDetailsMaintenance()"
+    />
+
+    <DeleteMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showDeleteModal"
+      :maintenanceId="selectedMaintenance.id"
+      @submit="confirmDeleteMaintenance"
+      @close="showDeleteModal = false"
+    />
+
+    <MarkPlanMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showMarkModal"
+      :maintenance="selectedMaintenance"
+      :motorcycle="selectedMotorcycle"
+      @submit="handleMarkMaintenance"
+      @close="showMarkModal = false"
     />
   </div>
 </template>
@@ -264,6 +286,9 @@ import formatDate from '@/utils/DateFormatter.js'
 
 import AddMaintenanceModal from '../components/modals/maintenance/AddMaintenanceModal.vue'
 import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
+import EditMaintenanceModal from '../components/modals/maintenance/EditMaintenanceModal.vue'
+import DeleteMaintenanceModal from '../components/modals/maintenance/DeleteMaintenanceModal.vue'
+import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue'
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 
@@ -298,6 +323,9 @@ const {
 // ===== Local UI state =====
 const showAddMaintenanceModal = ref(false)
 const showDetailsMaintenanceModal = ref(false)
+const showEditModal = ref(false)
+const showDeleteModal = ref(false)
+const showMarkModal = ref(false)
 const selectedMaintenance = ref(null)
 
 const selectedMotorcycle = computed(() => {
@@ -321,64 +349,38 @@ onMounted(() => {
 })
 
 // ===== CRUD =====
-async function addMaintenance(formData) {
-  try {
-    await create(formData)
-    showAddMaintenanceModal.value = false
-    toast.success('Обслуживание добавлено')
-  } catch (err) {
-    console.error('Failed to create maintenance:', err)
-    toast.error(err.response?.data?.error || 'Ошибка при добавлении обслуживания')
-  }
+function onMaintenanceCreated() {
+  showAddMaintenanceModal.value = false
 }
 
-function editMaintenance() {
-  // Модалка деталей после редактирования эмитит `save`,
-  // но её `handleSave` уже эмитит `close` — просто ничего не делаем.
-  // loadAll перезапустит refresh, если это понадобится.
-}
-
-async function deleteMaintenance(id) {
+async function confirmDeleteMaintenance() {
+  if (!selectedMaintenance.value) return
   try {
-    await remove(id)
-    showDetailsMaintenanceModal.value = false
+    await maintenancesStore.remove(selectedMaintenance.value.id)
+    showDeleteModal.value = false
+    closeDetailsMaintenance()
     toast.success('Обслуживание удалено')
   } catch (err) {
-    console.error('Failed to delete maintenance:', err)
-    toast.error(err.response?.data?.error || 'Ошибка удаления обслуживания')
+    toast.error('Не удалось удалить')
   }
 }
 
-async function markMaintenance(formData) {
+async function handleMarkMaintenance(formData) {
   try {
-    if (!formData?.id) {
-      toast.error('Ошибка: отсутствует ID обслуживания')
-      return
-    }
-
-    const payload = {
-      completed_mileage: formData.completed_mileage || formData.mileage || 0,
-      completed_date: formData.completed_date || new Date().toISOString().split('T')[0],
-      cost: formData.cost || 0,
-      is_repeat: formData.isRepeat || false,
-      interval: formData.interval || null,
-      interval_days: formData.interval_days || null,
-    }
-
-    await complete(formData.id, payload)
-    toast.success('Обслуживание успешно завершено!')
-
-    selectedMaintenance.value = null
+    await maintenancesStore.complete(formData.id, {
+      completed_mileage: formData.mileage,
+      completed_date: formData.date,
+      cost: formData.cost,
+      is_repeat: formData.isRepeat,
+      interval: formData.interval,
+      interval_days: formData.interval_days,
+    })
+    showMarkModal.value = false
+    closeDetailsMaintenance()
+    toast.success('Обслуживание завершено')
   } catch (err) {
-    console.error('Failed to complete maintenance:', err)
-    toast.error(err.response?.data?.error || 'Ошибка при завершении обслуживания')
+    toast.error(err.response?.data?.error || 'Ошибка завершения')
   }
-}
-
-function updateMaintenance() {
-  // Модалка редактирования обновляет данные на бэке
-  // и эмитит `updateMaintenance` — перезагружаем список
-  loadAll().catch(() => {})
 }
 
 // ===== Details modal =====

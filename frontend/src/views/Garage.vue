@@ -99,16 +99,16 @@
             </div>
 
             <div class="moto-list-actions" @click.stop>
-              <button @click="selectMotorcycle(moto); showEditMotoModal = true" class="icon-btn" title="Редактировать">
+              <button @click="openEditMoto(moto)" class="icon-btn" title="Редактировать">
                 <i class="fa fa-pen"></i>
               </button>
-              <button @click="selectMotorcycle(moto); showUpdateMotoMileageModal = true" class="icon-btn" title="Обновить пробег">
+              <button @click="openUpdateMileage(moto)" class="icon-btn" title="Обновить пробег">
                 <i class="fa-solid fa-gauge-high"></i>
               </button>
-              <button @click="selectMotorcycle(moto); showPhotoModal = true" class="icon-btn" title="Фото">
+              <button @click="openPhoto(moto)" class="icon-btn" title="Фото">
                 <i class="fa fa-camera"></i>
               </button>
-              <button @click="selectMotorcycle(moto); showDeleteMotoModal = true" class="icon-btn danger" title="Удалить">
+              <button @click="openDeleteMoto(moto)" class="icon-btn danger" title="Удалить">
                 <i class="fa fa-trash"></i>
               </button>
             </div>
@@ -302,7 +302,7 @@
       </div>
     </div>
 
-    <!-- MODALS -->
+    <!-- MODALS: MOTO -->
     <AddMotoModal
       :isOpen="showAddMotoModal"
       @submit="addMoto"
@@ -337,17 +337,6 @@
       @close="showDeleteMotoModal = false"
     />
 
-    <MaintenanceDetailsModal
-      v-if="selectedMotorcycle"
-      :isOpen="showDetailsMaintenanceModal"
-      :maintenance="selectedMaintenance"
-      :motorcycle="selectedMotorcycle"
-      @mark="markMaintenance"
-      @save="saveMaintenance"
-      @delete="deleteMaintenance"
-      @close="closeMaintenanceDetails"
-    />
-
     <PhotoModal
       :isOpen="showPhotoModal"
       :motorcycle="selectedMotorcycle"
@@ -361,6 +350,43 @@
       :motorcycle="selectedMotorcycle"
       @close="showQuickStartModal = false"
       @created="onQuickStartCreated"
+    />
+
+    <!-- MODALS: MAINTENANCE (цепочка) -->
+    <MaintenanceDetailsModal
+      v-if="selectedMotorcycle && selectedMaintenance"
+      :isOpen="showDetailsMaintenanceModal"
+      :maintenance="selectedMaintenance"
+      :motorcycle="selectedMotorcycle"
+      @edit="openEditMaintenance"
+      @delete="openDeleteMaintenance"
+      @mark="openMarkMaintenance"
+      @close="closeMaintenanceDetails"
+    />
+
+    <EditMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showEditModal"
+      :maintenance="selectedMaintenance"
+      :motorcycles="motorcycles"
+      @close="closeEditMaintenance"
+    />
+
+    <DeleteMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showDeleteModal"
+      :maintenanceId="selectedMaintenance.id"
+      @submit="confirmDeleteMaintenance"
+      @close="showDeleteModal = false"
+    />
+
+    <MarkPlanMaintenanceModal
+      v-if="selectedMaintenance"
+      :isOpen="showMarkModal"
+      :maintenance="selectedMaintenance"
+      :motorcycle="selectedMotorcycle"
+      @submit="handleMarkMaintenance"
+      @close="showMarkModal = false"
     />
   </div>
 </template>
@@ -376,12 +402,15 @@ import EditMotoModal from '../components/modals/moto/EditMotoModal.vue'
 import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue'
 import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue'
 import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue'
-import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
 import PhotoModal from '../components/modals/moto/PhotoModal.vue'
 import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
+import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
+import EditMaintenanceModal from '../components/modals/maintenance/EditMaintenanceModal.vue'
+import DeleteMaintenanceModal from '../components/modals/maintenance/DeleteMaintenanceModal.vue'
+import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 
-import { useMotorcyclesStore, useRemindersStore } from '@/stores'
+import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
 import {
   formatMileage,
@@ -403,9 +432,12 @@ export default {
     DeleteMotoModal,
     UpdateMileageModal,
     EditMotoNoteModal,
-    MaintenanceDetailsModal,
     PhotoModal,
     QuickStartModal,
+    MaintenanceDetailsModal,
+    EditMaintenanceModal,
+    DeleteMaintenanceModal,
+    MarkPlanMaintenanceModal,
     LoadingOverlay,
   },
 
@@ -414,6 +446,7 @@ export default {
     const toast = useToast()
 
     const motorcyclesStore = useMotorcyclesStore()
+    const maintenancesStore = useMaintenancesStore()
     const remindersStore = useRemindersStore()
 
     // ===== Store refs =====
@@ -435,14 +468,21 @@ export default {
 
     // ===== Local UI state =====
     const selectedMaintenance = ref(null)
+
+    // Moto modals
     const showAddMotoModal = ref(false)
     const showEditMotoModal = ref(false)
     const showDeleteMotoModal = ref(false)
     const showUpdateMotoMileageModal = ref(false)
     const showEditMotoNoteModal = ref(false)
-    const showDetailsMaintenanceModal = ref(false)
     const showPhotoModal = ref(false)
     const showQuickStartModal = ref(false)
+
+    // Maintenance modals (цепочка Details → Edit/Delete/Mark)
+    const showDetailsMaintenanceModal = ref(false)
+    const showEditModal = ref(false)
+    const showDeleteModal = ref(false)
+    const showMarkModal = ref(false)
 
     // ===== Lifecycle =====
     onMounted(async () => {
@@ -470,7 +510,28 @@ export default {
       if (placeholder) placeholder.classList.remove('hidden')
     }
 
-    // ===== Motorcycle CRUD =====
+    // ===== Moto actions (открытие модалок) =====
+    function openEditMoto(moto) {
+      selectMotorcycle(moto)
+      showEditMotoModal.value = true
+    }
+
+    function openUpdateMileage(moto) {
+      selectMotorcycle(moto)
+      showUpdateMotoMileageModal.value = true
+    }
+
+    function openPhoto(moto) {
+      selectMotorcycle(moto)
+      showPhotoModal.value = true
+    }
+
+    function openDeleteMoto(moto) {
+      selectMotorcycle(moto)
+      showDeleteMotoModal.value = true
+    }
+
+    // ===== Moto CRUD =====
     async function addMoto(formData) {
       try {
         const { photoFile, ...data } = formData
@@ -551,50 +612,6 @@ export default {
     }
 
     // ===== Maintenance =====
-    async function deleteMaintenance(id) {
-      try {
-        const { useMaintenancesStore } = await import('@/stores')
-        await useMaintenancesStore().remove(id)
-        await motorcyclesStore.loadAll()
-        showDetailsMaintenanceModal.value = false
-        toast.success('Обслуживание удалено')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка удаления')
-      }
-    }
-
-    async function markMaintenance(formData) {
-      try {
-        if (!formData?.id) {
-          toast.error('Ошибка: отсутствует ID обслуживания')
-          return
-        }
-
-        const payload = {
-          completed_mileage: formData.completed_mileage || formData.mileage || 0,
-          completed_date: formData.completed_date || new Date().toISOString().split('T')[0],
-          cost: formData.cost || 0,
-          is_repeat: formData.is_repeat || false,
-          interval: formData.interval || null,
-          interval_days: formData.interval_days || null,
-        }
-
-        const { useMaintenancesStore } = await import('@/stores')
-        await useMaintenancesStore().complete(formData.id, payload)
-        await motorcyclesStore.loadAll()
-        await remindersStore.loadPending()
-
-        toast.success('Обслуживание завершено')
-        selectedMaintenance.value = null
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка завершения обслуживания')
-      }
-    }
-
-    function saveMaintenance() {
-      motorcyclesStore.loadAll()
-    }
-
     function openMaintenanceDetails(item) {
       selectedMaintenance.value = item
       showDetailsMaintenanceModal.value = true
@@ -603,6 +620,60 @@ export default {
     function closeMaintenanceDetails() {
       selectedMaintenance.value = null
       showDetailsMaintenanceModal.value = false
+    }
+
+    function openEditMaintenance() {
+      showDetailsMaintenanceModal.value = false
+      showEditModal.value = true
+    }
+
+    function closeEditMaintenance() {
+      showEditModal.value = false
+      closeMaintenanceDetails()
+    }
+
+    function openDeleteMaintenance() {
+      showDetailsMaintenanceModal.value = false
+      showDeleteModal.value = true
+    }
+
+    function openMarkMaintenance() {
+      showDetailsMaintenanceModal.value = false
+      showMarkModal.value = true
+    }
+
+    async function confirmDeleteMaintenance() {
+      if (!selectedMaintenance.value) return
+      try {
+        await maintenancesStore.remove(selectedMaintenance.value.id)
+        showDeleteModal.value = false
+        closeMaintenanceDetails()
+        toast.success('Обслуживание удалено')
+      } catch (err) {
+        console.error('Failed to delete maintenance:', err)
+        toast.error(err.response?.data?.error || 'Не удалось удалить')
+      }
+    }
+
+    async function handleMarkMaintenance(formData) {
+      try {
+        await maintenancesStore.complete(formData.id, {
+          completed_mileage: formData.mileage,
+          completed_date: formData.date,
+          cost: formData.cost,
+          is_repeat: formData.isRepeat,
+          interval: formData.interval,
+          interval_days: formData.interval_days,
+        })
+        showMarkModal.value = false
+        closeMaintenanceDetails()
+        await motorcyclesStore.loadAll()
+        await remindersStore.loadPending()
+        toast.success('Обслуживание завершено')
+      } catch (err) {
+        console.error('Failed to complete maintenance:', err)
+        toast.error(err.response?.data?.error || 'Ошибка завершения')
+      }
     }
 
     function onQuickStartCreated() {
@@ -680,11 +751,14 @@ export default {
     return {
       // stores
       motorcyclesStore,
+      maintenancesStore,
       remindersStore,
+
       // store refs
       motorcycles,
       selectedMotoId,
       loading,
+
       // computed
       selectedMotorcycle,
       recentMaintenances,
@@ -694,16 +768,25 @@ export default {
       maintenanceSpends,
       activeRemindersForSelected,
       hasActiveReminders,
+
       // local state
       selectedMaintenance,
+
+      // moto modals
       showAddMotoModal,
       showEditMotoModal,
       showDeleteMotoModal,
       showUpdateMotoMileageModal,
       showEditMotoNoteModal,
-      showDetailsMaintenanceModal,
       showPhotoModal,
       showQuickStartModal,
+
+      // maintenance modals
+      showDetailsMaintenanceModal,
+      showEditModal,
+      showDeleteModal,
+      showMarkModal,
+
       // utils
       formatMileage,
       formatCost,
@@ -712,9 +795,16 @@ export default {
       getStatusBadgeVariant,
       getMotoPhotoUrl,
       formatDate,
-      // methods
+
+      // methods: helpers
       selectMotorcycle,
       handleImageError,
+
+      // methods: moto
+      openEditMoto,
+      openUpdateMileage,
+      openPhoto,
+      openDeleteMoto,
       addMoto,
       updateMoto,
       updateMotoMileage,
@@ -722,12 +812,19 @@ export default {
       deleteMoto,
       uploadPhoto,
       deletePhoto,
-      deleteMaintenance,
-      markMaintenance,
-      saveMaintenance,
+
+      // methods: maintenance
       openMaintenanceDetails,
       closeMaintenanceDetails,
+      openEditMaintenance,
+      closeEditMaintenance,
+      openDeleteMaintenance,
+      openMarkMaintenance,
+      confirmDeleteMaintenance,
+      handleMarkMaintenance,
       onQuickStartCreated,
+
+      // methods: reminders
       dismissReminder,
       reminderBannerInfo,
       handleReminderAction,
