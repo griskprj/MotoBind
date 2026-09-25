@@ -228,11 +228,11 @@
 </template>
 
 <script>
-import ModalWrapper from '../ModalWrapper.vue'
+import { BaseModal, BaseButton } from '@/components/ui'
 import api from '../../../api/api'
 
 export default {
-    components: { ModalWrapper },
+    components: { BaseModal, BaseButton },
 
     props: {
         isOpen: Boolean,
