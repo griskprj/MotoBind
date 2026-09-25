@@ -305,28 +305,25 @@
     <!-- MODALS: MOTO -->
     <AddMotoModal
       :isOpen="showAddMotoModal"
-      @submit="addMoto"
+      @created="onMotoCreated"
       @close="showAddMotoModal = false"
     />
 
     <EditMotoModal
       :isOpen="showEditMotoModal"
       :motorcycle="selectedMotorcycle"
-      @submit="updateMoto"
-      @close="showEditMotoModal = false"
+      @close="onMotoUpdated"
     />
 
     <UpdateMileageModal
       :isOpen="showUpdateMotoMileageModal"
       :motorcycle="selectedMotorcycle"
-      @submit="updateMotoMileage"
-      @close="showUpdateMotoMileageModal = false"
+      @close="onMileageUpdated"
     />
 
     <EditMotoNoteModal
       :isOpen="showEditMotoNoteModal"
       :motorcycle="selectedMotorcycle"
-      @submit="updateMotoNote"
       @close="showEditMotoNoteModal = false"
     />
 
@@ -340,8 +337,6 @@
     <PhotoModal
       :isOpen="showPhotoModal"
       :motorcycle="selectedMotorcycle"
-      @upload="uploadPhoto"
-      @delete="deletePhoto"
       @close="showPhotoModal = false"
     />
 
@@ -532,49 +527,19 @@ export default {
     }
 
     // ===== Moto CRUD =====
-    async function addMoto(formData) {
-      try {
-        const { photoFile, ...data } = formData
-        await motorcyclesStore.create(data, photoFile)
-        await remindersStore.loadPending()
-        showAddMotoModal.value = false
-        toast.success('Мотоцикл добавлен')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка добавления')
-      }
+    async function onMotoCreated() {
+      await remindersStore.loadPending()
+      showAddMotoModal.value = false
     }
 
-    async function updateMoto(formData) {
-      try {
-        const { id, newPhotoFile, deleteExistingPhoto, ...data } = formData
-        await motorcyclesStore.update(id, data, { newPhotoFile, deleteExistingPhoto })
-        await remindersStore.loadPending()
-        showEditMotoModal.value = false
-        toast.success('Мотоцикл обновлён')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка обновления')
-      }
+    async function onMotoUpdated() {
+      await remindersStore.loadPending()
+      showEditMotoModal.value = false
     }
 
-    async function updateMotoMileage(formData) {
-      try {
-        await motorcyclesStore.updateMileage(formData.id, formData.mileage)
-        await remindersStore.loadPending()
-        showUpdateMotoMileageModal.value = false
-        toast.success('Пробег обновлён')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка обновления пробега')
-      }
-    }
-
-    async function updateMotoNote(formData) {
-      try {
-        await motorcyclesStore.updateNote(formData.id, formData.note)
-        showEditMotoNoteModal.value = false
-        toast.success('Заметка обновлена')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка обновления заметки')
-      }
+    async function onMileageUpdated() {
+      await remindersStore.loadPending()
+      showUpdateMotoMileageModal.value = false
     }
 
     async function deleteMoto(id) {
@@ -588,28 +553,6 @@ export default {
       }
     }
 
-    async function uploadPhoto(formData) {
-      try {
-        const file = formData.get('photo')
-        if (!file) return
-        await motorcyclesStore.uploadPhoto(selectedMotoId.value, file)
-        showPhotoModal.value = false
-        toast.success('Фото загружено')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка загрузки фото')
-      }
-    }
-
-    async function deletePhoto() {
-      if (!confirm('Удалить фото?')) return
-      try {
-        await motorcyclesStore.deletePhoto(selectedMotoId.value)
-        showPhotoModal.value = false
-        toast.success('Фото удалено')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка удаления фото')
-      }
-    }
 
     // ===== Maintenance =====
     function openMaintenanceDetails(item) {
@@ -805,13 +748,10 @@ export default {
       openUpdateMileage,
       openPhoto,
       openDeleteMoto,
-      addMoto,
-      updateMoto,
-      updateMotoMileage,
-      updateMotoNote,
+      onMotoCreated,
+      onMotoUpdated,
+      onMileageUpdated,
       deleteMoto,
-      uploadPhoto,
-      deletePhoto,
 
       // methods: maintenance
       openMaintenanceDetails,
