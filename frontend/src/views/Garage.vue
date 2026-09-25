@@ -473,7 +473,6 @@ export default {
     const showPhotoModal = ref(false)
     const showQuickStartModal = ref(false)
 
-    // Maintenance modals (цепочка Details → Edit/Delete/Mark)
     const showDetailsMaintenanceModal = ref(false)
     const showEditModal = ref(false)
     const showDeleteModal = ref(false)
