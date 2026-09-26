@@ -1,252 +1,243 @@
 <template>
-    <div class="container">
-        <LoadingOverlay :isLoading="loading" text="Загрузка жалоб..." />
+  <div class="container">
+    <LoadingOverlay :isLoading="loading" text="Загрузка жалоб..." />
 
-        <Header title="Жалобы на посты" subtitle="Модерация контента и пользователей" />
+    <Header title="Жалобы на посты" subtitle="Модерация контента и пользователей" />
 
-        <!-- Статистика -->
-        <section>
-            <div class="stat-cards">
-                <div class="stat-card">
-                    <div class="card-icon warning"><i class="fa fa-clock"></i></div>
-                    <div class="card-body">
-                        <p class="card-title">На рассмотрении</p>
-                        <p class="card-value">{{ stats.pending || 0 }}</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="card-icon success"><i class="fa fa-check"></i></div>
-                    <div class="card-body">
-                        <p class="card-title">Рассмотрено</p>
-                        <p class="card-value">{{ stats.resolved || 0 }}</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="card-icon danger"><i class="fa fa-times"></i></div>
-                    <div class="card-body">
-                        <p class="card-title">Отклонено</p>
-                        <p class="card-value">{{ stats.rejected || 0 }}</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="card-icon"><i class="fa fa-flag"></i></div>
-                    <div class="card-body">
-                        <p class="card-title">Всего</p>
-                        <p class="card-value">{{ stats.total || 0 }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Фильтры -->
-        <section class="filters-section">
-            <div class="filters-row">
-                <select v-model="filters.status" @change="applyFilters" class="filter-select">
-                    <option value="">Все статусы</option>
-                    <option value="pending">На рассмотрении</option>
-                    <option value="resolved">Рассмотрено</option>
-                    <option value="rejected">Отклонено</option>
-                </select>
-                <select v-model="filters.category" @change="applyFilters" class="filter-select">
-                    <option value="">Все категории</option>
-                    <option v-for="cat in categories" :key="cat.value" :value="cat.value">
-                        {{ cat.label }}
-                    </option>
-                </select>
-                <button class="btn-outline" @click="resetFilters">
-                    <i class="fa fa-refresh"></i> Сбросить
-                </button>
-            </div>
-        </section>
-
-        <!-- Список жалоб -->
-        <section class="reports-list">
-            <div v-if="reports.length === 0 && !loading" class="empty-state">
-                <i class="fa fa-flag-o"></i>
-                <h3>Жалоб нет</h3>
-                <p class="empty-text">Все чисто — новых жалоб на посты пока нет</p>
-            </div>
-
-            <div
-                v-for="report in reports"
-                :key="report.id"
-                class="report-card"
-                @click="openDetails(report)"
-            >
-                <div class="report-main">
-                    <div class="report-badge" :class="'status-' + report.status">
-                        {{ statusLabel(report.status) }}
-                    </div>
-                    <div class="report-info">
-                        <div class="report-category">
-                            <i class="fa fa-exclamation-circle"></i>
-                            {{ report.category_label }}
-                        </div>
-                        <div class="report-meta">
-                            <span><i class="fa fa-user"></i> {{ report.reporter || '—' }}</span>
-                            <span class="dot">•</span>
-                            <span><i class="fa fa-calendar"></i> {{ formatDate(report.created_at) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="report-post-preview">
-                    <span class="preview-author">
-                        <i class="fa fa-motorcycle"></i>
-                        {{ report.post?.author || report.post_snapshot?.author || 'Автор удалён' }}
-                    </span>
-                    <p class="preview-text">
-                        {{ truncate(report.post?.content || report.post_snapshot?.content || '—', 90) }}
-                    </p>
-                </div>
-
-                <div class="report-right">
-                    <i class="fa fa-chevron-right"></i>
-                </div>
-            </div>
-        </section>
-
-        <!-- Пагинация -->
-        <div v-if="pagination.pages > 1" class="pagination">
-            <button class="btn-outline" :disabled="!pagination.has_prev" @click="goToPage(pagination.current_page - 1)">
-                <i class="fa fa-angle-left"></i>
-            </button>
-            <span>Стр. {{ pagination.current_page }} из {{ pagination.pages }}</span>
-            <button class="btn-outline" :disabled="!pagination.has_next" @click="goToPage(pagination.current_page + 1)">
-                <i class="fa fa-angle-right"></i>
-            </button>
+    <section>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="card-icon warning"><i class="fa fa-clock"></i></div>
+          <div class="card-body">
+            <p class="card-title">На рассмотрении</p>
+            <p class="card-value">{{ stats.pending || 0 }}</p>
+          </div>
         </div>
-    </div>
+        <div class="stat-card">
+          <div class="card-icon success"><i class="fa fa-check"></i></div>
+          <div class="card-body">
+            <p class="card-title">Рассмотрено</p>
+            <p class="card-value">{{ stats.resolved || 0 }}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon danger"><i class="fa fa-times"></i></div>
+          <div class="card-body">
+            <p class="card-title">Отклонено</p>
+            <p class="card-value">{{ stats.rejected || 0 }}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon"><i class="fa fa-flag"></i></div>
+          <div class="card-body">
+            <p class="card-title">Всего</p>
+            <p class="card-value">{{ stats.total || 0 }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- Модалка рассмотрения -->
-    <ReportDetailsModal
-        v-if="selectedReport"
-        :isOpen="showDetailsModal"
-        :report="selectedReport"
-        @close="closeDetails"
-        @resolved="onResolved"
-    />
+    <section class="filters-section">
+      <div class="filters-row">
+        <select v-model="filters.status" @change="applyFilters" class="filter-select">
+          <option value="">Все статусы</option>
+          <option value="pending">На рассмотрении</option>
+          <option value="resolved">Рассмотрено</option>
+          <option value="rejected">Отклонено</option>
+        </select>
+        <select v-model="filters.category" @change="applyFilters" class="filter-select">
+          <option value="">Все категории</option>
+          <option v-for="cat in categories" :key="cat.value" :value="cat.value">
+            {{ cat.label }}
+          </option>
+        </select>
+        <button class="btn-outline" @click="resetFilters">
+          <i class="fa fa-refresh"></i> Сбросить
+        </button>
+      </div>
+    </section>
+
+    <section class="reports-list">
+      <div v-if="reports.length === 0 && !loading" class="empty-state">
+        <i class="fa fa-flag-o"></i>
+        <h3>Жалоб нет</h3>
+        <p class="empty-text">Все чисто — новых жалоб на посты пока нет</p>
+      </div>
+
+      <div
+        v-for="report in reports"
+        :key="report.id"
+        class="report-card"
+        @click="openDetails(report)"
+      >
+        <div class="report-main">
+          <div class="report-badge" :class="'status-' + report.status">
+            {{ statusLabel(report.status) }}
+          </div>
+          <div class="report-info">
+            <div class="report-category">
+              <i class="fa fa-exclamation-circle"></i>
+              {{ report.category_label }}
+            </div>
+            <div class="report-meta">
+              <span><i class="fa fa-user"></i> {{ report.reporter || '—' }}</span>
+              <span class="dot">•</span>
+              <span><i class="fa fa-calendar"></i> {{ formatDate(report.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-post-preview">
+          <span class="preview-author">
+            <i class="fa fa-motorcycle"></i>
+            {{ report.post?.author || report.post_snapshot?.author || 'Автор удалён' }}
+          </span>
+          <p class="preview-text">
+            {{ truncate(report.post?.content || report.post_snapshot?.content || '—', 90) }}
+          </p>
+        </div>
+
+        <div class="report-right">
+          <i class="fa fa-chevron-right"></i>
+        </div>
+      </div>
+    </section>
+
+    <div v-if="pagination.pages > 1" class="pagination">
+      <button class="btn-outline" :disabled="!pagination.has_prev" @click="goToPage(pagination.current_page - 1)">
+        <i class="fa fa-angle-left"></i>
+      </button>
+      <span>Стр. {{ pagination.current_page }} из {{ pagination.pages }}</span>
+      <button class="btn-outline" :disabled="!pagination.has_next" @click="goToPage(pagination.current_page + 1)">
+        <i class="fa fa-angle-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <ReportDetailsModal
+    v-if="selectedReport"
+    :isOpen="showDetailsModal"
+    :report="selectedReport"
+    @close="closeDetails"
+    @resolved="onResolved"
+  />
 </template>
 
-<script>
-import api from '../../api/api'
-import Header from '../../components/Header.vue'
-import LoadingOverlay from '../../components/LoadingOverlay.vue'
-import ReportDetailsModal from '../../components/modals/admin/ReportDetailsModal.vue'
+<script setup>
+import { onMounted, ref } from 'vue'
+import Header from '@/components/Header.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import ReportDetailsModal from '@/components/modals/admin/ReportDetailsModal.vue'
 import { useToast } from '@/composables/useToast'
+import api from '@/api/api'
 
-export default {
-    name: 'AdminReportsPanel',
-    components: { Header, LoadingOverlay, ReportDetailsModal },
+const toast = useToast()
 
-    data() {
-        return {
-            loading: false,
-            reports: [],
-            stats: { total: 0, pending: 0, resolved: 0, rejected: 0 },
-            pagination: {
-                current_page: 1, per_page: 20, total: 0, pages: 0,
-                has_prev: false, has_next: false,
-            },
-            filters: { status: 'pending', category: '' },
-            categories: [
-                { value: 'sexual_content', label: 'Контент сексуального характера' },
-                { value: 'hate_speech', label: 'Разжигание межнациональной розни' },
-                { value: 'extremism', label: 'Экстремистская символика' },
-                { value: 'violence', label: 'Насилие' },
-                { value: 'drugs', label: 'Пропаганда наркотиков' },
-                { value: 'spam', label: 'Спам и мошенничество' },
-                { value: 'other', label: 'Другое' },
-            ],
-            selectedReport: null,
-            showDetailsModal: false,
-        }
-    },
+const loading = ref(false)
+const reports = ref([])
+const stats = ref({ total: 0, pending: 0, resolved: 0, rejected: 0 })
+const pagination = ref({
+  current_page: 1,
+  per_page: 20,
+  total: 0,
+  pages: 0,
+  has_prev: false,
+  has_next: false,
+})
+const filters = ref({ status: 'pending', category: '' })
+const categories = [
+  { value: 'sexual_content', label: 'Контент сексуального характера' },
+  { value: 'hate_speech', label: 'Разжигание межнациональной розни' },
+  { value: 'extremism', label: 'Экстремистская символика' },
+  { value: 'violence', label: 'Насилие' },
+  { value: 'drugs', label: 'Пропаганда наркотиков' },
+  { value: 'spam', label: 'Спам и мошенничество' },
+  { value: 'other', label: 'Другое' },
+]
+const selectedReport = ref(null)
+const showDetailsModal = ref(false)
 
-    setup() {
-        const toast = useToast()
-        return { toast }
-    },
+onMounted(() => {
+  loadReports()
+})
 
-    mounted() { this.loadReports() },
+async function loadReports() {
+  loading.value = true
+  try {
+    const params = {
+      page: pagination.value.current_page,
+      per_page: pagination.value.per_page,
+      status: filters.value.status || undefined,
+      category: filters.value.category || undefined,
+    }
+    const { data } = await api.get('/admin/reports', { params })
+    reports.value = data.reports || []
+    stats.value = data.stats || stats.value
+    pagination.value = {
+      current_page: data.current_page,
+      per_page: data.per_page,
+      total: data.total,
+      pages: data.pages,
+      has_prev: data.has_prev,
+      has_next: data.has_next,
+    }
+  } catch (err) {
+    console.error(err)
+    toast.error('Ошибка загрузки жалоб')
+  } finally {
+    loading.value = false
+  }
+}
 
-    methods: {
-        async loadReports() {
-            this.loading = true
-            try {
-                const params = {
-                    page: this.pagination.current_page,
-                    per_page: this.pagination.per_page,
-                    status: this.filters.status || undefined,
-                    category: this.filters.category || undefined,
-                }
-                const { data } = await api.get('/admin/reports', { params })
-                this.reports = data.reports || []
-                this.stats = data.stats || this.stats
-                this.pagination = {
-                    current_page: data.current_page,
-                    per_page: data.per_page,
-                    total: data.total,
-                    pages: data.pages,
-                    has_prev: data.has_prev,
-                    has_next: data.has_next,
-                }
-            } catch (err) {
-                console.error(err)
-                this.toast.error('Ошибка загрузки жалоб')
-            } finally {
-                this.loading = false
-            }
-        },
+function applyFilters() {
+  pagination.value.current_page = 1
+  loadReports()
+}
 
-        applyFilters() {
-            this.pagination.current_page = 1
-            this.loadReports()
-        },
+function resetFilters() {
+  filters.value = { status: 'pending', category: '' }
+  applyFilters()
+}
 
-        resetFilters() {
-            this.filters = { status: 'pending', category: '' }
-            this.applyFilters()
-        },
+function goToPage(page) {
+  if (page < 1 || page > pagination.value.pages) return
+  pagination.value.current_page = page
+  loadReports()
+}
 
-        goToPage(page) {
-            if (page < 1 || page > this.pagination.pages) return
-            this.pagination.current_page = page
-            this.loadReports()
-        },
+function openDetails(report) {
+  selectedReport.value = report
+  showDetailsModal.value = true
+}
 
-        openDetails(report) {
-            this.selectedReport = report
-            this.showDetailsModal = true
-        },
+function closeDetails() {
+  showDetailsModal.value = false
+  selectedReport.value = null
+}
 
-        closeDetails() {
-            this.showDetailsModal = false
-            this.selectedReport = null
-        },
+function onResolved() {
+  closeDetails()
+  loadReports()
+}
 
-        onResolved() {
-            this.closeDetails()
-            this.loadReports()
-        },
+function statusLabel(status) {
+  return { pending: 'На рассмотрении', resolved: 'Рассмотрено', rejected: 'Отклонено' }[status] || status
+}
 
-        statusLabel(status) {
-            return { pending: 'На рассмотрении', resolved: 'Рассмотрено', rejected: 'Отклонено' }[status] || status
-        },
+function formatDate(date) {
+  if (!date) return '—'
+  return new Date(date).toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
-        formatDate(date) {
-            if (!date) return '—'
-            return new Date(date).toLocaleString('ru-RU', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
-            })
-        },
-
-        truncate(text, len) {
-            if (!text) return ''
-            return text.length > len ? text.slice(0, len) + '...' : text
-        },
-    },
+function truncate(text, len) {
+  if (!text) return ''
+  return text.length > len ? text.slice(0, len) + '...' : text
 }
 </script>
 

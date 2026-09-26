@@ -1,229 +1,173 @@
 <template>
-    <div class="container">
-        <LoadingOverlay :isLoading="loading" text="Загрузка панели администратора..."/>
+  <div class="container">
+    <LoadingOverlay :isLoading="loading" text="Загрузка панели администратора..."/>
 
-        <!-- === HEADER === -->
-        <Header
-            title="Панель администратора"
-            subtitle="Обзор ключевых показателей и активности сайта"
-        />
-
-        <!-- === STATISTIC === -->
-        <section>
-            <div class="stat-cards">
-                <div class="stat-card">
-                    <div class="card-icon">
-                        <i class="fa fa-users"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Пользователи</p>
-                        <p class="card-value">{{ usersCount }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon">
-                        <i class="fa fa-motorcycle"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Мотоциклы</p>
-                        <p class="card-value">{{ motosCount }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card third">
-                    <div class="card-icon">
-                        <i class="fa fa-file"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Мануалы</p>
-                        <p class="card-value">{{ manualsCount }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- === MAIN SECTION === -->
-        <section class="main-section-wrapper">
-            <div class="chart-wrapper">
-                <h3>Регистрация пользователей</h3>
-                <UserRegistrationsChart
-                    :chart-data="registrationsChartData"
-                />
-            </div>
-            <div class="last-reg-wrapper">
-                <h3>Последние регистрации</h3>
-                <div class="last-reg-cards">
-                    <div 
-                        class="last-reg-card"
-                        v-for="user in lastRegUserData"    
-                    >
-                        <div class="user-info">
-                            <img class="user-img" :src="getAvatarUrl(user?.avatar)" alt="">
-                            <div class="reg-card-body">
-                                <p class="user-name">{{ user.username }}</p>
-                                <p class="user-time">{{ formatDate(user.last_login) }}</p>
-                            </div>
-                        </div>
-                        <div class="user-status" :class="user.role">
-                            <p class="user-role">{{getUserRole( user.role) }}</p>
-                        </div>
-                    </div>
-                </div>
-                <router-link class="btn outline-btn" style="text-decoration: none; width: 100%;" to="/admin/users">
-                    Смотреть всех пользователей <i class="fa fa-angle-right"></i>
-                </router-link>
-            </div>
-        </section>
-
-        <!-- === FAST ACTIONS === -->
-        <section class="fast-section-wrapper">
-            <h3>Быстрые действия</h3>
-            <div class="fast-action-card-wrapper">
-                <div @click="showAddUserModal = true" class="fast-action-card">
-                    <div class="action-card-icon">
-                        <i class="fa fa-user-plus"></i>
-                    </div>
-                    <p class="fast-action-text">
-                        Добавить пользователя
-                    </p>
-                </div>
-    
-                <router-link class="fast-action-card link" to="/manual-creator">
-                    <div class="action-card-icon">
-                        <i class="fa fa-tools"></i>
-                    </div>
-                    <p class="fast-action-text" to="/manual-creator">
-                        Добавить мануал
-                    </p>
-                </router-link>
-    
-                <router-link class="fast-action-card link" to="/admin/manuals">
-                    <div class="action-card-icon">
-                        <i class="fa fa-pen"></i>
-                    </div>
-                    <p class="fast-action-text">
-                        Модерация мануалов
-                    </p>
-                </router-link>
-    
-                <div @click="showNewsletterModal = true" class="fast-action-card">
-                    <div class="action-card-icon">
-                        <i class="fa fa-file-text"></i>
-                    </div>
-                    <p class="fast-action-text">
-                        Отправить рассылку
-                    </p>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <AddUserModal
-        :is-open="showAddUserModal"
-        @close="showAddUserModal = false"
-        @submit="addUser"
+    <Header
+      title="Панель администратора"
+      subtitle="Обзор ключевых показателей и активности сайта"
     />
 
-    <NewsletterModal
-        :is-open="showNewsletterModal"
-        @close="showNewsletterModal = false"
-        @sent="getRegChartData"
-    />
+    <section>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="card-icon">
+            <i class="fa fa-users"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">Пользователи</p>
+            <p class="card-value">{{ usersCount }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="card-icon">
+            <i class="fa fa-motorcycle"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">Мотоциклы</p>
+            <p class="card-value">{{ motosCount }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card third">
+          <div class="card-icon">
+            <i class="fa fa-file"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">Мануалы</p>
+            <p class="card-value">{{ manualsCount }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-section-wrapper">
+      <div class="chart-wrapper">
+        <h3>Регистрация пользователей</h3>
+        <UserRegistrationsChart :chart-data="registrationsChartData" />
+      </div>
+      <div class="last-reg-wrapper">
+        <h3>Последние регистрации</h3>
+        <div class="last-reg-cards">
+          <div
+            class="last-reg-card"
+            v-for="user in lastRegUserData"
+            :key="user.id"
+          >
+            <div class="user-info">
+              <img class="user-img" :src="getAvatarUrl(user?.avatar)" alt="">
+              <div class="reg-card-body">
+                <p class="user-name">{{ user.username }}</p>
+                <p class="user-time">{{ formatDate(user.last_login) }}</p>
+              </div>
+            </div>
+            <div class="user-status" :class="user.role">
+              <p class="user-role">{{ getUserRole(user.role) }}</p>
+            </div>
+          </div>
+        </div>
+        <router-link class="btn outline-btn" to="/admin/users">
+          Смотреть всех пользователей <i class="fa fa-angle-right"></i>
+        </router-link>
+      </div>
+    </section>
+
+    <section class="fast-section-wrapper">
+      <h3>Быстрые действия</h3>
+      <div class="fast-action-card-wrapper">
+        <div @click="showAddUserModal = true" class="fast-action-card">
+          <div class="action-card-icon">
+            <i class="fa fa-user-plus"></i>
+          </div>
+          <p class="fast-action-text">Добавить пользователя</p>
+        </div>
+
+        <router-link class="fast-action-card link" to="/manual-creator">
+          <div class="action-card-icon">
+            <i class="fa fa-tools"></i>
+          </div>
+          <p class="fast-action-text">Добавить мануал</p>
+        </router-link>
+
+        <router-link class="fast-action-card link" to="/admin/manuals">
+          <div class="action-card-icon">
+            <i class="fa fa-pen"></i>
+          </div>
+          <p class="fast-action-text">Модерация мануалов</p>
+        </router-link>
+
+        <div @click="showNewsletterModal = true" class="fast-action-card">
+          <div class="action-card-icon">
+            <i class="fa fa-file-text"></i>
+          </div>
+          <p class="fast-action-text">Отправить рассылку</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <AddUserModal
+    :is-open="showAddUserModal"
+    @close="showAddUserModal = false"
+    @saved="onUserSaved"
+  />
+
+  <NewsletterModal
+    :is-open="showNewsletterModal"
+    @close="showNewsletterModal = false"
+    @sent="getRegChartData"
+  />
 </template>
 
-<script>
-import api from '../../api/api'
-import UserRegistrationsChart from '../../components/charts/UserRegistrationsChart.vue';
-import Header from '../../components/Header.vue';
-import LoadingOverlay from '../../components/LoadingOverlay.vue';
-import AddUserModal from '../../components/modals/admin/AddUserModal.vue';
-import NewsletterModal from '../../components/modals/admin/NewsletterModal.vue';
+<script setup>
+import { onMounted, ref } from 'vue'
+import UserRegistrationsChart from '@/components/charts/UserRegistrationsChart.vue'
+import Header from '@/components/Header.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import AddUserModal from '@/components/modals/admin/AddUserModal.vue'
+import NewsletterModal from '@/components/modals/admin/NewsletterModal.vue'
+import { getAvatarUrl } from '@/utils/mediaUrl'
+import { getUserRoleLabel } from '@/utils/formatters'
+import formatDate from '@/utils/DateFormatter.js'
+import api from '@/api/api'
 
-export default {
-    components: {
-        UserRegistrationsChart,
-        AddUserModal,
-        NewsletterModal,
-        Header,
-        LoadingOverlay
-    },
-    data() {
-        return {
-            loading: false,
+const loading = ref(false)
+const registrationsChartData = ref([])
+const usersCount = ref(0)
+const motosCount = ref(0)
+const manualsCount = ref(0)
+const lastRegUserData = ref([])
 
-            registrationsChartData: [],
-            usersCount: 0,
-            motosCount: 0,
-            manualsCount: 0,
-            lastRegUserData: [],
+const showAddUserModal = ref(false)
+const showNewsletterModal = ref(false)
 
-            showAddUserModal: false,
-            showNewsletterModal: false
-        }
-    },
+onMounted(() => {
+  getRegChartData()
+})
 
-    methods: {
-        async getRegChartData() {
-            try {
-                this.loading = true
-                const response = await api.get('statistic/registrations-chart')
-                this.registrationsChartData = response.data.registrations || []
-                this.usersCount = response.data.users_count
-                this.motosCount = response.data.motos_count
-                this.manualsCount = response.data.manuals_count
-                this.lastRegUserData = response.data.last_reg
-            } catch (err) {
-                console.error('Failed load registrations data:', err)
-            } finally {
-                this.loading = false
-            }
-        },
+async function getRegChartData() {
+  try {
+    loading.value = true
+    const response = await api.get('statistic/registrations-chart')
+    registrationsChartData.value = response.data.registrations || []
+    usersCount.value = response.data.users_count
+    motosCount.value = response.data.motos_count
+    manualsCount.value = response.data.manuals_count
+    lastRegUserData.value = response.data.last_reg
+  } catch (err) {
+    console.error('Failed load registrations data:', err)
+  } finally {
+    loading.value = false
+  }
+}
 
-        async addUser(formData) {
-            try {
-                const response = await api.post('/admin/user', formData)
-                this.showAddUserModal = false
-                this.getRegChartData()
-            } catch (err) {
-                console.error(`Failed add user: ${err}`)
-            }
-        },
+function onUserSaved() {
+  showAddUserModal.value = false
+  getRegChartData()
+}
 
-        formatDate(date) {
-            if (!date) return '-'
-            const d = new Date(date)
-            return d.toLocaleDateString('ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            })
-        },
-
-        getUserRole(status) {
-            const labels = {
-                admin: 'Администратор',
-                motorcyclist: 'Мотоциклист',
-                club_member: 'Член клуба'
-            }
-            return labels[status]
-        },
-
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.webp';
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath;
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || '';
-            return `${baseUrl}/uploads/${avatarPath}`;  // ✅
-        },
-    },
-
-    mounted() {
-        this.getRegChartData()
-    }
+function getUserRole(role) {
+  return getUserRoleLabel(role)
 }
 </script>
 
@@ -443,7 +387,7 @@ export default {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(1, 1fr);
-    gap: 16px;  
+    gap: 16px;
 }
 
 .fast-action-card {
@@ -497,7 +441,7 @@ export default {
         grid-template-columns: repeat(1, 1fr);
         grid-template-rows: repeat(4, 1fr);
     }
-    
+
     .fast-action-card {
         min-height: 60px;
     }
