@@ -259,7 +259,7 @@
               <i class="fa fa-wrench"></i>
               <h4>Последние обслуживания</h4>
             </div>
-            <button @click="$router.push('/maintenance')" class="btn-link">
+            <button @click="router.push('/maintenance')" class="btn-link">
               Все записи <i class="fa fa-arrow-right"></i>
             </button>
           </div>
@@ -386,24 +386,26 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
-import Header from '../components/Header.vue'
-import AddMotoModal from '../components/modals/moto/AddMotoModal.vue'
-import EditMotoModal from '../components/modals/moto/EditMotoModal.vue'
-import DeleteMotoModal from '../components/modals/moto/DeleteMotoModal.vue'
-import UpdateMileageModal from '../components/modals/moto/UpdateMileageModal.vue'
-import EditMotoNoteModal from '../components/modals/moto/EditMotoNoteModal.vue'
-import PhotoModal from '../components/modals/moto/PhotoModal.vue'
-import QuickStartModal from '../components/modals/moto/QuickStartModal.vue'
-import MaintenanceDetailsModal from '../components/modals/maintenance/MaintenanceDetailsModal.vue'
-import EditMaintenanceModal from '../components/modals/maintenance/EditMaintenanceModal.vue'
-import DeleteMaintenanceModal from '../components/modals/maintenance/DeleteMaintenanceModal.vue'
-import MarkPlanMaintenanceModal from '../components/modals/maintenance/MarkPlanMaintenanceModal.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue'
+import Header from '@/components/Header.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+
+import AddMotoModal from '@/components/modals/moto/AddMotoModal.vue'
+import EditMotoModal from '@/components/modals/moto/EditMotoModal.vue'
+import DeleteMotoModal from '@/components/modals/moto/DeleteMotoModal.vue'
+import UpdateMileageModal from '@/components/modals/moto/UpdateMileageModal.vue'
+import EditMotoNoteModal from '@/components/modals/moto/EditMotoNoteModal.vue'
+import PhotoModal from '@/components/modals/moto/PhotoModal.vue'
+import QuickStartModal from '@/components/modals/moto/QuickStartModal.vue'
+
+import MaintenanceDetailsModal from '@/components/modals/maintenance/MaintenanceDetailsModal.vue'
+import EditMaintenanceModal from '@/components/modals/maintenance/EditMaintenanceModal.vue'
+import DeleteMaintenanceModal from '@/components/modals/maintenance/DeleteMaintenanceModal.vue'
+import MarkPlanMaintenanceModal from '@/components/modals/maintenance/MarkPlanMaintenanceModal.vue'
 
 import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
@@ -417,359 +419,257 @@ import {
 import { getMotoPhotoUrl } from '@/utils/mediaUrl'
 import formatDate from '@/utils/DateFormatter.js'
 
-export default {
-  name: 'GaragePage',
+const router = useRouter()
+const toast = useToast()
 
-  components: {
-    Header,
-    AddMotoModal,
-    EditMotoModal,
-    DeleteMotoModal,
-    UpdateMileageModal,
-    EditMotoNoteModal,
-    PhotoModal,
-    QuickStartModal,
-    MaintenanceDetailsModal,
-    EditMaintenanceModal,
-    DeleteMaintenanceModal,
-    MarkPlanMaintenanceModal,
-    LoadingOverlay,
-  },
+const motorcyclesStore = useMotorcyclesStore()
+const maintenancesStore = useMaintenancesStore()
+const remindersStore = useRemindersStore()
 
-  setup() {
-    const router = useRouter()
-    const toast = useToast()
+// ===== Store refs =====
+const { items: motorcycles, selectedId: selectedMotoId, loading } = storeToRefs(motorcyclesStore)
 
-    const motorcyclesStore = useMotorcyclesStore()
-    const maintenancesStore = useMaintenancesStore()
-    const remindersStore = useRemindersStore()
+// ===== Computed =====
+const selectedMotorcycle = computed(() => motorcyclesStore.selected)
+const recentMaintenances = computed(() => motorcyclesStore.recentMaintenances)
+const nextMaintenance = computed(() => motorcyclesStore.nextMaintenance)
+const totalMaintenances = computed(() => motorcyclesStore.totalMaintenances)
+const totalCosts = computed(() => motorcyclesStore.totalCosts)
+const maintenanceSpends = computed(() => motorcyclesStore.maintenanceSpends)
 
-    // ===== Store refs =====
-    const { items: motorcycles, selectedId: selectedMotoId, loading } = storeToRefs(motorcyclesStore)
+const activeRemindersForSelected = computed(() => {
+  if (!selectedMotoId.value) return []
+  return remindersStore.forMotorcycle(selectedMotoId.value)
+})
+const hasActiveReminders = computed(() => activeRemindersForSelected.value.length > 0)
 
-    // ===== Computed =====
-    const selectedMotorcycle = computed(() => motorcyclesStore.selected)
-    const recentMaintenances = computed(() => motorcyclesStore.recentMaintenances)
-    const nextMaintenance = computed(() => motorcyclesStore.nextMaintenance)
-    const totalMaintenances = computed(() => motorcyclesStore.totalMaintenances)
-    const totalCosts = computed(() => motorcyclesStore.totalCosts)
-    const maintenanceSpends = computed(() => motorcyclesStore.maintenanceSpends)
+// ===== Local UI state =====
+const selectedMaintenance = ref(null)
 
-    const activeRemindersForSelected = computed(() => {
-      if (!selectedMotoId.value) return []
-      return remindersStore.forMotorcycle(selectedMotoId.value)
+// Moto modals
+const showAddMotoModal = ref(false)
+const showEditMotoModal = ref(false)
+const showDeleteMotoModal = ref(false)
+const showUpdateMotoMileageModal = ref(false)
+const showEditMotoNoteModal = ref(false)
+const showPhotoModal = ref(false)
+const showQuickStartModal = ref(false)
+
+// Maintenance modals
+const showDetailsMaintenanceModal = ref(false)
+const showEditModal = ref(false)
+const showDeleteModal = ref(false)
+const showMarkModal = ref(false)
+
+// ===== Lifecycle =====
+onMounted(async () => {
+  try {
+    await Promise.all([
+      motorcyclesStore.loadAll(),
+      remindersStore.loadPending(),
+    ])
+  } catch (err) {
+    console.error('Failed to load garage data:', err)
+    toast.error('Не удалось загрузить гараж')
+  }
+})
+
+// ===== Helpers =====
+function selectMotorcycle(moto) {
+  if (!moto?.id) return
+  motorcyclesStore.select(moto.id)
+}
+
+function handleImageError(e) {
+  e.target.src = ''
+  e.target.style.display = 'none'
+  const placeholder = e.target.parentElement?.querySelector('.moto-list-placeholder')
+  if (placeholder) placeholder.classList.remove('hidden')
+}
+
+// ===== Moto actions =====
+function openEditMoto(moto) {
+  selectMotorcycle(moto)
+  showEditMotoModal.value = true
+}
+
+function openUpdateMileage(moto) {
+  selectMotorcycle(moto)
+  showUpdateMotoMileageModal.value = true
+}
+
+function openPhoto(moto) {
+  selectMotorcycle(moto)
+  showPhotoModal.value = true
+}
+
+function openDeleteMoto(moto) {
+  selectMotorcycle(moto)
+  showDeleteMotoModal.value = true
+}
+
+// ===== Moto CRUD =====
+async function onMotoCreated() {
+  await remindersStore.loadPending()
+  showAddMotoModal.value = false
+}
+
+async function onMotoUpdated() {
+  await remindersStore.loadPending()
+  showEditMotoModal.value = false
+}
+
+async function onMileageUpdated() {
+  await remindersStore.loadPending()
+  showUpdateMotoMileageModal.value = false
+}
+
+async function deleteMoto(id) {
+  try {
+    await motorcyclesStore.remove(id)
+    await remindersStore.loadPending()
+    showDeleteMotoModal.value = false
+    toast.success('Мотоцикл удалён')
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Ошибка удаления')
+  }
+}
+
+// ===== Maintenance =====
+function openMaintenanceDetails(item) {
+  selectedMaintenance.value = item
+  showDetailsMaintenanceModal.value = true
+}
+
+function closeMaintenanceDetails() {
+  selectedMaintenance.value = null
+  showDetailsMaintenanceModal.value = false
+}
+
+function openEditMaintenance() {
+  showDetailsMaintenanceModal.value = false
+  showEditModal.value = true
+}
+
+function closeEditMaintenance() {
+  showEditModal.value = false
+  closeMaintenanceDetails()
+}
+
+function openDeleteMaintenance() {
+  showDetailsMaintenanceModal.value = false
+  showDeleteModal.value = true
+}
+
+function openMarkMaintenance() {
+  showDetailsMaintenanceModal.value = false
+  showMarkModal.value = true
+}
+
+async function confirmDeleteMaintenance() {
+  if (!selectedMaintenance.value) return
+  try {
+    await maintenancesStore.remove(selectedMaintenance.value.id)
+    showDeleteModal.value = false
+    closeMaintenanceDetails()
+    toast.success('Обслуживание удалено')
+  } catch (err) {
+    console.error('Failed to delete maintenance:', err)
+    toast.error(err.response?.data?.error || 'Не удалось удалить')
+  }
+}
+
+async function handleMarkMaintenance(formData) {
+  try {
+    await maintenancesStore.complete(formData.id, {
+      completed_mileage: formData.mileage,
+      completed_date: formData.date,
+      cost: formData.cost,
+      is_repeat: formData.isRepeat,
+      interval: formData.interval,
+      interval_days: formData.interval_days,
     })
-    const hasActiveReminders = computed(() => activeRemindersForSelected.value.length > 0)
+    showMarkModal.value = false
+    closeMaintenanceDetails()
+    await motorcyclesStore.loadAll()
+    await remindersStore.loadPending()
+    toast.success('Обслуживание завершено')
+  } catch (err) {
+    console.error('Failed to complete maintenance:', err)
+    toast.error(err.response?.data?.error || 'Ошибка завершения')
+  }
+}
 
-    // ===== Local UI state =====
-    const selectedMaintenance = ref(null)
+function onQuickStartCreated() {
+  motorcyclesStore.loadAll()
+  showQuickStartModal.value = false
+}
 
-    // Moto modals
-    const showAddMotoModal = ref(false)
-    const showEditMotoModal = ref(false)
-    const showDeleteMotoModal = ref(false)
-    const showUpdateMotoMileageModal = ref(false)
-    const showEditMotoNoteModal = ref(false)
-    const showPhotoModal = ref(false)
-    const showQuickStartModal = ref(false)
+// ===== Reminders =====
+async function dismissReminder(reminder) {
+  try {
+    await remindersStore.dismiss(reminder.id)
+  } catch (err) {
+    toast.error('Не удалось скрыть напоминание')
+  }
+}
 
-    const showDetailsMaintenanceModal = ref(false)
-    const showEditModal = ref(false)
-    const showDeleteModal = ref(false)
-    const showMarkModal = ref(false)
+function reminderBannerInfo(reminder) {
+  const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
+  const motoName = moto?.name || 'мотоцикл'
 
-    // ===== Lifecycle =====
-    onMounted(async () => {
-      try {
-        await Promise.all([
-          motorcyclesStore.loadAll(),
-          remindersStore.loadPending(),
-        ])
-      } catch (err) {
-        console.error('Failed to load garage data:', err)
-        toast.error('Не удалось загрузить гараж')
+  switch (reminder.type) {
+    case 'mileage_update': {
+      const last = reminder.motorcycle?.mileage || moto?.mileage || 0
+      return {
+        icon: 'fa-solid fa-gauge-high',
+        variant: 'warning',
+        title: `Обновите пробег для ${motoName}`,
+        text: `Текущий: ${last} км. Свежие данные помогают точнее напоминать о ТО.`,
+        cta: 'Обновить',
       }
-    })
+    }
+    case 'maintenance_soon': {
+      const maint = reminder.maintenance
+      return {
+        icon: 'fa fa-wrench',
+        variant: 'accent',
+        title: `Скоро ТО: ${maint?.title || 'обслуживание'}`,
+        text: `Запланировано на ${maint?.planned_mileage || '—'} км.`,
+        cta: 'Открыть',
+      }
+    }
+    case 'maintenance_overdue': {
+      const maint = reminder.maintenance
+      return {
+        icon: 'fa fa-exclamation-triangle',
+        variant: 'danger',
+        title: `Просрочено ТО: ${maint?.title || 'обслуживание'}`,
+        text: `Планировалось на ${maint?.planned_mileage || '—'} км.`,
+        cta: 'Открыть',
+      }
+    }
+    default:
+      return {
+        icon: 'fa fa-bell',
+        variant: 'accent',
+        title: 'Напоминание',
+        text: '',
+        cta: 'Открыть',
+      }
+  }
+}
 
-    // ===== Helpers =====
-    function selectMotorcycle(moto) {
-      if (!moto?.id) return
+function handleReminderAction(reminder) {
+  if (reminder.type === 'mileage_update') {
+    const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
+    if (moto) {
       motorcyclesStore.select(moto.id)
-    }
-
-    function handleImageError(e) {
-      e.target.src = ''
-      e.target.style.display = 'none'
-      const placeholder = e.target.parentElement?.querySelector('.moto-list-placeholder')
-      if (placeholder) placeholder.classList.remove('hidden')
-    }
-
-    // ===== Moto actions (открытие модалок) =====
-    function openEditMoto(moto) {
-      selectMotorcycle(moto)
-      showEditMotoModal.value = true
-    }
-
-    function openUpdateMileage(moto) {
-      selectMotorcycle(moto)
       showUpdateMotoMileageModal.value = true
     }
-
-    function openPhoto(moto) {
-      selectMotorcycle(moto)
-      showPhotoModal.value = true
-    }
-
-    function openDeleteMoto(moto) {
-      selectMotorcycle(moto)
-      showDeleteMotoModal.value = true
-    }
-
-
-    // ===== Moto CRUD =====
-    async function onMotoCreated() {
-      await remindersStore.loadPending()
-      showAddMotoModal.value = false
-    }
-
-    async function onMotoUpdated() {
-      await remindersStore.loadPending()
-      showEditMotoModal.value = false
-    }
-
-    async function onMileageUpdated() {
-      await remindersStore.loadPending()
-      showUpdateMotoMileageModal.value = false
-    }
-
-    async function deleteMoto(id) {
-      try {
-        await motorcyclesStore.remove(id)
-        await remindersStore.loadPending()
-        showDeleteMotoModal.value = false
-        toast.success('Мотоцикл удалён')
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Ошибка удаления')
-      }
-    }
-
-
-    // ===== Maintenance =====
-    function openMaintenanceDetails(item) {
-      selectedMaintenance.value = item
-      showDetailsMaintenanceModal.value = true
-    }
-
-    function closeMaintenanceDetails() {
-      selectedMaintenance.value = null
-      showDetailsMaintenanceModal.value = false
-    }
-
-    function openEditMaintenance() {
-      showDetailsMaintenanceModal.value = false
-      showEditModal.value = true
-    }
-
-    function closeEditMaintenance() {
-      showEditModal.value = false
-      closeMaintenanceDetails()
-    }
-
-    function openDeleteMaintenance() {
-      showDetailsMaintenanceModal.value = false
-      showDeleteModal.value = true
-    }
-
-    function openMarkMaintenance() {
-      showDetailsMaintenanceModal.value = false
-      showMarkModal.value = true
-    }
-
-    async function confirmDeleteMaintenance() {
-      if (!selectedMaintenance.value) return
-      try {
-        await maintenancesStore.remove(selectedMaintenance.value.id)
-        showDeleteModal.value = false
-        closeMaintenanceDetails()
-        toast.success('Обслуживание удалено')
-      } catch (err) {
-        console.error('Failed to delete maintenance:', err)
-        toast.error(err.response?.data?.error || 'Не удалось удалить')
-      }
-    }
-
-    async function handleMarkMaintenance(formData) {
-      try {
-        await maintenancesStore.complete(formData.id, {
-          completed_mileage: formData.mileage,
-          completed_date: formData.date,
-          cost: formData.cost,
-          is_repeat: formData.isRepeat,
-          interval: formData.interval,
-          interval_days: formData.interval_days,
-        })
-        showMarkModal.value = false
-        closeMaintenanceDetails()
-        await motorcyclesStore.loadAll()
-        await remindersStore.loadPending()
-        toast.success('Обслуживание завершено')
-      } catch (err) {
-        console.error('Failed to complete maintenance:', err)
-        toast.error(err.response?.data?.error || 'Ошибка завершения')
-      }
-    }
-
-    function onQuickStartCreated() {
-      motorcyclesStore.loadAll()
-      showQuickStartModal.value = false
-    }
-
-    // ===== Reminders =====
-    async function dismissReminder(reminder) {
-      try {
-        await remindersStore.dismiss(reminder.id)
-      } catch (err) {
-        toast.error('Не удалось скрыть напоминание')
-      }
-    }
-
-    function reminderBannerInfo(reminder) {
-      const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
-      const motoName = moto?.name || 'мотоцикл'
-
-      switch (reminder.type) {
-        case 'mileage_update': {
-          const last = reminder.motorcycle?.mileage || moto?.mileage || 0
-          return {
-            icon: 'fa-solid fa-gauge-high',
-            variant: 'warning',
-            title: `Обновите пробег для ${motoName}`,
-            text: `Текущий: ${last} км. Свежие данные помогают точнее напоминать о ТО.`,
-            cta: 'Обновить',
-          }
-        }
-        case 'maintenance_soon': {
-          const maint = reminder.maintenance
-          return {
-            icon: 'fa fa-wrench',
-            variant: 'accent',
-            title: `Скоро ТО: ${maint?.title || 'обслуживание'}`,
-            text: `Запланировано на ${maint?.planned_mileage || '—'} км.`,
-            cta: 'Открыть',
-          }
-        }
-        case 'maintenance_overdue': {
-          const maint = reminder.maintenance
-          return {
-            icon: 'fa fa-exclamation-triangle',
-            variant: 'danger',
-            title: `Просрочено ТО: ${maint?.title || 'обслуживание'}`,
-            text: `Планировалось на ${maint?.planned_mileage || '—'} км.`,
-            cta: 'Открыть',
-          }
-        }
-        default:
-          return {
-            icon: 'fa fa-bell',
-            variant: 'accent',
-            title: 'Напоминание',
-            text: '',
-            cta: 'Открыть',
-          }
-      }
-    }
-
-    function handleReminderAction(reminder) {
-      if (reminder.type === 'mileage_update') {
-        const moto = motorcycles.value.find((m) => m.id === reminder.motorcycle_id)
-        if (moto) {
-          motorcyclesStore.select(moto.id)
-          showUpdateMotoMileageModal.value = true
-        }
-      } else {
-        router.push('/maintenance')
-      }
-    }
-
-    return {
-      // stores
-      motorcyclesStore,
-      maintenancesStore,
-      remindersStore,
-
-      // store refs
-      motorcycles,
-      selectedMotoId,
-      loading,
-
-      // computed
-      selectedMotorcycle,
-      recentMaintenances,
-      nextMaintenance,
-      totalMaintenances,
-      totalCosts,
-      maintenanceSpends,
-      activeRemindersForSelected,
-      hasActiveReminders,
-
-      // local state
-      selectedMaintenance,
-
-      // moto modals
-      showAddMotoModal,
-      showEditMotoModal,
-      showDeleteMotoModal,
-      showUpdateMotoMileageModal,
-      showEditMotoNoteModal,
-      showPhotoModal,
-      showQuickStartModal,
-
-      // maintenance modals
-      showDetailsMaintenanceModal,
-      showEditModal,
-      showDeleteModal,
-      showMarkModal,
-
-      // utils
-      formatMileage,
-      formatCost,
-      declensionMotorcycles,
-      getStatusLabel,
-      getStatusBadgeVariant,
-      getMotoPhotoUrl,
-      formatDate,
-
-      // methods: helpers
-      selectMotorcycle,
-      handleImageError,
-
-      // methods: moto
-      openEditMoto,
-      openUpdateMileage,
-      openPhoto,
-      openDeleteMoto,
-      onMotoCreated,
-      onMotoUpdated,
-      onMileageUpdated,
-      deleteMoto,
-
-      // methods: maintenance
-      openMaintenanceDetails,
-      closeMaintenanceDetails,
-      openEditMaintenance,
-      closeEditMaintenance,
-      openDeleteMaintenance,
-      openMarkMaintenance,
-      confirmDeleteMaintenance,
-      handleMarkMaintenance,
-      onQuickStartCreated,
-
-      // methods: reminders
-      dismissReminder,
-      reminderBannerInfo,
-      handleReminderAction,
-    }
-  },
+  } else {
+    router.push('/maintenance')
+  }
 }
 </script>
 
