@@ -34,23 +34,20 @@
         <template v-if="step === 2">
             <!-- Пробег -->
             <div class="field">
-                <label>Текущий пробег <span>*</span></label>
-                <div class="input-with-unit">
-                    <input
-                        v-model.number="form.currentMileage"
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        required
-                    />
-                    <span class="unit">км</span>
-                </div>
+                <BaseInput
+                    v-model.number="form.currentMileage"
+                    type="number"
+                    label="Текущий пробег"
+                    placeholder="0"
+                    :min="0"
+                    required
+                />
                 <p class="field-hint">Можно изменить, если значение неточное</p>
             </div>
 
             <!-- Тип привода -->
             <div class="field">
-                <label>Тип привода <span>*</span></label>
+                <label class="field-label">Тип привода <span>*</span></label>
                 <div class="radio-group">
                     <button
                         v-for="d in driveOptions"
@@ -68,7 +65,7 @@
 
             <!-- Стиль езды -->
             <div class="field">
-                <label>Стиль езды</label>
+                <label class="field-label">Стиль езды</label>
                 <div class="radio-group">
                     <button
                         v-for="s in styleOptions"
@@ -86,7 +83,7 @@
 
             <!-- Местность -->
             <div class="field">
-                <label>Условия эксплуатации</label>
+                <label class="field-label">Условия эксплуатации</label>
                 <div class="radio-group vertical">
                     <button
                         v-for="t in terrainOptions"
@@ -163,7 +160,7 @@
                         <span class="stat-label">работ</span>
                     </div>
                     <div class="success-stat">
-                        <span class="stat-value">{{ form.currentMileage.toLocaleString() }}</span>
+                        <span class="stat-value">{{ (form.currentMileage || 0).toLocaleString() }}</span>
                         <span class="stat-label">км</span>
                     </div>
                 </div>
@@ -227,229 +224,183 @@
     </BaseModal>
 </template>
 
-<script>
-import { BaseModal, BaseButton } from '@/components/ui'
-import api from '../../../api/api'
+<script setup>
+import { computed, reactive, ref, watch } from 'vue'
+import { BaseModal, BaseButton, BaseInput } from '@/components/ui'
+import { useToast } from '@/composables/useToast'
+import api from '@/api/api'
 
-export default {
-    components: { BaseModal, BaseButton },
+const props = defineProps({
+    isOpen: { type: Boolean, default: false },
+    motorcycle: { type: Object, default: null },
+})
 
-    props: {
-        isOpen: Boolean,
-        motorcycle: {
-            type: Object,
-            default: null
-        }
-    },
+const emit = defineEmits(['close', 'created'])
+const toast = useToast()
 
-    emits: ['close', 'created'],
+const step = ref(1)
+const loading = ref(false)
+const createdCount = ref(0)
 
-    data() {
+const form = reactive({
+    currentMileage: 0,
+    driveType: 'chain',
+    style: 'normal',
+    terrain: 'mixed',
+})
+
+const driveOptions = [
+    { value: 'chain', label: 'Цепь', icon: 'fa fa-link' },
+    { value: 'belt', label: 'Ремень', icon: 'fa fa-circle-notch' },
+    { value: 'shaft', label: 'Кардан', icon: 'fa fa-cog' },
+]
+
+const styleOptions = [
+    { value: 'calm', label: 'Спокойный', icon: 'fa fa-leaf' },
+    { value: 'normal', label: 'Обычный', icon: 'fa fa-motorcycle' },
+    { value: 'aggressive', label: 'Агрессивный', icon: 'fa fa-bolt' },
+]
+
+const terrainOptions = [
+    { value: 'city', label: 'Город', desc: 'Ежедневные поездки по асфальту', icon: 'fa fa-city' },
+    { value: 'highway', label: 'Трасса', desc: 'Дальние поездки, ровный асфальт', icon: 'fa fa-road' },
+    { value: 'mixed', label: 'Смешанный', desc: 'И город, и трасса', icon: 'fa fa-random' },
+    { value: 'dusty', label: 'Пыльная местность', desc: 'Много пыли, грунтовки', icon: 'fa fa-wind' },
+    { value: 'offroad', label: 'Бездорожье', desc: 'Грязь, камни, бездорожье', icon: 'fa fa-mountain' },
+]
+
+const stepTitle = computed(() => ({
+    1: 'Быстрый старт',
+    2: 'Параметры эксплуатации',
+    3: 'Предпросмотр',
+    4: 'Готово!',
+}[step.value] || 'Быстрый старт'))
+
+const stepSubtitle = computed(() => ({
+    1: 'Настроим базовое обслуживание за 30 секунд',
+    2: 'Это поможет точнее рассчитать интервалы',
+    3: 'Проверьте, что мы вам предлагаем',
+    4: '',
+}[step.value] || ''))
+
+const stepIcon = computed(() => ({
+    1: 'rocket',
+    2: 'sliders',
+    3: 'list-check',
+    4: 'check-circle',
+}[step.value] || 'rocket'))
+
+const canProceed = computed(() => {
+    if (step.value === 1) return true
+    if (step.value === 2) {
+        return form.currentMileage >= 0 && form.driveType
+    }
+    return true
+})
+
+const previewItems = computed(() => {
+    const basePresets = [
+        { code: 'engine_oil', title: 'Замена масла', category: 'engine', km: 5000, days: 365, affects: ['style', 'terrain'] },
+        { code: 'air_filter', title: 'Замена воздушного фильтра', category: 'engine', km: 10000, days: 365, affects: ['terrain'] },
+        { code: 'tire_pressure', title: 'Проверка давления в шинах', category: 'wheel', km: 1000, days: 30, affects: [] },
+        { code: 'brake_check', title: 'Проверка тормозов', category: 'brakes', km: 10000, days: 180, affects: ['style'] },
+    ]
+
+    const drivePresets = {
+        chain: [
+            { code: 'chain_lube', title: 'Смазка цепи', category: 'drive', km: 500, days: 14, affects: ['terrain'] },
+            { code: 'chain_adjust', title: 'Регулировка цепи', category: 'drive', km: 1000, days: 30, affects: ['style'] },
+        ],
+        belt: [
+            { code: 'belt_check', title: 'Проверка ремня', category: 'drive', km: 5000, days: 90, affects: ['style'] },
+        ],
+        shaft: [
+            { code: 'shaft_oil', title: 'Замена масла в редукторе', category: 'drive', km: 20000, days: 730, affects: [] },
+        ],
+    }
+
+    const presets = [...basePresets, ...(drivePresets[form.driveType] || [])]
+
+    const styleMult = { calm: 1.2, normal: 1.0, aggressive: 0.8 }[form.style] || 1.0
+    const terrainMult = { city: 1.0, highway: 1.1, mixed: 1.0, dusty: 0.7, offroad: 0.6 }[form.terrain] || 1.0
+
+    return presets.map(p => {
+        let mult = 1.0
+        if (p.affects.includes('style')) mult *= styleMult
+        if (p.affects.includes('terrain')) mult *= terrainMult
+
         return {
-            step: 1,
-            loading: false,
-            createdCount: 0,
-
-            form: {
-                currentMileage: 0,
-                driveType: 'chain',
-                style: 'normal',
-                terrain: 'mixed'
-            },
-
-            driveOptions: [
-                { value: 'chain', label: 'Цепь', icon: 'fa fa-link' },
-                { value: 'belt', label: 'Ремень', icon: 'fa fa-circle-notch' },
-                { value: 'shaft', label: 'Кардан', icon: 'fa fa-cog' },
-            ],
-
-            styleOptions: [
-                { value: 'calm', label: 'Спокойный', icon: 'fa fa-leaf' },
-                { value: 'normal', label: 'Обычный', icon: 'fa fa-motorcycle' },
-                { value: 'aggressive', label: 'Агрессивный', icon: 'fa fa-bolt' },
-            ],
-
-            terrainOptions: [
-                {
-                    value: 'city',
-                    label: 'Город',
-                    desc: 'Ежедневные поездки по асфальту',
-                    icon: 'fa fa-city'
-                },
-                {
-                    value: 'highway',
-                    label: 'Трасса',
-                    desc: 'Дальние поездки, ровный асфальт',
-                    icon: 'fa fa-road'
-                },
-                {
-                    value: 'mixed',
-                    label: 'Смешанный',
-                    desc: 'И город, и трасса',
-                    icon: 'fa fa-random'
-                },
-                {
-                    value: 'dusty',
-                    label: 'Пыльная местность',
-                    desc: 'Много пыли, грунтовки',
-                    icon: 'fa fa-wind'
-                },
-                {
-                    value: 'offroad',
-                    label: 'Бездорожье',
-                    desc: 'Грязь, камни, бездорожье',
-                    icon: 'fa fa-mountain'
-                },
-            ]
+            ...p,
+            interval_km: Math.max(Math.round(p.km * mult / 100) * 100, 100),
+            interval_days: Math.max(Math.round(p.days * mult), 7),
         }
-    },
+    })
+})
 
-    computed: {
-        stepTitle() {
-            return {
-                1: 'Быстрый старт',
-                2: 'Параметры эксплуатации',
-                3: 'Предпросмотр',
-                4: 'Готово!'
-            }[this.step] || 'Быстрый старт'
-        },
-
-        stepSubtitle() {
-            return {
-                1: 'Настроим базовое обслуживание за 30 секунд',
-                2: 'Это поможет точнее рассчитать интервалы',
-                3: 'Проверьте, что мы вам предлагаем',
-                4: ''
-            }[this.step] || ''
-        },
-
-        stepIcon() {
-            return {
-                1: 'rocket',
-                2: 'sliders',
-                3: 'list-check',
-                4: 'check-circle'
-            }[this.step] || 'rocket'
-        },
-
-        canProceed() {
-            if (this.step === 1) return true
-            if (this.step === 2) {
-                return this.form.currentMileage >= 0 && this.form.driveType
-            }
-            return true
-        },
-
-        previewItems() {
-            // Локальный расчёт для предпросмотра
-            // Дублирует логику backend для UX
-            const basePresets = [
-                { code: 'engine_oil', title: 'Замена масла', category: 'engine', km: 5000, days: 365, affects: ['style', 'terrain'] },
-                { code: 'air_filter', title: 'Замена воздушного фильтра', category: 'engine', km: 10000, days: 365, affects: ['terrain'] },
-                { code: 'tire_pressure', title: 'Проверка давления в шинах', category: 'wheel', km: 1000, days: 30, affects: [] },
-                { code: 'brake_check', title: 'Проверка тормозов', category: 'brakes', km: 10000, days: 180, affects: ['style'] },
-            ]
-
-            const drivePresets = {
-                chain: [
-                    { code: 'chain_lube', title: 'Смазка цепи', category: 'drive', km: 500, days: 14, affects: ['terrain'] },
-                    { code: 'chain_adjust', title: 'Регулировка цепи', category: 'drive', km: 1000, days: 30, affects: ['style'] },
-                ],
-                belt: [
-                    { code: 'belt_check', title: 'Проверка ремня', category: 'drive', km: 5000, days: 90, affects: ['style'] },
-                ],
-                shaft: [
-                    { code: 'shaft_oil', title: 'Замена масла в редукторе', category: 'drive', km: 20000, days: 730, affects: [] },
-                ]
-            }
-
-            const presets = [...basePresets, ...(drivePresets[this.form.driveType] || [])]
-
-            const styleMult = { calm: 1.2, normal: 1.0, aggressive: 0.8 }[this.form.style] || 1.0
-            const terrainMult = { city: 1.0, highway: 1.1, mixed: 1.0, dusty: 0.7, offroad: 0.6 }[this.form.terrain] || 1.0
-
-            return presets.map(p => {
-                let mult = 1.0
-                if (p.affects.includes('style')) mult *= styleMult
-                if (p.affects.includes('terrain')) mult *= terrainMult
-
-                return {
-                    ...p,
-                    interval_km: Math.max(Math.round(p.km * mult / 100) * 100, 100),
-                    interval_days: Math.max(Math.round(p.days * mult), 7)
-                }
-            })
-        }
-    },
-
-    watch: {
-        isOpen(val) {
-            if (val) {
-                this.step = 1
-                this.loading = false
-                this.createdCount = 0
-                this.form = {
-                    currentMileage: this.motorcycle?.mileage || 0,
-                    driveType: 'chain',
-                    style: 'normal',
-                    terrain: 'mixed'
-                }
-            }
-        }
-    },
-
-    methods: {
-        getCategoryIcon(category) {
-            const icons = {
-                engine: 'fa fa-cog',
-                drive: 'fa fa-link',
-                wheel: 'fa fa-circle',
-                brakes: 'fa fa-stop-circle',
-                fuel: 'fa fa-gas-pump',
-                cooling: 'fa fa-snowflake',
-                electronics: 'fa fa-bolt',
-                suspension: 'fa fa-arrows-alt-v',
-                steering: 'fa fa-crosshairs'
-            }
-            return icons[category] || 'fa fa-wrench'
-        },
-
-        async submit() {
-            if (!this.motorcycle) {
-                this.$toast?.error('Мотоцикл не выбран')
-                return
-            }
-
-            this.loading = true
-            try {
-                const { data } = await api.post('/maintenance/quick-start', {
-                    moto_id: this.motorcycle.id,
-                    current_mileage: this.form.currentMileage,
-                    drive_type: this.form.driveType,
-                    style: this.form.style,
-                    terrain: this.form.terrain
-                })
-
-                this.createdCount = data.created?.length || 0
-                this.step = 4
-                this.$emit('created', data)
-                this.$toast?.success('Расписание создано!')
-            } catch (err) {
-                console.error('Quick start failed:', err)
-                this.$toast?.error(err.response?.data?.error || 'Ошибка создания')
-            } finally {
-                this.loading = false
-            }
-        },
-
-        finish() {
-            this.$emit('close')
-        },
-
-        close() {
-            this.$emit('close')
+watch(
+    () => props.isOpen,
+    (val) => {
+        if (val) {
+            step.value = 1
+            loading.value = false
+            createdCount.value = 0
+            form.currentMileage = props.motorcycle?.mileage || 0
+            form.driveType = 'chain'
+            form.style = 'normal'
+            form.terrain = 'mixed'
         }
     }
+)
+
+function getCategoryIcon(category) {
+    const icons = {
+        engine: 'fa fa-cog',
+        drive: 'fa fa-link',
+        wheel: 'fa fa-circle',
+        brakes: 'fa fa-stop-circle',
+        fuel: 'fa fa-gas-pump',
+        cooling: 'fa fa-snowflake',
+        electronics: 'fa fa-bolt',
+        suspension: 'fa fa-arrows-alt-v',
+        steering: 'fa fa-crosshairs',
+    }
+    return icons[category] || 'fa fa-wrench'
+}
+
+async function submit() {
+    if (!props.motorcycle) {
+        toast.error('Мотоцикл не выбран')
+        return
+    }
+
+    loading.value = true
+    try {
+        const { data } = await api.post('/maintenance/quick-start', {
+            moto_id: props.motorcycle.id,
+            current_mileage: form.currentMileage,
+            drive_type: form.driveType,
+            style: form.style,
+            terrain: form.terrain,
+        })
+
+        createdCount.value = data.created?.length || 0
+        step.value = 4
+        emit('created', data)
+        toast.success('Расписание создано!')
+    } catch (err) {
+        console.error('Quick start failed:', err)
+        toast.error(err.response?.data?.error || 'Ошибка создания')
+    } finally {
+        loading.value = false
+    }
+}
+
+function finish() {
+    emit('close')
+}
+
+function close() {
+    emit('close')
 }
 </script>
 
@@ -515,7 +466,7 @@ export default {
     margin-bottom: 0;
 }
 
-.field > label {
+.field-label {
     display: block;
     font-size: 13px;
     font-weight: 600;
@@ -523,40 +474,8 @@ export default {
     margin-bottom: 8px;
 }
 
-.field > label span {
+.field-label span {
     color: var(--danger);
-}
-
-.input-with-unit {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.input-with-unit input {
-    width: 100%;
-    padding: 10px 50px 10px 14px;
-    background: var(--bg-input);
-    border: 2px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    font-size: 15px;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.input-with-unit input:focus {
-    border-color: var(--accent);
-    outline: none;
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.input-with-unit .unit {
-    position: absolute;
-    right: 14px;
-    font-size: 13px;
-    color: var(--text-muted);
-    pointer-events: none;
 }
 
 .field-hint {
@@ -799,57 +718,11 @@ export default {
 .actions {
     display: flex;
     gap: 10px;
+    width: 100%;
 }
 
-.actions .btn {
+.actions > * {
     flex: 1;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.actions .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px var(--accent-trans);
-}
-
-.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--border-color);
-}
-
-.btn-success {
-    background: var(--success);
-    color: #fff;
-}
-
-.btn-success:hover {
-    background: var(--success-hover);
-    transform: translateY(-2px);
 }
 
 /* ===== АДАПТИВ ===== */
@@ -880,10 +753,6 @@ export default {
 
     .actions {
         flex-direction: column-reverse;
-    }
-
-    .actions .btn {
-        width: 100%;
     }
 
     .success-icon {
