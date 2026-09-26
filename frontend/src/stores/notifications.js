@@ -25,6 +25,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const unreadItems = computed(() => items.value.filter((n) => !n.is_read))
 
   // ===== Actions =====
+
   async function loadCount() {
     const { data } = await notificationsApi.getUnreadCount()
     unreadCount.value = data.unread_count || 0
@@ -119,10 +120,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
     unreadCount,
     loading,
     pagination,
-
     hasUnread,
     unreadItems,
-
     loadCount,
     loadList,
     loadRecent,

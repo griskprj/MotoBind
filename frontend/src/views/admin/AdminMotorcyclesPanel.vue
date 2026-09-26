@@ -1,461 +1,411 @@
 <template>
-    <div class="container">
-        <LoadingOverlay :isLoading="loading" text="Загрузка мотоциклов..." />
+  <div class="container">
+    <LoadingOverlay :isLoading="loading" text="Загрузка мотоциклов..." />
 
-        <!-- === HEADER === -->
-        <Header
-            title="Мотоциклы пользователей"
-            subtitle="Управление мотоциклами всех пользователей"
-        />
-
-        <!-- === СТАТИСТИКА === -->
-        <section>
-            <div class="stat-cards">
-                <div class="stat-card">
-                    <div class="card-icon">
-                        <i class="fa fa-motorcycle"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Всего мотоциклов</p>
-                        <p class="card-value">{{ stats.total || 0 }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon success">
-                        <i class="fa fa-check-circle"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">С обслуживанием</p>
-                        <p class="card-value">{{ stats.with_maintenance || 0 }}</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="card-icon warning">
-                        <i class="fa fa-clock"></i>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Без обслуживания</p>
-                        <p class="card-value">{{ stats.without_maintenance || 0 }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- === ФИЛЬТРЫ === -->
-        <section>
-            <div class="table-filters">
-                <div class="filters-row">
-                    <div class="filter-group">
-                        <input
-                            type="text"
-                            v-model="filters.search"
-                            @input="debouncedSearch"
-                            placeholder="Поиск по названию, VIN, номеру..."
-                            class="search-input"
-                        />
-                    </div>
-
-                    <select v-model="filters.status" @change="applyFilters" class="filter-select">
-                        <option value="">Все мотоциклы</option>
-                        <option value="has_maintenance">С обслуживанием</option>
-                        <option value="no_maintenance">Без обслуживания</option>
-                    </select>
-
-                    <select v-model="filters.owner_id" @change="applyFilters" class="filter-select">
-                        <option value="">Все владельцы</option>
-                        <option v-for="user in users" :key="user.id" :value="user.id">
-                            {{ user.username }}
-                        </option>
-                    </select>
-
-                    <select v-model="filters.sort_by" @change="applyFilters" class="filter-select">
-                        <option value="created_at">По дате (новые)</option>
-                        <option value="name">По названию</option>
-                        <option value="mileage">По пробегу</option>
-                    </select>
-                </div>
-
-                <div class="filters-actions">
-                    <button class="btn-outline" @click="resetFilters">
-                        <i class="fa fa-refresh"></i> Сбросить
-                    </button>
-                </div>
-            </div>
-
-            <!-- Результаты -->
-            <div class="filter-results" v-if="filteredCount > 0">
-                <span>Найдено: {{ filteredCount }} мотоциклов</span>
-                <button class="clear-filters" @click="resetFilters" v-if="hasActiveFilters">
-                    <i class="fa fa-times"></i> Очистить фильтры
-                </button>
-            </div>
-        </section>
-
-        <!-- === ТАБЛИЦА === -->
-        <section class="table-section">
-            <div v-if="loading" class="loading-state">
-                <i class="fa fa-spinner fa-spin"></i> Загрузка...
-            </div>
-
-            <div v-else class="motorcycles-table-wrapper">
-                <div class="table-header">
-                    <span class="th">Мотоцикл</span>
-                    <span class="th">Владелец</span>
-                    <span class="th">Пробег</span>
-                    <span class="th">Обслуживаний</span>
-                    <span class="th">Дата добавления</span>
-                    <span class="th"></span>
-                </div>
-
-                <div class="table-body">
-                    <div v-if="motorcycles.length === 0" class="tr empty-state">
-                        <div class="td" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
-                            Мотоциклы не найдены
-                        </div>
-                    </div>
-
-                    <div
-                        v-for="moto in motorcycles"
-                        :key="moto.id"
-                        class="tr"
-                    >
-                        <div class="td moto-cell">
-                            <img
-                                v-if="moto.photo_url"
-                                :src="getPhotoUrl(moto.photo_url)"
-                                alt="Фото"
-                                class="moto-thumb"
-                                @error="(e) => e.target.src = '/moto_default.webp'"
-                            />
-                            <div class="moto-placeholder" v-else>
-                                <i class="fa fa-motorcycle"></i>
-                            </div>
-                            <div class="moto-info">
-                                <p class="moto-name">{{ moto.name }}</p>
-                                <span class="moto-meta">{{ moto.years || '—' }} • {{ moto.volume || '—' }} см³</span>
-                            </div>
-                        </div>
-
-                        <div class="td owner-cell">
-                            <div class="owner-info">
-                                <span class="owner-name">{{ moto.owner?.username || '—' }}</span>
-                                <span class="owner-email">{{ moto.owner?.email || '—' }}</span>
-                            </div>
-                        </div>
-
-                        <div class="td">
-                            <span class="mileage-value">{{ moto.mileage || 0 }} км</span>
-                        </div>
-
-                        <div class="td">
-                            <span
-                                class="maintenance-badge"
-                                :class="{
-                                    'badge-success': moto.maintenances_count > 0,
-                                    'badge-gray': moto.maintenances_count === 0
-                                }"
-                            >
-                                {{ moto.maintenances.length || 0 }}
-                            </span>
-                        </div>
-
-                        <div class="td">
-                            <span class="date-value">{{ formatDate(moto.created_at) }}</span>
-                        </div>
-
-                        <div class="td actions-cell">
-                            <button
-                                class="btn-small danger"
-                                @click="openDeleteModal(moto)"
-                                title="Удалить мотоцикл"
-                            >
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- === ПАГИНАЦИЯ === -->
-            <div v-if="!loading && motorcycles.length > 0" class="table-paginate">
-                <p class="paginate-show">
-                    Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
-                    {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
-                    из {{ pagination.total }}
-                </p>
-
-                <div class="paginate-ui">
-                    <button
-                        class="btn-outline"
-                        @click="goToPage(pagination.current_page - 1)"
-                        :disabled="!pagination.has_prev"
-                    >
-                        <i class="fa fa-angle-left"></i>
-                    </button>
-
-                    <div class="paginate-btns">
-                        <button
-                            v-for="page in visiblePages"
-                            :key="page"
-                            class="btn-outline paginate"
-                            :class="{ active: page === pagination.current_page }"
-                            @click="goToPage(page)"
-                        >
-                            {{ page }}
-                        </button>
-                    </div>
-
-                    <button
-                        class="btn-outline"
-                        @click="goToPage(pagination.current_page + 1)"
-                        :disabled="!pagination.has_next"
-                    >
-                        <i class="fa fa-angle-right"></i>
-                    </button>
-                </div>
-
-                <div class="show-per-page">
-                    <select v-model="pagination.per_page" @change="changePerPage">
-                        <option :value="10">10</option>
-                        <option :value="20">20</option>
-                        <option :value="50">50</option>
-                        <option :value="100">100</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Модалка удаления -->
-    <DeleteMotoAdminModal
-        :isOpen="showDeleteModal"
-        :motorcycle="selectedMotorcycle"
-        @submit="deleteMotorcycle"
-        @close="closeDeleteModal"
+    <Header
+      title="Мотоциклы пользователей"
+      subtitle="Управление мотоциклами всех пользователей"
     />
+
+    <section>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="card-icon">
+            <i class="fa fa-motorcycle"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">Всего мотоциклов</p>
+            <p class="card-value">{{ stats.total || 0 }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="card-icon success">
+            <i class="fa fa-check-circle"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">С обслуживанием</p>
+            <p class="card-value">{{ stats.with_maintenance || 0 }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="card-icon warning">
+            <i class="fa fa-clock"></i>
+          </div>
+          <div class="card-body">
+            <p class="card-title">Без обслуживания</p>
+            <p class="card-value">{{ stats.without_maintenance || 0 }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="table-filters">
+        <div class="filters-row">
+          <div class="filter-group">
+            <input
+              type="text"
+              v-model="filters.search"
+              @input="debouncedSearch"
+              placeholder="Поиск по названию, VIN, номеру..."
+              class="search-input"
+            />
+          </div>
+
+          <select v-model="filters.status" @change="applyFilters" class="filter-select">
+            <option value="">Все мотоциклы</option>
+            <option value="has_maintenance">С обслуживанием</option>
+            <option value="no_maintenance">Без обслуживания</option>
+          </select>
+
+          <select v-model="filters.owner_id" @change="applyFilters" class="filter-select">
+            <option value="">Все владельцы</option>
+            <option v-for="user in users" :key="user.id" :value="user.id">
+              {{ user.username }}
+            </option>
+          </select>
+
+          <select v-model="filters.sort_by" @change="applyFilters" class="filter-select">
+            <option value="created_at">По дате (новые)</option>
+            <option value="name">По названию</option>
+            <option value="mileage">По пробегу</option>
+          </select>
+        </div>
+
+        <div class="filters-actions">
+          <button class="btn-outline" @click="resetFilters">
+            <i class="fa fa-refresh"></i> Сбросить
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-results" v-if="filteredCount > 0">
+        <span>Найдено: {{ filteredCount }} мотоциклов</span>
+        <button class="clear-filters" @click="resetFilters" v-if="hasActiveFilters">
+          <i class="fa fa-times"></i> Очистить фильтры
+        </button>
+      </div>
+    </section>
+
+    <section class="table-section">
+      <div v-if="loading" class="loading-state">
+        <i class="fa fa-spinner fa-spin"></i> Загрузка...
+      </div>
+
+      <div v-else class="motorcycles-table-wrapper">
+        <div class="table-header">
+          <span class="th">Мотоцикл</span>
+          <span class="th">Владелец</span>
+          <span class="th">Пробег</span>
+          <span class="th">Обслуживаний</span>
+          <span class="th">Дата добавления</span>
+          <span class="th"></span>
+        </div>
+
+        <div class="table-body">
+          <div v-if="motorcycles.length === 0" class="tr empty-state">
+            <div class="td" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
+              Мотоциклы не найдены
+            </div>
+          </div>
+
+          <div
+            v-for="moto in motorcycles"
+            :key="moto.id"
+            class="tr"
+          >
+            <div class="td moto-cell">
+              <img
+                v-if="moto.photo_url"
+                :src="getMotoPhotoUrl(moto.photo_url)"
+                alt="Фото"
+                class="moto-thumb"
+                @error="(e) => e.target.src = '/moto_default.webp'"
+              />
+              <div class="moto-placeholder" v-else>
+                <i class="fa fa-motorcycle"></i>
+              </div>
+              <div class="moto-info">
+                <p class="moto-name">{{ moto.name }}</p>
+                <span class="moto-meta">{{ moto.years || '—' }} • {{ moto.volume || '—' }} см³</span>
+              </div>
+            </div>
+
+            <div class="td owner-cell">
+              <div class="owner-info">
+                <span class="owner-name">{{ moto.owner?.username || '—' }}</span>
+                <span class="owner-email">{{ moto.owner?.email || '—' }}</span>
+              </div>
+            </div>
+
+            <div class="td">
+              <span class="mileage-value">{{ moto.mileage || 0 }} км</span>
+            </div>
+
+            <div class="td">
+              <span
+                class="maintenance-badge"
+                :class="{
+                  'badge-success': moto.maintenances_count > 0,
+                  'badge-gray': moto.maintenances_count === 0
+                }"
+              >
+                {{ moto.maintenances.length || 0 }}
+              </span>
+            </div>
+
+            <div class="td">
+              <span class="date-value">{{ formatDate(moto.created_at) }}</span>
+            </div>
+
+            <div class="td actions-cell">
+              <button
+                class="btn-small danger"
+                @click="openDeleteModal(moto)"
+                title="Удалить мотоцикл"
+              >
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loading && motorcycles.length > 0" class="table-paginate">
+        <p class="paginate-show">
+          Показано {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
+          {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
+          из {{ pagination.total }}
+        </p>
+
+        <div class="paginate-ui">
+          <button
+            class="btn-outline"
+            @click="goToPage(pagination.current_page - 1)"
+            :disabled="!pagination.has_prev"
+          >
+            <i class="fa fa-angle-left"></i>
+          </button>
+
+          <div class="paginate-btns">
+            <button
+              v-for="page in visiblePages"
+              :key="page"
+              class="btn-outline paginate"
+              :class="{ active: page === pagination.current_page }"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button
+            class="btn-outline"
+            @click="goToPage(pagination.current_page + 1)"
+            :disabled="!pagination.has_next"
+          >
+            <i class="fa fa-angle-right"></i>
+          </button>
+        </div>
+
+        <div class="show-per-page">
+          <select v-model="pagination.per_page" @change="changePerPage">
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <DeleteMotoAdminModal
+    :isOpen="showDeleteModal"
+    :motorcycle="selectedMotorcycle"
+    @submit="deleteMotorcycle"
+    @close="closeDeleteModal"
+  />
 </template>
 
-<script>
-import api from '../../api/api.js'
-import Header from '../../components/Header.vue'
-import LoadingOverlay from '../../components/LoadingOverlay.vue'
-import DeleteMotoAdminModal from '../../components/modals/admin/DeleteMotoAdminModal.vue'
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import Header from '@/components/Header.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import DeleteMotoAdminModal from '@/components/modals/admin/DeleteMotoAdminModal.vue'
+import { useToast } from '@/composables/useToast'
+import { getMotoPhotoUrl } from '@/utils/mediaUrl'
+import formatDate from '@/utils/DateFormatter.js'
+import api from '@/api/api'
 
-export default {
-    name: 'AdminMotorcyclesPanel',
+const toast = useToast()
 
-    components: {
-        Header,
-        LoadingOverlay,
-        DeleteMotoAdminModal
-    },
+const loading = ref(false)
+const motorcycles = ref([])
+const users = ref([])
+const stats = ref({
+  total: 0,
+  with_maintenance: 0,
+  without_maintenance: 0,
+})
+const pagination = ref({
+  current_page: 1,
+  per_page: 10,
+  total: 0,
+  pages: 0,
+  has_prev: false,
+  has_next: false,
+})
+const filters = ref({
+  search: '',
+  status: '',
+  owner_id: '',
+  sort_by: 'created_at',
+  sort_order: 'desc',
+})
+const showDeleteModal = ref(false)
+const selectedMotorcycle = ref(null)
 
-    data() {
-        return {
-            loading: false,
-            motorcycles: [],
-            users: [],
-            stats: {
-                total: 0,
-                with_maintenance: 0,
-                without_maintenance: 0
-            },
-            pagination: {
-                current_page: 1,
-                per_page: 10,
-                total: 0,
-                pages: 0,
-                has_prev: false,
-                has_next: false
-            },
-            filters: {
-                search: '',
-                status: '',
-                owner_id: '',
-                sort_by: 'created_at',
-                sort_order: 'desc'
-            },
-            searchTimeout: null,
-            showDeleteModal: false,
-            selectedMotorcycle: null
-        }
-    },
+let searchTimeout = null
 
-    computed: {
-        filteredCount() {
-            return this.pagination.total || 0
-        },
+const filteredCount = computed(() => pagination.value.total || 0)
 
-        visiblePages() {
-            const current = this.pagination.current_page
-            const total = this.pagination.pages
-            const delta = 2
-            const range = []
+const visiblePages = computed(() => {
+  const current = pagination.value.current_page
+  const total = pagination.value.pages
+  const delta = 2
+  const range = []
 
-            for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-                range.push(i)
-            }
+  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+    range.push(i)
+  }
 
-            if (current - delta > 2) {
-                range.unshift('...')
-            }
+  if (current - delta > 2) range.unshift('...')
+  if (current + delta < total - 1) range.push('...')
 
-            if (current + delta < total - 1) {
-                range.push('...')
-            }
+  range.unshift(1)
 
-            range.unshift(1)
+  if (total > 1) range.push(total)
 
-            if (total > 1) {
-                range.push(total)
-            }
+  return range.filter((v, i, a) => a.indexOf(v) === i)
+})
 
-            return range.filter((v, i, a) => a.indexOf(v) === i)
-        },
+const hasActiveFilters = computed(() => {
+  return filters.value.search || filters.value.status || filters.value.owner_id
+})
 
-        hasActiveFilters() {
-            return this.filters.search || this.filters.status || this.filters.owner_id
-        }
-    },
+onMounted(() => {
+  loadMotorcycles()
+  loadUsers()
+})
 
-    created() {
-        this.loadMotorcycles()
-        this.loadUsers()
-    },
-
-    methods: {
-        getPhotoUrl(photoPath) {
-            if (!photoPath) return null
-            if (photoPath.startsWith('http')) return photoPath
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${photoPath}`
-        },
-
-        async loadMotorcycles() {
-            this.loading = true
-            try {
-                const params = {
-                    page: this.pagination.current_page,
-                    per_page: this.pagination.per_page,
-                    ...this.filters
-                }
-
-                // Убираем пустые параметры
-                Object.keys(params).forEach(key => {
-                    if (!params[key]) delete params[key]
-                })
-
-                const response = await api.get('/admin/motorcycles', { params })
-                const data = response.data
-
-                this.motorcycles = data.motorcycles || []
-                this.pagination = {
-                    current_page: data.current_page,
-                    per_page: data.per_page,
-                    total: data.total,
-                    pages: data.pages,
-                    has_prev: data.has_prev,
-                    has_next: data.has_next
-                }
-                this.stats = data.stats || {
-                    total: 0,
-                    with_maintenance: 0,
-                    without_maintenance: 0
-                }
-            } catch (error) {
-                console.error('Error loading motorcycles:', error)
-                if (error.response?.status === 401) {
-                    this.$router.push('/login')
-                }
-            } finally {
-                this.loading = false
-            }
-        },
-
-        async loadUsers() {
-            try {
-                const response = await api.get('/admin/users', {
-                    params: { per_page: 1000 }
-                })
-                this.users = response.data.users || []
-            } catch (error) {
-                console.error('Error loading users:', error)
-            }
-        },
-
-        goToPage(page) {
-            if (page < 1 || page > this.pagination.pages) return
-            this.pagination.current_page = page
-            this.loadMotorcycles()
-        },
-
-        changePerPage() {
-            this.pagination.current_page = 1
-            this.loadMotorcycles()
-        },
-
-        applyFilters() {
-            this.pagination.current_page = 1
-            this.loadMotorcycles()
-        },
-
-        debouncedSearch() {
-            clearTimeout(this.searchTimeout)
-            this.searchTimeout = setTimeout(() => {
-                this.applyFilters()
-            }, 500)
-        },
-
-        resetFilters() {
-            this.filters = {
-                search: '',
-                status: '',
-                owner_id: '',
-                sort_by: 'created_at',
-                sort_order: 'desc'
-            }
-            this.pagination.current_page = 1
-            this.loadMotorcycles()
-        },
-
-        formatDate(dateString) {
-            if (!dateString) return '—'
-            try {
-                const date = new Date(dateString)
-                if (isNaN(date.getTime())) return '—'
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })
-            } catch {
-                return '—'
-            }
-        },
-
-        openDeleteModal(moto) {
-            this.selectedMotorcycle = moto
-            this.showDeleteModal = true
-        },
-
-        closeDeleteModal() {
-            this.selectedMotorcycle = null
-            this.showDeleteModal = false
-        },
-
-        async deleteMotorcycle(motoId) {
-            try {
-                await api.delete(`/admin/motorcycle/${motoId}`)
-                await this.loadMotorcycles()
-                this.closeDeleteModal()
-            } catch (error) {
-                console.error('Error deleting motorcycle:', error)
-                alert(error.response?.data?.error || 'Ошибка при удалении мотоцикла')
-            }
-        }
+async function loadMotorcycles() {
+  loading.value = true
+  try {
+    const params = {
+      page: pagination.value.current_page,
+      per_page: pagination.value.per_page,
+      ...filters.value,
     }
+
+    Object.keys(params).forEach(key => {
+      if (!params[key]) delete params[key]
+    })
+
+    const response = await api.get('/admin/motorcycles', { params })
+    const data = response.data
+
+    motorcycles.value = data.motorcycles || []
+    pagination.value = {
+      current_page: data.current_page,
+      per_page: data.per_page,
+      total: data.total,
+      pages: data.pages,
+      has_prev: data.has_prev,
+      has_next: data.has_next,
+    }
+    stats.value = data.stats || {
+      total: 0,
+      with_maintenance: 0,
+      without_maintenance: 0,
+    }
+  } catch (error) {
+    console.error('Error loading motorcycles:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadUsers() {
+  try {
+    const response = await api.get('/admin/users', {
+      params: { per_page: 1000 },
+    })
+    users.value = response.data.users || []
+  } catch (error) {
+    console.error('Error loading users:', error)
+  }
+}
+
+function goToPage(page) {
+  if (page < 1 || page > pagination.value.pages) return
+  pagination.value.current_page = page
+  loadMotorcycles()
+}
+
+function changePerPage() {
+  pagination.value.current_page = 1
+  loadMotorcycles()
+}
+
+function applyFilters() {
+  pagination.value.current_page = 1
+  loadMotorcycles()
+}
+
+function debouncedSearch() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    applyFilters()
+  }, 500)
+}
+
+function resetFilters() {
+  filters.value = {
+    search: '',
+    status: '',
+    owner_id: '',
+    sort_by: 'created_at',
+    sort_order: 'desc',
+  }
+  pagination.value.current_page = 1
+  loadMotorcycles()
+}
+
+function openDeleteModal(moto) {
+  selectedMotorcycle.value = moto
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  selectedMotorcycle.value = null
+  showDeleteModal.value = false
+}
+
+async function deleteMotorcycle(motoId) {
+  try {
+    await api.delete(`/admin/motorcycle/${motoId}`)
+    await loadMotorcycles()
+    closeDeleteModal()
+    toast.success('Мотоцикл удалён')
+  } catch (error) {
+    console.error('Error deleting motorcycle:', error)
+    toast.error(
+      error.response?.data?.error || 'Ошибка при удалении мотоцикла'
+    )
+  }
 }
 </script>
 

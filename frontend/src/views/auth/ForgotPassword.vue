@@ -7,31 +7,33 @@
       </div>
 
       <form @submit.prevent="submit">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="motorcycle@moto.com"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="email"
+          type="email"
+          label="Email"
+          placeholder="motorcycle@moto.com"
+          required
+        />
 
-        <div v-if="error" class="error-message">
+        <div v-if="error" class="message message-error">
           <i class="fa fa-exclamation-circle"></i> {{ error }}
         </div>
 
-        <div v-if="success" class="success-message">
+        <div v-if="success" class="message message-success">
           <i class="fa fa-check-circle"></i> {{ success }}
         </div>
 
-        <button type="submit" class="btn btn-primary" :disabled="loading">
-          {{ loading ? 'Отправка...' : 'Отправить' }}
-        </button>
+        <BaseButton
+          type="submit"
+          variant="primary"
+          block
+          :loading="loading"
+        >
+          Отправить
+        </BaseButton>
 
         <div class="auth-links">
-          <router-link to="/login">Вспомнил пароль? Войти</router-link>
+          <router-link to="/login">Вспомнили пароль? Войти</router-link>
           <router-link to="/register">Нет аккаунта? Зарегистрироваться</router-link>
         </div>
       </form>
@@ -39,35 +41,29 @@
   </div>
 </template>
 
-<script>
-import api from '../../api/api'
+<script setup>
+import { ref } from 'vue'
+import { BaseButton, BaseInput } from '@/components/ui'
+import api from '@/api/api'
 
-export default {
-  name: 'ForgotPassword',
-  data() {
-    return {
-      email: '',
-      loading: false,
-      error: null,
-      success: null
-    }
-  },
-  methods: {
-    async submit() {
-      this.error = null
-      this.success = null
-      this.loading = true
+const email = ref('')
+const loading = ref(false)
+const error = ref(null)
+const success = ref(null)
 
-      try {
-        await api.post('/auth/forgot-password', { email: this.email })
-        this.success = 'Письмо отправлено! Проверьте почту.'
-        this.email = ''
-      } catch (err) {
-        this.error = err.response?.data?.error || 'Ошибка отправки. Попробуйте позже.'
-      } finally {
-        this.loading = false
-      }
-    }
+async function submit() {
+  error.value = null
+  success.value = null
+  loading.value = true
+
+  try {
+    await api.post('/auth/forgot-password', { email: email.value })
+    success.value = 'Письмо отправлено! Проверьте почту.'
+    email.value = ''
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Ошибка отправки. Попробуйте позже.'
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -78,15 +74,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0A0A0F;
+  background: var(--bg-primary);
   padding: 20px;
 }
 
 .auth-card {
   max-width: 400px;
   width: 100%;
-  background: #181824;
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 40px 32px;
 }
@@ -99,90 +95,34 @@ export default {
 .auth-header h1 {
   font-size: 28px;
   margin: 0 0 8px 0;
+  color: var(--text-primary);
 }
 
 .auth-header p {
-  color: #8b8b9e;
+  color: var(--text-muted);
   margin: 0;
 }
 
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: 600;
-  font-size: 14px;
-  color: #8b8b9e;
-  margin-bottom: 4px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 16px;
-  background: #0f0f1a;
-  border: 2px solid #2d2d3d;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 16px;
-  transition: border 0.2s;
-}
-
-.form-group input:focus {
-  border-color: #8B5CF6;
-  outline: none;
-}
-
-.btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-  font-size: 16px;
-}
-
-.btn-primary {
-  background: #8B5CF6;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #7C3AED;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error-message {
+.message {
   padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
   border-radius: 8px;
-  color: #ef4444;
   font-size: 14px;
-  margin-bottom: 16px;
+  margin: 12px 0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.success-message {
-  padding: 10px 14px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid #4ade80;
-  border-radius: 8px;
-  color: #4ade80;
-  font-size: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.message-error {
+  background: var(--danger-trans);
+  border: 1px solid var(--danger);
+  color: var(--danger-text);
+}
+
+.message-success {
+  background: var(--success-trans);
+  border: 1px solid var(--success);
+  color: var(--success-text);
 }
 
 .auth-links {
@@ -194,13 +134,13 @@ export default {
 }
 
 .auth-links a {
-  color: #8b8b9e;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
   transition: color 0.2s;
 }
 
 .auth-links a:hover {
-  color: #8B5CF6;
+  color: var(--accent);
 }
 </style>

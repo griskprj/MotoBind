@@ -1,15 +1,16 @@
-from flask import current_app
-from sqlalchemy import or_
-from typing import Any, Dict, List, Optional
-from werkzeug.utils import secure_filename
 import os
+from typing import Any, Dict, List, Optional
 
 from app.exceptions import ForbiddenError, NotFoundError
 from app.extensions import db
+from app.models.maintenance import Maintenance
 from app.models.manual import Manual, ManualStep
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
 from app.schemas.manual import ManualForMaintenanceResponseSchema
+from flask import current_app
+from sqlalchemy import or_
+from werkzeug.utils import secure_filename
 
 
 class ManualService:
@@ -110,30 +111,28 @@ class ManualService:
 
     @staticmethod
     def create_manual(
-        author_id: int,
-        data: Dict[str, Any],
-        files: Dict[str, Any] = None
+        author_id: int, data: Dict[str, Any], files: Dict[str, Any] = None
     ) -> Manual:
         """Создает мануал с шагами и сохраняет изображения"""
-        
+
         # Извлекаем данные
-        title = data.get('title')
-        description = data.get('description')
-        category = data.get('category')
-        difficult = data.get('difficult', 'easy')
-        motorcycle = data.get('motorcycle')
-        time_estimate = data.get('time_estimate')
-        interval = data.get('interval')
-        safety_tip = data.get('safety_tip')
-        warnings = data.get('warnings')
-        conditions = data.get('conditions')
-        instruments = data.get('instruments')
-        parts = data.get('parts')
-        docs_links = data.get('docs_links')
-        specs = data.get('specs')
-        aftercare = data.get('aftercare')
-        tip = data.get('tip')
-        steps_data = data.get('steps', [])
+        title = data.get("title")
+        description = data.get("description")
+        category = data.get("category")
+        difficult = data.get("difficult", "easy")
+        motorcycle = data.get("motorcycle")
+        time_estimate = data.get("time_estimate")
+        interval = data.get("interval")
+        safety_tip = data.get("safety_tip")
+        warnings = data.get("warnings")
+        conditions = data.get("conditions")
+        instruments = data.get("instruments")
+        parts = data.get("parts")
+        docs_links = data.get("docs_links")
+        specs = data.get("specs")
+        aftercare = data.get("aftercare")
+        tip = data.get("tip")
+        steps_data = data.get("steps", [])
 
         manual = Manual(
             author_id=author_id,
@@ -162,23 +161,21 @@ class ManualService:
         for idx, step_data in enumerate(steps_data):
             image_url = None
             if files:
-                file_key = f'image_{idx + 1}'
+                file_key = f"image_{idx + 1}"
                 if file_key in files and files[file_key]:
                     image_url = ManualService._save_step_image(
-                        files[file_key],
-                        manual.id,
-                        step_data.get('order', idx + 1)
+                        files[file_key], manual.id, step_data.get("order", idx + 1)
                     )
 
             step = ManualStep(
                 manual_id=manual.id,
-                order=step_data.get('order', idx + 1),
-                title=step_data.get('title'),
-                text=step_data.get('text'),
-                tip=step_data.get('tip'),
-                warning=step_data.get('warning'),
+                order=step_data.get("order", idx + 1),
+                title=step_data.get("title"),
+                text=step_data.get("text"),
+                tip=step_data.get("tip"),
+                warning=step_data.get("warning"),
                 image=image_url,
-                result=step_data.get('result'),
+                result=step_data.get("result"),
             )
             db.session.add(step)
 
@@ -189,35 +186,34 @@ class ManualService:
     def _save_step_image(file, manual_id, step_order):
         """Сохраняет изображение шага в папку"""
         from app.utils.files import compress_image
-        
+
         if not file:
             return None
-        
-        allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
+
+        allowed_extensions = {"jpg", "jpeg", "png", "gif", "bmp", "webp"}
         filename = file.filename.lower()
         if not any(filename.endswith(ext) for ext in allowed_extensions):
             return None
-        
+
         try:
             compressed = compress_image(
-                file,
-                max_width=1920,
-                quality=80,
-                output_format="webp"
+                file, max_width=1920, quality=80, output_format="webp"
             )
-            
+
             secure_name = secure_filename(f"step_{manual_id}_{step_order}.webp")
-            
-            upload_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "manual_steps")
+
+            upload_dir = os.path.join(
+                current_app.config["UPLOAD_FOLDER"], "manual_steps"
+            )
             os.makedirs(upload_dir, exist_ok=True)
-            
+
             filepath = os.path.join(upload_dir, secure_name)
-            
-            with open(filepath, 'wb') as f:
+
+            with open(filepath, "wb") as f:
                 f.write(compressed.getvalue())
-            
+
             return f"manual_steps/{secure_name}"
-            
+
         except Exception as e:
             current_app.logger.error(f"Ошибка сохранения изображения: {e}")
             return None
@@ -247,10 +243,14 @@ class ManualService:
                 manual.rejection_reason = None
             elif manual.status == "approved":
                 if not is_admin:
-                    raise ForbiddenError("Нельзя редактировать опубликованный мануал. Обратитесь к администратору.")
+                    raise ForbiddenError(
+                        "Нельзя редактировать опубликованный мануал. Обратитесь к администратору."
+                    )
             elif manual.status == "moderate":
                 if not is_admin:
-                    raise ForbiddenError("Мануал уже на проверке, дождитесь решения администратора.")
+                    raise ForbiddenError(
+                        "Мануал уже на проверке, дождитесь решения администратора."
+                    )
         else:
             if not is_admin:
                 raise ForbiddenError("Вы не являетесь автором этого мануала")
@@ -403,14 +403,11 @@ class ManualService:
         Полный флоу для эндпоинта GET /api/manual/.
 
         Проверяет права на обслуживание и мотоцикл, находит подходящий
-        мануал, сериализует в формат ответа API.
+        мануал по совпадению motorcycle.name + category (+ опционально title),
+        сериализует в формат ответа API.
 
         Возвращает None, если мануал не найден (API отдаст []).
         """
-        from app.models.maintenance import Maintenance
-        from app.models.motorcycle import Motorcycle
-        from app.models.user import User
-
         maintenance = db.session.get(Maintenance, maintenance_id)
         motorcycle = db.session.get(Motorcycle, moto_id)
         user = db.session.get(User, user_id)
@@ -427,17 +424,21 @@ class ManualService:
         if int(motorcycle.owner_id) != int(user.id):
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        manual = ManualService.get_manual_for_maintenance(
-            maintenance_title=maintenance.title,
-            motorcycle_name=motorcycle.name,
-            user_id=user.id,
+        base_query = Manual.query.filter(
+            Manual.status == "approved",
+            Manual.motorcycle.ilike(motorcycle.name),
+            Manual.category == maintenance.category,
         )
+
+        manual = base_query.filter(Manual.title == maintenance.title).first()
+
+        if not manual:
+            manual = base_query.order_by(Manual.created_at.desc()).first()
 
         if not manual:
             return None
 
         return ManualService._serialize_for_maintenance(manual)
-
 
     @staticmethod
     def _serialize_for_maintenance(manual: Manual) -> dict:

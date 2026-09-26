@@ -11,29 +11,29 @@
         <!-- === TABS & FILTERS === -->
         <div class="controls-wrapper">
             <div class="tabs">
-                <div 
-                    @click="changeTab('all')" 
+                <div
+                    @click="changeTab('all')"
                     class="tab"
                     :class="selectedTab === 'all' ? 'active' : ''"
-                >   
+                >
                     <p>Все <span class="tab-count">{{ getTabCount('all') }}</span></p>
                 </div>
                 <div
                     @click="changeTab('moderate')"
-                    class="tab" 
+                    class="tab"
                     :class="selectedTab === 'moderate' ? 'active' : ''"
                 >
                     <p>На проверке <span class="tab-count">{{ getTabCount('moderate') }}</span></p>
                 </div>
-                <div 
-                    @click="changeTab('approved')" 
+                <div
+                    @click="changeTab('approved')"
                     class="tab"
                     :class="selectedTab === 'approved' ? 'active' : ''"
                 >
                     <p>Одобренные <span class="tab-count">{{ getTabCount('approved') }}</span></p>
                 </div>
-                <div 
-                    @click="changeTab('rejected')" 
+                <div
+                    @click="changeTab('rejected')"
                     class="tab"
                     :class="selectedTab === 'rejected' ? 'active' : ''"
                 >
@@ -43,15 +43,15 @@
 
             <div class="filters">
                 <div class="filter-group">
-                    <input 
-                        type="text" 
-                        v-model="searchQuery" 
+                    <input
+                        type="text"
+                        v-model="searchQuery"
                         placeholder="Поиск по названию, автору..."
                         class="search-input"
                         @input="debouncedSearch"
                     >
                 </div>
-                
+
                 <select v-model="filterCategory" class="filter-select" @change="applyFilters">
                     <option value="">Все категории</option>
                     <option value="engine">Двигатель</option>
@@ -98,15 +98,15 @@
 
         <!-- === GRID OF MANUALS === -->
         <div v-if="filteredManuals && filteredManuals.length > 0" class="manuals-grid">
-            <div 
-                class="manual-card" 
-                v-for="manual in filteredManuals" 
+            <div
+                class="manual-card"
+                v-for="manual in filteredManuals"
                 :key="manual.id"
                 @click="openDetailsModal(manual)"
             >
                 <div class="card-header">
                     <span class="card-title">{{ manual.title }}</span>
-                    <span 
+                    <span
                         class="status-badge"
                         :class="{
                             'badge-green': manual.status === 'approved',
@@ -185,285 +185,270 @@
     />
 </template>
 
-<script>
-import api from '../../api/api';
-import Header from '../../components/Header.vue';
-import LoadingOverlay from '../../components/LoadingOverlay.vue';
-import ManualDetailsAdminModal from '../../components/modals/admin/ManualDetailsAdminModal.vue';
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import api from '@/api/api'
+import Header from '@/components/Header.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import ManualDetailsAdminModal from '@/components/modals/admin/ManualDetailsAdminModal.vue'
+import { useToast } from '@/composables/useToast'
 
-export default {
-    name: 'AdminManuals',
-    components: {
-        ManualDetailsAdminModal,
-        Header,
-        LoadingOverlay
-    },
+// ===== Composable =====
+const toast = useToast()
 
-    data() {
-        return {
-            loading: false,
-            manuals: [],
-            motorcycles: [],
-            
-            selectedManual: null,
-            showDetailsModal: false,
+// ===== State =====
+const loading = ref(false)
+const manuals = ref([])
+const motorcycles = ref([])
 
-            // Фильтры
-            searchQuery: '',
-            filterCategory: '',
-            filterMotorcycle: '',
-            filterDifficulty: '',
-            sortBy: 'created_at_desc',
-            selectedTab: 'moderate',
-            
-            searchTimeout: null
-        }
-    },
+const selectedManual = ref(null)
+const showDetailsModal = ref(false)
 
-    computed: {
-        filteredManuals() {
-            let items = [...this.manuals]
-            
-            // Таб фильтр
-            if (this.selectedTab === 'moderate') {
-                items = items.filter(m => m.status === 'moderate')
-            } else if (this.selectedTab === 'approved') {
-                items = items.filter(m => m.status === 'approved')
-            } else if (this.selectedTab === 'rejected') {
-                items = items.filter(m => m.status === 'rejected')
-            }
-            
-            // Поиск
-            if (this.searchQuery.trim()) {
-                const query = this.searchQuery.toLowerCase().trim()
-                items = items.filter(m => 
-                    m.title?.toLowerCase().includes(query) ||
-                    m.motorcycle?.toLowerCase().includes(query) ||
-                    m.author?.username?.toLowerCase().includes(query) ||
-                    m.description?.toLowerCase().includes(query)
-                )
-            }
-            
-            // Категория
-            if (this.filterCategory) {
-                items = items.filter(m => m.category === this.filterCategory)
-            }
-            
-            // Мотоцикл
-            if (this.filterMotorcycle) {
-                items = items.filter(m => m.motorcycle === this.filterMotorcycle)
-            }
-            
-            // Сложность
-            if (this.filterDifficulty) {
-                items = items.filter(m => m.difficult === this.filterDifficulty)
-            }
-            
-            // Сортировка
-            items = this.sortItems(items)
-            
-            return items
-        },
-        
-        hasActiveFilters() {
-            return this.searchQuery || 
-                   this.filterCategory || 
-                   this.filterMotorcycle || 
-                   this.filterDifficulty ||
-                   this.sortBy !== 'created_at_desc'
-        }
-    },
+// Фильтры
+const searchQuery = ref('')
+const filterCategory = ref('')
+const filterMotorcycle = ref('')
+const filterDifficulty = ref('')
+const sortBy = ref('created_at_desc')
+const selectedTab = ref('moderate')
 
-    methods: {
-        async loadData() {
-            try {
-                this.loading = true
-                
-                // Загружаем все мануалы (без пагинации для админки)
-                const manualsRes = await api.get('/manual/list?per_page=1000')
-                this.manuals = manualsRes.data.manuals || []
+let searchTimeout = null
 
-                // Загружаем мотоциклы
-                const motoRes = await api.get('/motorcycle/')
-                this.motorcycles = motoRes.data || []
-            } catch (err) {
-                console.error('Failed load admin manuals data:', err)
-                if (err.response?.status === 401) {
-                    this.$router.push('/login')
-                }
-            } finally {
-                this.loading = false
-            }
-        },
+// ===== Computed =====
+const filteredManuals = computed(() => {
+    let items = [...manuals.value]
 
-        getTabCount(status) {
-            if (status === 'all') return this.manuals.length
-            return this.manuals.filter(m => m.status === status).length
-        },
-
-        changeTab(tabName) {
-            this.selectedTab = tabName
-            // Не очищаем фильтры при смене таба
-        },
-
-        applyFilters() {
-            // Применяем фильтры (пересчёт computed)
-        },
-
-        debouncedSearch() {
-            clearTimeout(this.searchTimeout)
-            this.searchTimeout = setTimeout(() => {
-                // Применяем поиск (пересчёт computed)
-            }, 400)
-        },
-
-        openDetailsModal(manual) {
-            this.selectedManual = manual
-            this.showDetailsModal = true
-        },
-
-        closeDetailsModal() {
-            this.showDetailsModal = false
-            this.selectedManual = null
-        },
-
-        async handleApprove(manualId) {
-            try {
-                await api.post(`/admin/manual/${manualId}/approve`)
-                const manual = this.manuals.find(m => m.id === manualId)
-                if (manual) {
-                    manual.status = 'approved'
-                    manual.rejection_reason = null
-                }
-                this.closeDetailsModal()
-                this.$emit('manual-updated')
-                this.showToast('Мануал успешно одобрен!', 'success')
-            } catch (err) {
-                console.error('Failed approve manual:', err)
-                this.showToast('Ошибка при одобрении мануала', 'error')
-            }
-        },
-
-        async handleReject(data) {
-            try {
-                await api.post(`/admin/manual/${data.id}/reject`, { reason: data.reason })
-                const manual = this.manuals.find(m => m.id === data.id)
-                if (manual) {
-                    manual.status = 'rejected'
-                    manual.rejection_reason = data.reason
-                }
-                this.closeDetailsModal()
-                this.showToast('Мануал отклонён', 'warning')
-            } catch (err) {
-                console.error('Failed reject manual:', err)
-                this.showToast('Ошибка при отклонении мануала', 'error')
-            }
-        },
-
-        async handleReconsider(manualId) {
-            try {
-                await api.post(`/admin/manual/${manualId}/reconsider`)
-                const manual = this.manuals.find(m => m.id === manualId)
-                if (manual) {
-                    manual.status = 'moderate'
-                    manual.rejection_reason = null
-                }
-                this.closeDetailsModal()
-                this.showToast('Мануал возвращён на проверку', 'info')
-            } catch (err) {
-                console.error('Failed reconsider manual:', err)
-                this.showToast('Ошибка при возврате мануала на проверку', 'error')
-            }
-        },
-
-        async handleDelete(manualId) {
-            if (!confirm('Вы уверены, что хотите удалить этот мануал?')) return
-            
-            try {
-                await api.delete(`/admin/manual/${manualId}`)
-                this.manuals = this.manuals.filter(m => m.id !== manualId)
-                this.closeDetailsModal()
-                this.showToast('Мануал удалён', 'success')
-            } catch (err) {
-                console.error('Failed delete manual:', err)
-                this.showToast('Ошибка при удалении мануала', 'error')
-            }
-        },
-
-        sortItems(items) {
-            const sortFunctions = {
-                'created_at_desc': (a, b) => new Date(b.created_at) - new Date(a.created_at),
-                'created_at_asc': (a, b) => new Date(a.created_at) - new Date(b.created_at),
-                'title_asc': (a, b) => a.title.localeCompare(b.title),
-                'title_desc': (a, b) => b.title.localeCompare(a.title),
-            }
-            return items.sort(sortFunctions[this.sortBy] || sortFunctions['created_at_desc'])
-        },
-
-        clearFilters() {
-            this.searchQuery = ''
-            this.filterCategory = ''
-            this.filterMotorcycle = ''
-            this.filterDifficulty = ''
-            this.sortBy = 'created_at_desc'
-        },
-
-        formatDate(dateString) {
-            if (!dateString) return '—'
-            try {
-                const date = new Date(dateString)
-                if (isNaN(date.getTime())) return '—'
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })
-            } catch { return '—' }
-        },
-
-        getStatusLabel(status) {
-            const labels = {
-                'approved': 'Одобрен',
-                'moderate': 'На проверке',
-                'rejected': 'Отклонён'
-            }
-            return labels[status] || status
-        },
-
-        getCategory(category) {
-            const categories = {
-                'engine': 'Двигатель',
-                'drive': 'Привод',
-                'steering': 'Рулевое управление',
-                'suspension': 'Подвеска',
-                'electronics': 'Электроника',
-                'wheel': 'Колеса / Шины',
-                'brakes': 'Тормозная система',
-                'fuel': 'Топливная система',
-                'cooling': 'Система охлаждения'
-            }
-            return categories[category] || category
-        },
-
-        getDifficulty(difficult) {
-            const difficulties = {
-                'easy': 'Легко',
-                'medium': 'Средне',
-                'hard': 'Сложно'
-            }
-            return difficulties[difficult] || difficult
-        },
-
-        showToast(message, type = 'info') {
-            // TODO: Реализовать систему уведомлений
-            alert(message)
-        },
-
-    },
-
-    mounted() {
-        this.loadData()
+    // Таб фильтр
+    if (selectedTab.value === 'moderate') {
+        items = items.filter(m => m.status === 'moderate')
+    } else if (selectedTab.value === 'approved') {
+        items = items.filter(m => m.status === 'approved')
+    } else if (selectedTab.value === 'rejected') {
+        items = items.filter(m => m.status === 'rejected')
     }
+
+    // Поиск
+    if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim()
+        items = items.filter(m =>
+            m.title?.toLowerCase().includes(query) ||
+            m.motorcycle?.toLowerCase().includes(query) ||
+            m.author?.username?.toLowerCase().includes(query) ||
+            m.description?.toLowerCase().includes(query)
+        )
+    }
+
+    // Категория
+    if (filterCategory.value) {
+        items = items.filter(m => m.category === filterCategory.value)
+    }
+
+    // Мотоцикл
+    if (filterMotorcycle.value) {
+        items = items.filter(m => m.motorcycle === filterMotorcycle.value)
+    }
+
+    // Сложность
+    if (filterDifficulty.value) {
+        items = items.filter(m => m.difficult === filterDifficulty.value)
+    }
+
+    // Сортировка
+    items = sortItems(items)
+
+    return items
+})
+
+const hasActiveFilters = computed(() => {
+    return searchQuery.value ||
+        filterCategory.value ||
+        filterMotorcycle.value ||
+        filterDifficulty.value ||
+        sortBy.value !== 'created_at_desc'
+})
+
+// ===== Lifecycle =====
+onMounted(() => {
+    loadData()
+})
+
+// ===== Methods =====
+async function loadData() {
+    try {
+        loading.value = true
+
+        // Загружаем все мануалы (без пагинации для админки)
+        const manualsRes = await api.get('/manual/list?per_page=1000')
+        manuals.value = manualsRes.data.manuals || []
+
+        // Загружаем мотоциклы
+        const motoRes = await api.get('/motorcycle/')
+        motorcycles.value = motoRes.data || []
+    } catch (err) {
+        console.error('Failed load admin manuals data:', err)
+        // 401 обрабатывается глобальным интерцептором
+    } finally {
+        loading.value = false
+    }
+}
+
+function getTabCount(status) {
+    if (status === 'all') return manuals.value.length
+    return manuals.value.filter(m => m.status === status).length
+}
+
+function changeTab(tabName) {
+    selectedTab.value = tabName
+    // Не очищаем фильтры при смене таба
+}
+
+function applyFilters() {
+    // Применяем фильтры (пересчёт computed)
+}
+
+function debouncedSearch() {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+        // Применяем поиск (пересчёт computed)
+    }, 400)
+}
+
+function openDetailsModal(manual) {
+    selectedManual.value = manual
+    showDetailsModal.value = true
+}
+
+function closeDetailsModal() {
+    showDetailsModal.value = false
+    selectedManual.value = null
+}
+
+async function handleApprove(manualId) {
+    try {
+        await api.post(`/admin/manual/${manualId}/approve`)
+        const manual = manuals.value.find(m => m.id === manualId)
+        if (manual) {
+            manual.status = 'approved'
+            manual.rejection_reason = null
+        }
+        closeDetailsModal()
+        toast.success('Мануал успешно одобрен!')
+    } catch (err) {
+        console.error('Failed approve manual:', err)
+        toast.error('Ошибка при одобрении мануала')
+    }
+}
+
+async function handleReject(data) {
+    try {
+        await api.post(`/admin/manual/${data.id}/reject`, { reason: data.reason })
+        const manual = manuals.value.find(m => m.id === data.id)
+        if (manual) {
+            manual.status = 'rejected'
+            manual.rejection_reason = data.reason
+        }
+        closeDetailsModal()
+        toast.warning('Мануал отклонён')
+    } catch (err) {
+        console.error('Failed reject manual:', err)
+        toast.error('Ошибка при отклонении мануала')
+    }
+}
+
+async function handleReconsider(manualId) {
+    try {
+        await api.post(`/admin/manual/${manualId}/reconsider`)
+        const manual = manuals.value.find(m => m.id === manualId)
+        if (manual) {
+            manual.status = 'moderate'
+            manual.rejection_reason = null
+        }
+        closeDetailsModal()
+        toast.info('Мануал возвращён на проверку')
+    } catch (err) {
+        console.error('Failed reconsider manual:', err)
+        toast.error('Ошибка при возврате мануала на проверку')
+    }
+}
+
+async function handleDelete(manualId) {
+    if (!confirm('Вы уверены, что хотите удалить этот мануал?')) return
+
+    try {
+        await api.delete(`/admin/manual/${manualId}`)
+        manuals.value = manuals.value.filter(m => m.id !== manualId)
+        closeDetailsModal()
+        toast.success('Мануал удалён')
+    } catch (err) {
+        console.error('Failed delete manual:', err)
+        toast.error('Ошибка при удалении мануала')
+    }
+}
+
+function sortItems(items) {
+    const sortFunctions = {
+        'created_at_desc': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+        'created_at_asc': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+        'title_asc': (a, b) => a.title.localeCompare(b.title),
+        'title_desc': (a, b) => b.title.localeCompare(a.title),
+    }
+    return items.sort(sortFunctions[sortBy.value] || sortFunctions['created_at_desc'])
+}
+
+function clearFilters() {
+    searchQuery.value = ''
+    filterCategory.value = ''
+    filterMotorcycle.value = ''
+    filterDifficulty.value = ''
+    sortBy.value = 'created_at_desc'
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '—'
+    try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return '—'
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        })
+    } catch {
+        return '—'
+    }
+}
+
+function getStatusLabel(status) {
+    const labels = {
+        'approved': 'Одобрен',
+        'moderate': 'На проверке',
+        'rejected': 'Отклонён'
+    }
+    return labels[status] || status
+}
+
+function getCategory(category) {
+    const categories = {
+        'engine': 'Двигатель',
+        'drive': 'Привод',
+        'steering': 'Рулевое управление',
+        'suspension': 'Подвеска',
+        'electronics': 'Электроника',
+        'wheel': 'Колеса / Шины',
+        'brakes': 'Тормозная система',
+        'fuel': 'Топливная система',
+        'cooling': 'Система охлаждения'
+    }
+    return categories[category] || category
+}
+
+function getDifficulty(difficult) {
+    const difficulties = {
+        'easy': 'Легко',
+        'medium': 'Средне',
+        'hard': 'Сложно'
+    }
+    return difficulties[difficult] || difficult
 }
 </script>
 
@@ -496,12 +481,12 @@ export default {
     transition: 0.2s;
 }
 
-.tab:hover { 
-    color: var(--text-primary); 
+.tab:hover {
+    color: var(--text-primary);
 }
 
-.tab.active { 
-    color: var(--accent-text); 
+.tab.active {
+    color: var(--accent-text);
 }
 
 .tab.active::after {
@@ -556,12 +541,12 @@ export default {
     transition: border 0.2s;
 }
 
-.search-input:focus { 
-    border-color: var(--accent); 
+.search-input:focus {
+    border-color: var(--accent);
 }
 
-.search-input::placeholder { 
-    color: var(--text-muted); 
+.search-input::placeholder {
+    color: var(--text-muted);
 }
 
 .filter-select {
@@ -583,11 +568,11 @@ export default {
     padding-right: 36px;
 }
 
-.filter-select:focus { 
-    border-color: var(--accent); 
+.filter-select:focus {
+    border-color: var(--accent);
 }
 
-.filter-select option { 
+.filter-select option {
     background: var(--bg-input);
     color: var(--text-primary);
 }
@@ -613,8 +598,8 @@ export default {
     transition: color 0.2s;
 }
 
-.clear-filters:hover { 
-    color: var(--accent); 
+.clear-filters:hover {
+    color: var(--accent);
 }
 
 /* ===== GRID ===== */
@@ -667,19 +652,19 @@ export default {
     flex-shrink: 0;
 }
 
-.badge-green { 
-    background: var(--success-trans); 
-    color: var(--success-text); 
+.badge-green {
+    background: var(--success-trans);
+    color: var(--success-text);
 }
 
-.badge-warning { 
-    background: var(--warning-trans); 
-    color: var(--warning-text); 
+.badge-warning {
+    background: var(--warning-trans);
+    color: var(--warning-text);
 }
 
-.badge-danger { 
-    background: var(--danger-trans); 
-    color: var(--danger-text); 
+.badge-danger {
+    background: var(--danger-trans);
+    color: var(--danger-text);
 }
 
 .card-body {
@@ -721,8 +706,8 @@ export default {
     color: var(--text-muted);
 }
 
-.steps-count i { 
-    margin-right: 6px; 
+.steps-count i {
+    margin-right: 6px;
 }
 
 .click-hint {
@@ -734,8 +719,8 @@ export default {
     transition: color 0.2s;
 }
 
-.manual-card:hover .click-hint { 
-    color: var(--accent-text); 
+.manual-card:hover .click-hint {
+    color: var(--accent-text);
 }
 
 /* ===== EMPTY STATE ===== */
@@ -772,11 +757,11 @@ export default {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .filters {
         flex-wrap: wrap;
     }
-    
+
     .filter-select {
         flex: 1;
         min-width: 120px;
@@ -791,11 +776,11 @@ export default {
         white-space: nowrap;
         scrollbar-width: none;
     }
-    
-    .tabs::-webkit-scrollbar { 
-        display: none; 
+
+    .tabs::-webkit-scrollbar {
+        display: none;
     }
-    
+
     .card-meta {
         grid-template-columns: 1fr;
     }
@@ -805,16 +790,16 @@ export default {
     .filters {
         flex-direction: column;
     }
-    
+
     .filter-select {
         width: 100%;
         min-width: unset;
     }
-    
+
     .manuals-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .manual-card {
         padding: 14px 16px;
     }

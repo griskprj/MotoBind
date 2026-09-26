@@ -1,488 +1,247 @@
 <template>
-    <ModalWrapper
-        :is-open="isOpen"
-        title="Редактирование пользователя"
-        subtitle="Измените данные пользователя. Роль определяет доступ к функциям."
-        icon="user-cog"
-        bg-icon-color="var(--accent-trans)"
-        icon-color="var(--accent-text)"
-        @close="handleClose"
-    >
-        <!-- Информация о пользователе -->
-        <div class="user-info-card">
-            <img :src="getAvatarUrl(user?.avatar)" alt="Аватар" class="user-avatar" />
-            <div class="user-info">
-                <div class="user-name">{{ user?.username || 'Пользователь' }}</div>
-                <div class="user-meta">
-                    <span class="user-id">ID: #{{ user?.id }}</span>
-                    <span class="user-date">{{ formatDate(user?.created_at) }}</span>
-                </div>
-            </div>
+  <BaseModal
+    :is-open="isOpen"
+    title="Редактирование пользователя"
+    subtitle="Измените данные пользователя. Роль определяет доступ к функциям."
+    icon="user-cog"
+    variant="default"
+    size="md"
+    @close="close"
+  >
+    <!-- Инфо о пользователе -->
+    <div v-if="user" class="user-info-card">
+      <img :src="getAvatarUrl(user.avatar)" alt="Аватар" class="user-avatar" />
+      <div class="user-info">
+        <div class="user-name">{{ user.username || 'Пользователь' }}</div>
+        <div class="user-meta">
+          <span class="user-id">ID: #{{ user.id }}</span>
+          <span>{{ formatDate(user.created_at) }}</span>
         </div>
+      </div>
+    </div>
 
-        <!-- Форма -->
-        <div class="modal-form-group">
-            <label>
-                Имя пользователя <span class="required">*</span>
-                <input 
-                    v-model="form.username" 
-                    type="text" 
-                    placeholder="Введите имя пользователя"
-                    required
-                />
-            </label>
-        </div>
+    <form @submit.prevent="submit" class="form-stack">
+      <BaseInput
+        v-model="form.username"
+        label="Имя пользователя"
+        placeholder="Введите имя пользователя"
+        required
+      />
 
-        <div class="modal-form-group">
-            <label>
-                Email <span class="required">*</span>
-                <input 
-                    v-model="form.email" 
-                    type="email" 
-                    placeholder="user@example.com"
-                    required
-                />
-            </label>
-        </div>
+      <BaseInput
+        v-model="form.email"
+        type="email"
+        label="Email"
+        placeholder="user@example.com"
+        required
+      />
 
-        <div class="modal-form-row">
-            <div class="modal-form-group">
-                <label>Роль</label>
-                <select v-model="form.role">
-                    <option value="motorcyclist">Мотоциклист</option>
-                    <option value="club_member">Член клуба</option>
-                    <option value="admin">Администратор</option>
-                </select>
-            </div>
+      <div class="form-row">
+        <BaseSelect v-model="form.role" label="Роль">
+          <option value="motorcyclist">Мотоциклист</option>
+          <option value="club_member">Член клуба</option>
+          <option value="admin">Администратор</option>
+        </BaseSelect>
 
-            <div class="modal-form-group">
-                <label>Статус</label>
-                <select v-model="form.status">
-                    <option value="active">Активен</option>
-                    <option value="banned">Заблокирован</option>
-                    <option value="pending">Ожидает</option>
-                </select>
-            </div>
-        </div>
+        <BaseSelect v-model="form.status" label="Статус">
+          <option value="active">Активен</option>
+          <option value="banned">Заблокирован</option>
+          <option value="pending">Ожидает</option>
+        </BaseSelect>
+      </div>
+    </form>
 
-        <template #actions>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" @click="handleClose">
-                    Отменить
-                </button>
-                <button class="btn btn-primary" @click="submit" :disabled="loading">
-                    <span v-if="!loading">
-                        <i class="fa fa-save"></i> Сохранить
-                    </span>
-                    <span v-else>
-                        <i class="fa fa-spinner fa-spin"></i> Сохранение...
-                    </span>
-                </button>
-            </div>
-        </template>
-    </ModalWrapper>
+    <template #actions>
+      <BaseButton variant="secondary" block type="button" @click="close">
+        Отменить
+      </BaseButton>
+      <BaseButton
+        variant="primary"
+        icon="fa fa-save"
+        block
+        type="submit"
+        :disabled="!isFormValid"
+        :loading="loading"
+        @click="submit"
+      >
+        Сохранить
+      </BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
-<script>
-import ModalWrapper from '../ModalWrapper.vue'
+<script setup>
+import { computed, reactive, ref, watch } from 'vue'
+import { BaseModal, BaseButton, BaseInput, BaseSelect } from '@/components/ui'
+import { useToast } from '@/composables/useToast'
+import { getAvatarUrl } from '@/utils/mediaUrl'
+import api from '@/api/api'
 
-export default {
-    components: { ModalWrapper },
+const props = defineProps({
+  isOpen: { type: Boolean, required: true, default: false },
+  user: { type: Object, default: null },
+})
 
-    props: {
-        isOpen: {
-            type: Boolean,
-            default: false,
-            required: true
-        },
-        user: {
-            type: Object,
-            default: null
-        }
-    },
+const emit = defineEmits(['close', 'saved'])
+const toast = useToast()
 
-    data() {
-        return {
-            form: {
-                id: null,
-                username: '',
-                email: '',
-                role: 'motorcyclist',
-                status: 'active'
-            },
-            loading: false
-        }
-    },
+const form = reactive({
+  id: null,
+  username: '',
+  email: '',
+  role: 'motorcyclist',
+  status: 'active',
+})
 
-    watch: {
-        isOpen(newVal) {
-            if (newVal && this.user) {
-                this.loadFormData()
-            }
-            if (!newVal) {
-                this.loading = false
-            }
-        },
-        user: {
-            handler(newVal) {
-                if (this.isOpen && newVal) {
-                    this.loadFormData()
-                }
-            },
-            deep: true
-        }
-    },
+const loading = ref(false)
 
-    methods: {
-        loadFormData() {
-            if (!this.user) return
-            this.form = {
-                id: this.user.id || null,
-                username: this.user.username || '',
-                email: this.user.email || '',
-                role: this.user.role || 'motorcyclist',
-                status: this.user.status || 'active'
-            }
-        },
+const isFormValid = computed(() => {
+  return (
+    form.username.trim().length >= 2 &&
+    form.email.includes('@')
+  )
+})
 
-        resetForm() {
-            this.form = {
-                id: null,
-                username: '',
-                email: '',
-                role: 'motorcyclist',
-                status: 'active'
-            }
-            this.loading = false
-        },
+watch(
+  () => props.user,
+  (newVal) => {
+    if (newVal && props.isOpen) loadFormData(newVal)
+  },
+  { immediate: true }
+)
 
-        handleClose() {
-            this.resetForm()
-            this.$emit('close')
-        },
+watch(
+  () => props.isOpen,
+  (newVal) => {
+    if (newVal && props.user) loadFormData(props.user)
+    if (!newVal) loading.value = false
+  }
+)
 
-        async submit() {
-            // Валидация
-            if (!this.form.username || this.form.username.trim().length < 2) {
-                alert('Имя пользователя должно содержать минимум 2 символа')
-                return
-            }
+function loadFormData(user) {
+  form.id = user.id || null
+  form.username = user.username || ''
+  form.email = user.email || ''
+  form.role = user.role || 'motorcyclist'
+  form.status = user.status || 'active'
+}
 
-            if (!this.form.email || !this.form.email.includes('@')) {
-                alert('Введите корректный email адрес')
-                return
-            }
+function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return '—'
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  } catch {
+    return '—'
+  }
+}
 
-            this.loading = true
-            try {
-                await this.$emit('submit', this.form)
-                this.resetForm()
-                this.$emit('close')
-            } catch (error) {
-                console.error('Submit error:', error)
-            } finally {
-                this.loading = false
-            }
-        },
+function close() {
+  if (loading.value) return
+  emit('close')
+}
 
-        getAvatarUrl(avatarPath) {
-            if (!avatarPath || typeof avatarPath !== 'string') {
-                return '/BaseAvatar.webp'
-            }
-            if (avatarPath.startsWith('http')) {
-                return avatarPath
-            }
-            const baseUrl = import.meta.env.VITE_API_URL || ''
-            return `${baseUrl}/uploads/${avatarPath}`
-        },
+async function submit() {
+  if (!isFormValid.value) {
+    toast.warning('Заполните обязательные поля')
+    return
+  }
 
-        formatDate(dateString) {
-            if (!dateString) return '—'
-            try {
-                const date = new Date(dateString)
-                if (isNaN(date.getTime())) return '—'
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                })
-            } catch {
-                return '—'
-            }
-        }
-    },
-
-    mounted() {
-        if (this.isOpen && this.user) {
-            this.loadFormData()
-        }
-    }
+  loading.value = true
+  try {
+    await api.put(`/admin/user/${form.id}`, {
+      username: form.username.trim(),
+      email: form.email.trim(),
+      role: form.role,
+      status: form.status,
+    })
+    emit('saved')
+    emit('close')
+    toast.success('Пользователь обновлён')
+  } catch (err) {
+    console.error('Failed to update user:', err)
+    toast.error(err.response?.data?.error || 'Ошибка при сохранении')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
-/* ===== ИНФО О ПОЛЬЗОВАТЕЛЕ ===== */
 .user-info-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 16px;
-    background: var(--bg-secondary);
-    border-radius: 12px;
-    border: 1px solid var(--border-light);
-    margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 18px;
 }
 
 .user-avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--accent);
-    flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
 }
 
 .user-info {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .user-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 2px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
 }
 
 .user-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 13px;
-    color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .user-id {
-    background: var(--accent-trans);
-    padding: 1px 10px;
-    border-radius: 12px;
-    color: var(--accent-text);
+  background: var(--accent-trans);
+  padding: 1px 10px;
+  border-radius: 12px;
+  color: var(--accent-text);
 }
 
-/* ===== ПОЛЯ ВВОДА ===== */
-.modal-form-group {
-    margin-bottom: 14px;
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.modal-form-group:last-child {
-    margin-bottom: 0;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-
-.modal-form-group label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.modal-form-group label .required {
-    color: var(--danger-text);
-    font-weight: 700;
-}
-
-.modal-form-group input,
-.modal-form-group select {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    border-radius: 10px;
-    border: 2px solid var(--border-color);
-    background-color: var(--bg-input);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    box-sizing: border-box;
-    font-family: inherit;
-    appearance: auto;
-}
-
-.modal-form-group input:focus,
-.modal-form-group select:focus {
-    border-color: var(--accent);
-    outline: none;
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.modal-form-group input::placeholder {
-    color: var(--text-muted);
-}
-
-.modal-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-/* ===== ИНФО-БЛОК ===== */
-.modal-info-block {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin: 12px 0;
-}
-
-.modal-info-block.info {
-    background: var(--accent-trans);
-    border: 1px solid var(--accent-light);
-}
-
-.modal-info-icon {
-    font-size: 18px;
-    color: var(--accent-text);
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.modal-info-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
-}
-
-.role-tag {
-    display: inline-block;
-    padding: 0 6px;
-    font-weight: 500;
-    color: var(--accent-text);
-    background: var(--accent-trans);
-    border-radius: 4px;
-}
-
-.status-tag {
-    display: inline-block;
-    padding: 0 6px;
-    font-weight: 500;
-    border-radius: 4px;
-}
-
-.status-tag.active {
-    color: var(--success-text);
-    background: var(--success-trans);
-}
-
-.status-tag.banned {
-    color: var(--danger-text);
-    background: var(--danger-trans);
-}
-
-/* ===== КНОПКИ ===== */
-.modal-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.modal-actions .btn {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.modal-actions .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.modal-actions .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    color: #fff;
-}
-
-.modal-actions .btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(138, 92, 246, 0.3);
-}
-
-.modal-actions .btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.modal-actions .btn-secondary:hover:not(:disabled) {
-    background: var(--border-color);
-}
-
-/* ============================================ */
-/* ===== АДАПТИВНОСТЬ ===== */
-/* ============================================ */
 
 @media (max-width: 640px) {
-    .user-info-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 16px;
-    }
-
-    .user-avatar {
-        width: 60px;
-        height: 60px;
-    }
-
-    .user-meta {
-        justify-content: center;
-    }
-
-    .modal-form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
-    .modal-actions {
-        flex-direction: column;
-    }
-
-    .modal-actions .btn {
-        width: 100%;
-        padding: 0.8rem;
-    }
-
-    .modal-info-block {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .modal-info-icon {
-        margin-top: 0;
-    }
-}
-
-@media (max-width: 400px) {
-    .user-avatar {
-        width: 48px;
-        height: 48px;
-    }
-
-    .user-name {
-        font-size: 14px;
-    }
-
-    .modal-form-group input,
-    .modal-form-group select {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.7rem;
-    }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .user-info-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .user-meta {
+    justify-content: center;
+  }
 }
 </style>

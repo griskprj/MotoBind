@@ -2,12 +2,9 @@
   <LoadingOverlay :is-loading="loading" text="Вход..."/>
   <div class="login-container">
     <div class="login-card animate-slide-in">
-      <!-- Левая часть с изображением -->
       <div class="left-side"></div>
-      <div class="image-overlay">
-      </div>
+      <div class="image-overlay"></div>
 
-      <!-- Правая часть с формой -->
       <div class="right-side">
         <div class="login-header">
           <i class="fa fa-motorcycle"></i>
@@ -54,9 +51,14 @@
             </router-link>
           </div>
 
-          <button class="btn btn-primary submit-btn" type="submit">
-            <i class="fa fa-sign-in-alt"></i> Войти
-          </button>
+          <BaseButton
+            type="submit"
+            variant="primary"
+            block
+            icon="fa fa-sign-in-alt"
+          >
+            Войти
+          </BaseButton>
         </form>
 
         <div v-if="error" class="error-message">
@@ -78,57 +80,51 @@
   </div>
 </template>
 
-<script>
-import api from '../../api/api';
-import LoadingOverlay from '../../components/LoadingOverlay.vue';
-import { useAuthStore } from '../../stores/auth.js';
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import { BaseButton } from '@/components/ui'
+import { useAuthStore } from '@/stores'
+import api from '@/api/api'
 
-export default {
-  components: { LoadingOverlay },
+const router = useRouter()
+const auth = useAuthStore()
 
-  data() {
-    return {
-      email: '',
-      password: '',
-      rememberMe: false,
-      error: null,
-      loading: false
-    };
-  },
+const email = ref('')
+const password = ref('')
+const rememberMe = ref(false)
+const error = ref(null)
+const loading = ref(false)
 
-  methods: {
-    async login() {
-      this.error = null;
-      this.loading = true
-      try {
-        const response = await api.post('/auth/login', {
-          email: this.email,
-          password: this.password,
-          rememberMe: this.rememberMe,
-        });
-        const { access_token, refresh_token } = response.data;
-        const auth = useAuthStore()
-        auth.setTokens(access_token, refresh_token)
-        auth.setUser(response.data.user)
+async function login() {
+  error.value = null
+  loading.value = true
+  try {
+    const response = await api.post('/auth/login', {
+      email: email.value,
+      password: password.value,
+      rememberMe: rememberMe.value,
+    })
+    const { access_token, refresh_token } = response.data
+    auth.setTokens(access_token, refresh_token)
+    auth.setUser(response.data.user)
 
-        const role = response.data.user.role;
-        if (role === 'admin') {
-          this.$router.push('/admin/panel');
-        } else {
-          this.$router.push('/garage');
-        }
-      } catch (err) {
-        this.error = err.response?.data?.error || 'Ошибка входа. Проверьте email и пароль.';
-      } finally {
-        this.loading = false
-      }
-    },
-  },
-};
+    const role = response.data.user.role
+    if (role === 'admin') {
+      router.push('/admin/panel')
+    } else {
+      router.push('/garage')
+    }
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Ошибка входа. Проверьте email и пароль.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
-/* Контейнер */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -137,7 +133,6 @@ export default {
   padding: 16px;
 }
 
-/* Карточка входа */
 .login-card {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -151,14 +146,12 @@ export default {
   min-height: 600px;
 }
 
-/* Анимация появления */
 .animate-slide-in {
   animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
   transform: translateY(30px);
 }
 
-/* Левая сторона — изображение */
 .left-side {
   position: relative;
   min-height: 400px;
@@ -168,7 +161,6 @@ export default {
   background-repeat: no-repeat;
 }
 
-/* Оверлей с текстом по центру */
 .image-overlay {
   position: absolute;
   top: 0;
@@ -181,22 +173,6 @@ export default {
   pointer-events: none;
 }
 
-.overlay-text {
-  display: inline-block;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 10px 28px;
-  border-radius: 40px;
-  font-size: 1.3rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Правая сторона — форма */
 .right-side {
   padding: 48px 40px;
   display: flex;
@@ -205,7 +181,6 @@ export default {
   background-color: var(--bg-card);
 }
 
-/* Заголовок */
 .login-header {
   text-align: center;
   margin-bottom: 32px;
@@ -221,6 +196,7 @@ export default {
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0 0 8px 0;
+  color: var(--text-primary);
 }
 
 .login-subtitle {
@@ -229,7 +205,6 @@ export default {
   margin: 0;
 }
 
-/* Форма */
 .login-form {
   display: flex;
   flex-direction: column;
@@ -269,7 +244,7 @@ export default {
 
 .form-group input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(138, 92, 246, 0.15);
+  box-shadow: var(--shadow-focus);
   outline: none;
 }
 
@@ -277,7 +252,6 @@ export default {
   color: var(--text-muted);
 }
 
-/* Опции формы */
 .form-options {
   display: flex;
   justify-content: space-between;
@@ -318,47 +292,13 @@ export default {
   text-decoration: underline;
 }
 
-/* Кнопка входа */
-.submit-btn {
-  width: 100%;
-  padding: 0.9rem 1.5rem;
-  font-size: 1rem;
-  border-radius: 40px;
-  background-color: var(--accent);
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.submit-btn:hover {
-  background-color: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(138, 92, 246, 0.3);
-}
-
-.submit-btn:active {
-  transform: translateY(0);
-}
-
-.submit-btn i {
-  font-size: 16px;
-  color: white;
-  margin: 0;
-}
-
-/* Сообщения */
 .error-message {
   margin-top: 16px;
   padding: 12px 16px;
   background-color: var(--danger-trans);
   border: 1px solid var(--danger);
   border-radius: 10px;
-  color: var(--danger);
+  color: var(--danger-text);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -371,14 +311,13 @@ export default {
   background-color: var(--success-trans);
   border: 1px solid var(--success);
   border-radius: 10px;
-  color: var(--success);
+  color: var(--success-text);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Ссылка регистрации */
 .register-link {
   margin-top: 24px;
   text-align: center;
@@ -402,7 +341,6 @@ export default {
   text-decoration: underline;
 }
 
-/* ===== Адаптивность ===== */
 @media (max-width: 820px) {
   .login-container {
     padding: 0;
@@ -417,7 +355,6 @@ export default {
     box-shadow: none;
   }
 
-  /* Фон на весь экран */
   .left-side {
     position: absolute;
     inset: 0;
@@ -432,14 +369,6 @@ export default {
     width: 100%;
     height: 100%;
     z-index: 1;
-  }
-
-  .overlay-text {
-    font-size: 1.1rem;
-    padding: 8px 20px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
   }
 
   .right-side {
@@ -480,11 +409,6 @@ export default {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
-  }
-
-  .overlay-text {
-    font-size: 1rem;
-    padding: 6px 16px;
   }
 }
 </style>

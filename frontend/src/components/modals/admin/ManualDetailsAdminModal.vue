@@ -1,11 +1,10 @@
 <template>
-    <ModalWrapper
-        :isOpen="isOpen"
+    <BaseModal
+        :is-open="isOpen"
         :title="manual?.title || 'Мануал'"
         :subtitle="manual?.motorcycle || 'Мотоцикл'"
         icon="book"
-        bg-icon-color="var(--accent-trans)"
-        icon-color="var(--accent-text)"
+        variant="default"
         size="lg"
         @close="$emit('close')"
     >
@@ -68,7 +67,7 @@
                 </div>
                 <div v-if="manual?.difficult" class="about-item">
                     <i class="fa fa-signal"></i>
-                    <span><strong>Сложность:</strong> 
+                    <span><strong>Сложность:</strong>
                         <span class="difficulty-dots">
                             <span class="dot" :class="{ filled: ['easy', 'medium', 'hard'].includes(manual.difficult) }"></span>
                             <span class="dot" :class="{ filled: ['medium', 'hard'].includes(manual.difficult) }"></span>
@@ -89,17 +88,17 @@
             <h4 class="block-title">
                 <i class="fa fa-shield"></i> Безопасность и подготовка
             </h4>
-            
+
             <div v-if="manual?.safety_tip" class="safety-item safety-tip">
                 <i class="fa fa-lightbulb"></i>
                 <span>{{ manual.safety_tip }}</span>
             </div>
-            
+
             <div v-if="manual?.warnings" class="safety-item safety-warning">
                 <i class="fa fa-exclamation-triangle"></i>
                 <span>{{ manual.warnings }}</span>
             </div>
-            
+
             <div v-if="manual?.conditions" class="safety-item safety-condition">
                 <i class="fa fa-check-circle"></i>
                 <span>{{ manual.conditions }}</span>
@@ -111,7 +110,7 @@
             <h4 class="block-title">
                 <i class="fa fa-wrench"></i> Инструменты и материалы
             </h4>
-            
+
             <div class="tools-grid">
                 <div v-if="manual?.instruments" class="tools-item">
                     <i class="fa fa-wrench"></i>
@@ -120,7 +119,7 @@
                         <span class="tools-value">{{ manual.instruments }}</span>
                     </div>
                 </div>
-                
+
                 <div v-if="manual?.parts" class="tools-item">
                     <i class="fa fa-cogs"></i>
                     <div>
@@ -136,10 +135,10 @@
             <h4 class="block-title">
                 <i class="fa fa-link"></i> Ссылки на документацию
             </h4>
-            
+
             <div class="docs-list">
-                <a 
-                    v-for="(link, index) in manual.docs_links" 
+                <a
+                    v-for="(link, index) in manual.docs_links"
                     :key="index"
                     :href="link"
                     target="_blank"
@@ -168,8 +167,8 @@
                         <span>Момент (Н·м)</span>
                         <span>Примечание</span>
                     </div>
-                    <div 
-                        v-for="(item, index) in manual.specs.torque" 
+                    <div
+                        v-for="(item, index) in manual.specs.torque"
                         :key="index"
                         class="torque-row"
                     >
@@ -184,8 +183,8 @@
             <div v-if="manual.specs.fluids" class="specs-section">
                 <h5 class="specs-subtitle">Объёмы жидкостей</h5>
                 <div class="fluids-grid">
-                    <div 
-                        v-for="(value, key) in manual.specs.fluids" 
+                    <div
+                        v-for="(value, key) in manual.specs.fluids"
                         :key="key"
                         class="fluid-item"
                     >
@@ -199,8 +198,8 @@
             <div v-if="manual.specs.tolerances" class="specs-section">
                 <h5 class="specs-subtitle">Допуски и зазоры</h5>
                 <div class="tolerances-grid">
-                    <div 
-                        v-for="(value, key) in manual.specs.tolerances" 
+                    <div
+                        v-for="(value, key) in manual.specs.tolerances"
                         :key="key"
                         class="tolerance-item"
                     >
@@ -221,8 +220,8 @@
             </div>
 
             <div class="steps-list">
-                <div 
-                    v-for="(step, index) in manual.steps" 
+                <div
+                    v-for="(step, index) in manual.steps"
                     :key="index"
                     class="step-item"
                 >
@@ -230,18 +229,18 @@
                         <span class="step-number">{{ step.order || index + 1 }}</span>
                         <div class="step-line" v-if="index < manual.steps.length - 1"></div>
                     </div>
-                    
+
                     <div class="step-body">
                         <div class="step-header-inner">
                             <span class="step-title">{{ step.title }}</span>
                         </div>
-                        
+
                         <p v-if="step.text" class="step-text">{{ step.text }}</p>
-                        
+
                         <div v-if="step.image" class="step-image">
                             <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
                         </div>
-                        
+
                         <div class="step-meta">
                             <div v-if="step.warning" class="step-warning">
                                 <i class="fa fa-exclamation-triangle"></i>
@@ -266,7 +265,7 @@
             <h4 class="block-title">
                 <i class="fa fa-check-circle"></i> После завершения
             </h4>
-            
+
             <div class="aftercare-content">
                 <i class="fa fa-info-circle"></i>
                 <span>{{ manual.aftercare }}</span>
@@ -284,227 +283,232 @@
             <div class="admin-footer">
                 <div class="admin-actions">
                     <!-- Одобрить -->
-                    <button 
-                        v-if="manual?.status === 'moderate'" 
-                        @click="$emit('approve', manual.id)" 
-                        class="btn btn-success"
+                    <BaseButton
+                        v-if="manual?.status === 'moderate'"
+                        variant="success"
+                        icon="fa fa-check"
+                        block
+                        @click="$emit('approve', manual.id)"
                     >
-                        <i class="fa fa-check"></i> Одобрить
-                    </button>
+                        Одобрить
+                    </BaseButton>
 
                     <!-- Отклонить -->
-                    <button 
-                        v-if="manual?.status === 'moderate'" 
-                        @click="openRejectModal" 
-                        class="btn btn-danger"
+                    <BaseButton
+                        v-if="manual?.status === 'moderate'"
+                        variant="danger"
+                        icon="fa fa-times"
+                        block
+                        @click="openRejectModal"
                     >
-                        <i class="fa fa-times"></i> Отклонить
-                    </button>
+                        Отклонить
+                    </BaseButton>
 
                     <!-- Вернуть на проверку -->
-                    <button 
-                        v-if="manual?.status === 'rejected'" 
-                        @click="$emit('reconsider', manual.id)" 
-                        class="btn btn-warning"
+                    <BaseButton
+                        v-if="manual?.status === 'rejected'"
+                        variant="warning"
+                        icon="fa fa-undo"
+                        block
+                        @click="$emit('reconsider', manual.id)"
                     >
-                        <i class="fa fa-undo"></i> Вернуть на проверку
-                    </button>
+                        Вернуть на проверку
+                    </BaseButton>
 
                     <!-- Удалить -->
-                    <button 
-                        @click="confirmDelete" 
-                        class="btn btn-delete"
+                    <BaseButton
+                        variant="outline"
+                        icon="fa fa-trash"
+                        block
+                        @click="confirmDelete"
                     >
-                        <i class="fa fa-trash"></i> Удалить
-                    </button>
+                        Удалить
+                    </BaseButton>
                 </div>
 
-                <button @click="$emit('close')" class="btn btn-outline">
-                    <i class="fa fa-times"></i> Закрыть
-                </button>
+                <BaseButton
+                    variant="secondary"
+                    icon="fa fa-times"
+                    block
+                    @click="$emit('close')"
+                >
+                    Закрыть
+                </BaseButton>
             </div>
         </template>
 
         <!-- ===== МОДАЛКА ДЛЯ ПРИЧИНЫ ОТКЛОНЕНИЯ ===== -->
         <div v-if="showRejectModal" class="reject-overlay" @click.self="closeRejectModal">
-            <div class="reject-box">
-                <div class="reject-header">
-                    <h4 class="reject-title">Отклонить мануал</h4>
-                    <button class="reject-close" @click="closeRejectModal">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
+        <div class="reject-box">
+            <div class="reject-header">
+                <h4 class="reject-title">Отклонить мануал</h4>
+                <BaseButton
+                    variant="ghost"
+                    icon="fa fa-times"
+                    size="sm"
+                    @click="closeRejectModal"
+                />
+            </div>
                 <p class="reject-sub">Укажите причину отклонения, чтобы автор мог исправить ошибки</p>
-                <textarea 
-                    v-model="rejectReason" 
-                    class="reject-input" 
+                <BaseTextarea
+                    v-model="rejectReason"
                     placeholder="Например: Не хватает шагов, ошибки в тексте, неверная категория..."
-                    rows="4"
-                ></textarea>
-                <div class="reject-actions">
-                    <button class="btn btn-cancel" @click="closeRejectModal">Отмена</button>
-                    <button class="btn btn-confirm-reject" @click="submitReject">
-                        <i class="fa fa-times"></i> Отклонить
-                    </button>
-                </div>
+                    :rows="4"
+                />
+            <div class="reject-actions">
+                <BaseButton variant="secondary" @click="closeRejectModal">
+                    Отмена
+                </BaseButton>
+                <BaseButton
+                    variant="danger"
+                    icon="fa fa-times"
+                    @click="submitReject"
+                >
+                    Отклонить
+                </BaseButton>
             </div>
         </div>
-    </ModalWrapper>
+        </div>
+    </BaseModal>
 </template>
 
-<script>
-import ModalWrapper from '../ModalWrapper.vue'
+<script setup>
+import { computed, ref } from 'vue'
+import { BaseModal, BaseButton, BaseTextarea } from '@/components/ui'
 
-export default {
-    components: { ModalWrapper },
+const props = defineProps({
+  isOpen: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  manual: {
+    type: Object,
+    required: true,
+    default: null,
+  },
+})
 
-    props: {
-        isOpen: {
-            type: Boolean,
-            required: true,
-            default: false
-        },
-        manual: {
-            type: Object,
-            required: true,
-            default: null
-        }
-    },
+const emit = defineEmits(['close', 'approve', 'reject', 'reconsider', 'delete'])
 
-    emits: ['close', 'approve', 'reject', 'reconsider', 'delete'],
+const showRejectModal = ref(false)
+const rejectReason = ref('')
 
-    data() {
-        return {
-            showRejectModal: false,
-            rejectReason: ''
-        }
-    },
+const statusIcon = computed(() => {
+  const icons = {
+    approved: 'fa fa-check-circle',
+    moderate: 'fa fa-hourglass-half',
+    rejected: 'fa fa-times-circle',
+    draft: 'fa fa-pencil',
+  }
+  return icons[props.manual?.status] || 'fa-circle'
+})
 
-    computed: {
-        statusIcon() {
-            const icons = {
-                'approved': 'fa fa-check-circle',
-                'moderate': 'fa fa-hourglass-half',
-                'rejected': 'fa fa-times-circle',
-                'draft': 'fa fa-pencil'
-            }
-            return icons[this.manual?.status] || 'fa-circle'
-        }
-    },
+function formatDate(dateString) {
+  if (!dateString) return '—'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return '—'
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    })
+  } catch {
+    return '—'
+  }
+}
 
-    methods: {
-        formatDate(dateString) {
-            if (!dateString) return '—'
-            try {
-                const date = new Date(dateString)
-                if (isNaN(date.getTime())) return '—'
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                })
-            } catch {
-                return '—'
-            }
-        },
+function getStatusLabel(status) {
+  const labels = {
+    approved: 'Одобрен',
+    moderate: 'На проверке',
+    rejected: 'Отклонён',
+    draft: 'Черновик',
+  }
+  return labels[status] || status || '—'
+}
 
-        getStatusLabel(status) {
-            const labels = {
-                'approved': 'Одобрен',
-                'moderate': 'На проверке',
-                'rejected': 'Отклонён',
-                'draft': 'Черновик'
-            }
-            return labels[status] || status || '—'
-        },
+function getCategory(category) {
+  const categories = {
+    engine: 'Двигатель',
+    drive: 'Привод',
+    steering: 'Рулевое управление',
+    suspension: 'Подвеска',
+    electronics: 'Электроника',
+    wheel: 'Колёса / Шины',
+    brakes: 'Тормозная система',
+    fuel: 'Топливная система',
+    cooling: 'Система охлаждения',
+  }
+  return categories[category] || category
+}
 
-        getCategory(category) {
-            const categories = {
-                'engine': 'Двигатель',
-                'drive': 'Привод',
-                'steering': 'Рулевое управление',
-                'suspension': 'Подвеска',
-                'electronics': 'Электроника',
-                'wheel': 'Колеса / Шины',
-                'brakes': 'Тормозная система',
-                'fuel': 'Топливная система',
-                'cooling': 'Система охлаждения'
-            }
-            return categories[category] || category
-        },
+function getDifficulty(difficult) {
+  const difficulties = {
+    easy: 'Лёгкая',
+    medium: 'Средняя',
+    hard: 'Сложная',
+  }
+  return difficulties[difficult] || difficult
+}
 
-        getDifficulty(difficult) {
-            const difficulties = {
-                'easy': 'Лёгкая',
-                'medium': 'Средняя',
-                'hard': 'Сложная'
-            }
-            return difficulties[difficult] || difficult
-        },
+function hasSpecs(specs) {
+  if (!specs) return false
+  return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances)
+}
 
-        hasSpecs(specs) {
-            if (!specs) return false
-            return !!(specs.torque?.length > 0 || specs.fluids || specs.tolerances)
-        },
+function getFluidLabel(key) {
+  const labels = {
+    oil: 'Моторное масло',
+    coolant: 'Охлаждающая жидкость',
+    brake: 'Тормозная жидкость',
+    fork: 'Масло в вилке',
+    gear: 'Масло в КПП',
+    chain: 'Смазка цепи',
+  }
+  return labels[key] || key
+}
 
-        getFluidLabel(key) {
-            const labels = {
-                'oil': 'Моторное масло',
-                'coolant': 'Охлаждающая жидкость',
-                'brake': 'Тормозная жидкость',
-                'fork': 'Масло в вилке',
-                'gear': 'Масло в КПП',
-                'chain': 'Смазка цепи'
-            }
-            return labels[key] || key
-        },
+function getToleranceLabel(key) {
+  const labels = {
+    chain: 'Зазор цепи',
+    valve: 'Зазор клапанов',
+    spark: 'Зазор свечи',
+    brake: 'Толщина колодок',
+    tire: 'Давление в шинах',
+  }
+  return labels[key] || key
+}
 
-        getToleranceLabel(key) {
-            const labels = {
-                'chain': 'Зазор цепи',
-                'valve': 'Зазор клапанов',
-                'spark': 'Зазор свечи',
-                'brake': 'Толщина колодок',
-                'tire': 'Давление в шинах'
-            }
-            return labels[key] || key
-        },
+function getImageUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/')) return path
+  return `/uploads/${path}`
+}
 
-        // ===== РАБОТА С ИЗОБРАЖЕНИЯМИ =====
-        getImageUrl(path) {
-            if (!path) return ''
-            if (path.startsWith('http://') || path.startsWith('https://')) {
-                return path
-            }
-            if (path.startsWith('/')) {
-                return path
-            }
-            return `/uploads/${path}`
-        },
+function openRejectModal() {
+  rejectReason.value = ''
+  showRejectModal.value = true
+}
 
-        openRejectModal() {
-            this.rejectReason = ''
-            this.showRejectModal = true
-        },
+function closeRejectModal() {
+  showRejectModal.value = false
+}
 
-        closeRejectModal() {
-            this.showRejectModal = false
-        },
+function submitReject() {
+  emit('reject', {
+    id: props.manual.id,
+    reason: rejectReason.value.trim() || 'Без указания причины',
+  })
+  closeRejectModal()
+}
 
-        submitReject() {
-            this.$emit('reject', { 
-                id: this.manual.id, 
-                reason: this.rejectReason.trim() || 'Без указания причины' 
-            })
-            this.closeRejectModal()
-        },
-
-        confirmDelete() {
-            if (confirm('Вы уверены, что хотите удалить этот мануал?')) {
-                this.$emit('delete', this.manual.id)
-            }
-        }
-    }
+function confirmDelete() {
+  if (confirm('Вы уверены, что хотите удалить этот мануал?')) {
+    emit('delete', props.manual.id)
+  }
 }
 </script>
 
@@ -1136,196 +1140,88 @@ export default {
     width: 100%;
 }
 
-/* ===== КНОПКИ ===== */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
+/* ===== АДМИН-ФУТЕР ===== */
+.admin-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
 }
 
-.btn i {
-    font-size: 14px;
+.admin-actions {
+  display: flex;
+  width: 100%;
+  gap: 8px;
 }
 
-.btn-success {
-    background: var(--success);
-    color: #fff;
+.admin-actions > * {
+  flex: 1;
 }
 
-.btn-success:hover {
-    background: var(--success-hover);
-    transform: translateY(-1px);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: #fff;
-}
-
-.btn-danger:hover {
-    background: var(--danger-hover);
-    transform: translateY(-1px);
-}
-
-.btn-warning {
-    background: var(--warning);
-    color: #fff;
-}
-
-.btn-warning:hover {
-    background: var(--warning-hover);
-    transform: translateY(-1px);
-}
-
-.btn-delete {
-    background: transparent;
-    border: 1px solid var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.btn-delete:hover {
-    background: var(--danger-trans);
-    border-color: var(--danger);
-}
-
-.btn-outline {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-}
-
-.btn-outline:hover {
-    background: var(--bg-secondary);
-    border-color: var(--text-muted);
-    color: var(--text-primary);
-}
-
-.btn-cancel {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-}
-
-.btn-cancel:hover {
-    background: var(--bg-secondary);
-}
-
-.btn-confirm-reject {
-    background: var(--danger);
-    color: #fff;
-}
-
-.btn-confirm-reject:hover {
-    background: var(--danger-hover);
-    transform: translateY(-1px);
+.admin-footer > button {
+  flex: 0 0 auto;
 }
 
 /* ===== МОДАЛКА ОТКЛОНЕНИЯ ===== */
 .reject-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    animation: fadeIn 0.2s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-popover); /* 1200 — выше base-modal (1100), ниже toast (9999) */
+  animation: fadeIn 0.2s ease;
 }
 
 .reject-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px 28px;
-    max-width: 420px;
-    width: 92%;
-    box-shadow: var(--shadow-lg);
-    animation: slideUp 0.3s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  max-width: 420px;
+  width: 92%;
+  box-shadow: var(--shadow-modal);
+  animation: slideUp 0.3s ease;
 }
 
 .reject-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-}
-
-.reject-close {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 20px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.reject-close:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
 }
 
 .reject-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .reject-sub {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin: 4px 0 14px 0;
-}
-
-.reject-input {
-    width: 100%;
-    padding: 10px 14px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    color: var(--text-primary);
-    font-size: 14px;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: border 0.2s;
-    min-height: 80px;
-    box-sizing: border-box;
-}
-
-.reject-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-trans);
-}
-
-.reject-input::placeholder {
-    color: var(--text-muted);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 4px 0 14px 0;
 }
 
 .reject-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-    justify-content: flex-end;
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: flex-end;
 }
 
-.reject-actions .btn {
-    padding: 8px 20px;
+.reject-actions > * {
+  flex: 0 0 auto;
 }
 
 /* ===== АНИМАЦИИ ===== */
@@ -1398,12 +1294,6 @@ export default {
         flex-direction: column;
     }
 
-    .admin-actions .btn,
-    .admin-footer .btn-outline {
-        width: 100%;
-        justify-content: center;
-    }
-
     .reject-box {
         padding: 20px;
         width: 95%;
@@ -1411,11 +1301,6 @@ export default {
 
     .reject-actions {
         flex-direction: column;
-    }
-
-    .reject-actions .btn {
-        width: 100%;
-        justify-content: center;
     }
 }
 

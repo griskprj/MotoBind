@@ -8,14 +8,18 @@
         </div>
 
         <div class="header-actions">
-          <button @click="this.$router.push('/login')" class="btn-outline">Войти</button>
-          <button @click="this.$router.push('/welcome')" class="btn-primary">Начать</button>
-          <button 
-              class="theme-toggle" 
-              @click="toggleTheme"
-              :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
+          <BaseButton variant="outline" @click="goTo('/login')">
+            Войти
+          </BaseButton>
+          <BaseButton variant="primary" @click="goTo('/welcome')">
+            Начать
+          </BaseButton>
+          <button
+            class="theme-toggle"
+            @click="toggleTheme"
+            :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
           >
-              <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
+            <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
           </button>
         </div>
       </div>
@@ -62,11 +66,12 @@
           </div>
 
           <div class="hero-buttons">
-            <button @click="this.$router.push('/welcome')" class="btn-primary big">Начать бесплатно</button>
+            <BaseButton variant="primary" size="lg" @click="goTo('/welcome')">
+              Начать бесплатно
+            </BaseButton>
           </div>
         </div>
 
-        <!-- Hero Image Placeholder -->
         <div class="hero-image-wrapper">
           <div class="hero-image-placeholder">
             <img src="/16x9Auth-Bg.webp" alt="" class="landing-img">
@@ -75,7 +80,7 @@
       </div>
     </section>
 
-    <!-- === FEATURES SECTION (4 cards) === -->
+    <!-- === FEATURES SECTION === -->
     <section class="section">
       <div class="container">
         <div class="section-header">
@@ -141,7 +146,7 @@
       </div>
     </section>
 
-    <!-- === HOW IT WORKS (3 steps) === -->
+    <!-- === HOW IT WORKS === -->
     <section class="section steps-section">
       <div class="container">
         <div class="section-header">
@@ -222,7 +227,7 @@
       </div>
     </section>
 
-    <!-- === COMMUNITY (Title only, stats removed) === -->
+    <!-- === COMMUNITY === -->
     <section class="section community-section">
       <div class="container">
         <div class="section-header">
@@ -233,13 +238,15 @@
       </div>
     </section>
 
-    <!-- === CTA (Footer) === -->
+    <!-- === CTA === -->
     <section class="cta-banner">
       <div class="container cta-layout">
         <div class="cta-left">
           <h2 class="cta-title">Готовы взять контроль <br>над своим мотоциклом?</h2>
           <p class="cta-desc">Присоединяйтесь к MotoBind и сделайте обслуживание простым и понятным.</p>
-          <button @click="this.$router.push('/welcome')" class="btn-primary big">Начать бесплатно <i class="fa fa-arrow-right"></i></button>
+          <BaseButton variant="primary" size="lg" icon="fa fa-arrow-right" @click="goTo('/welcome')">
+            Начать бесплатно
+          </BaseButton>
         </div>
         <div class="cta-right">
           <div class="cta-image-placeholder">
@@ -250,57 +257,63 @@
     </section>
 
     <!-- Кнопка "Наверх" -->
-    <button class="back-to-top" @click="scrollToTop" v-show="showBackToTop">
+    <button
+      v-show="showBackToTop"
+      class="back-to-top"
+      @click="scrollToTop"
+    >
       <i class="fas fa-arrow-up"></i>
     </button>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Landing',
+<script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { BaseButton } from '@/components/ui'
 
-  data() {
-    showBackToTop: false
-  },
+const router = useRouter()
 
-  mounted() {
-    window.addEventListener('scroll', this.handleScroll)
-  },
+const showBackToTop = ref(false)
+const isDark = ref(true)
 
-  beforeDestroy() {
-    window.removeEventListener('scroll', this.handleScroll)
-  },
+// Восстанавливаем тему при монтировании
+onMounted(() => {
+  const saved = localStorage.getItem('theme')
+  isDark.value = saved !== 'light'
+  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
 
-  methods: {
-    toggleTheme() {
-      this.isDark = !this.isDark;
-      const theme = this.isDark ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      
-      const icon = this.$el.querySelector('.theme-toggle i');
-      if (icon) {
-          icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';
-      }
-    },
+  window.addEventListener('scroll', handleScroll)
+})
 
-    handleScroll() {
-      this.showBackToTop = window.scrollY > 600
-    },
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
-    scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    },
-  }
+function handleScroll() {
+  showBackToTop.value = window.scrollY > 600
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
+
+function goTo(path) {
+  router.push(path)
 }
 </script>
 
 <style scoped>
-/* ===== Базовые стили ===== */
 section {
-    border: none;
-    border-radius: 0px;
+  border: none;
+  border-radius: 0;
 }
 
 .landing {
@@ -344,121 +357,47 @@ section {
   font-weight: 700;
   letter-spacing: -0.5px;
 }
+
 .logo-m {
   font-weight: 900;
-}
-
-.nav {
-  display: flex;
-  gap: 32px;
-}
-.nav a {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.nav a:hover {
-  color: var(--text-primary);
 }
 
 .header-actions {
   display: flex;
   gap: 12px;
-}
-
-.btn-primary {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.btn-primary:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-}
-.btn-primary.big {
-  padding: 14px 28px;
-  font-size: 16px;
-  border-radius: 12px;
 }
 
-.btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.btn-outline:hover {
-  background: var(--border-light);
-  border-color: var(--text-muted);
-}
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: none;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-.btn-ghost:hover {
-  color: var(--text-primary);
-}
-
-/* ===== КНОПКА ПЕРЕКЛЮЧЕНИЯ ТЕМЫ ===== */
 .theme-toggle {
-    min-width: 45px;
-    padding: 0;
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.3s ease;
 }
 
 .theme-toggle:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    transform: rotate(30deg);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  transform: rotate(30deg);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
 .theme-toggle:active {
-    transform: rotate(60deg) scale(0.9);
+  transform: rotate(60deg) scale(0.9);
 }
 
 .theme-toggle i {
-    transition: transform 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 /* ===== HERO ===== */
@@ -466,6 +405,7 @@ section {
   padding: 80px 0 60px;
   position: relative;
 }
+
 .hero-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -498,6 +438,7 @@ section {
   margin: 0 0 16px 0;
   color: var(--text-primary);
 }
+
 .hero-desc {
   font-size: 16px;
   line-height: 1.6;
@@ -512,11 +453,13 @@ section {
   gap: 24px;
   margin-bottom: 32px;
 }
+
 .tag {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .tag-icon {
   width: 32px;
   height: 32px;
@@ -528,11 +471,13 @@ section {
   justify-content: center;
   font-size: 14px;
 }
+
 .tag-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
+
 .tag-desc {
   font-size: 12px;
   color: var(--text-muted);
@@ -548,6 +493,7 @@ section {
   justify-content: center;
   align-items: center;
 }
+
 .hero-image-placeholder {
   width: 100%;
   aspect-ratio: 4/3;
@@ -562,6 +508,7 @@ section {
   gap: 12px;
   text-align: center;
 }
+
 .landing-img {
   width: 100%;
   height: 100%;
@@ -570,10 +517,6 @@ section {
   display: block;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-light);
-}
-.hero-image-placeholder p {
-  font-size: 16px;
-  margin: 0;
 }
 
 /* ===== SECTIONS ===== */
@@ -585,6 +528,7 @@ section {
   text-align: center;
   margin-bottom: 48px;
 }
+
 .section-title {
   font-size: 36px;
   font-weight: 600;
@@ -592,16 +536,19 @@ section {
   line-height: 1.2;
   color: var(--text-primary);
 }
+
 .section-desc {
   color: var(--text-muted);
   font-size: 16px;
   max-width: 520px;
   margin: 0 auto;
 }
+
 .section-desc.left-align {
   max-width: 100%;
   margin: 0 0 24px 0;
 }
+
 .mini-label {
   font-size: 12px;
   font-weight: 600;
@@ -617,6 +564,7 @@ section {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
+
 .feature-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
@@ -624,10 +572,12 @@ section {
   padding: 24px;
   transition: all 0.3s;
 }
+
 .feature-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent-trans);
 }
+
 .feature-icon {
   width: 40px;
   height: 40px;
@@ -640,12 +590,14 @@ section {
   font-size: 18px;
   margin-bottom: 16px;
 }
+
 .feature-title {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
 }
+
 .feature-desc {
   font-size: 14px;
   color: var(--text-muted);
@@ -664,12 +616,14 @@ section {
   align-items: center;
   margin-bottom: 64px;
 }
+
 .catalog-left h3 {
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
 }
+
 .catalog-desc {
   font-size: 16px;
   color: var(--text-muted);
@@ -682,12 +636,14 @@ section {
   gap: 48px;
   align-items: center;
 }
+
 .interface-content h3 {
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
 }
+
 .interface-desc {
   font-size: 16px;
   color: var(--text-muted);
@@ -708,22 +664,22 @@ section {
   font-size: 32px;
   gap: 8px;
 }
+
 .screenshot-placeholder.big {
   aspect-ratio: 21/9;
-}
-.screenshot-placeholder span {
-  font-size: 14px;
 }
 
 /* ===== STEPS ===== */
 .steps-section {
   background: var(--border-light);
 }
+
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 32px;
 }
+
 .step-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
@@ -732,11 +688,13 @@ section {
   text-align: center;
   transition: all 0.3s;
 }
+
 .step-card:hover {
   background: var(--bg-card-hover);
   transform: translateY(-4px);
   border-color: var(--accent-trans);
 }
+
 .step-icon {
   width: 56px;
   height: 56px;
@@ -749,12 +707,14 @@ section {
   font-size: 24px;
   margin: 0 auto 16px;
 }
+
 .step-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
 }
+
 .step-desc {
   font-size: 14px;
   color: var(--text-muted);
@@ -765,12 +725,14 @@ section {
 .riders-section {
   background: var(--border-light);
 }
+
 .riders-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;
   align-items: center;
 }
+
 .riders-image-placeholder {
   width: 100%;
   aspect-ratio: 4/3;
@@ -784,20 +746,19 @@ section {
   font-size: 48px;
   gap: 12px;
 }
-.riders-image-placeholder p {
-  font-size: 16px;
-  margin: 0;
-}
+
 .riders-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-top: 16px;
 }
+
 .rider-item {
   display: flex;
   flex-direction: column;
 }
+
 .rider-icon {
   width: 32px;
   height: 32px;
@@ -810,11 +771,13 @@ section {
   font-size: 14px;
   margin-bottom: 8px;
 }
+
 .rider-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
+
 .rider-desc {
   font-size: 12px;
   color: var(--text-muted);
@@ -830,6 +793,7 @@ section {
   padding: 64px 0;
   background: var(--bg-primary);
 }
+
 .cta-layout {
   background: var(--bg-secondary);
   border-radius: 24px;
@@ -840,21 +804,24 @@ section {
   align-items: center;
   border: 1px solid var(--border-color);
 }
+
 .cta-title {
   font-size: 32px;
   font-weight: 700;
   margin: 0 0 12px 0;
   color: var(--text-primary);
 }
+
 .cta-desc {
   font-size: 16px;
   color: var(--text-muted);
   margin: 0 0 24px 0;
 }
+
 .cta-image-placeholder {
   width: 100%;
   aspect-ratio: 3/4;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -864,10 +831,6 @@ section {
   font-size: 48px;
   gap: 8px;
   border: 1px solid var(--border-light);
-}
-.cta-image-placeholder p {
-  font-size: 14px;
-  margin: 0;
 }
 
 /* --- Кнопка "Наверх" --- */
@@ -934,9 +897,6 @@ section {
 }
 
 @media (max-width: 768px) {
-  .nav {
-    display: none;
-  }
   .hero-title {
     font-size: 32px;
   }
@@ -968,9 +928,8 @@ section {
     flex-direction: column;
     width: 100%;
   }
-  .btn-primary.big, .btn-ghost {
+  .hero-buttons > * {
     width: 100%;
-    justify-content: center;
   }
   .cta-layout {
     padding: 24px 16px;
