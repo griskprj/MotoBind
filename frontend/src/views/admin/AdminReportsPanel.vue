@@ -133,6 +133,7 @@ import api from '../../api/api'
 import Header from '../../components/Header.vue'
 import LoadingOverlay from '../../components/LoadingOverlay.vue'
 import ReportDetailsModal from '../../components/modals/admin/ReportDetailsModal.vue'
+import { useToast } from '@/composables/useToast'
 
 export default {
     name: 'AdminReportsPanel',
@@ -162,6 +163,11 @@ export default {
         }
     },
 
+    setup() {
+        const toast = useToast()
+        return { toast }
+    },
+
     mounted() { this.loadReports() },
 
     methods: {
@@ -187,7 +193,7 @@ export default {
                 }
             } catch (err) {
                 console.error(err)
-                alert('Ошибка загрузки жалоб')
+                this.toast.error('Ошибка загрузки жалоб')
             } finally {
                 this.loading = false
             }

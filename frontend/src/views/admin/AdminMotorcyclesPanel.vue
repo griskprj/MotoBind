@@ -242,6 +242,7 @@ import api from '../../api/api.js'
 import Header from '../../components/Header.vue'
 import LoadingOverlay from '../../components/LoadingOverlay.vue'
 import DeleteMotoAdminModal from '../../components/modals/admin/DeleteMotoAdminModal.vue'
+import { useToast } from '@/composables/useToast'
 
 export default {
     name: 'AdminMotorcyclesPanel',
@@ -250,6 +251,11 @@ export default {
         Header,
         LoadingOverlay,
         DeleteMotoAdminModal
+    },
+
+    setup() {
+        const toast = useToast()
+        return { toast }
     },
 
     data() {
@@ -342,7 +348,6 @@ export default {
                     ...this.filters
                 }
 
-                // Убираем пустые параметры
                 Object.keys(params).forEach(key => {
                     if (!params[key]) delete params[key]
                 })
@@ -450,11 +455,14 @@ export default {
                 await api.delete(`/admin/motorcycle/${motoId}`)
                 await this.loadMotorcycles()
                 this.closeDeleteModal()
+                this.toast.success('Мотоцикл удалён')
             } catch (error) {
                 console.error('Error deleting motorcycle:', error)
-                alert(error.response?.data?.error || 'Ошибка при удалении мотоцикла')
+                this.toast.error(
+                    error.response?.data?.error || 'Ошибка при удалении мотоцикла'
+                )
             }
-        }
+        },
     }
 }
 </script>
