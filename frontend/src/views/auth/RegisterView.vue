@@ -2,7 +2,7 @@
   <div class="register-wizard-container">
     <div class="wizard-card animate-slide-in">
       <div class="background-image"></div>
-      
+
       <div class="background-overlay"></div>
 
       <div class="progress-section">
@@ -15,12 +15,11 @@
         </div>
       </div>
 
-      <!-- Шаги -->
       <div class="step-content">
-        <!-- Шаг 7: Завершение -->
+        <!-- Шаг 7 -->
         <div v-if="currentStep === 7" class="step completion-step">
           <div class="completion-glow"></div>
-          
+
           <div class="particles-container">
             <div
               v-for="i in 40"
@@ -29,7 +28,7 @@
               :style="getParticleStyle(i)"
             ></div>
           </div>
-          
+
           <div class="blur-blobs">
             <div class="blob blob-1"></div>
             <div class="blob blob-2"></div>
@@ -46,18 +45,17 @@
           </p>
 
           <div class="step-actions">
-            <button
-              class="btn btn-primary"
-              :disabled="loading"
+            <BaseButton
+              variant="primary"
+              :loading="loading"
               @click="finishRegistration"
             >
-              <span v-if="!loading">Перейти в приложение</span>
-              <span v-else>Загрузка...</span>
-            </button>
+              Перейти в приложение
+            </BaseButton>
           </div>
         </div>
 
-        <!-- Остальные шаги -->
+        <!-- Шаг 1 -->
         <div v-else-if="currentStep === 1" class="step">
           <h2 class="step-title">Выберите, что вас описывает</h2>
           <p class="step-subtitle">Мы настроим приложение под ваши задачи.</p>
@@ -83,7 +81,7 @@
             <div
               class="role-card"
               :class="{ selected: formData.role === 'motoclub' }"
-              @click="error='Эта роль находится в разработке'"
+              @click="error = 'Эта роль находится в разработке'"
             >
               <div class="role-icon">
                 <i class="fa fa-store"></i>
@@ -99,19 +97,20 @@
           </div>
 
           <div class="step-actions">
-            <div class="btn btn-secondary" @click="this.$router.push('/welcome')">
+            <BaseButton variant="secondary" @click="router.push('/welcome')">
               Отмена
-            </div>
-            <button
-              class="btn btn-primary"
+            </BaseButton>
+            <BaseButton
+              variant="primary"
               :disabled="!formData.role"
               @click="nextStep"
             >
               Продолжить
-            </button>
+            </BaseButton>
           </div>
         </div>
 
+        <!-- Шаг 2 -->
         <div v-else-if="currentStep === 2" class="step">
           <h2 class="step-title">Давайте познакомимся</h2>
           <p class="step-subtitle">Это поможет сделать MotoBind удобнее для вас.</p>
@@ -156,17 +155,18 @@
           </div>
 
           <div class="step-actions">
-            <button class="btn btn-secondary" @click="prevStep">Назад</button>
-            <button
-              class="btn btn-primary"
+            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
+            <BaseButton
+              variant="primary"
               :disabled="!isStep2Valid"
               @click="nextStep"
             >
               Продолжить
-            </button>
+            </BaseButton>
           </div>
         </div>
 
+        <!-- Шаг 3 -->
         <div v-else-if="currentStep === 3" class="step">
           <h2 class="step-title">Добавьте свой первый мотоцикл</h2>
           <p class="step-subtitle">
@@ -177,19 +177,20 @@
             <i class="fa fa-motorcycle empty-icon"></i>
             <h3>Мотоциклов пока нет</h3>
             <p>Добавьте свой мотоцикл, чтобы начать вести учет обслуживания.</p>
-            <button class="btn btn-primary" @click="addMotorcycle">
+            <BaseButton variant="primary" @click="addMotorcycle">
               Добавить мотоцикл
-            </button>
+            </BaseButton>
           </div>
 
           <div class="step-actions">
-            <button class="btn btn-secondary" @click="prevStep">Назад</button>
-            <button class="btn btn-outline" @click="skipMotorcycle">
+            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
+            <BaseButton variant="outline" @click="skipMotorcycle">
               Добавить позже
-            </button>
+            </BaseButton>
           </div>
         </div>
 
+        <!-- Шаг 4 -->
         <div v-else-if="currentStep === 4" class="step">
           <h2 class="step-title">Добавление мотоцикла</h2>
 
@@ -212,7 +213,7 @@
               type="number"
               placeholder="2020"
               min="1900"
-              :max="new Date().getFullYear()"
+              :max="currentYear"
             />
           </div>
 
@@ -229,17 +230,18 @@
           </div>
 
           <div class="step-actions">
-            <button class="btn btn-secondary" @click="prevStep">Назад</button>
-            <button
-              class="btn btn-primary"
+            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
+            <BaseButton
+              variant="primary"
               :disabled="!formData.motorcycle.name"
               @click="nextStep"
             >
               Продолжить
-            </button>
+            </BaseButton>
           </div>
         </div>
 
+        <!-- Шаг 5 -->
         <div v-else-if="currentStep === 5" class="step">
           <h2 class="step-title">Добавление мотоцикла</h2>
 
@@ -275,13 +277,14 @@
           </div>
 
           <div class="step-actions">
-            <button class="btn btn-secondary" @click="prevStep">Назад</button>
-            <button class="btn btn-primary" @click="nextStep">
+            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
+            <BaseButton variant="primary" @click="nextStep">
               Продолжить
-            </button>
+            </BaseButton>
           </div>
         </div>
 
+        <!-- Шаг 6 -->
         <div v-else-if="currentStep === 6" class="step">
           <h2 class="step-title">Добавление мотоцикла</h2>
 
@@ -308,7 +311,7 @@
 
           <div class="form-group">
             <label>Фото мотоцикла</label>
-            <div class="upload-card" @click="$refs.fileInput.click()">
+            <div class="upload-card" @click="fileInput?.click()">
               <div class="upload-icon">
                 <i class="fa fa-cloud-upload-alt"></i>
               </div>
@@ -326,22 +329,24 @@
             </div>
             <div v-if="formData.motorcycle.photo" class="photo-preview">
               <img :src="formData.motorcycle.photo" alt="Мотоцикл" />
-              <button class="btn btn-danger btn-small" @click="removePhoto">
-                <i class="fa fa-times"></i>
-              </button>
+              <BaseButton
+                variant="danger"
+                size="sm"
+                icon="fa fa-times"
+                @click="removePhoto"
+              />
             </div>
           </div>
 
           <div class="step-actions">
-            <button class="btn btn-secondary" @click="prevStep">Назад</button>
-            <button class="btn btn-primary" @click="nextStep">
+            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
+            <BaseButton variant="primary" @click="nextStep">
               Сохранить мотоцикл
-            </button>
+            </BaseButton>
           </div>
         </div>
       </div>
 
-      <!-- Ошибка -->
       <div v-if="error" class="error-message">
         <i class="fa fa-exclamation-circle"></i> {{ error }}
       </div>
@@ -356,205 +361,228 @@
   />
 </template>
 
-<script>
-import api from '../../api/api';
-import { useAuthStore } from '../../stores/auth.js';
-import VerificationModal from '../../components/modals/VerificationModal.vue';
+<script setup>
+import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { BaseButton } from '@/components/ui'
+import { useAuthStore } from '@/stores'
+import api from '@/api/api'
+import VerificationModal from '@/components/modals/VerificationModal.vue'
 
-export default {
-  name: 'RegisterWizard',
-  components: {VerificationModal},
-  data() {
-    return {
-      currentStep: 1,
-      totalSteps: 7,
-      formData: {
-        role: '',
-        username: '',
-        email: '',
-        password: '',
-        motorcycle: {
-          name: '',
-          years: null,
-          volume: null,
-          color: '#8B5CF6',
-          mileage: null,
-          licensePlate: '',
-          vin: '',
-          note: '',
-          photo: null,
-        },
-      },
-      error: null,
-      loading: false,
-      skipMotorcycleMode: false,
-      
-      showVerificationModal: false,
-      pendingUser: null,
-    };
+const router = useRouter()
+const auth = useAuthStore()
+
+const currentStep = ref(1)
+const totalSteps = 7
+const currentYear = new Date().getFullYear()
+
+const formData = reactive({
+  role: '',
+  username: '',
+  email: '',
+  password: '',
+  motorcycle: {
+    name: '',
+    years: null,
+    volume: null,
+    color: '#8B5CF6',
+    mileage: null,
+    licensePlate: '',
+    vin: '',
+    note: '',
+    photo: null,
   },
-  computed: {
-    progressPercent() {
-      return ((this.currentStep - 1) / (this.totalSteps - 1)) * 100;
-    },
-    isStep2Valid() {
-      return (
-        this.formData.username.length >= 2 &&
-        this.formData.email.includes('@') &&
-        this.formData.password.length >= 6
-      );
-    },
-  },
-  methods: {
-    selectRole(role) {
-      this.formData.role = role;
-    },
-    nextStep() {
-      if (this.currentStep < this.totalSteps) {
-        this.currentStep++;
-        this.error = null;
+})
+
+const error = ref(null)
+const loading = ref(false)
+const skipMotorcycleMode = ref(false)
+
+const showVerificationModal = ref(false)
+const pendingUser = ref(null)
+
+const fileInput = ref(null)
+
+const progressPercent = computed(() => {
+  return ((currentStep.value - 1) / (totalSteps - 1)) * 100
+})
+
+const isStep2Valid = computed(() => {
+  return (
+    formData.username.length >= 2 &&
+    formData.email.includes('@') &&
+    formData.password.length >= 6
+  )
+})
+
+function selectRole(role) {
+  formData.role = role
+}
+
+function nextStep() {
+  if (currentStep.value < totalSteps) {
+    currentStep.value++
+    error.value = null
+  }
+}
+
+function prevStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--
+    error.value = null
+  }
+}
+
+function addMotorcycle() {
+  skipMotorcycleMode.value = false
+  currentStep.value = 4
+}
+
+function skipMotorcycle() {
+  skipMotorcycleMode.value = true
+  currentStep.value = 7
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      formData.motorcycle.photo = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+function removePhoto() {
+  formData.motorcycle.photo = null
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+function getParticleStyle(index) {
+  const size = Math.random() * 6 + 2
+  const x = Math.random() * 100
+  const y = Math.random() * 100
+  const duration = Math.random() * 20 + 15
+  const delay = Math.random() * 10
+  const opacity = Math.random() * 0.4 + 0.1
+
+  return {
+    width: size + 'px',
+    height: size + 'px',
+    left: x + '%',
+    top: y + '%',
+    animationDuration: duration + 's',
+    animationDelay: delay + 's',
+    opacity: opacity,
+  }
+}
+
+function onVerified() {
+  showVerificationModal.value = false
+  router.push('/garage')
+}
+
+function onVerificationClosed() {
+  showVerificationModal.value = false
+  if (auth.isAuthenticated) {
+    router.push('/garage')
+  } else {
+    router.push('/login')
+  }
+}
+
+async function finishRegistration() {
+  error.value = null
+  loading.value = true
+
+  try {
+    const registerPayload = {
+      email: formData.email,
+      username: formData.username,
+      password: formData.password,
+      role: formData.role,
+    }
+
+    const registerResponse = await api.post('/auth/register', registerPayload)
+    const { access_token, refresh_token, user, requires_verification } = registerResponse.data
+
+    if (!access_token || !refresh_token || !user) {
+      throw new Error('Сервер не вернул токены авторизации')
+    }
+
+    auth.setTokens(access_token, refresh_token)
+    auth.setUser(user)
+
+    if (requires_verification) {
+      showVerificationModal.value = true
+      pendingUser.value = user
+    }
+
+    let motoId = null
+    if (!skipMotorcycleMode.value && formData.motorcycle.name) {
+      const motoPayload = {
+        name: formData.motorcycle.name,
+        years: formData.motorcycle.years || null,
+        volume: formData.motorcycle.volume || null,
+        color: formData.motorcycle.color || null,
+        mileage: formData.motorcycle.mileage || null,
+        licensePlate: formData.motorcycle.licensePlate || null,
+        vin: formData.motorcycle.vin || null,
+        note: formData.motorcycle.note || null,
       }
-    },
-    prevStep() {
-      if (this.currentStep > 1) {
-        this.currentStep--;
-        this.error = null;
+
+      const motoResponse = await api.post('/motorcycle/', motoPayload, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+
+      motoId = motoResponse.data.id
+
+      if (formData.motorcycle.photo) {
+        try {
+          const response = await fetch(formData.motorcycle.photo)
+          const blob = await response.blob()
+          const file = new File([blob], 'motorcycle_photo.jpg', { type: 'image/jpeg' })
+
+          const uploadFormData = new FormData()
+          uploadFormData.append('photo', file)
+
+          await api.post(`/motorcycle/${motoId}/photo`, uploadFormData, {
+            headers: {
+              Authorization: `Bearer ${access_token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+        } catch (photoError) {
+          console.warn('Не удалось загрузить фото:', photoError)
+        }
       }
-    },
-    addMotorcycle() {
-      this.skipMotorcycleMode = false;
-      this.currentStep = 4;
-    },
-    skipMotorcycle() {
-      this.skipMotorcycleMode = true;
-      this.currentStep = 7;
-    },
-    handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.formData.motorcycle.photo = e.target.result;
-        };
-        reader.readAsDataURL(file);
+    }
+
+    const role = user.role || formData.role
+    const targetRoute = role === 'admin' ? '/admin/panel' : '/garage'
+    if (!requires_verification) {
+      router.push(targetRoute)
+    }
+  } catch (err) {
+    if (err.response?.data?.detail) {
+      const details = err.response.data.detail
+      if (Array.isArray(details)) {
+        error.value = details.map((d) => d.msg || d).join(', ')
+      } else {
+        error.value = details
       }
-    },
-    removePhoto() {
-      this.formData.motorcycle.photo = null;
-      this.$refs.fileInput.value = '';
-    },
-    getParticleStyle(index) {
-      const size = Math.random() * 6 + 2;
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
-      const duration = Math.random() * 20 + 15;
-      const delay = Math.random() * 10;
-      const opacity = Math.random() * 0.4 + 0.1;
-      
-      return {
-        width: size + 'px',
-        height: size + 'px',
-        left: x + '%',
-        top: y + '%',
-        animationDuration: duration + 's',
-        animationDelay: delay + 's',
-        opacity: opacity,
-      };
-    },
-    async finishRegistration() {
-      this.error = null;
-      this.loading = true;
+    } else {
+      error.value = err.response?.data?.error || err.message || 'Ошибка регистрации. Попробуйте снова.'
+    }
 
-      try {
-        const registerPayload = {
-          email: this.formData.email,
-          username: this.formData.username,
-          password: this.formData.password,
-          role: this.formData.role,
-        };
-
-        const registerResponse = await api.post('/auth/register', registerPayload);
-        const { access_token, refresh_token, user, requires_verification } = registerResponse.data;
-
-        if (!access_token || !refresh_token || !user) {
-          throw new Error('Сервер не вернул токены авторизации');
-        }
-        
-        const auth = useAuthStore()
-        auth.setTokens(access_token, refresh_token)
-        auth.setUser(user)
-
-        if (requires_verification) {
-          this.showVerificationModal = true
-          this.pendingUser = user
-        } else {
-          this.$router.push('/garage')
-        }
-
-        let motoId = null;
-        if (!this.skipMotorcycleMode && this.formData.motorcycle.name) {
-          const motoPayload = {
-            name: this.formData.motorcycle.name,
-            years: this.formData.motorcycle.years || null,
-            volume: this.formData.motorcycle.volume || null,
-            color: this.formData.motorcycle.color || null,
-            mileage: this.formData.motorcycle.mileage || null,
-            licensePlate: this.formData.motorcycle.licensePlate || null,
-            vin: this.formData.motorcycle.vin || null,
-            note: this.formData.motorcycle.note || null,
-          };
-
-          const motoResponse = await api.post('/motorcycle/', motoPayload, {
-            headers: { Authorization: `Bearer ${access_token}` },
-          });
-          
-          motoId = motoResponse.data.id;
-
-          if (this.formData.motorcycle.photo) {
-            try {
-              const response = await fetch(this.formData.motorcycle.photo);
-              const blob = await response.blob();
-              const file = new File([blob], 'motorcycle_photo.jpg', { type: 'image/jpeg' });
-              
-              const uploadFormData = new FormData();
-              uploadFormData.append('photo', file);
-              
-              await api.post(`/motorcycle/${motoId}/photo`, uploadFormData, {
-                headers: { 
-                  Authorization: `Bearer ${access_token}`,
-                  'Content-Type': 'multipart/form-data',
-                },
-              });
-            } catch (photoError) {
-              console.warn('Не удалось загрузить фото:', photoError);
-            }
-          }
-        }
-
-        const role = user.role || this.formData.role;
-        const targetRoute = role === 'admin' ? '/admin/panel' : '/garage';
-        this.$router.push(targetRoute);
-      } catch (err) {
-        if (err.response?.data?.detail) {
-          const details = err.response.data.detail;
-          if (Array.isArray(details)) {
-            this.error = details.map(d => d.msg || d).join(', ');
-          } else {
-            this.error = details;
-          }
-        } else {
-          this.error = err.response?.data?.error || err.message || 'Ошибка регистрации. Попробуйте снова.';
-        }
-
-        if (this.error.includes('email') || this.error.includes('username') || this.error.includes('password')) {
-          this.currentStep = 2;
-        }
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
-};
+    if (error.value && (error.value.includes('email') || error.value.includes('username') || error.value.includes('password'))) {
+      currentStep.value = 2
+    }
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -879,17 +907,6 @@ export default {
   width: 100%;
 }
 
-.step-actions .btn {
-  flex: 1;
-  padding: 0.8rem 1.5rem;
-  border-radius: 40px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  text-align: center;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
 .completion-step .step-title {
   margin-bottom: 8px;
 }
@@ -1102,34 +1119,6 @@ export default {
   justify-content: flex-end;
 }
 
-.step-actions .btn {
-  min-width: 120px;
-  padding: 0.8rem 1.5rem;
-  border-radius: 40px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.step-actions .btn-secondary {
-  background-color: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  color: var(--text-primary);
-}
-
-.step-actions .btn-secondary:hover {
-  background-color: var(--border-color);
-}
-
-.step-actions .btn-outline {
-  background: transparent;
-  border: 2px solid var(--accent);
-  color: var(--accent);
-}
-
-.step-actions .btn-outline:hover {
-  background: var(--accent-trans);
-}
-
 .error-message {
   margin-top: 16px;
   padding: 12px 16px;
@@ -1232,12 +1221,6 @@ export default {
     flex-wrap: wrap;
     justify-content: center;
     padding-top: 16px;
-  }
-
-  .step-actions .btn {
-    min-width: 100%;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
   }
 
   .empty-moto-card {
