@@ -6,6 +6,147 @@
 версионирование — [Semantic Versioning](https://semver.org/lang/ru/).
 
 
+## [1.12.0] — 2026-09-26
+
+### Added
+- **frontend/ui**: `BaseSelect` — выпадающий список с label/error/hint,
+  поддержкой raw-value (`data-raw-value`) для числовых и boolean-значений
+- **frontend/composables**: `useToast` — уже был, но теперь используется
+  везде вместо `alert()` и мёртвого `this.$toast?.`
+- **frontend/utils/mediaUrl**: `getMotoPhotoUrl`, `getAvatarUrl`,
+  `getUploadUrl`, `getManualImageUrl` — единый резолвер URL
+- **frontend/utils/formatters**: `getUserRoleLabel`, `getUserStatusLabel`,
+  `getUserStatusClass`, `getUserExperienceLabel`, `getSocialIcon`,
+  `getFluidLabel`, `getToleranceLabel`, `getManualStatusLabel`,
+  `getDifficultyLabel`, `getCategoryLabel`
+
+### Changed — модалки (Sprint 12.13b)
+
+- **frontend/modals/admin/NewsletterModal.vue**
+  - `ModalWrapper` → `BaseModal` (variant="default", size="lg")
+  - нативные input/select/textarea → `BaseInput` / `BaseSelect` / `BaseTextarea`
+  - кнопки → `BaseButton` в `#actions`
+  - `$toast?.success/error` → `useToast().success/error`
+  - `<script setup>`, импорты через `@/`
+- **frontend/modals/admin/ReportDetailsModal.vue**
+  - `ModalWrapper` → `BaseModal` (variant="warning", size="lg", icon="flag")
+  - `<textarea>` → `BaseTextarea` (встроенный counter при `maxlength`)
+  - кнопки → `BaseButton` в `#actions`
+  - `alert()` → `toast.error()`
+  - добавлена кнопка «Закрыть» для статусов `resolved`/`rejected`
+    (раньше футер в этих состояниях вообще не рендерился)
+- **frontend/modals/admin/ManualDetailsAdminModal.vue** (точечная миграция)
+  - `ModalWrapper` → `BaseModal` (variant="default", size="lg", icon="book")
+  - `#actions` → `BaseButton` (success/danger/warning/outline/secondary)
+  - `reject-overlay`: `<textarea>` → `BaseTextarea`, кнопки → `BaseButton`
+  - `z-index` reject-overlay: хардкод 2000 → `var(--z-popover)` (1200)
+  - шаги / torque-table / specs / safety / docs / aftercare — не тронуты
+- **frontend/modals/moto/QuickStartModal.vue**
+  - `Options API` → `<script setup>`
+  - `this.$toast?.error(...)` → `toast.error(...)` через `useToast()`
+    (важно: `$toast` не был зарегистрирован глобально — ошибки Quick Start
+    молча проглатывались)
+  - шаг 2: нативный `input[type=number]` → `BaseInput`
+  - `.actions .btn*` CSS удалены — `BaseButton` с `block`
+  - остальные 6 moto-модалок были мигрированы до этого релиза
+
+### Changed — views
+
+- **frontend/views/admin/ManualsPanel.vue**
+  - `Options API` → `<script setup>`
+  - `alert()` → `useToast()`
+  - `this.$emit('manual-updated')` убран (не слушался)
+- **frontend/views/admin/UsersPanel.vue**
+  - `<script setup>`, `alert()` → `useToast()`
+  - убраны локальные `addUser`/`editUser`/`loadAllUsers` (модалки сами
+    делают API-запросы)
+  - `@submit` → `@saved` на `AddUserModal`/`EditUserModal`
+  - локальный `getAvatarUrl` → `@/utils/mediaUrl`
+- **frontend/views/Garage.vue**
+  - `setup()` внутри Options API → `<script setup>`
+  - `components: {...}` → плоские импорты
+  - `$router.push('/maintenance')` → `router.push('/maintenance')`
+- **frontend/views/auth/** — пять страниц на `<script setup>`:
+  - `WelcomeScreen.vue` — `BaseButton`, удалён мёртвый CSS
+  - `Unsubscribe.vue` — `BaseButton`, `useRoute`/`useRouter`
+  - `ForgotPassword.vue` — `BaseInput`/`BaseButton`, хардкод цветов → токены
+  - `ResetPassword.vue` — `BaseInput`/`BaseButton`, `<router-link>` в блоке
+    ошибки → ссылка, хардкод цветов → токены
+  - `VerifyEmail.vue` — `BaseButton`, `alert()` → `useToast()`, хардкод
+    цветов → токены
+- **frontend/views/auth/LoginView.vue**
+  - `<script setup>`, `useRouter`/`useAuthStore`
+  - `submit-btn` → `BaseButton`
+  - `rgba(138,92,246,.15)` → `var(--shadow-focus)`
+- **frontend/views/auth/RegisterView.vue**
+  - `<script setup>`, `data`/`computed`/`methods` → `ref`/`reactive`/`computed`
+  - `BaseButton` в шагах 1/3/4/5/6/7
+  - `.step-actions .btn*` CSS → `.step-actions > *`
+  - логика `finishRegistration` 1:1
+- **frontend/views/Landing.vue**
+  - `<script setup>`, `<button>` → `BaseButton`
+  - **исправлены баги:**
+    - `data()` не возвращал объект → `showBackToTop` не был реактивен,
+      `isDark` — undefined, `toggleTheme` падал
+    - `beforeDestroy` не вызывается во Vue 3 → `onBeforeUnmount`
+      (утечка scroll-listener)
+    - тема не восстанавливалась из `localStorage` при монтировании
+  - мёртвый CSS (`.nav`, `.overlay-text`) удалён
+- **frontend/views/Contacts.vue**
+  - `<script setup>`, `BaseButton`
+  - `data()` → module-scope константы
+  - хардкод `#60a5fa` / `rgba(59,130,246,.15)` → `var(--info-text)` / `var(--info-trans)`
+- **frontend/views/PublicProfile.vue**
+  - `<script setup>`, `BaseButton`
+  - локальные `getAvatarUrl`/`getImageUrl`/`getExperienceLabel`/`formatDate`
+    → `@/utils/mediaUrl` и `@/utils/formatters`/`DateFormatter`
+  - удалён мёртвый `getSocialIcon`
+- **frontend/views/admin/AdminPanel.vue**
+  - `<script setup>`, `onMounted`
+  - `@submit="addUser"` → `@saved="onUserSaved"` (модалка сама делает API)
+  - локальные `getAvatarUrl`/`getUserRole`/`formatDate` → `@/utils/*`
+- **frontend/views/admin/AdminReportsPanel.vue**
+  - `setup() { return { toast } }` → `<script setup>`
+  - импорты через `@/`
+- **frontend/views/admin/AdminMotorcyclesPanel.vue**
+  - `<script setup>`, `onMounted`
+  - `getPhotoUrl`/`formatDate` → `@/utils/mediaUrl` и `DateFormatter`
+  - `searchTimeout` → module-scope `let`
+
+### Fixed
+
+- **frontend/Landing.vue**: `data()` не возвращал объект — кнопка «Наверх»
+  не появлялась при скролле, `toggleTheme` не работал
+- **frontend/Landing.vue**: `beforeDestroy` не вызывается во Vue 3 →
+  scroll-listener утекал при уходе со страницы
+- **frontend/QuickStartModal.vue**: ошибки Quick Start молча проглатывались —
+  `this.$toast?.error(...)` не работал (`$toast` не зарегистрирован глобально)
+- **frontend/ReportDetailsModal.vue**: футер не рендерился для жалоб в
+  статусах `resolved`/`rejected` — не было кнопки «Закрыть»
+- **frontend/AdminPanel.vue**: `addUser()` был мёртвым кодом —
+  `AddUserModal` сам делает `api.post` и эмитит `@saved`
+
+### Notes
+
+- JSON-контракт API не менялся ни в одном PR
+- Все views и все модалки проекта теперь на `<script setup>`
+- Единый UI-kit (`BaseModal`, `BaseButton`, `BaseInput`, `BaseSelect`,
+  `BaseTextarea`) используется во всех модалках и части view
+- Единый `useToast()` вместо `alert()` и `$toast?.` — во всех модалках,
+  `ManualsPanel`, `UsersPanel`, `VerifyEmail`
+- Единые форматтеры (`formatMileage`, `formatCost`, `getStatusLabel`,
+  `getAvatarUrl`, `formatDate`, `getUserRoleLabel` и др.) вместо локальных
+  копий в 10+ файлах
+- Не тронуто (отдельные задачи):
+  - `useModalsStore` — задел есть, нигде не используется (Sprint 4)
+  - UI-kit для view-кнопок (`.btn-outline`, `.btn-primary`, `.icon-btn`,
+    `.btn-small`, `.add-btn`, `.reminder-btn`) — работают, но не
+    унифицированы с `BaseButton`
+  - Отключение обязательной верификации email
+  - Тесты для view и модалок (Vitest покрывает только `utils`/`stores`/`api`)
+  - `VerificationModal.vue` — не проверялся, скорее всего на `ModalWrapper`
+
+
 ## [1.11.0] — 2026-09-21
 
 ### Added
