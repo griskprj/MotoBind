@@ -13,7 +13,9 @@
         </div>
         <h2>Email подтверждён! 🎉</h2>
         <p>Добро пожаловать в MotoBind!</p>
-        <button class="btn btn-primary" @click="goToApp">Перейти в приложение</button>
+        <BaseButton variant="primary" @click="goToApp">
+          Перейти в приложение
+        </BaseButton>
       </div>
 
       <div v-else-if="status === 'error'" class="status-error">
@@ -22,64 +24,69 @@
         </div>
         <h2>Ошибка подтверждения</h2>
         <p>{{ errorMessage }}</p>
-        <button class="btn btn-outline" @click="resend">Отправить повторно</button>
+        <BaseButton variant="outline" @click="resend">
+          Отправить повторно
+        </BaseButton>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import api from '../../api/api'
-import { useAuthStore } from '../../stores/auth';
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { BaseButton } from '@/components/ui'
+import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores'
+import api from '@/api/api'
 
-export default {
-  name: 'VerifyEmail',
-  data() {
-    return {
-      status: 'loading',
-      errorMessage: '',
-      token: null
-    }
-  },
-  methods: {
-    async verify() {
-      this.token = this.$route.params.token
-      
-      if (!this.token) {
-        this.status = 'error'
-        this.errorMessage = 'Неверная ссылка подтверждения.'
-        return
-      }
-      
-      try {
-        const response = await api.get(`/auth/verify-email/${this.token}`)
-        const { access_token, refresh_token, user } = response.data
-        
-        const auth = useAuthStore()
-        auth.setTokens(access_token, refresh_token)
-        auth.setUser(user)
-        
-        this.status = 'success'
-      } catch (err) {
-        this.status = 'error'
-        this.errorMessage = err.response?.data?.error || 'Ссылка недействительна или истекла.'
-      }
-    },
-    async resend() {
-      try {
-        await api.post('/auth/resend-verification')
-        alert('Письмо отправлено повторно! Проверьте почту.')
-      } catch (err) {
-        alert('Ошибка отправки. Попробуйте позже.')
-      }
-    },
-    goToApp() {
-      this.$router.push('/garage')
-    }
-  },
-  mounted() {
-    this.verify()
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
+const auth = useAuthStore()
+
+const status = ref('loading')
+const errorMessage = ref('')
+const token = ref(null)
+
+onMounted(() => {
+  verify()
+})
+
+async function verify() {
+  token.value = route.params.token
+
+  if (!token.value) {
+    status.value = 'error'
+    errorMessage.value = 'Неверная ссылка подтверждения.'
+    return
   }
+
+  try {
+    const response = await api.get(`/auth/verify-email/${token.value}`)
+    const { access_token, refresh_token, user } = response.data
+
+    auth.setTokens(access_token, refresh_token)
+    auth.setUser(user)
+
+    status.value = 'success'
+  } catch (err) {
+    status.value = 'error'
+    errorMessage.value = err.response?.data?.error || 'Ссылка недействительна или истекла.'
+  }
+}
+
+async function resend() {
+  try {
+    await api.post('/auth/resend-verification')
+    toast.success('Письмо отправлено повторно! Проверьте почту.')
+  } catch (err) {
+    toast.error('Ошибка отправки. Попробуйте позже.')
+  }
+}
+
+function goToApp() {
+  router.push('/garage')
 }
 </script>
 
@@ -89,15 +96,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0A0A0F;
+  background: var(--bg-primary);
   padding: 20px;
 }
 
 .verify-card {
   max-width: 420px;
   width: 100%;
-  background: #181824;
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 48px 32px;
   text-align: center;
@@ -109,18 +116,18 @@ export default {
 }
 
 .icon.success {
-  color: #4ade80;
+  color: var(--success-text);
 }
 
 .icon.error {
-  color: #ef4444;
+  color: var(--danger-text);
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #2d2d3d;
-  border-top: 4px solid #8B5CF6;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
@@ -134,40 +141,12 @@ export default {
 .verify-card h2 {
   font-size: 24px;
   margin: 0 0 8px 0;
+  color: var(--text-primary);
 }
 
 .verify-card p {
-  color: #8b8b9e;
+  color: var(--text-muted);
   margin: 0 0 24px 0;
   line-height: 1.6;
-}
-
-.btn {
-  padding: 12px 32px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #8B5CF6;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #7C3AED;
-}
-
-.btn-outline {
-  background: transparent;
-  border: 2px solid #2d2d3d;
-  color: #8b8b9e;
-}
-
-.btn-outline:hover {
-  border-color: #8B5CF6;
-  color: #8B5CF6;
 }
 </style>

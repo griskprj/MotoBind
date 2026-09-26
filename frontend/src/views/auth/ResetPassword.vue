@@ -14,134 +14,133 @@
       <div v-else class="auth-header">
         <h1>Ошибка</h1>
         <p>{{ errorMessage }}</p>
-        <router-link to="/forgot-password" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none; margin-top: 16px;">
+        <router-link to="/forgot-password" class="reset-link">
           Запросить сброс
         </router-link>
       </div>
 
       <form v-if="valid" @submit.prevent="submit">
-        <div class="form-group">
-          <label for="password">Новый пароль</label>
-          <input
-            id="password"
-            v-model="newPassword"
-            type="password"
-            placeholder="Минимум 6 символов"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="newPassword"
+          type="password"
+          label="Новый пароль"
+          placeholder="Минимум 6 символов"
+          required
+        />
 
-        <div class="form-group">
-          <label for="confirm">Подтвердите пароль</label>
-          <input
-            id="confirm"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="Повторите пароль"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="confirmPassword"
+          type="password"
+          label="Подтвердите пароль"
+          placeholder="Повторите пароль"
+          required
+        />
 
-        <div v-if="error" class="error-message">
+        <div v-if="error" class="message message-error">
           <i class="fa fa-exclamation-circle"></i> {{ error }}
         </div>
 
-        <div v-if="success" class="success-message">
+        <div v-if="success" class="message message-success">
           <i class="fa fa-check-circle"></i> {{ success }}
         </div>
 
-        <button type="submit" class="btn btn-primary" :disabled="loading">
-          {{ loading ? 'Сохранение...' : 'Сохранить пароль' }}
-        </button>
+        <BaseButton
+          type="submit"
+          variant="primary"
+          block
+          :loading="loading"
+        >
+          Сохранить пароль
+        </BaseButton>
       </form>
     </div>
   </div>
 </template>
 
-<script>
-import api from '../../api/api'
-import { useAuthStore } from '../../stores/auth';
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { BaseButton, BaseInput } from '@/components/ui'
+import { useAuthStore } from '@/stores'
+import api from '@/api/api'
 
-export default {
-  name: 'ResetPassword',
-  data() {
-    return {
-      token: null,
-      email: '',
-      valid: false,
-      checking: true,
-      errorMessage: '',
-      newPassword: '',
-      confirmPassword: '',
-      loading: false,
-      error: null,
-      success: null
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+
+const token = ref(null)
+const email = ref('')
+const valid = ref(false)
+const checking = ref(true)
+const errorMessage = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const loading = ref(false)
+const error = ref(null)
+const success = ref(null)
+
+onMounted(() => {
+  checkToken()
+})
+
+async function checkToken() {
+  token.value = route.params.token
+
+  if (!token.value) {
+    valid.value = false
+    checking.value = false
+    errorMessage.value = 'Неверная ссылка сброса.'
+    return
+  }
+
+  try {
+    const response = await api.get(`/auth/check-reset-token/${token.value}`)
+    email.value = response.data.email
+    valid.value = true
+  } catch (err) {
+    valid.value = false
+    errorMessage.value = err.response?.data?.error || 'Ссылка недействительна или истекла.'
+  } finally {
+    checking.value = false
+  }
+}
+
+async function submit() {
+  error.value = null
+  success.value = null
+
+  if (newPassword.value.length < 6) {
+    error.value = 'Пароль должен быть минимум 6 символов'
+    return
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    error.value = 'Пароли не совпадают'
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await api.post('/auth/reset-password', {
+      token: token.value,
+      new_password: newPassword.value,
+    })
+
+    if (response.data.access_token) {
+      auth.setTokens(response.data.access_token, response.data.refresh_token)
+      auth.setUser(response.data.user)
+      router.push('/garage')
+    } else {
+      success.value = 'Пароль успешно изменён!'
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
     }
-  },
-  methods: {
-    async checkToken() {
-      this.token = this.$route.params.token
-      
-      if (!this.token) {
-        this.valid = false
-        this.checking = false
-        this.errorMessage = 'Неверная ссылка сброса.'
-        return
-      }
-      
-      try {
-        const response = await api.get(`/auth/check-reset-token/${this.token}`)
-        this.email = response.data.email
-        this.valid = true
-      } catch (err) {
-        this.valid = false
-        this.errorMessage = err.response?.data?.error || 'Ссылка недействительна или истекла.'
-      } finally {
-        this.checking = false
-      }
-    },
-    async submit() {
-      this.error = null
-      this.success = null
-      
-      if (this.newPassword.length < 6) {
-        this.error = 'Пароль должен быть минимум 6 символов'
-        return
-      }
-      
-      if (this.newPassword !== this.confirmPassword) {
-        this.error = 'Пароли не совпадают'
-        return
-      }
-      
-      this.loading = true
-      
-      try {
-        const response = await api.post('/auth/reset-password', {
-          token: this.token,
-          new_password: this.newPassword
-        })
-        
-        if (response.data.access_token) {
-          const auth = useAuthStore()
-          auth.setTokens(response.data.access_token, response.data.refresh_token)
-          auth.setUser(response.data.user)
-          this.$router.push('/garage')
-        } else {
-          this.success = 'Пароль успешно изменён!'
-          setTimeout(() => {
-            this.$router.push('/login')
-          }, 3000)
-        }
-      } catch (err) {
-        this.error = err.response?.data?.error || 'Ошибка смены пароля'
-      } finally {
-        this.loading = false
-      }
-    }
-  },
-  mounted() {
-    this.checkToken()
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Ошибка смены пароля'
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -152,15 +151,15 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0A0A0F;
+  background: var(--bg-primary);
   padding: 20px;
 }
 
 .auth-card {
   max-width: 400px;
   width: 100%;
-  background: #181824;
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   padding: 40px 32px;
 }
@@ -173,108 +172,46 @@ export default {
 .auth-header h1 {
   font-size: 28px;
   margin: 0 0 8px 0;
+  color: var(--text-primary);
 }
 
 .auth-header p {
-  color: #8b8b9e;
+  color: var(--text-muted);
   margin: 0;
 }
 
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
+.reset-link {
   display: block;
-  font-weight: 600;
-  font-size: 14px;
-  color: #8b8b9e;
-  margin-bottom: 4px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 16px;
-  background: #0f0f1a;
-  border: 2px solid #2d2d3d;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 16px;
-  transition: border 0.2s;
-}
-
-.form-group input:focus {
-  border-color: #8B5CF6;
-  outline: none;
-}
-
-.btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-  font-size: 16px;
-}
-
-.btn-primary {
-  background: #8B5CF6;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #7C3AED;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error-message {
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid #ef4444;
-  border-radius: 8px;
-  color: #ef4444;
-  font-size: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.success-message {
-  padding: 10px 14px;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid #4ade80;
-  border-radius: 8px;
-  color: #4ade80;
-  font-size: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.auth-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.auth-links a {
-  color: #8b8b9e;
+  margin-top: 16px;
+  color: var(--accent);
   text-decoration: none;
-  font-size: 14px;
-  transition: color 0.2s;
+  font-weight: 500;
 }
 
-.auth-links a:hover {
-  color: #8B5CF6;
+.reset-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.message {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-error {
+  background: var(--danger-trans);
+  border: 1px solid var(--danger);
+  color: var(--danger-text);
+}
+
+.message-success {
+  background: var(--success-trans);
+  border: 1px solid var(--success);
+  color: var(--success-text);
 }
 </style>
