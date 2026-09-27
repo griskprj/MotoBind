@@ -1,14 +1,15 @@
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
 import json
 
 from app.exceptions import ValidationError
 from app.schemas.manual import (
     CreateManualSchema,
-    UpdateManualSchema,
     ManualResponseSchema,
+    UpdateManualSchema,
 )
 from app.services.manual_service import ManualService
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 manual = Blueprint("manual", __name__)
 
@@ -37,15 +38,46 @@ def get_manual_for_maintenance():
     return jsonify(result), 200
 
 
+def _optional_user_id():
+    """
+    Возвращает user_id, если передан валидный JWT, иначе None.
+    Не бросает исключений — используется на публичных роутах.
+    """
+    try:
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        return int(identity) if identity else None
+    except NoAuthorizationError:
+        return None
+    except Exception:
+        return None
+
+
 @manual.route("/list", methods=["GET"])
-@jwt_required()
 def list_manuals():
-    """Получение списка мануалов с пагинацией и фильтрами."""
+    """
+    Публичный список мануалов.
+
+    Для гостей принудительно:
+      - tab = 'all'
+      - status = 'approved'
+      - игнорируются 'my' и 'myMotos'
+    """
+    user_id = _optional_user_id()
+    is_guest = user_id is None
+
+    tab = request.args.get("tab", "all")
+    status = request.args.get("status", "")
+
+    if is_guest:
+        tab = "all"
+        status = "approved"
+
     data = ManualService.list_manuals(
-        user_id=int(get_jwt_identity()),
+        user_id=user_id or 0,
         page=request.args.get("page", 1, type=int),
         per_page=request.args.get("per_page", 8, type=int),
-        tab=request.args.get("tab", "all"),
+        tab=tab,
         search=request.args.get("search", ""),
         motorcycle_filter=request.args.get("motorcycle", ""),
         category=request.args.get("category", ""),
@@ -53,23 +85,41 @@ def list_manuals():
         difficult=request.args.get("difficult", ""),
         time_estimate=request.args.get("time_estimate", ""),
         interval=request.args.get("interval", ""),
-        status=request.args.get("status", ""),
+        status=status,
     )
+
     data["manuals"] = [
-        ManualResponseSchema.model_validate(m).model_dump()
-        for m in data["manuals"]
+        ManualResponseSchema.model_validate(m).model_dump() for m in data["manuals"]
     ]
     return jsonify(data), 200
 
 
 @manual.route("/<int:manual_id>", methods=["GET"])
-@jwt_required()
 def get_manual_by_id(manual_id):
-    """Получение детальной информации о мануале."""
-    manual_record = ManualService.get_manual_for_user(
-        manual_id=manual_id,
-        user_id=int(get_jwt_identity()),
-    )
+    """
+    Публичный просмотр мануала.
+
+    Гость может смотреть только approved.
+    Автор — свой любой статус.
+    Админ — любой.
+    """
+    user_id = _optional_user_id()
+
+    if user_id is None:
+        from app.extensions import db
+        from app.models.manual import Manual
+
+        manual_record = db.session.get(Manual, manual_id)
+        if not manual_record or manual_record.status != "approved":
+            from app.exceptions import NotFoundError
+
+            raise NotFoundError("Мануал не найден")
+    else:
+        manual_record = ManualService.get_manual_for_user(
+            manual_id=manual_id,
+            user_id=user_id,
+        )
+
     return jsonify(_serialize_manual(manual_record)), 200
 
 
@@ -117,10 +167,7 @@ def delete_manual(manual_id):
     """
     Удаление мануала
     """
-    ManualService.delete_manual(
-        manual_id=manual_id,
-        user_id=int(get_jwt_identity())
-    )
+    ManualService.delete_manual(manual_id=manual_id, user_id=int(get_jwt_identity()))
     return jsonify({"message": "Мануал успешно удален"}), 200
 
 
@@ -141,10 +188,15 @@ def upload_step_image(manual_id, step_id):
         user_id=int(get_jwt_identity()),
         file=file,
     )
-    return jsonify({
-        "message": "Изображение загружено",
-        "image_url": image_url,
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Изображение загружено",
+                "image_url": image_url,
+            }
+        ),
+        200,
+    )
 
 
 @manual.route("/<int:manual_id>/steps/<int:step_id>/image", methods=["DELETE"])

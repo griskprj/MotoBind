@@ -252,6 +252,7 @@
         icon="fa fa-arrow-left"
         block
         @click="prevStep"
+        style="margin-bottom: 8px;"
       >
         Назад
       </BaseButton>
@@ -261,6 +262,7 @@
         variant="secondary"
         block
         @click="closeModal"
+        style="margin-bottom: 8px;"
       >
         Отменить
       </BaseButton>
@@ -293,6 +295,7 @@
         icon="fa fa-check"
         block
         @click="closeModal"
+        style="margin-bottom: 8px;"
       >
         Закрыть
       </BaseButton>

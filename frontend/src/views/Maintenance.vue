@@ -74,7 +74,7 @@
               </button>
             </div>
             <button
-              class="outline-btn"
+              class="outline-btn tab-btn"
               style="padding: 10px 24px;"
               @click="showAddMaintenanceModal = true"
             >
@@ -549,6 +549,7 @@ function getStatusIcon(status) {
   padding: 4px;
   border-radius: 12px;
   border: 1px solid var(--border-light);
+  gap: 12px;
 }
 
 .tabs-btn {
@@ -556,6 +557,11 @@ function getStatusIcon(status) {
   gap: 4px;
   width: 100%;
   margin-bottom: 8px;
+}
+
+.tab-btn {
+  width: 100%;
+  max-width: 256px;
 }
 
 .tab {
@@ -957,9 +963,29 @@ function getStatusIcon(status) {
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1020px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    max-width: 100%;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tabs button {
+    width: 100%;
+  }
+
+  .tab-btn {
+    max-width: 100%;
   }
 }
 
@@ -982,6 +1008,12 @@ function getStatusIcon(status) {
     min-width: unset;
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    max-width: 100%;
+  }
+
   .tabs {
     flex-wrap: wrap;
   }
@@ -1000,11 +1032,6 @@ function getStatusIcon(status) {
 
   .maintenance-page {
     padding: 12px 0 24px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
   }
 
   .stat-card {
@@ -1093,7 +1120,7 @@ function getStatusIcon(status) {
 
   .tab {
     font-size: 11px;
-    padding: 4px 8px;
+    padding: 4px 4px;
   }
 
   .tab-count {

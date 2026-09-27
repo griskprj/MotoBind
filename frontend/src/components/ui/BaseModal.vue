@@ -270,9 +270,7 @@ export default {
 }
 
 .base-modal__close {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  min-height: 52px;
   border-radius: 50%;
   border: none;
   background: var(--bg-secondary);

@@ -25,20 +25,22 @@
       </div>
     </header>
 
-    <!-- === HERO SECTION === -->
+    <!-- === HERO === -->
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-content">
           <div class="hero-mini-badge">
             Всё для мотоцикла. Всё в одном. Без сервисов.
           </div>
+
           <h1 class="hero-title">
             Всё для вашего<br>
             <span class="accent">мотоцикла</span><br>
             в одном месте
           </h1>
+
           <p class="hero-desc">
-            MotoBind — сервис для мотоциклистов, который помогает вести учет обслуживания, хранить мануалы и находить инструкции по ремонту.
+            MotoBind — сервис для мотоциклистов, который помогает вести учёт обслуживания, хранить мануалы и находить инструкции по ремонту.
           </p>
 
           <div class="hero-tags">
@@ -66,26 +68,37 @@
           </div>
 
           <div class="hero-buttons">
-            <BaseButton variant="primary" size="lg" @click="goTo('/welcome')">
+            <BaseButton
+              variant="primary"
+              size="lg"
+              icon="fa fa-arrow-right"
+              @click="goTo('/welcome')"
+            >
               Начать бесплатно
             </BaseButton>
           </div>
         </div>
 
-        <div class="hero-image-wrapper">
-          <div class="hero-image-placeholder">
-            <img src="/16x9Auth-Bg.webp" alt="" class="landing-img">
-          </div>
+        <div class="hero-image">
+          <img
+            src="/hero-moto.webp"
+            alt="Мотоцикл в фиолетовом свете — MotoBind"
+            class="landing-img"
+          >
         </div>
       </div>
     </section>
 
-    <!-- === FEATURES SECTION === -->
+    <!-- === FEATURES === -->
     <section class="section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Всё, что нужно <span class="accent">мотоциклисту</span></h2>
-          <p class="section-desc">Продвинутые инструменты для ухода за мотоциклом и ведения истории обслуживания</p>
+          <h2 class="section-title">
+            Всё, что нужно <span class="accent">мотоциклисту</span>
+          </h2>
+          <p class="section-desc">
+            Продвинутые инструменты для ухода за мотоциклом и ведения истории обслуживания
+          </p>
         </div>
 
         <div class="features-grid">
@@ -116,79 +129,111 @@
       </div>
     </section>
 
-    <!-- === CATALOG & INTERFACE SECTION === -->
-    <section class="section catalog-section">
+    <!-- === INTERFACE === -->
+    <section class="section section-alt">
       <div class="container">
-        <div class="catalog-layout">
-          <div class="catalog-left">
-            <h3>Интерфейс, созданный для мотоциклистов</h3>
-            <p class="interface-desc">Лёгкий дизайн, удобная навигация, всё необходимое под рукой. Создан для тех, кто ценит своё время.</p>
+        <div class="split-layout">
+          <div class="split-left">
+            <h3 class="split-title">Интерфейс, созданный для мотоциклистов</h3>
+            <p class="split-desc">
+              Лёгкий дизайн, удобная навигация, всё необходимое под рукой.
+              Создан для тех, кто ценит своё время.
+            </p>
           </div>
-
-          <div class="catalog-right">
-            <div class="screenshot-placeholder">
-              <img src="/MobileUI.webp" alt="" class="landing-img">
-            </div>
+          <div class="split-right">
+            <img
+              src="/app-mockup.webp"
+              alt="MotoBind — управление гаражом на телефоне"
+              class="landing-img"
+            >
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="interface-layout">
-          <div class="interface-content">
-            <h3>Каталог работ</h3>
-            <p class="catalog-desc">Готовые инструкции по обслуживанию и ремонту мотоциклов для разных моделей.</p>
+    <!-- === CATALOG === -->
+    <section class="section">
+      <div class="container">
+        <div class="split-layout reverse">
+          <div class="split-right">
+            <img
+              src="/app-mockup-catalog.webp"
+              alt="MotoBind — каталог мануалов"
+              class="landing-img"
+            >
           </div>
-          <div class="interface-right">
-            <div class="screenshot-placeholder big">
-              <img src="/ManualsUI.webp" alt="" class="landing-img">
-            </div>
+          <div class="split-left">
+            <h3 class="split-title">Каталог работ</h3>
+            <p class="split-desc">
+              Готовые инструкции по обслуживанию и ремонту мотоциклов
+              для разных моделей — от замены масла до полной разборки.
+            </p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- === HOW IT WORKS === -->
-    <section class="section steps-section">
+    <section class="section section-alt">
       <div class="container">
         <div class="section-header">
           <p class="mini-label">КАК ЭТО РАБОТАЕТ</p>
-          <h2 class="section-title">Три простых шага <br>к идеальному порядку в гараже</h2>
+          <h2 class="section-title">
+            Три простых шага <br>к идеальному порядку в гараже
+          </h2>
         </div>
 
         <div class="steps-grid">
           <div class="step-card">
+            <div class="step-number">1</div>
             <div class="step-icon"><i class="fa fa-motorcycle"></i></div>
-            <div class="step-title">1. Создайте гараж</div>
-            <div class="step-desc">Добавьте свои мотоциклы с ключевыми характеристиками и фото.</div>
+            <div class="step-title">Создайте гараж</div>
+            <div class="step-desc">
+              Добавьте свои мотоциклы с ключевыми характеристиками и фото.
+            </div>
           </div>
 
           <div class="step-card">
+            <div class="step-number">2</div>
             <div class="step-icon"><i class="fa fa-calendar-check"></i></div>
-            <div class="step-title">2. Планируйте и обслуживайте</div>
-            <div class="step-desc">Планируйте ТО, получайте напоминания и записывайте выполненные работы.</div>
+            <div class="step-title">Планируйте и обслуживайте</div>
+            <div class="step-desc">
+              Планируйте ТО, получайте напоминания и записывайте выполненные работы.
+            </div>
           </div>
 
           <div class="step-card">
+            <div class="step-number">3</div>
             <div class="step-icon"><i class="fa fa-book"></i></div>
-            <div class="step-title">3. Храните и создавайте</div>
-            <div class="step-desc">Храните мануалы и создавайте свои инструкции по ремонту и обслуживанию.</div>
+            <div class="step-title">Храните и создавайте</div>
+            <div class="step-desc">
+              Храните мануалы и создавайте свои инструкции по ремонту.
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- === BUILD BY RIDERS === -->
-    <section class="section riders-section">
+    <!-- === RIDERS === -->
+    <section class="section">
       <div class="container riders-layout">
         <div class="riders-left">
-          <div class="riders-image-placeholder">
-            <img src="/MotorcForMotorc.webp" alt="" class="landing-img">
-          </div>
+          <img
+            src="/riders.webp"
+            alt="Мотоциклисты MotoBind"
+            class="landing-img"
+          >
         </div>
+
         <div class="riders-right">
-          <h2 class="section-title">Создан мотоциклистами <br><span class="accent">для мотоциклистов</span></h2>
+          <h2 class="section-title left-align">
+            Создан мотоциклистами <br>
+            <span class="accent">для мотоциклистов</span>
+          </h2>
           <p class="section-desc left-align">
-            Мы создали MotoBind, чтобы каждый мотоциклист мог легко управлять уходом за своим железным конём.
-            Никакой сложной логистики и лишнего шума — только нужные инструменты в одном месте.
+            Мы создали MotoBind, чтобы каждый мотоциклист мог легко управлять
+            уходом за своим железным конём. Никакой сложной логистики и лишнего
+            шума — только нужные инструменты в одном месте.
           </p>
 
           <div class="riders-grid">
@@ -227,30 +272,33 @@
       </div>
     </section>
 
-    <!-- === COMMUNITY === -->
-    <section class="section community-section">
-      <div class="container">
-        <div class="section-header">
-          <p class="mini-label">СООБЩЕСТВО</p>
-          <h2 class="section-title">Доверие мотоциклистов</h2>
-          <p class="section-desc">Присоединяйтесь к растущему сообществу владельцев</p>
-        </div>
-      </div>
-    </section>
-
     <!-- === CTA === -->
-    <section class="cta-banner">
-      <div class="container cta-layout">
-        <div class="cta-left">
-          <h2 class="cta-title">Готовы взять контроль <br>над своим мотоциклом?</h2>
-          <p class="cta-desc">Присоединяйтесь к MotoBind и сделайте обслуживание простым и понятным.</p>
-          <BaseButton variant="primary" size="lg" icon="fa fa-arrow-right" @click="goTo('/welcome')">
-            Начать бесплатно
-          </BaseButton>
-        </div>
-        <div class="cta-right">
-          <div class="cta-image-placeholder">
-            <img src="/MockupUI.webp" alt="" class="landing-img">
+    <section class="section">
+      <div class="container">
+        <div class="cta-layout">
+          <div class="cta-left">
+            <h2 class="cta-title">
+              Готовы взять контроль <br>над своим мотоциклом?
+            </h2>
+            <p class="cta-desc">
+              Присоединяйтесь к MotoBind и сделайте обслуживание простым и понятным.
+            </p>
+            <BaseButton
+              variant="primary"
+              size="lg"
+              icon="fa fa-arrow-right"
+              @click="goTo('/welcome')"
+            >
+              Начать бесплатно
+            </BaseButton>
+          </div>
+
+          <div class="cta-right">
+            <img
+              src="/cta-mockup.webp"
+              alt="MotoBind — начните бесплатно"
+              class="landing-img"
+            >
           </div>
         </div>
       </div>
@@ -261,6 +309,7 @@
       v-show="showBackToTop"
       class="back-to-top"
       @click="scrollToTop"
+      aria-label="Наверх"
     >
       <i class="fas fa-arrow-up"></i>
     </button>
@@ -268,7 +317,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { BaseButton } from '@/components/ui'
 
@@ -277,7 +326,8 @@ const router = useRouter()
 const showBackToTop = ref(false)
 const isDark = ref(true)
 
-// Восстанавливаем тему при монтировании
+const currentYear = computed(() => new Date().getFullYear())
+
 onMounted(() => {
   const saved = localStorage.getItem('theme')
   isDark.value = saved !== 'light'
@@ -298,6 +348,11 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+function scrollToSection(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function toggleTheme() {
   isDark.value = !isDark.value
   const theme = isDark.value ? 'dark' : 'light'
@@ -311,19 +366,18 @@ function goTo(path) {
 </script>
 
 <style scoped>
-section {
-  border: none;
-  border-radius: 0;
-}
-
+/* ============================================
+   BASE / LAYOUT
+   ============================================ */
 .landing {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   overflow-x: hidden;
 }
 
 .container {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
@@ -333,13 +387,23 @@ section {
   color: var(--accent-text);
 }
 
-/* ===== HEADER ===== */
+.landing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
 .header {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: var(--bg-primary);
+  z-index: var(--z-sticky);
+  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-light);
   padding: 16px 0;
 }
@@ -354,7 +418,7 @@ section {
 
 .logo {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.5px;
 }
 
@@ -371,8 +435,9 @@ section {
 .theme-toggle {
   width: 44px;
   height: 44px;
+  min-height: 44px;
   padding: 0;
-  background: var(--bg-primary);
+  background: transparent;
   border: 2px solid var(--border-color);
   border-radius: 50%;
   color: var(--text-primary);
@@ -381,28 +446,28 @@ section {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
-
 .theme-toggle:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
-  transform: rotate(30deg);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px var(--accent-trans);
 }
-
 .theme-toggle:active {
-  transform: rotate(60deg) scale(0.9);
+  transform: scale(0.95);
 }
-
 .theme-toggle i {
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-base);
+  pointer-events: none;
 }
 
-/* ===== HERO ===== */
+/* ============================================
+   HERO
+   ============================================ */
 .hero {
-  padding: 80px 0 60px;
+  padding: 80px 0 64px;
   position: relative;
 }
 
@@ -416,6 +481,7 @@ section {
 .hero-content {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .hero-mini-badge {
@@ -423,17 +489,17 @@ section {
   background: var(--accent-trans);
   color: var(--accent-text);
   padding: 6px 14px;
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   margin-bottom: 20px;
   align-self: flex-start;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid var(--accent-trans);
 }
 
 .hero-title {
   font-size: 52px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   line-height: 1.1;
   margin: 0 0 16px 0;
   color: var(--text-primary);
@@ -441,7 +507,7 @@ section {
 
 .hero-desc {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
   color: var(--text-muted);
   margin: 0 0 24px 0;
   max-width: 480px;
@@ -463,18 +529,20 @@ section {
 .tag-icon {
   width: 32px;
   height: 32px;
+  min-height: 32px;
   background: var(--accent-trans);
   color: var(--accent-text);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .tag-title {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-primary);
 }
 
@@ -488,40 +556,24 @@ section {
   gap: 12px;
 }
 
-.hero-image-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.hero-image-placeholder {
+.hero-image {
   width: 100%;
-  aspect-ratio: 4/3;
-  background: var(--bg-secondary);
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 48px;
-  gap: 12px;
-  text-align: center;
-}
-
-.landing-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 16px;
-  display: block;
-  background-color: var(--bg-secondary);
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
   border: 1px solid var(--border-light);
+  box-shadow: 0 20px 60px -20px var(--accent-trans);
 }
 
-/* ===== SECTIONS ===== */
+/* ============================================
+   SECTIONS
+   ============================================ */
 .section {
   padding: 64px 0;
+}
+
+.section-alt {
+  background: var(--bg-secondary);
 }
 
 .section-header {
@@ -531,10 +583,14 @@ section {
 
 .section-title {
   font-size: 36px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin: 0 0 12px 0;
   line-height: 1.2;
   color: var(--text-primary);
+}
+
+.section-title.left-align {
+  text-align: left;
 }
 
 .section-desc {
@@ -542,23 +598,27 @@ section {
   font-size: 16px;
   max-width: 520px;
   margin: 0 auto;
+  line-height: var(--leading-relaxed);
 }
 
 .section-desc.left-align {
   max-width: 100%;
   margin: 0 0 24px 0;
+  text-align: left;
 }
 
 .mini-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-muted);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin: 0 0 8px 0;
 }
 
-/* ===== FEATURES ===== */
+/* ============================================
+   FEATURES
+   ============================================ */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -568,22 +628,24 @@ section {
 .feature-card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 24px;
-  transition: all 0.3s;
+  transition: all var(--transition-base);
+  min-width: 0;
 }
-
 .feature-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent-trans);
+  transform: translateY(-2px);
 }
 
 .feature-icon {
   width: 40px;
   height: 40px;
+  min-height: 40px;
   background: var(--accent-trans);
   color: var(--accent-text);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -593,7 +655,7 @@ section {
 
 .feature-title {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 8px;
   color: var(--text-primary);
 }
@@ -601,106 +663,95 @@ section {
 .feature-desc {
   font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: var(--leading-base);
 }
 
-/* ===== CATALOG & INTERFACE ===== */
-.catalog-section {
-  background: var(--border-light);
-}
-
-.catalog-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 48px;
-  align-items: center;
-  margin-bottom: 64px;
-}
-
-.catalog-left h3 {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-}
-
-.catalog-desc {
-  font-size: 16px;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-
-.interface-layout {
+/* ============================================
+   SPLIT LAYOUT (Interface / Catalog)
+   ============================================ */
+.split-layout {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 48px;
   align-items: center;
 }
 
-.interface-content h3 {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text-primary);
+.split-layout.reverse {
+  grid-template-columns: 1.5fr 1fr;
 }
 
-.interface-desc {
+.split-title {
+  font-size: 28px;
+  font-weight: var(--fw-semibold);
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.split-desc {
   font-size: 16px;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin: 0;
+  line-height: var(--leading-relaxed);
 }
 
-.screenshot-placeholder {
+.split-right {
   width: 100%;
-  aspect-ratio: 16/10;
-  background: var(--bg-secondary);
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
   border: 1px solid var(--border-light);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 32px;
-  gap: 8px;
 }
 
-.screenshot-placeholder.big {
-  aspect-ratio: 21/9;
-}
-
-/* ===== STEPS ===== */
-.steps-section {
-  background: var(--border-light);
-}
-
+/* ============================================
+   STEPS
+   ============================================ */
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  gap: 24px;
 }
 
 .step-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 32px 24px;
   text-align: center;
-  transition: all 0.3s;
+  transition: all var(--transition-base);
 }
-
 .step-card:hover {
   background: var(--bg-card-hover);
   transform: translateY(-4px);
   border-color: var(--accent-trans);
 }
 
+.step-number {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--fw-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px var(--bg-secondary);
+}
+
 .step-icon {
   width: 56px;
   height: 56px;
+  min-height: 56px;
   background: var(--accent-trans);
   color: var(--accent-text);
-  border-radius: 16px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -710,7 +761,7 @@ section {
 
 .step-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 8px;
   color: var(--text-primary);
 }
@@ -718,14 +769,12 @@ section {
 .step-desc {
   font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: var(--leading-base);
 }
 
-/* ===== RIDERS ===== */
-.riders-section {
-  background: var(--border-light);
-}
-
+/* ============================================
+   RIDERS
+   ============================================ */
 .riders-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -733,113 +782,122 @@ section {
   align-items: center;
 }
 
-.riders-image-placeholder {
+.riders-left {
   width: 100%;
-  aspect-ratio: 4/3;
-  background: var(--bg-secondary);
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 48px;
-  gap: 12px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
 }
 
 .riders-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 20px;
+  margin-top: 24px;
 }
 
 .rider-item {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .rider-icon {
   width: 32px;
   height: 32px;
+  min-height: 32px;
   background: var(--accent-trans);
   color: var(--accent-text);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .rider-title {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-primary);
 }
 
 .rider-desc {
   font-size: 12px;
   color: var(--text-muted);
+  line-height: var(--leading-base);
 }
 
-/* ===== COMMUNITY ===== */
-.community-section {
-  background: var(--bg-primary);
-}
-
-/* ===== CTA BANNER ===== */
-.cta-banner {
-  padding: 64px 0;
-  background: var(--bg-primary);
-}
-
+/* ============================================
+   CTA
+   ============================================ */
 .cta-layout {
   background: var(--bg-secondary);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   padding: 48px 56px;
   display: grid;
   grid-template-columns: 1fr 0.8fr;
   gap: 48px;
   align-items: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--accent-trans);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-layout::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--accent-trans) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-left {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
 }
 
 .cta-title {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin: 0 0 12px 0;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .cta-desc {
   font-size: 16px;
   color: var(--text-muted);
   margin: 0 0 24px 0;
+  line-height: var(--leading-relaxed);
 }
 
-.cta-image-placeholder {
+.cta-right {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  aspect-ratio: 3/4;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 48px;
-  gap: 8px;
+  aspect-ratio: 16 / 16;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
   border: 1px solid var(--border-light);
 }
 
-/* --- Кнопка "Наверх" --- */
+/* ============================================
+   BACK TO TOP
+   ============================================ */
 .back-to-top {
   position: fixed;
   bottom: 80px;
   right: 24px;
   width: 48px;
   height: 48px;
+  min-height: 48px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -847,92 +905,210 @@ section {
   font-size: 20px;
   cursor: pointer;
   box-shadow: var(--shadow-lg);
-  transition: all 0.3s;
-  z-index: 100;
+  transition: all var(--transition-base);
+  z-index: var(--z-sticky);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .back-to-top:hover {
   transform: translateY(-4px);
   background: var(--accent-hover);
 }
 
-/* ===== MEDIA QUERIES ===== */
+/* ============================================
+   АДАПТИВ
+   Шкала: 1024 → 820 → 640 → 480 → 400
+   ============================================ */
+
+/* --- Планшет --- */
 @media (max-width: 1024px) {
   .hero-grid {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 40px;
   }
-  .hero-content {
-    align-items: center;
-  }
-  .hero-mini-badge {
-    align-self: center;
-  }
+  .hero-content { align-items: center; }
+  .hero-mini-badge { align-self: center; }
   .hero-desc {
     margin-left: auto;
     margin-right: auto;
   }
-  .hero-tags {
-    justify-content: center;
-  }
+  .hero-tags { justify-content: center; }
+  .hero-buttons { justify-content: center; }
+
   .features-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
-  .catalog-layout,
-  .interface-layout {
+
+  .split-layout,
+  .split-layout.reverse {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 32px;
   }
+  .split-layout.reverse .split-right { order: -1; }
+
   .riders-layout {
     grid-template-columns: 1fr;
+    gap: 32px;
   }
+
   .cta-layout {
     grid-template-columns: 1fr;
     text-align: center;
-    padding: 32px 24px;
+    padding: 40px 32px;
   }
-}
-
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 32px;
-  }
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-  .steps-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
+  .cta-layout .btn,
+  .cta-left :deep(.btn) {
     margin: 0 auto;
   }
-  .riders-grid {
+
+  .footer-container {
     grid-template-columns: 1fr;
-  }
-  .cta-title {
-    font-size: 24px;
+    gap: 32px;
   }
 }
 
-@media (max-width: 480px) {
-  .hero {
-    padding: 40px 0 32px;
+/* --- Мобильный планшет --- */
+@media (max-width: 820px) {
+  .section { padding: 48px 0; }
+  .hero { padding: 56px 0 40px; }
+
+  .hero-title { font-size: 40px; }
+  .section-title { font-size: 28px; }
+  .split-title { font-size: 24px; }
+  .cta-title { font-size: 26px; }
+
+  .steps-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    gap: 28px;
   }
+
+  .riders-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer-cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+/* --- Мобильные --- */
+@media (max-width: 640px) {
+  .container { padding: 0 16px; }
+
+  .header { padding: 12px 0; }
+  .header-container { gap: 10px; }
+  .logo { font-size: 20px; }
+  .header-actions { gap: 8px; }
+
+  .hero-title { font-size: 32px; }
+  .section-title { font-size: 24px; }
+  .split-title { font-size: 22px; }
+  .cta-title { font-size: 22px; }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .feature-card { padding: 20px; }
+
   .hero-tags {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .hero-buttons { width: 100%; }
+  .hero-buttons > * { width: 100%; }
+
+  .cta-layout { padding: 32px 20px; }
+  .cta-left :deep(.btn),
+  .cta-layout :deep(.btn) { width: 100%; justify-content: center; }
+
+  .footer { padding: 32px 0 20px; }
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
     align-items: center;
   }
-  .hero-buttons {
-    flex-direction: column;
-    width: 100%;
+  .footer-links { justify-content: center; }
+
+  .back-to-top {
+    bottom: 20px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    font-size: 18px;
   }
-  .hero-buttons > * {
-    width: 100%;
+}
+
+/* --- Узкие мобильные --- */
+@media (max-width: 480px) {
+  .hero { padding: 40px 0 32px; }
+  .hero-title { font-size: 28px; }
+  .hero-desc { font-size: 14px; }
+  .section-title { font-size: 22px; }
+  .cta-title { font-size: 20px; }
+  .cta-desc { font-size: 14px; }
+
+  .hero-mini-badge {
+    font-size: 11px;
+    padding: 5px 12px;
   }
-  .cta-layout {
-    padding: 24px 16px;
+
+  .feature-icon {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    font-size: 16px;
   }
+  .feature-title { font-size: 15px; }
+  .feature-desc { font-size: 13px; }
+
+  .step-card { padding: 24px 18px; }
+  .step-icon {
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+    font-size: 20px;
+  }
+  .step-title { font-size: 16px; }
+  .step-desc { font-size: 13px; }
+
+  .rider-icon {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+  }
+  .rider-title { font-size: 13px; }
+  .rider-desc { font-size: 11px; }
+
+  .footer-cols { grid-template-columns: 1fr; }
+}
+
+/* --- Экстра-узкие --- */
+@media (max-width: 400px) {
+  .logo { font-size: 18px; }
+  .header-actions :deep(.btn) {
+    padding: 0.6rem 0.9rem;
+    font-size: 13px;
+  }
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    font-size: 15px;
+  }
+
+  .hero-title { font-size: 26px; }
+  .section-title { font-size: 20px; }
+  .split-title { font-size: 19px; }
+  .cta-title { font-size: 18px; }
 }
 </style>

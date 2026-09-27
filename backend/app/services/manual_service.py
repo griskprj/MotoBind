@@ -84,8 +84,20 @@ class ManualService:
 
         if status:
             current_user = db.session.get(User, user_id)
-            if current_user is not None and current_user.role == "admin":
+            is_admin = current_user is not None and current_user.role == "admin"
+
+            if is_admin:
                 query = query.filter(Manual.status == status)
+            else:
+                if status == "approved":
+                    query = query.filter(
+                        or_(
+                            Manual.status == "approved",
+                            Manual.author_id == user_id,
+                        )
+                    )
+                else:
+                    query = query.filter(Manual.status == "approved")
 
         sort_mapping = {
             "created_at_desc": Manual.created_at.desc(),

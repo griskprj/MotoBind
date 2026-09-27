@@ -89,18 +89,18 @@
         </div>
 
         <!-- Результаты фильтрации -->
-        <div class="filter-results" v-if="filteredManuals.length > 0">
-            <span>Найдено: {{ filteredManuals.length }} мануалов</span>
-            <button class="clear-filters" @click="clearFilters" v-if="hasActiveFilters">
-                <i class="fa fa-times"></i> Очистить фильтры
-            </button>
+        <div class="filter-results" v-if="pagination.total > 0">
+        <span>Найдено: {{ pagination.total }} мануалов</span>
+        <button class="clear-filters" @click="clearFilters" v-if="hasActiveFilters">
+            <i class="fa fa-times"></i> Очистить фильтры
+        </button>
         </div>
 
         <!-- === GRID OF MANUALS === -->
-        <div v-if="filteredManuals && filteredManuals.length > 0" class="manuals-grid">
+        <div v-if="manuals && manuals.length > 0" class="manuals-grid">
             <div
                 class="manual-card"
-                v-for="manual in filteredManuals"
+                v-for="manual in manuals"
                 :key="manual.id"
                 @click="openDetailsModal(manual)"
             >
@@ -155,6 +155,61 @@
             </div>
         </div>
 
+        <!-- === PAGINATION === -->
+        <div
+        v-if="!loading && pagination.total > 0"
+        class="table-paginate"
+        >
+        <p class="paginate-show">
+            Показано
+            {{ (pagination.current_page - 1) * pagination.per_page + 1 }}-
+            {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}
+            из {{ pagination.total }}
+        </p>
+
+        <div class="paginate-ui">
+            <button
+            class="paginate-arrow"
+            @click="goToPage(pagination.current_page - 1)"
+            :disabled="!pagination.has_prev"
+            aria-label="Предыдущая страница"
+            >
+            <i class="fa fa-angle-left"></i>
+            </button>
+
+            <div class="paginate-btns">
+            <button
+                v-for="(page, idx) in visiblePages"
+                :key="`p-${idx}-${page}`"
+                class="paginate-num"
+                :class="{ active: page === pagination.current_page, dots: page === '...' }"
+                :disabled="page === '...'"
+                @click="goToPage(page)"
+            >
+                {{ page }}
+            </button>
+            </div>
+
+            <button
+            class="paginate-arrow"
+            @click="goToPage(pagination.current_page + 1)"
+            :disabled="!pagination.has_next"
+            aria-label="Следующая страница"
+            >
+            <i class="fa fa-angle-right"></i>
+            </button>
+        </div>
+
+        <div class="show-per-page">
+            <select v-model.number="pagination.per_page" @change="changePerPage">
+            <option :value="6">6</option>
+            <option :value="12">12</option>
+            <option :value="24">24</option>
+            <option :value="48">48</option>
+            </select>
+        </div>
+        </div>
+
         <!-- Empty State -->
         <div v-else class="empty-state">
             <div class="empty-header">
@@ -186,14 +241,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import api from '@/api/api'
 import Header from '@/components/Header.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ManualDetailsAdminModal from '@/components/modals/admin/ManualDetailsAdminModal.vue'
 import { useToast } from '@/composables/useToast'
 
-// ===== Composable =====
 const toast = useToast()
 
 // ===== State =====
@@ -212,107 +266,188 @@ const filterDifficulty = ref('')
 const sortBy = ref('created_at_desc')
 const selectedTab = ref('moderate')
 
+// Пагинация
+const pagination = ref({
+    current_page: 1,
+    per_page: 12,
+    total: 0,
+    pages: 0,
+    has_prev: false,
+    has_next: false,
+})
+
+// Счётчики вкладок
+const tabCounts = ref({
+    all: 0,
+    moderate: 0,
+    approved: 0,
+    rejected: 0,
+})
+
 let searchTimeout = null
 
 // ===== Computed =====
-const filteredManuals = computed(() => {
-    let items = [...manuals.value]
+const hasActiveFilters = computed(() =>
+    !!searchQuery.value ||
+    !!filterCategory.value ||
+    !!filterMotorcycle.value ||
+    !!filterDifficulty.value ||
+    sortBy.value !== 'created_at_desc'
+)
 
-    // Таб фильтр
-    if (selectedTab.value === 'moderate') {
-        items = items.filter(m => m.status === 'moderate')
-    } else if (selectedTab.value === 'approved') {
-        items = items.filter(m => m.status === 'approved')
-    } else if (selectedTab.value === 'rejected') {
-        items = items.filter(m => m.status === 'rejected')
+const visiblePages = computed(() => {
+    const current = pagination.value.current_page
+    const total = pagination.value.pages
+    const delta = 2
+    const pages = []
+
+    if (total <= 7) {
+        for (let i = 1; i <= total; i++) pages.push(i)
+        return pages
     }
 
-    // Поиск
-    if (searchQuery.value.trim()) {
-        const query = searchQuery.value.toLowerCase().trim()
-        items = items.filter(m =>
-            m.title?.toLowerCase().includes(query) ||
-            m.motorcycle?.toLowerCase().includes(query) ||
-            m.author?.username?.toLowerCase().includes(query) ||
-            m.description?.toLowerCase().includes(query)
-        )
-    }
+    pages.push(1)
+    if (current - delta > 2) pages.push('...')
 
-    // Категория
-    if (filterCategory.value) {
-        items = items.filter(m => m.category === filterCategory.value)
-    }
+    const start = Math.max(2, current - delta)
+    const end = Math.min(total - 1, current + delta)
+    for (let i = start; i <= end; i++) pages.push(i)
 
-    // Мотоцикл
-    if (filterMotorcycle.value) {
-        items = items.filter(m => m.motorcycle === filterMotorcycle.value)
-    }
+    if (current + delta < total - 1) pages.push('...')
+    pages.push(total)
 
-    // Сложность
-    if (filterDifficulty.value) {
-        items = items.filter(m => m.difficult === filterDifficulty.value)
-    }
-
-    // Сортировка
-    items = sortItems(items)
-
-    return items
-})
-
-const hasActiveFilters = computed(() => {
-    return searchQuery.value ||
-        filterCategory.value ||
-        filterMotorcycle.value ||
-        filterDifficulty.value ||
-        sortBy.value !== 'created_at_desc'
+    return pages
 })
 
 // ===== Lifecycle =====
-onMounted(() => {
-    loadData()
+onMounted(async () => {
+    await Promise.all([
+        loadManuals(),
+        loadMotorcycles(),
+        loadTabCounts(),
+    ])
 })
 
-// ===== Methods =====
-async function loadData() {
+// ===== Загрузка данных =====
+async function loadManuals() {
+    loading.value = true
     try {
-        loading.value = true
+        const params = {
+            page: pagination.value.current_page,
+            per_page: pagination.value.per_page,
+            tab: 'all',
+            search: searchQuery.value || '',
+            motorcycle: filterMotorcycle.value || '',
+            category: filterCategory.value || '',
+            difficult: filterDifficulty.value || '',
+            sort_by: sortBy.value,
+            status: selectedTab.value === 'all' ? '' : selectedTab.value,
+        }
 
-        // Загружаем все мануалы (без пагинации для админки)
-        const manualsRes = await api.get('/manual/list?per_page=1000')
-        manuals.value = manualsRes.data.manuals || []
+        // Убираем пустые
+        Object.keys(params).forEach(k => {
+            if (!params[k]) delete params[k]
+        })
 
-        // Загружаем мотоциклы
-        const motoRes = await api.get('/motorcycle/')
-        motorcycles.value = motoRes.data || []
+        const { data } = await api.get('/manual/list', { params })
+
+        manuals.value = data.manuals || []
+        pagination.value = {
+            current_page: data.current_page,
+            per_page: data.per_page,
+            total: data.total,
+            pages: data.pages,
+            has_prev: data.has_prev,
+            has_next: data.has_next,
+        }
     } catch (err) {
-        console.error('Failed load admin manuals data:', err)
-        // 401 обрабатывается глобальным интерцептором
+        console.error('Failed load manuals:', err)
+        toast.error('Не удалось загрузить мануалы')
     } finally {
         loading.value = false
     }
 }
 
-function getTabCount(status) {
-    if (status === 'all') return manuals.value.length
-    return manuals.value.filter(m => m.status === status).length
+async function loadMotorcycles() {
+    try {
+        const { data } = await api.get('/motorcycle/')
+        motorcycles.value = data || []
+    } catch (err) {
+        console.error('Failed load motorcycles:', err)
+    }
 }
 
+async function loadTabCounts() {
+    const statuses = ['', 'moderate', 'approved', 'rejected']
+    try {
+        const results = await Promise.all(
+            statuses.map(status =>
+                api.get('/manual/list', {
+                    params: { per_page: 1, status, tab: 'all' },
+                })
+            )
+        )
+        tabCounts.value = {
+            all: results[0].data.total || 0,
+            moderate: results[1].data.total || 0,
+            approved: results[2].data.total || 0,
+            rejected: results[3].data.total || 0,
+        }
+    } catch (err) {
+        console.error('Failed load tab counts:', err)
+    }
+}
+
+// ===== Управление вкладками =====
 function changeTab(tabName) {
+    if (selectedTab.value === tabName) return
     selectedTab.value = tabName
-    // Не очищаем фильтры при смене таба
+    pagination.value.current_page = 1
+    loadManuals()
 }
 
+function getTabCount(status) {
+    return tabCounts.value[status] ?? 0
+}
+
+// ===== Фильтры =====
 function applyFilters() {
-    // Применяем фильтры (пересчёт computed)
+    pagination.value.current_page = 1
+    loadManuals()
 }
 
 function debouncedSearch() {
     clearTimeout(searchTimeout)
     searchTimeout = setTimeout(() => {
-        // Применяем поиск (пересчёт computed)
+        applyFilters()
     }, 400)
 }
 
+function clearFilters() {
+    searchQuery.value = ''
+    filterCategory.value = ''
+    filterMotorcycle.value = ''
+    filterDifficulty.value = ''
+    sortBy.value = 'created_at_desc'
+    pagination.value.current_page = 1
+    loadManuals()
+}
+
+// ===== Пагинация =====
+function goToPage(page) {
+    if (typeof page !== 'number') return
+    if (page < 1 || page > pagination.value.pages) return
+    if (page === pagination.value.current_page) return
+    pagination.value.current_page = page
+    loadManuals()
+}
+
+function changePerPage() {
+    pagination.value.current_page = 1
+    loadManuals()
+}
+
+// ===== Модалка =====
 function openDetailsModal(manual) {
     selectedManual.value = manual
     showDetailsModal.value = true
@@ -323,16 +458,13 @@ function closeDetailsModal() {
     selectedManual.value = null
 }
 
+// ===== Действия =====
 async function handleApprove(manualId) {
     try {
         await api.post(`/admin/manual/${manualId}/approve`)
-        const manual = manuals.value.find(m => m.id === manualId)
-        if (manual) {
-            manual.status = 'approved'
-            manual.rejection_reason = null
-        }
         closeDetailsModal()
         toast.success('Мануал успешно одобрен!')
+        await Promise.all([loadManuals(), loadTabCounts()])
     } catch (err) {
         console.error('Failed approve manual:', err)
         toast.error('Ошибка при одобрении мануала')
@@ -342,13 +474,9 @@ async function handleApprove(manualId) {
 async function handleReject(data) {
     try {
         await api.post(`/admin/manual/${data.id}/reject`, { reason: data.reason })
-        const manual = manuals.value.find(m => m.id === data.id)
-        if (manual) {
-            manual.status = 'rejected'
-            manual.rejection_reason = data.reason
-        }
         closeDetailsModal()
         toast.warning('Мануал отклонён')
+        await Promise.all([loadManuals(), loadTabCounts()])
     } catch (err) {
         console.error('Failed reject manual:', err)
         toast.error('Ошибка при отклонении мануала')
@@ -358,13 +486,9 @@ async function handleReject(data) {
 async function handleReconsider(manualId) {
     try {
         await api.post(`/admin/manual/${manualId}/reconsider`)
-        const manual = manuals.value.find(m => m.id === manualId)
-        if (manual) {
-            manual.status = 'moderate'
-            manual.rejection_reason = null
-        }
         closeDetailsModal()
         toast.info('Мануал возвращён на проверку')
+        await Promise.all([loadManuals(), loadTabCounts()])
     } catch (err) {
         console.error('Failed reconsider manual:', err)
         toast.error('Ошибка при возврате мануала на проверку')
@@ -376,33 +500,21 @@ async function handleDelete(manualId) {
 
     try {
         await api.delete(`/admin/manual/${manualId}`)
-        manuals.value = manuals.value.filter(m => m.id !== manualId)
         closeDetailsModal()
         toast.success('Мануал удалён')
+
+        if (manuals.value.length === 1 && pagination.value.current_page > 1) {
+            pagination.value.current_page -= 1
+        }
+
+        await Promise.all([loadManuals(), loadTabCounts()])
     } catch (err) {
         console.error('Failed delete manual:', err)
         toast.error('Ошибка при удалении мануала')
     }
 }
 
-function sortItems(items) {
-    const sortFunctions = {
-        'created_at_desc': (a, b) => new Date(b.created_at) - new Date(a.created_at),
-        'created_at_asc': (a, b) => new Date(a.created_at) - new Date(b.created_at),
-        'title_asc': (a, b) => a.title.localeCompare(b.title),
-        'title_desc': (a, b) => b.title.localeCompare(a.title),
-    }
-    return items.sort(sortFunctions[sortBy.value] || sortFunctions['created_at_desc'])
-}
-
-function clearFilters() {
-    searchQuery.value = ''
-    filterCategory.value = ''
-    filterMotorcycle.value = ''
-    filterDifficulty.value = ''
-    sortBy.value = 'created_at_desc'
-}
-
+// ===== Хелперы =====
 function formatDate(dateString) {
     if (!dateString) return '—'
     try {
@@ -411,7 +523,7 @@ function formatDate(dateString) {
         return date.toLocaleDateString('ru-RU', {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
         })
     } catch {
         return '—'
@@ -420,33 +532,33 @@ function formatDate(dateString) {
 
 function getStatusLabel(status) {
     const labels = {
-        'approved': 'Одобрен',
-        'moderate': 'На проверке',
-        'rejected': 'Отклонён'
+        approved: 'Одобрен',
+        moderate: 'На проверке',
+        rejected: 'Отклонён',
     }
     return labels[status] || status
 }
 
 function getCategory(category) {
     const categories = {
-        'engine': 'Двигатель',
-        'drive': 'Привод',
-        'steering': 'Рулевое управление',
-        'suspension': 'Подвеска',
-        'electronics': 'Электроника',
-        'wheel': 'Колеса / Шины',
-        'brakes': 'Тормозная система',
-        'fuel': 'Топливная система',
-        'cooling': 'Система охлаждения'
+        engine: 'Двигатель',
+        drive: 'Привод',
+        steering: 'Рулевое управление',
+        suspension: 'Подвеска',
+        electronics: 'Электроника',
+        wheel: 'Колеса / Шины',
+        brakes: 'Тормозная система',
+        fuel: 'Топливная система',
+        cooling: 'Система охлаждения',
     }
     return categories[category] || category
 }
 
 function getDifficulty(difficult) {
     const difficulties = {
-        'easy': 'Легко',
-        'medium': 'Средне',
-        'hard': 'Сложно'
+        easy: 'Легко',
+        medium: 'Средне',
+        hard: 'Сложно',
     }
     return difficulties[difficult] || difficult
 }
@@ -723,6 +835,119 @@ function getDifficulty(difficult) {
     color: var(--accent-text);
 }
 
+/* ============================================
+   PAGINATION
+   ============================================ */
+.table-paginate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.paginate-show {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 0;
+}
+
+.paginate-ui {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.paginate-btns {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.paginate-arrow {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.paginate-arrow:hover:not(:disabled) {
+    background: var(--border-light);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+.paginate-arrow:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.paginate-num {
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: var(--fw-medium);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.paginate-num:hover:not(:disabled):not(.active) {
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+.paginate-num.active {
+    background: var(--accent-trans);
+    color: var(--accent-text);
+    font-weight: var(--fw-semibold);
+}
+.paginate-num.dots {
+    cursor: default;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.show-per-page {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.show-per-page select {
+    padding: 6px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
+    min-height: 36px;
+}
+.show-per-page select:focus {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+}
+
 /* ===== EMPTY STATE ===== */
 .empty-state {
     background: var(--bg-card);
@@ -784,6 +1009,28 @@ function getDifficulty(difficult) {
     .card-meta {
         grid-template-columns: 1fr;
     }
+
+    .table-paginate {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .paginate-show { text-align: center; font-size: 13px; }
+    .paginate-ui { justify-content: center; }
+    .show-per-page { justify-content: center; }
+}
+
+@media (max-width: 640px) {
+    .paginate-ui { gap: 6px; }
+    .paginate-arrow { width: 34px; height: 34px; min-height: 34px; }
+    .paginate-num {
+        min-width: 32px;
+        height: 32px;
+        min-height: 32px;
+        padding: 0 8px;
+        font-size: 13px;
+    }
+    .show-per-page select { width: 100%; }
 }
 
 @media (max-width: 480px) {
@@ -803,5 +1050,8 @@ function getDifficulty(difficult) {
     .manual-card {
         padding: 14px 16px;
     }
+
+    .paginate-num:not(.active):not(.dots) { display: none; }
+    .paginate-num.dots { display: none; }
 }
 </style>

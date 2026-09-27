@@ -519,23 +519,25 @@ function closeEditUserModal() {
 </script>
 
 <style scoped>
-/* === STATISTIC === */
+/* ============================================
+   STATISTIC CARDS
+   ============================================ */
 .stat-cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(1, 1fr);
     gap: 16px;
 }
 
 .stat-card {
     display: flex;
     gap: 16px;
-    justify-content: center;
+    align-items: center;
     padding: 12px 14px;
     background-color: var(--bg-card);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
+    min-width: 0;
 }
 .stat-card:hover {
     background-color: var(--accent-trans);
@@ -545,90 +547,72 @@ function closeEditUserModal() {
 .card-icon {
     width: 48px;
     height: 48px;
+    min-height: 48px; /* перебиваем reset.scss */
     font-size: 18px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     background-color: var(--accent-trans);
     color: var(--accent);
+    flex-shrink: 0;
 }
-.card-icon.success {
-    background-color: var(--success-trans);
-    color: var(--success-text);
-}
-.card-icon.danger {
-    background-color: var(--danger-trans);
-    color: var(--danger-text);
-}
+.card-icon.success { background-color: var(--success-trans); color: var(--success-text); }
+.card-icon.danger  { background-color: var(--danger-trans);  color: var(--danger-text); }
+
+.card-body { min-width: 0; }
 
 .card-title {
     font-size: 14px;
     color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
 .card-value {
     font-size: 21px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     color: var(--text-primary);
+    margin: 0;
 }
 
-@media (max-width: 1000px) {
-    .stat-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 1580px) {
-    .stat-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 520px) {
-    .stat-cards {
-        grid-template-columns: repeat(1, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-    }
-    .stat-card {
-        justify-content: center;
-        align-items: center;
-    }
-}
-
-
-/* === TABLE FILTERS AND TABLE === */
+/* ============================================
+   TABLE SECTION
+   ============================================ */
 .table-section {
     padding: 14px 16px;
     background-color: var(--bg-card);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
+    min-width: 0;
 }
 
-/* filters */
-
+/* ============================================
+   FILTERS
+   ============================================ */
 .table-filters {
     display: flex;
     justify-content: space-between;
-    align-items: last baseline;
+    align-items: flex-end;
     margin-bottom: 16px;
     gap: 16px;
+    flex-wrap: wrap;
 }
 
 .inputs-group {
     display: flex;
     gap: 14px;
-    justify-content: center;
-    align-items: center;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .inputs-wrapper {
     display: flex;
     gap: 14px;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .inputs-wrapper label {
@@ -636,8 +620,9 @@ function closeEditUserModal() {
     flex-direction: column;
     gap: 4px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
+    min-width: 0;
 }
 
 .inputs-wrapper input,
@@ -645,22 +630,20 @@ function closeEditUserModal() {
     padding: 8px 14px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
-    transition: border 0.2s;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
     min-width: 150px;
+    max-width: 100%;
 }
-
 .inputs-wrapper input:focus,
 .inputs-wrapper select:focus {
     border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
-
-.inputs-wrapper input::placeholder {
-    color: var(--text-muted);
-}
+.inputs-wrapper input::placeholder { color: var(--text-muted); }
 
 .inputs-wrapper select {
     appearance: none;
@@ -671,7 +654,6 @@ function closeEditUserModal() {
     padding-right: 36px;
     cursor: pointer;
 }
-
 .inputs-wrapper select option {
     background: var(--bg-input);
     color: var(--text-primary);
@@ -680,151 +662,125 @@ function closeEditUserModal() {
 .filters-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
-    .table-filters {
-        flex-direction: column;
-        gap: 4px;
-    }
-    .table-filters button {
-        width: 100%;
-    }
-}
-
-@media (max-width: 1000px) {
-    .inputs-group {
-        flex-direction: column;
-        align-items: normal;
-        width: 100%;
-    }
-    .inputs-wrapper {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(1, 1fr);
-        gap: 10px;
-    }
-
-    .table-paginate {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
-@media (max-width: 520px) {
-    .inputs-wrapper {
-        grid-template-columns: repeat(1, 1fr);
-    }
-    .filters-actions {
-        flex-direction: column;
-    }
-}
-
-/* table */
+/* ============================================
+   TABLE
+   ============================================ */
 .users-table-wrapper {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     overflow-x: auto;
     margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table-header {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1fr;
     gap: 8px;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-light);
     font-size: 13px;
     color: var(--text-muted);
-    font-weight: 500;
-    min-width: 700px;
+    font-weight: var(--fw-medium);
+    min-width: 760px;
 }
 
-.table-body {
-    display: flex;
-    flex-direction: column;
-}
+.table-body { display: flex; flex-direction: column; }
 
 .tr {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr 1fr;
     gap: 8px;
     padding: 14px 16px;
     align-items: center;
     border-bottom: 1px solid var(--border-light);
-    transition: background 0.2s;
+    transition: background var(--transition-fast);
     cursor: pointer;
-    min-width: 700px;
+    min-width: 760px;
 }
-
-.tr:hover {
-    background: var(--border-light);
-}
+.tr:hover { background: var(--border-light); }
+.tr:last-child { border-bottom: none; }
 
 .td {
     font-size: 14px;
     color: var(--text-primary);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.last-reg-cards {
-    display: flex;
-    flex-direction: column;
-}
-
+/* User cell */
 .user-cell {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
+    min-width: 0;
 }
-
+.user-img {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
 .user-info {
     display: flex;
     flex-direction: column;
-    margin-bottom: 8px;
+    min-width: 0;
 }
-
 .user-name {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .user-email {
     font-size: 14px;
     color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.user-img {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--border-color);
-}
-
+/* Actions */
 .table-actions-wrapper {
     display: flex;
-    gap: 10px;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
-.icon-square {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: flex;
+/* btn-small: перебиваем reset.scss */
+.btn-small {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
+    background-color: var(--bg-secondary);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--text-secondary);
     flex-shrink: 0;
 }
-
-.tr:hover .action-cell { color: var(--accent-text); }
-
-.table-footer {
-    padding: 16px;
-    text-align: center;
+.btn-small:hover {
+    background-color: var(--bg-card);
+    color: var(--accent-text);
+    box-shadow: 0 0 0 1px var(--accent);
 }
-
 .btn-small.danger {
     background-color: var(--danger-trans);
     color: var(--danger-text);
@@ -832,6 +788,7 @@ function closeEditUserModal() {
 .btn-small.danger:hover {
     background-color: var(--danger-trans);
     opacity: 0.8;
+    box-shadow: none;
 }
 .btn-small.success {
     background-color: var(--success-trans);
@@ -840,40 +797,27 @@ function closeEditUserModal() {
 .btn-small.success:hover {
     background-color: var(--success-trans);
     opacity: 0.8;
+    box-shadow: none;
 }
 
 /* Status badges */
-.status-active {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--success-trans);
-    color: var(--success-text);
-}
-
-.status-banned {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
+.status-active,
+.status-banned,
 .status-pending {
     display: inline-block;
     padding: 2px 14px;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-size: 12px;
-    font-weight: 500;
-    background: var(--warning-trans);
-    color: var(--warning-text);
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
 }
+.status-active  { background: var(--success-trans); color: var(--success-text); }
+.status-banned  { background: var(--danger-trans);  color: var(--danger-text); }
+.status-pending { background: var(--warning-trans); color: var(--warning-text); }
 
-/* paginate */
+/* ============================================
+   PAGINATION
+   ============================================ */
 .table-paginate {
     display: flex;
     justify-content: space-between;
@@ -885,32 +829,41 @@ function closeEditUserModal() {
 .paginate-show {
     color: var(--text-secondary);
     font-size: 14px;
+    margin: 0;
 }
 
 .paginate-ui {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .paginate-btns {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
 }
+.paginate-btns p { margin: 0; color: var(--text-muted); }
 
 .outline-btn.paginate {
     border: none;
     min-width: 36px;
     height: 36px;
+    min-height: 36px;
     padding: 0 8px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: 14px;
 }
-
 .outline-btn.paginate.active {
     background-color: var(--accent-trans);
     color: var(--accent-text);
 }
-
 .outline-btn.paginate:hover:not(.active) {
     background-color: var(--border-light);
 }
@@ -920,28 +873,26 @@ function closeEditUserModal() {
     cursor: not-allowed;
 }
 
-.show-per-page {
-    display: flex;
-    gap: 16px;
-}
-
+.show-per-page { display: flex; gap: 16px; }
 .show-per-page select {
     padding: 8px 14px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
-    transition: border 0.2s;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
 }
-
 .show-per-page select:focus {
     border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
 
-/* Loading state */
+/* ============================================
+   LOADING
+   ============================================ */
 .loading-state {
     display: flex;
     justify-content: center;
@@ -950,81 +901,130 @@ function closeEditUserModal() {
     color: var(--text-secondary);
     gap: 12px;
 }
+.loading-state .fa-spinner { font-size: 24px; color: var(--accent); }
 
-.loading-state .fa-spinner {
-    font-size: 24px;
-    color: var(--accent);
+/* ============================================
+   АДАПТИВ
+   Шкала: 1200 → 1000 → 820 → 640 → 480 → 400
+   ============================================ */
+
+/* --- Планшет: фильтры в колонку, stat-cards 2×2 --- */
+@media (max-width: 1200px) {
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+
+    .table-filters { flex-direction: column; align-items: stretch; gap: 12px; }
+    .table-filters button { width: 100%; }
+
+    .inputs-group { width: 100%; }
+    .inputs-wrapper { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+    .inputs-wrapper input,
+    .inputs-wrapper select { min-width: 0; width: 100%; }
+
+    .filters-actions { flex-direction: row; }
+    .filters-actions button { flex: 1; }
 }
 
-/* === ANIMATIONS === */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Responsive table adjustments */
+/* --- Мобильный планшет: карточки таблицы --- */
 @media (max-width: 820px) {
-    .table-header {
-        display: none;
-    }
+    .table-header { display: none; }
+
     .tr {
         grid-template-columns: 1fr;
-        gap: 4px;
-        padding: 16px;
+        gap: 6px;
+        padding: 14px;
         border: 1px solid var(--border-light);
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         margin-bottom: 8px;
         background: var(--bg-primary);
-        position: relative;
         min-width: unset;
     }
-    .tr:hover {
-        background: var(--bg-primary);
-    }
+    .tr:hover { background: var(--bg-primary); }
+
     .user-cell {
         order: 1;
         margin-bottom: 4px;
     }
-    .td:nth-child(2) {
-        order: 2;
-        padding-left: 50px;
+
+    /* Все информационные ячейки — с подписью */
+    .td:not(.user-cell):not(.table-actions-wrapper) {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0;
         font-size: 13px;
     }
-    .td:nth-child(3) {
-        order: 3;
-        padding-left: 50px;
-        font-size: 13px;
+
+    /* Подписи через ::before (data-label в разметке не задан) */
+    .role-cell::before      { content: "Роль";              color: var(--text-muted); font-weight: var(--fw-normal); }
+    .status-cell::before    { content: "Статус";            color: var(--text-muted); font-weight: var(--fw-normal); }
+    .date-cell::before      { content: "Дата регистрации";  color: var(--text-muted); font-weight: var(--fw-normal); }
+    .last-login-cell::before{ content: "Последний вход";    color: var(--text-muted); font-weight: var(--fw-normal); }
+
+    .role-cell      { order: 2; }
+    .status-cell    { order: 3; }
+    .date-cell      { order: 4; }
+    .last-login-cell{ order: 5; }
+
+    /* Кнопки — отдельной строкой */
+    .table-actions-wrapper {
+        order: 6;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-light);
+        justify-content: flex-end;
     }
-    .td:nth-child(4) {
-        order: 4;
-        padding-left: 50px;
-        font-size: 13px;
+
+    /* Пустое состояние */
+    .tr.empty-state .td { justify-content: center; }
+}
+
+/* --- Мобильные --- */
+@media (max-width: 640px) {
+    .table-section { padding: 12px; }
+
+    .inputs-wrapper { grid-template-columns: 1fr; gap: 8px; }
+
+    .filters-actions { flex-direction: column; }
+    .filters-actions button { width: 100%; }
+
+    .table-paginate {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
     }
-    .td:nth-child(5) {
-        order: 5;
-        padding-left: 50px;
-        font-size: 13px;
-    }
-    .td:not(.user-cell):not(.table-actions-wrapper)::before {
-        content: attr(data-label);
-        color: var(--text-muted);
-        font-weight: 400;
-        margin-right: 8px;
-    }
-    .td:nth-child(2)::before {
-        content: "Роль: ";
-    }
-    .td:nth-child(3)::before {
-        content: "Статус: ";
-    }
-    .td:nth-child(4)::before {
-        content: "Дата регистрации: ";
-    }
+    .paginate-show { text-align: center; font-size: 13px; }
+    .paginate-ui { justify-content: center; }
+    .show-per-page { justify-content: center; }
+    .show-per-page select { width: 100%; }
+
+    /* Ограничиваем пагинацию, чтобы не разрасталась */
+    .paginate-btns { gap: 4px; }
+    .outline-btn.paginate { min-width: 32px; height: 32px; min-height: 32px; padding: 0 6px; font-size: 13px; }
+}
+
+/* --- Очень узкие --- */
+@media (max-width: 480px) {
+    .stat-card { padding: 10px 12px; gap: 12px; }
+    .card-icon { width: 40px; height: 40px; min-height: 40px; font-size: 16px; }
+    .card-title { font-size: 12px; }
+    .card-value { font-size: 18px; }
+
+    .user-img { width: 34px; height: 34px; min-height: 34px; }
+    .user-name { font-size: 14px; }
+    .user-email { font-size: 12px; }
+
+    /* Скрываем пагинацию с точками на очень узких — оставляем только стрелки и текущую */
+    .paginate-btns .outline-btn.paginate:not(.active) { display: none; }
+    .paginate-btns p { display: none; }
+}
+
+/* --- Экстра-узкие --- */
+@media (max-width: 400px) {
+    .stat-cards { grid-template-columns: 1fr; gap: 10px; }
+    .stat-card { padding: 10px; }
+
+    .table-actions-wrapper { justify-content: space-between; }
+    .btn-small { width: 36px; height: 36px; min-height: 36px; }
 }
 </style>

@@ -291,6 +291,7 @@ function formatDate(dateString) {
 
 .modal-actions {
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 

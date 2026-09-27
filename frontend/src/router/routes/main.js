@@ -76,7 +76,7 @@ export default [
     name: 'manuals',
     component: () => import('../../views/Manuals.vue'),
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
       title: 'MotoBind - Мануалы по ремонту',
       description: 'База инструкций по ремонту и обслуживанию мотоциклов от сообщества. Находите мануалы для своего мотоцикла и делитесь своим опытом.',
       showFooter: true,

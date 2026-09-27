@@ -674,6 +674,9 @@ function handleReminderAction(reminder) {
 </script>
 
 <style scoped>
+/* ============================================
+   QUICK START PROMO
+   ============================================ */
 .quick-start-promo {
     display: flex;
     align-items: center;
@@ -681,7 +684,7 @@ function handleReminderAction(reminder) {
     padding: 20px 24px;
     background: linear-gradient(135deg, var(--accent-trans), rgba(139, 92, 246, 0.05));
     border: 2px solid var(--accent);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     margin-bottom: 24px;
 }
 
@@ -704,36 +707,18 @@ function handleReminderAction(reminder) {
     50% { transform: scale(1.05); box-shadow: 0 0 0 10px transparent; }
 }
 
-.promo-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.promo-content h4 {
-    margin: 0 0 4px;
-    font-size: 16px;
-    color: var(--text-primary);
-}
-
-.promo-content p {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
+.promo-content { flex: 1; min-width: 0; }
+.promo-content h4 { margin: 0 0 4px; font-size: 16px; color: var(--text-primary); }
+.promo-content p { margin: 0; font-size: 14px; color: var(--text-secondary); }
 
 @media (max-width: 1020px) {
-    .quick-start-promo {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .quick-start-promo .btn-primary {
-        width: 100%;
-        justify-content: center;
-    }
+    .quick-start-promo { flex-direction: column; text-align: center; }
+    .quick-start-promo .btn-primary { width: 100%; justify-content: center; }
 }
 
-/* ===== REMINDERS BANNER ===== */
+/* ============================================
+   REMINDERS BANNER
+   ============================================ */
 .reminders-banner {
     display: flex;
     flex-direction: column;
@@ -749,8 +734,8 @@ function handleReminderAction(reminder) {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-left: 3px solid var(--accent);
-    border-radius: 12px;
-    transition: all 0.2s ease;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
 }
 
 .reminder-item:hover {
@@ -759,22 +744,14 @@ function handleReminderAction(reminder) {
     border-left-color: var(--accent);
 }
 
-.reminder-warning {
-    border-left-color: var(--warning);
-}
-
-.reminder-danger {
-    border-left-color: var(--danger);
-}
-
-.reminder-accent {
-    border-left-color: var(--accent);
-}
+.reminder-warning { border-left-color: var(--warning); }
+.reminder-danger  { border-left-color: var(--danger); }
+.reminder-accent  { border-left-color: var(--accent); }
 
 .reminder-icon {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     background: var(--accent-trans);
     color: var(--accent-text);
     display: flex;
@@ -782,30 +759,15 @@ function handleReminderAction(reminder) {
     justify-content: center;
     font-size: 16px;
     flex-shrink: 0;
+    /* Перебиваем reset.scss, чтобы не растягивался до 44px */
+    min-height: 40px;
 }
 
-.reminder-warning .reminder-icon {
-    background: var(--warning-trans);
-    color: var(--warning-text);
-}
+.reminder-warning .reminder-icon { background: var(--warning-trans); color: var(--warning-text); }
+.reminder-danger  .reminder-icon { background: var(--danger-trans);  color: var(--danger-text); }
 
-.reminder-danger .reminder-icon {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.reminder-body {
-    flex: 1;
-    min-width: 0;
-}
-
-.reminder-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 2px;
-}
-
+.reminder-body { flex: 1; min-width: 0; }
+.reminder-title { font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-primary); margin-bottom: 2px; }
 .reminder-text {
     font-size: 13px;
     color: var(--text-secondary);
@@ -813,12 +775,7 @@ function handleReminderAction(reminder) {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-.reminder-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-}
+.reminder-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 .reminder-btn {
     display: inline-flex;
@@ -826,23 +783,21 @@ function handleReminderAction(reminder) {
     justify-content: center;
     gap: 6px;
     padding: 6px 14px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     border: none;
     cursor: pointer;
     font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: var(--fw-medium);
+    transition: all var(--transition-base);
     white-space: nowrap;
+    min-height: 32px; /* компактнее глобального 44px */
 }
 
 .reminder-btn.primary {
     background: var(--accent);
     color: #fff;
 }
-
-.reminder-btn.primary:hover {
-    background: var(--accent-hover);
-}
+.reminder-btn.primary:hover { background: var(--accent-hover); }
 
 .reminder-btn.ghost {
     width: 32px;
@@ -852,47 +807,16 @@ function handleReminderAction(reminder) {
     color: var(--text-muted);
     border: 1px solid var(--border-color);
 }
-
-.reminder-btn.ghost:hover {
-    background: var(--border-light);
-    color: var(--text-primary);
-}
-
+.reminder-btn.ghost:hover { background: var(--border-light); color: var(--text-primary); }
 .reminder-btn.ghost.danger:hover {
     background: var(--danger-trans);
     color: var(--danger-text);
     border-color: var(--danger-trans);
 }
 
-/* Мобильная адаптация */
-@media (max-width: 640px) {
-    .reminder-item {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .reminder-body {
-        flex-basis: calc(100% - 54px);
-    }
-
-    .reminder-text {
-        white-space: normal;
-    }
-
-    .reminder-actions {
-        flex-basis: 100%;
-        justify-content: flex-end;
-        padding-top: 8px;
-        border-top: 1px solid var(--border-light);
-    }
-
-    .reminder-btn.primary {
-        flex: 1;
-        justify-content: center;
-    }
-}
-
-/* ===== GARAGE STATS ===== */
+/* ============================================
+   GARAGE STATS
+   ============================================ */
 .garage-stats {
     display: flex;
     gap: 8px;
@@ -907,31 +831,19 @@ function handleReminderAction(reminder) {
     padding: 8px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-size: 13px;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
+.stat-chip:hover { border-color: var(--border-color); background: var(--bg-card-hover); }
+.stat-chip i { color: var(--accent-text); font-size: 14px; }
+.stat-chip span { font-weight: var(--fw-bold); color: var(--text-primary); }
 
-.stat-chip:hover {
-    border-color: var(--border-color);
-    background: var(--bg-card-hover);
-}
-
-.stat-chip i {
-    color: var(--accent-text);
-    font-size: 14px;
-}
-
-.stat-chip span {
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-/* ===== MOTORCYCLES LIST ===== */
-.motorcycles-container {
-    margin-bottom: 28px;
-}
+/* ============================================
+   MOTORCYCLES LIST
+   ============================================ */
+.motorcycles-container { margin-bottom: 28px; }
 
 .motorcycles-list {
     display: flex;
@@ -946,16 +858,11 @@ function handleReminderAction(reminder) {
     padding: 12px 16px;
     background: var(--bg-secondary);
     border: 2px solid transparent;
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all var(--transition-base);
 }
-
-.moto-list-item:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-light);
-}
-
+.moto-list-item:hover { background: var(--bg-card-hover); border-color: var(--border-light); }
 .moto-list-item.active {
     border-color: var(--accent);
     background: var(--accent-trans);
@@ -974,17 +881,12 @@ function handleReminderAction(reminder) {
     position: relative;
     width: 56px;
     height: 56px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     overflow: hidden;
     flex-shrink: 0;
     background: var(--bg-card);
 }
-
-.moto-list-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+.moto-list-preview img { width: 100%; height: 100%; object-fit: cover; }
 
 .moto-list-placeholder {
     width: 100%;
@@ -997,31 +899,7 @@ function handleReminderAction(reminder) {
     background: var(--bg-card);
 }
 
-.moto-status-badge {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-size: 9px;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-}
-
-.moto-status-badge.status-warning {
-    background: rgba(239, 68, 68, 0.9);
-}
-
-.moto-status-badge.status-ok {
-    background: rgba(16, 185, 129, 0.9);
-}
-
-.moto-list-info {
-    flex: 1;
-    min-width: 0;
-}
+.moto-list-info { flex: 1; min-width: 0; }
 
 .moto-list-header {
     display: flex;
@@ -1032,26 +910,23 @@ function handleReminderAction(reminder) {
 
 .moto-list-name {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin: 0;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-.moto-list-year {
-    font-size: 13px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-}
+.moto-list-year { font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
 
 .moto-list-volume {
     font-size: 12px;
     color: var(--text-muted);
     background: var(--bg-primary);
     padding: 2px 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-full);
     flex-shrink: 0;
 }
 
@@ -1070,16 +945,9 @@ function handleReminderAction(reminder) {
     align-items: center;
     gap: 4px;
 }
+.moto-list-mileage i { font-size: 12px; color: var(--text-muted); }
 
-.moto-list-mileage i {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.moto-list-color {
-    display: flex;
-    align-items: center;
-}
+.moto-list-color { display: flex; align-items: center; }
 
 .color-dot-sm {
     width: 14px;
@@ -1087,12 +955,9 @@ function handleReminderAction(reminder) {
     border-radius: 50%;
     border: 1px solid var(--border-color);
     display: block;
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-base);
 }
-
-.moto-list-item:hover .color-dot-sm {
-    transform: scale(1.15);
-}
+.moto-list-item:hover .color-dot-sm { transform: scale(1.15); }
 
 .moto-list-maintenances {
     font-size: 12px;
@@ -1101,46 +966,41 @@ function handleReminderAction(reminder) {
     align-items: center;
     gap: 4px;
 }
-
-.moto-list-maintenances i {
-    font-size: 12px;
-}
+.moto-list-maintenances i { font-size: 12px; }
 
 .moto-list-actions {
     display: flex;
     gap: 2px;
     flex-shrink: 0;
     opacity: 0.6;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--transition-base);
 }
-
-.moto-list-item:hover .moto-list-actions {
-    opacity: 1;
-}
+.moto-list-item:hover .moto-list-actions { opacity: 1; }
 
 .add-btn {
     padding: 12px;
     border: 2px dashed var(--border-color);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     background: transparent;
     color: var(--text-muted);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all var(--transition-base);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
 }
-
 .add-btn:hover {
     border-color: var(--accent);
     color: var(--accent-text);
     background: var(--accent-trans);
 }
 
-/* ===== EMPTY STATE ===== */
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -1148,15 +1008,12 @@ function handleReminderAction(reminder) {
     padding: 60px 24px;
     background: var(--bg-secondary);
     border: 2px dashed var(--border-color);
-    border-radius: 24px;
+    border-radius: var(--radius-xl);
     text-align: center;
-    margin-bottom: 32px;
-    transition: all 0.3s ease;
+    margin-bottom: var(--space-6);
+    transition: all var(--transition-base);
 }
-
-.empty-state:hover {
-    border-color: var(--border-color);
-}
+.empty-state:hover { border-color: var(--border-color); }
 
 .empty-icon {
     width: 80px;
@@ -1169,37 +1026,23 @@ function handleReminderAction(reminder) {
     font-size: 36px;
     color: var(--accent-text);
     margin-bottom: 20px;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-base);
 }
+.empty-icon i { margin-bottom: 0; }
+.empty-state:hover .empty-icon { transform: scale(1.05); }
 
-.empty-icon i {
-    margin-bottom: 0;
-}
+.empty-state h3 { font-size: 22px; margin: 0 0 8px; color: var(--text-primary); }
+.empty-state p { color: var(--text-muted); font-size: 14px; margin: 0 0 28px; }
 
-.empty-state:hover .empty-icon {
-    transform: scale(1.05);
-}
-
-.empty-state h3 {
-    font-size: 22px;
-    margin: 0 0 8px;
-    color: var(--text-primary);
-}
-
-.empty-state p {
-    color: var(--text-muted);
-    font-size: 14px;
-    margin: 0 0 28px;
-}
-
-/* ===== DETAIL SECTION ===== */
+/* ============================================
+   DETAIL SECTION
+   ============================================ */
 .moto-detail {
     margin-top: 28px;
     padding-top: 24px;
     border-top: 1px solid var(--border-light);
 }
 
-/* Stats */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1214,16 +1057,15 @@ function handleReminderAction(reminder) {
     padding: 16px 20px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 14px;
-    transition: all 0.25s ease;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+    min-width: 0;
 }
-
 .stat-card:hover {
     border-color: var(--border-color);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
-
 .stat-card.stat-warning {
     border-color: var(--danger-trans);
     background: var(--danger-trans);
@@ -1232,7 +1074,8 @@ function handleReminderAction(reminder) {
 .stat-icon {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    min-height: 44px;
+    border-radius: var(--radius-md);
     background: var(--accent-trans);
     display: flex;
     align-items: center;
@@ -1241,43 +1084,26 @@ function handleReminderAction(reminder) {
     color: var(--accent-text);
     flex-shrink: 0;
 }
+.stat-warning .stat-icon { background: var(--danger-trans); color: var(--danger-text); }
 
-.stat-warning .stat-icon {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.stat-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
+.stat-info { display: flex; flex-direction: column; min-width: 0; }
 .stat-label {
     font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 }
-
 .stat-value {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+.stat-value.text-danger { color: var(--danger); }
+.stat-value .text-muted { font-size: 13px; font-weight: var(--fw-normal); color: var(--text-muted); }
 
-.stat-value.text-danger {
-    color: var(--danger);
-}
-
-.stat-value .text-muted {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--text-muted);
-}
-
-/* Detail Grid */
 .detail-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1289,18 +1115,11 @@ function handleReminderAction(reminder) {
     padding: 20px 24px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 14px;
-    transition: all 0.25s ease;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
 }
-
-.detail-card:hover {
-    border-color: var(--border-color);
-}
-
-.notes-card {
-    display: flex;
-    flex-direction: column;
-}
+.detail-card:hover { border-color: var(--border-color); }
+.notes-card { display: flex; flex-direction: column; }
 
 .detail-header {
     display: flex;
@@ -1311,7 +1130,7 @@ function handleReminderAction(reminder) {
 
 .detail-title {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin: 0;
     color: var(--text-primary);
     letter-spacing: 0.3px;
@@ -1322,40 +1141,29 @@ function handleReminderAction(reminder) {
     grid-template-columns: 1fr 1fr;
     gap: 8px 20px;
 }
-
-.spec-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px 0;
-}
-
-.spec-item.full {
-    grid-column: 1 / -1;
-}
-
+.spec-item { display: flex; flex-direction: column; gap: 2px; padding: 6px 0; min-width: 0; }
+.spec-item.full { grid-column: 1 / -1; }
 .spec-label {
     font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
 }
-
 .spec-value {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
-    word-break: break-all;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
-
 .spec-value.spec-code {
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 13px;
     letter-spacing: 0.5px;
     background: var(--bg-primary);
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     display: inline-block;
 }
 
@@ -1363,29 +1171,14 @@ function handleReminderAction(reminder) {
     display: inline-block;
     width: 32px;
     height: 16px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-base);
 }
+.color-dot:hover { transform: scale(1.1); }
 
-.color-dot:hover {
-    transform: scale(1.1);
-}
-
-.notes-content {
-    flex: 1;
-    display: flex;
-    align-items: flex-start;
-    padding-top: 4px;
-}
-
-.notes-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.7;
-}
-
+.notes-content { flex: 1; display: flex; align-items: flex-start; padding-top: 4px; }
+.notes-text { font-size: 14px; color: var(--text-secondary); margin: 0; line-height: var(--leading-relaxed); }
 .notes-empty {
     font-size: 14px;
     color: var(--text-muted);
@@ -1395,17 +1188,15 @@ function handleReminderAction(reminder) {
     align-items: center;
     gap: 8px;
 }
+.notes-empty i { color: var(--text-muted); font-size: 14px; }
 
-.notes-empty i {
-    color: var(--text-muted);
-    font-size: 14px;
-}
-
-/* Maintenances */
+/* ============================================
+   MAINTENANCES
+   ============================================ */
 .maintenances-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     padding: 20px 24px;
     margin-bottom: 24px;
 }
@@ -1414,52 +1205,33 @@ function handleReminderAction(reminder) {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
-.section-header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.section-header-left i {
-    color: var(--accent-text);
-    font-size: 18px;
-}
-
-.section-header h4 {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0;
-}
+.section-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.section-header-left i { color: var(--accent-text); font-size: 18px; }
+.section-header h4 { font-size: 15px; font-weight: var(--fw-semibold); margin: 0; }
 
 .btn-link {
     background: none;
     border: none;
     color: var(--accent-text);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     font-size: 13px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.25s ease;
+    transition: all var(--transition-base);
     padding: 6px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
+    min-height: 32px;
 }
+.btn-link:hover { color: var(--accent); gap: 10px; background: var(--accent-trans); }
 
-.btn-link:hover {
-    color: var(--accent);
-    gap: 10px;
-    background: var(--accent-trans);
-}
-
-.maintenances-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
+.maintenances-list { display: flex; flex-direction: column; gap: 6px; }
 
 .maintenance-item {
     display: flex;
@@ -1467,56 +1239,37 @@ function handleReminderAction(reminder) {
     gap: 14px;
     padding: 12px 16px;
     background: var(--bg-primary);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
+    min-width: 0;
 }
-
-.maintenance-item:hover {
-    background: var(--bg-card-hover);
-    transform: translateX(4px);
-}
+.maintenance-item:hover { background: var(--bg-card-hover); transform: translateX(4px); }
 
 .maint-icon {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    min-height: 36px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     font-size: 14px;
 }
+.maint-icon-completed { background: var(--success-trans); color: var(--success-text); }
+.maint-icon-planned   { background: var(--warning-trans); color: var(--warning-text); }
+.maint-icon-overdue   { background: var(--danger-trans);  color: var(--danger-text); }
 
-.maint-icon-completed {
-    background: var(--success-trans);
-    color: var(--success-text);
-}
-
-.maint-icon-planned {
-    background: var(--warning-trans);
-    color: var(--warning-text);
-}
-
-.maint-icon-overdue {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.maint-info {
-    flex: 1;
-    min-width: 0;
-}
-
+.maint-info { flex: 1; min-width: 0; }
 .maint-title {
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     font-size: 13px;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .maint-meta {
     font-size: 12px;
     color: var(--text-muted);
@@ -1525,54 +1278,24 @@ function handleReminderAction(reminder) {
     gap: 6px;
     flex-wrap: wrap;
 }
+.maint-meta .dot { opacity: 0.3; }
 
-.maint-meta .dot {
-    opacity: 0.3;
-}
-
-.maint-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.maint-status i {
-    color: var(--text-muted);
-    font-size: 12px;
-    opacity: 0.5;
-}
+.maint-status { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.maint-status i { color: var(--text-muted); font-size: 12px; opacity: 0.5; }
 
 .badge {
     display: inline-block;
     padding: 3px 12px;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-size: 11px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     white-space: nowrap;
 }
+.badge-success { background: var(--success-trans); color: var(--success-text); }
+.badge-warning { background: var(--warning-trans); color: var(--warning-text); }
+.badge-danger  { background: var(--danger-trans);  color: var(--danger-text); }
+.badge-gray    { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
 
-.badge-success {
-    background: var(--success-trans);
-    color: var(--success-text);
-}
-
-.badge-warning {
-    background: var(--warning-trans);
-    color: var(--warning-text);
-}
-
-.badge-danger {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.badge-gray {
-    background: rgba(107, 114, 128, 0.15);
-    color: #9ca3af;
-}
-
-/* Empty small */
 .empty-small {
     display: flex;
     flex-direction: column;
@@ -1580,243 +1303,154 @@ function handleReminderAction(reminder) {
     padding: 32px 16px;
     text-align: center;
 }
+.empty-small i { font-size: 28px; color: var(--text-muted); margin-bottom: 8px; opacity: 0.4; }
+.empty-small p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+.empty-small .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-.empty-small i {
-    font-size: 28px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    opacity: 0.4;
-}
-
-.empty-small p {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.empty-small .hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
-}
-
-/* ===== ICON BTN ===== */
+/* ============================================
+   ICON BUTTON
+   ВАЖНО: перебиваем глобальный min-height: 44px из reset.scss
+   ============================================ */
 .icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 34px;
     height: 34px;
+    min-height: 34px;
     padding: 0;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
     font-size: 14px;
     line-height: 1;
     flex-shrink: 0;
+    touch-action: manipulation;
+}
+.icon-btn:hover { background: var(--border-light); color: var(--text-primary); }
+.icon-btn.danger:hover { background: var(--danger-trans); color: var(--danger); }
+.icon-btn.small { width: 28px; height: 28px; min-height: 28px; font-size: 12px; }
+.icon-btn i { pointer-events: none; }
+
+/* ============================================
+   АДАПТИВ
+   Шкала: 1100 → 820 → 640 → 480 → 400
+   ============================================ */
+
+/* --- Планшеты --- */
+@media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.icon-btn:hover {
-    background: var(--border-light);
-    color: var(--text-primary);
-}
-
-.icon-btn.danger:hover {
-    background: var(--danger-trans);
-    color: var(--danger);
-}
-
-.icon-btn.small {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-}
-
-.icon-btn i {
-    pointer-events: none;
-}
-
-/* ===== MEDIA QUERIES ===== */
 @media (max-width: 820px) {
-    .page-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-
-    .page-title {
-        font-size: 24px;
-    }
-
-    .btn-primary {
-        width: 100%;
-        justify-content: center;
-        padding: 12px;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .detail-grid {
-        grid-template-columns: 1fr;
-    }
+    .detail-grid { grid-template-columns: 1fr; }
+    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+    .quick-start-promo { flex-direction: column; text-align: center; }
+    .quick-start-promo .btn-primary { width: 100%; justify-content: center; }
 }
 
-@media (max-width: 600px) {
-    .reminder-item {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .reminder-body {
-        flex-basis: calc(100% - 54px);
-    }
-
-    .reminder-text {
-        white-space: normal;
-    }
-
+/* --- Мобильные (широкие) --- */
+@media (max-width: 640px) {
+    /* Напоминания */
+    .reminder-item { flex-wrap: wrap; gap: 10px; }
+    .reminder-body { flex-basis: calc(100% - 54px); }
+    .reminder-text { white-space: normal; }
     .reminder-actions {
         flex-basis: 100%;
         justify-content: flex-end;
         padding-top: 8px;
         border-top: 1px solid var(--border-light);
     }
+    .reminder-btn.primary { flex: 1; justify-content: center; }
 
-    .reminder-btn.primary {
-        flex: 1;
-        justify-content: center;
-    }
+    /* Статистика гаража */
+    .garage-stats { gap: 6px; }
+    .stat-chip { width: 100%; font-size: 12px; padding: 6px 12px; }
 
-    .garage-stats {
-        gap: 6px;
-    }
+    /* Карточки статистики */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 12px 14px; gap: 10px; }
+    .stat-icon { width: 36px; height: 36px; min-height: 36px; font-size: 15px; }
+    .stat-value { font-size: 15px; }
 
-    .stat-chip {
-        width: 100%;
-        font-size: 12px;
-        padding: 6px 12px;
-    }
+    /* Детали */
+    .detail-card { padding: 14px 16px; }
+    .spec-list { gap: 4px 12px; }
+    .spec-value { font-size: 13px; }
 
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-    }
+    /* Обслуживания */
+    .maintenances-section { padding: 14px 16px; }
+    .maintenance-item { padding: 10px 12px; gap: 10px; }
+    .maint-icon { width: 32px; height: 32px; min-height: 32px; font-size: 12px; }
+    .maint-title { font-size: 12px; }
+    .maint-meta { font-size: 11px; }
+    .maint-status i { display: none; } /* стрелку убираем, badge и так понятен */
 
-    .stat-card {
-        padding: 12px 14px;
-        gap: 10px;
-    }
+    /* Список мотоциклов */
+    .moto-list-item { padding: 10px 12px; gap: 10px; }
+    .moto-list-preview { width: 48px; height: 48px; }
+    .moto-list-name { font-size: 14px; }
 
-    .stat-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 15px;
-    }
+    /* Действия НЕ переносим — держим справа от превью */
+    .moto-list-actions { opacity: 1; gap: 0; }
+    .icon-btn { width: 32px; height: 32px; min-height: 32px; font-size: 13px; }
 
-    .stat-value {
-        font-size: 15px;
-    }
+    /* Пустое состояние */
+    .empty-state { padding: 40px 16px; }
+    .empty-icon { width: 60px; height: 60px; font-size: 26px; }
+    .empty-state h3 { font-size: 18px; }
 
-    .detail-card {
-        padding: 14px 16px;
-    }
+    /* Хедер секции */
+    .section-header { gap: 8px; }
+}
 
-    .spec-list {
-        grid-template-columns: 1fr 1fr;
-        gap: 4px 12px;
-    }
-
-    .spec-value {
-        font-size: 13px;
-    }
-
-    .maintenances-section {
-        padding: 14px 16px;
-    }
-
-    .maintenance-item {
-        padding: 10px 12px;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .maint-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-    }
-
-    .maint-title {
-        font-size: 12px;
-    }
-
-    .maint-meta {
-        font-size: 11px;
-    }
-
-    .moto-list-item {
-        padding: 10px 12px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .moto-list-preview {
-        width: 48px;
-        height: 48px;
-    }
-
-    .moto-list-name {
-        font-size: 14px;
-    }
-
+/* --- Мобильные (узкие) --- */
+@media (max-width: 480px) {
+    /* Кнопки действий в списке — переносим вниз на всю ширину */
+    .moto-list-item { flex-wrap: wrap; }
+    .moto-card-wrapper { flex-basis: 100%; }
     .moto-list-actions {
-        opacity: 1;
         width: 100%;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+        opacity: 1;
+    }
+
+    /* Промо */
+    .quick-start-promo { padding: 16px; gap: 12px; }
+    .promo-icon { width: 44px; height: 44px; font-size: 18px; }
+    .promo-content h4 { font-size: 15px; }
+    .promo-content p { font-size: 13px; }
+
+    /* Обслуживание: badge переносим под текст */
+    .maintenance-item { flex-wrap: wrap; }
+    .maint-info { flex-basis: calc(100% - 52px); }
+    .maint-status {
+        flex-basis: 100%;
         justify-content: flex-end;
         padding-top: 6px;
         border-top: 1px solid var(--border-light);
     }
-
-    .empty-state {
-        padding: 40px 16px;
-    }
-
-    .empty-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 26px;
-    }
-
-    .empty-state h3 {
-        font-size: 18px;
-    }
 }
 
+/* --- Очень узкие --- */
 @media (max-width: 400px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
+    .stats-grid { grid-template-columns: 1fr; }
+    .spec-list  { grid-template-columns: 1fr; }
+    .moto-list-meta { gap: 8px; }
+    .moto-list-volume { font-size: 11px; padding: 1px 10px; }
+    .stat-card { padding: 10px 12px; }
 
-    .spec-list {
-        grid-template-columns: 1fr;
-    }
+    /* Чипы статистики — компактнее */
+    .stat-chip { padding: 6px 10px; font-size: 11px; }
+    .stat-chip i { font-size: 12px; }
 
-    .moto-list-meta {
-        gap: 8px;
-    }
-
-    .moto-list-volume {
-        font-size: 11px;
-        padding: 1px 10px;
-    }
-
-    .stat-card {
-        padding: 10px 12px;
-    }
+    /* Кнопки действий — по 2 в ряд, чтобы не сжимались */
+    .moto-list-actions { justify-content: space-between; }
+    .icon-btn { width: 34px; height: 34px; min-height: 34px; }
 }
 </style>

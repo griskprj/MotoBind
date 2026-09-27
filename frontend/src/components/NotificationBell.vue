@@ -1,5 +1,5 @@
 <template>
-  <div class="notification-bell" @click="toggleDropdown" ref="bellRef">
+  <div v-if="isAuthenticated" class="notification-bell" @click="toggleDropdown" ref="bellRef">
     <i class="fas fa-bell"></i>
     <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
 
@@ -58,7 +58,9 @@ const dropdownRef = ref(null)
 
 // ===== Lifecycle =====
 onMounted(() => {
-  notificationsStore.startPolling()
+  if (isAuthenticated.value) {
+    notificationsStore.startPolling()
+  }
   document.addEventListener('click', closeDropdownOutside)
 })
 
@@ -70,6 +72,10 @@ onBeforeUnmount(() => {
 // ===== Actions =====
 async function toggleDropdown(event) {
   event.stopPropagation()
+  if (!isAuthenticated.value) {
+    router.push('/login')
+    return
+  }
   dropdownOpen.value = !dropdownOpen.value
   if (dropdownOpen.value) {
     try {
@@ -123,7 +129,7 @@ function positionDropdown() {
   dropdown.style.top = (rect.bottom + 8) + 'px'
   dropdown.style.left = Math.max(10, left) + 'px'
   dropdown.style.width = dropdownWidth + 'px'
-  dropdown.style.right = 'auto'  // ← важно: сбросить CSS right
+  dropdown.style.right = 'auto'
 }
 
 function formatTime(dateStr) {

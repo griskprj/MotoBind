@@ -29,9 +29,22 @@
               </button>
             </div>
 
-            <button @click="$router.push('/manual-creator')" class="outline-btn">
+            <button
+              v-if="isAuthenticated"
+              @click="$router.push('/manual-creator')"
+              class="outline-btn"
+            >
               <i class="fa fa-plus"></i>
               <span>Создать мануал</span>
+            </button>
+
+            <button
+              v-else
+              @click="$router.push('/login')"
+              class="outline-btn"
+            >
+              <i class="fa fa-sign-in"></i>
+              <span>Войти, чтобы создать</span>
             </button>
           </div>
         </div>
@@ -53,16 +66,13 @@
             </div>
 
             <select
+              v-if="motorcycles.length > 0"
               class="filter-select"
               :value="filters.motorcycle"
               @change="onMotorcycleChange($event.target.value)"
             >
               <option value="">Все мотоциклы</option>
-              <option
-                v-for="moto in motorcycles"
-                :key="moto.id"
-                :value="moto.name"
-              >
+              <option v-for="moto in motorcycles" :key="moto.id" :value="moto.name">
                 {{ moto.name }}
               </option>
             </select>
@@ -125,15 +135,30 @@
             <p class="empty-text" v-if="hasActiveFilters">
               Попробуйте изменить параметры фильтрации
             </p>
-            <p class="empty-text" v-else>
+            <p class="empty-text" v-else-if="isAuthenticated">
               Создайте свой первый мануал и помогите сообществу
             </p>
+            <p class="empty-text" v-else>
+              Пока нет опубликованных мануалов. Заглядывайте позже!
+            </p>
+
             <div class="empty-actions">
               <button v-if="hasActiveFilters" @click="clearAllFilters" class="btn-secondary">
                 Сбросить фильтры
               </button>
-              <button v-else @click="$router.push('/manual-creator')" class="btn-primary">
+              <button
+                v-else-if="isAuthenticated"
+                @click="$router.push('/manual-creator')"
+                class="btn-primary"
+              >
                 Создать мануал
+              </button>
+              <button
+                v-else
+                @click="$router.push('/login')"
+                class="btn-primary"
+              >
+                Войти
               </button>
             </div>
           </div>
@@ -247,9 +272,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useManualsStore, useMotorcyclesStore } from '@/stores'
+import { useManualsStore, useMotorcyclesStore, useAuthStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
 import { getCategoryLabel, getDifficultyLabel } from '@/utils/formatters'
 import { getManualImageUrl } from '@/utils/mediaUrl'
@@ -261,6 +286,8 @@ import LoadingOverlay from '../components/LoadingOverlay.vue'
 const toast = useToast()
 const manualsStore = useManualsStore()
 const motorcyclesStore = useMotorcyclesStore()
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const {
   items,
@@ -290,18 +317,31 @@ const showManualDetailsModal = ref(false)
 let searchTimeout = null
 
 // ===== Tabs =====
-const tabs = [
-  { value: 'all', label: 'Все мануалы', icon: 'fa fa-book' },
-  { value: 'my', label: 'Мои мануалы', icon: 'fa fa-user' },
-  { value: 'myMotos', label: 'Для моих мотоциклов', icon: 'fa fa-motorcycle' },
-]
+const tabs = computed(() => {
+  const base = [
+    { value: 'all', label: 'Все мануалы', icon: 'fa fa-book' },
+  ]
+  if (!isAuthenticated.value) return base
+
+  return [
+    ...base,
+    { value: 'my', label: 'Мои мануалы', icon: 'fa fa-user' },
+    { value: 'myMotos', label: 'Для моих мотоциклов', icon: 'fa fa-motorcycle' },
+  ]
+})
 
 // ===== Lifecycle =====
 onMounted(async () => {
   const promises = [loadList()]
-  if (!motorcycles.value.length) {
-    promises.push(motorcyclesStore.loadAll())
+
+  if (isAuthenticated.value && !motorcycles.value.length) {
+    promises.push(
+      motorcyclesStore.loadAll().catch((err) => {
+        console.warn('Не удалось загрузить мотоциклы:', err)
+      })
+    )
   }
+
   await Promise.all(promises).catch((err) => {
     console.error('Failed to load manuals:', err)
     toast.error('Не удалось загрузить мануалы')
@@ -310,6 +350,7 @@ onMounted(async () => {
 
 // ===== Filters / tabs / pagination =====
 function changeTab(value) {
+  if (!isAuthenticated.value && value !== 'all') return
   setTab(value)
   loadList().catch(() => {})
 }

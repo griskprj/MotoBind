@@ -387,10 +387,6 @@ async function loadManualFromRoute() {
     await manualsStore.loadOne(id)
   } catch (err) {
     console.error('Ошибка загрузки мануала:', err)
-    if (err.response?.status === 401) {
-      router.push('/login')
-      return
-    }
     toast.error(err.response?.data?.message || 'Мануал не найден')
   }
 }

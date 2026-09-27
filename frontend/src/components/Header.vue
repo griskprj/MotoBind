@@ -1,26 +1,26 @@
 <template>
-    <!-- === WELCOME SECTION === -->
-    <header class="page-header">
-        <div class="header-left">
-            <h2>{{ title }}</h2>
-            <p class="header-subtitle">{{ subtitle }}</p>
-        </div>
+  <header class="page-header">
+    <div class="header-left">
+      <h2>{{ title }}</h2>
+      <p class="header-subtitle">{{ subtitle }}</p>
+    </div>
 
-        <div class="header-right">
-            <NotificationBell />
-            <button 
-                class="theme-toggle" 
-                @click="toggleTheme"
-                :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
-            >
-                <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
-            </button>
-        </div>
-    </header>
+    <div class="header-right">
+      <NotificationBell v-if="isAuthenticated" />
+      <button
+        class="theme-toggle"
+        @click="toggleTheme"
+        :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
+      >
+        <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
+      </button>
+    </div>
+  </header>
 </template>
 
 <script>
 import NotificationBell from './NotificationBell.vue';
+import { useAuthStore } from '../stores/auth.js';
 
 export default {
     name: 'Header',
@@ -46,6 +46,12 @@ export default {
             required: true
         }
     },
+
+    computed: {
+    isAuthenticated() {
+      return useAuthStore().isAuthenticated
+    },
+  },
 
     mounted() {
         const savedTheme = localStorage.getItem('theme');

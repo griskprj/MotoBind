@@ -476,7 +476,9 @@ async function copyProfileLink() {
 </script>
 
 <style scoped>
-/* ===== PROFILE GRID ===== */
+/* ============================================
+   PROFILE GRID
+   ============================================ */
 .profile-grid {
     display: grid;
     grid-template-columns: 320px 1fr;
@@ -484,19 +486,23 @@ async function copyProfileLink() {
     align-items: start;
 }
 
-/* ===== SIDEBAR ===== */
+/* ============================================
+   SIDEBAR
+   ============================================ */
 .profile-sidebar {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
 }
 
 .profile-card {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 24px;
     text-align: center;
+    min-width: 0;
 }
 
 .profile-avatar-wrapper {
@@ -504,7 +510,7 @@ async function copyProfileLink() {
     width: 120px;
     height: 120px;
     margin: 0 auto 16px;
-    overflow-y: hidden;
+    overflow: hidden;
 }
 
 .profile-avatar {
@@ -519,34 +525,35 @@ async function copyProfileLink() {
     position: absolute;
     bottom: 4px;
     right: 4px;
-    min-width: 38px;
+    width: 38px;
+    height: 38px;
+    min-height: 38px; /* перебиваем reset.scss */
+    padding: 0;
     border-radius: 50%;
     background: var(--accent);
     border: none;
     color: #fff;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-base);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 14px;
 }
-
-.avatar-edit-btn:hover {
-    background: var(--accent-hover);
-    transform: scale(1.05);
-}
+.avatar-edit-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
 
 .profile-username {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin: 0 0 4px 0;
     color: var(--text-primary);
+    word-break: break-word;
 }
-
 .profile-email {
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0 0 12px 0;
+    word-break: break-word;
 }
 
 .profile-badge {
@@ -557,49 +564,24 @@ async function copyProfileLink() {
     flex-wrap: wrap;
 }
 
-.status-active {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--success-trans);
-    color: var(--success-text);
-}
-
-.status-banned {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.status-pending {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: var(--warning-trans);
-    color: var(--warning-text);
-}
-
+/* Статусы — общий паттерн */
+.status-active,
+.status-banned,
+.status-pending,
 .role-badge {
     display: inline-block;
     padding: 2px 14px;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-size: 12px;
-    font-weight: 500;
-    background: var(--accent-trans);
-    color: var(--accent-text);
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
 }
+.status-active  { background: var(--success-trans); color: var(--success-text); }
+.status-banned  { background: var(--danger-trans);  color: var(--danger-text); }
+.status-pending { background: var(--warning-trans); color: var(--warning-text); }
+.role-badge     { background: var(--accent-trans);  color: var(--accent-text); }
 
-.avatar-actions {
-    margin-bottom: 12px;
-}
+.avatar-actions { margin-bottom: 12px; }
 
 .profile-info-items {
     display: flex;
@@ -615,12 +597,10 @@ async function copyProfileLink() {
     gap: 8px;
     font-size: 14px;
     color: var(--text-secondary);
+    min-width: 0;
 }
-
-.info-item i {
-    width: 18px;
-    color: var(--accent-text);
-}
+.info-item i { width: 18px; min-width: 18px; color: var(--accent-text); flex-shrink: 0; }
+.info-item span { overflow: hidden; text-overflow: ellipsis; }
 
 .profile-bio {
     font-size: 14px;
@@ -628,17 +608,13 @@ async function copyProfileLink() {
     margin-bottom: 14px;
     padding: 12px 16px;
     background: var(--bg-secondary);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border-left: 3px solid var(--accent);
     text-align: left;
-    line-height: 1.6;
+    line-height: var(--leading-relaxed);
+    word-break: break-word;
 }
-
-.profile-bio i {
-    color: var(--accent-text);
-    margin-right: 6px;
-    opacity: 0.7;
-}
+.profile-bio i { color: var(--accent-text); margin-right: 6px; opacity: 0.7; }
 
 .profile-social {
     display: flex;
@@ -654,34 +630,30 @@ async function copyProfileLink() {
     justify-content: center;
     width: 38px;
     height: 38px;
+    min-height: 38px; /* перебиваем reset.scss */
     border-radius: 50%;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    transition: all 0.2s;
+    transition: all var(--transition-base);
 }
-
 .social-link:hover {
     background: var(--accent);
-    color: white;
+    color: #fff;
     border-color: var(--accent);
     transform: translateY(-2px);
 }
 
-.profile-actions {
-    display: flex;
-    gap: 8px;
-}
+.profile-actions { display: flex; gap: 8px; }
+.profile-actions .btn { flex: 1; }
 
-.profile-actions .btn {
-    flex: 1;
-}
-
-/* ===== STATS CARD ===== */
+/* ============================================
+   STATS CARD
+   ============================================ */
 .stats-card {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 16px 20px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -692,31 +664,31 @@ async function copyProfileLink() {
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-width: 0;
 }
-
-.stat-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent);
-}
-
+.stat-value { font-size: 20px; font-weight: var(--fw-bold); color: var(--accent); }
 .stat-label {
     font-size: 12px;
     color: var(--text-secondary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-/* ===== SETTINGS ===== */
+/* ============================================
+   SETTINGS CARDS
+   ============================================ */
 .settings-card {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     margin-bottom: 16px;
+    min-width: 0;
 }
-
-.settings-card:last-child {
-    margin-bottom: 0;
-}
+.settings-card:last-child { margin-bottom: 0; }
 
 .settings-card-header {
     display: flex;
@@ -726,17 +698,14 @@ async function copyProfileLink() {
     border-bottom: 1px solid var(--border-light);
     background: var(--bg-secondary);
 }
-
-.settings-card-header i {
-    font-size: 18px;
-    color: var(--accent);
-}
-
+.settings-card-header i { font-size: 18px; color: var(--accent); flex-shrink: 0; }
 .settings-card-header h3 {
     font-size: 16px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin: 0;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .settings-card-body {
@@ -744,107 +713,104 @@ async function copyProfileLink() {
     flex-direction: column;
     gap: 8px;
     padding: 20px;
+    min-width: 0;
 }
 
+/* ============================================
+   INFO ROWS
+   ============================================ */
 .info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border-light);
+    min-width: 0;
 }
-
-.info-row:last-child {
-    border-bottom: none;
-}
+.info-row:last-child { border-bottom: none; }
 
 .info-label {
     font-size: 14px;
     color: var(--text-secondary);
+    flex-shrink: 0;
 }
-
 .info-value {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
+    min-width: 0;
 }
 
+/* ============================================
+   TOGGLE ROWS
+   ============================================ */
 .toggle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
+    min-width: 0;
 }
+.toggle-row:last-child { border-bottom: none; }
 
-.toggle-row:last-child {
-    border-bottom: none;
-}
-
-.toggle-row.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
+.toggle-row.disabled { opacity: 0.5; pointer-events: none; }
 
 .settings-group-title {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin: 12px 0 4px 0;
     padding-left: 2px;
 }
-
-.settings-group-title:first-child {
-    margin-top: 0;
-}
+.settings-group-title:first-child { margin-top: 0; }
 
 .toggle-info {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
+    flex: 1;
 }
-
 .toggle-label {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
 }
-
 .toggle-desc {
     font-size: 13px;
     color: var(--text-muted);
+    line-height: var(--leading-base);
 }
 
-/* Переключатель */
+/* ============================================
+   SWITCH
+   ============================================ */
 .switch {
     position: relative;
     display: inline-block;
     width: 48px;
     height: 26px;
+    min-height: 26px; /* перебиваем reset.scss */
     flex-shrink: 0;
 }
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
+.switch input { opacity: 0; width: 0; height: 0; }
 
 .switch .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: var(--bg-secondary);
     border: 2px solid var(--border-color);
     border-radius: 26px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 }
-
 .switch .slider::before {
     content: '';
     position: absolute;
@@ -854,45 +820,40 @@ async function copyProfileLink() {
     bottom: 2px;
     background: var(--text-muted);
     border-radius: 50%;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 }
-
 .switch input:checked + .slider {
     background: var(--accent);
     border-color: var(--accent);
 }
-
 .switch input:checked + .slider::before {
     transform: translateX(22px);
-    background: white;
+    background: #fff;
 }
-
 .switch input:disabled + .slider {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+/* ============================================
+   INFO BOX
+   ============================================ */
 .info-box {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     margin-top: 12px;
 }
+.info-box.info { background: var(--accent-trans); color: var(--text-secondary); }
+.info-box i { color: var(--accent-text); font-size: 18px; flex-shrink: 0; }
+.info-box span { min-width: 0; }
 
-.info-box.info {
-    background: var(--accent-trans);
-    color: var(--text-secondary);
-}
-
-.info-box i {
-    color: var(--accent-text);
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
+/* ============================================
+   PUBLIC PROFILE LINK
+   ============================================ */
 .hint-text {
     font-size: 14px;
     color: var(--text-secondary);
@@ -901,90 +862,39 @@ async function copyProfileLink() {
     align-items: center;
     gap: 8px;
 }
-
-.hint-text i {
-    color: var(--accent-text);
-}
+.hint-text i { color: var(--accent-text); flex-shrink: 0; }
 
 .profile-link {
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+    min-width: 0;
 }
 
 .profile-link input {
     flex: 1;
+    min-width: 0;
+    min-height: 44px;
     padding: 8px 12px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 13px;
+    font-family: var(--font-mono);
     cursor: pointer;
-    font-family: monospace;
+    text-overflow: ellipsis;
 }
-
 .profile-link input:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
 
-.btn-sm {
-    padding: 6px 14px;
-    font-size: 13px;
-}
-
-/* ===== BUTTONS ===== */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background: var(--accent);
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-input);
-}
-
-.btn-secondary:hover {
-    background: var(--border-light);
-}
-
-.btn-danger {
-    background: var(--danger-trans);
-    color: var(--danger);
-    border: 1px solid transparent;
-    padding: 10px 16px;
-}
-
-.btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
-
+/* ============================================
+   LOCAL BUTTONS
+   (минимум переопределений, опираемся на components.scss)
+   ============================================ */
 .btn-sm {
     padding: 6px 14px;
     font-size: 13px;
@@ -996,111 +906,156 @@ async function copyProfileLink() {
     border: 1px solid var(--accent);
     color: var(--accent);
     padding: 10px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
+    transition: all var(--transition-base);
+    font-weight: var(--fw-medium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
+.outline-btn:hover { background: var(--accent); color: #fff; }
 
-.outline-btn:hover {
-    background: var(--accent);
-    color: #fff;
+.btn-danger {
+    background: var(--danger-trans);
+    color: var(--danger-text);
+    border: 1px solid transparent;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-weight: var(--fw-medium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
 
-/* ============================================ */
-/* ===== АДАПТИВНОСТЬ ===== */
-/* ============================================ */
+/* ============================================
+   АДАПТИВ
+   Шкала: 1024 → 820 → 640 → 480 → 400
+   ============================================ */
 
+/* --- Планшет: одна колонка --- */
 @media (max-width: 1024px) {
     .profile-grid {
         grid-template-columns: 1fr;
-        grid-template-rows: repeat(1, 2fr);
-    }
-
-    .profile-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .stats-card {
-        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
     }
 }
 
-@media (max-width: 768px) {
-    .profile-sidebar {
-        grid-template-columns: 1fr;
-    }
-
+/* --- Планшет/мобильный: центрирование и переносы --- */
+@media (max-width: 820px) {
     .profile-card {
         display: flex;
         flex-direction: column;
         align-items: center;
     }
-
-    .profile-info-items {
-        width: 100%;
-    }
-
-    .profile-bio {
-        width: 100%;
-    }
-
-    .profile-social {
-        width: 100%;
-        justify-content: center;
-    }
-
+    .profile-info-items,
+    .profile-bio,
+    .profile-social,
     .profile-actions {
         width: 100%;
-        flex-direction: column;
     }
+    .profile-actions { flex-direction: column; }
+    .profile-actions .btn { width: 100%; }
 
-    .profile-actions .btn {
-        width: 100%;
-    }
+    .profile-link { flex-direction: column; }
+    .profile-link input { width: 100%; }
+    .profile-link .btn { width: 100%; }
+}
 
-    .stats-card {
-        grid-template-columns: repeat(4, 1fr);
-    }
+/* --- Мобильные --- */
+@media (max-width: 640px) {
+    .settings-card-body { padding: 16px; }
+    .settings-card-header { padding: 14px 16px; }
 
+    /* Info-row: переносим значение под лейбл */
     .info-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
     }
+    .info-value { text-align: left; width: 100%; }
 
-    .profile-link {
-        flex-direction: column;
+    /* Toggle-row: switch переносится вправо-снизу при нехватке места */
+    .toggle-row {
+        flex-wrap: wrap;
+        gap: 10px;
     }
+    .toggle-info { flex-basis: 100%; }
+    .switch { align-self: flex-end; }
 
-    .profile-link input {
+    /* Кнопки безопасности — на всю ширину */
+    .settings-card-body > .outline-btn,
+    .settings-card-body > .btn-danger {
         width: 100%;
     }
-}
 
-@media (max-width: 480px) {
+    /* Статистика: 4 → 2 в ряд */
     .stats-card {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
-    }
-
-    .settings-card-body {
         padding: 16px;
     }
 
-    .profile-card {
-        padding: 16px;
+    .profile-card { padding: 18px; }
+    .profile-avatar-wrapper { width: 104px; height: 104px; }
+}
+
+/* --- Узкие мобильные --- */
+@media (max-width: 480px) {
+    .profile-username { font-size: 18px; }
+    .stat-value { font-size: 18px; }
+
+    .settings-card-body { padding: 14px; }
+    .settings-card-header { padding: 12px 14px; gap: 10px; }
+    .settings-card-header h3 { font-size: 15px; }
+
+    .profile-link input {
+        font-size: 12px;
+        padding: 6px 10px;
     }
 
-    .profile-avatar-wrapper {
-        width: 100px;
-        height: 100px;
+    /* Info-box: иконка сверху, текст по центру */
+    .info-box {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
     }
 
-    .stat-value {
-        font-size: 18px;
+    .hint-text {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        font-size: 13px;
     }
+}
+
+/* --- Очень узкие --- */
+@media (max-width: 400px) {
+    .profile-card { padding: 14px; }
+    .profile-avatar-wrapper { width: 92px; height: 92px; }
+    .profile-bio { padding: 10px 12px; font-size: 13px; }
+
+    .social-link {
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
+    }
+
+    .stats-card { gap: 8px; padding: 12px; }
+    .stat-value { font-size: 16px; }
+    .stat-label { font-size: 11px; }
+
+    .settings-card-body { padding: 12px; }
+
+    /* Switch чуть компактнее */
+    .switch { width: 44px; height: 24px; min-height: 24px; }
+    .switch .slider::before { height: 16px; width: 16px; }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
 }
 </style>

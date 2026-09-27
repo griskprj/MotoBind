@@ -2,18 +2,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <div v-if="isLoading" class="loading-overlay">
-      <div class="spinner"></div>
+    <div class="spinner"></div>
   </div>
   <div class="animated-bg"></div>
 
-  <div v-if="$route.meta.showHeader" class="app-with-sidebar">
+  <div v-if="$route.meta.showHeader && isAuthenticated" class="app-with-sidebar">
     <Sidebar ref="sidebar" />
 
     <div class="app-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <div class="page-content">
         <router-view />
       </div>
-
       <Footer v-if="$route.meta.showFooter" />
     </div>
   </div>
@@ -30,13 +29,10 @@
 import Sidebar from './components/Sidebar.vue';
 import Footer from './components/Footer.vue';
 import ToastContainer from './components/ui/ToastContainer.vue';
+import { useAuthStore } from './stores/auth';
 
 export default {
-  components: {
-    Sidebar,
-    Footer,
-    ToastContainer
-  },
+  components: { Sidebar, Footer, ToastContainer },
 
   data() {
     return {
@@ -45,13 +41,19 @@ export default {
     }
   },
 
+  computed: {
+    isAuthenticated() {
+      return useAuthStore().isAuthenticated
+    },
+  },
+
   mounted() {
-      this.$nextTick(() => {
-        if (this.$refs.sidebar) {
-          this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
-          this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
-        }
-      });
+    this.$nextTick(() => {
+      if (this.$refs.sidebar) {
+        this.$refs.sidebar.$on('toggle-collapse', this.handleSidebarToggle);
+        this.isSidebarCollapsed = this.$refs.sidebar.isCollapsed;
+      }
+    });
   },
 
   beforeUnmount() {

@@ -106,9 +106,7 @@
 
         <div class="table-body">
           <div v-if="motorcycles.length === 0" class="tr empty-state">
-            <div class="td" style="grid-column: 1 / -1; text-align: center; color: var(--text-secondary);">
-              Мотоциклы не найдены
-            </div>
+            <div class="td">Мотоциклы не найдены</div>
           </div>
 
           <div
@@ -140,11 +138,11 @@
               </div>
             </div>
 
-            <div class="td">
+            <div class="td mileage-cell">
               <span class="mileage-value">{{ moto.mileage || 0 }} км</span>
             </div>
 
-            <div class="td">
+            <div class="td maintenance-cell">
               <span
                 class="maintenance-badge"
                 :class="{
@@ -152,11 +150,11 @@
                   'badge-gray': moto.maintenances_count === 0
                 }"
               >
-                {{ moto.maintenances.length || 0 }}
+                {{ moto.maintenances_count || 0 }}
               </span>
             </div>
 
-            <div class="td">
+            <div class="td date-cell">
               <span class="date-value">{{ formatDate(moto.created_at) }}</span>
             </div>
 
@@ -182,29 +180,32 @@
 
         <div class="paginate-ui">
           <button
-            class="btn-outline"
+            class="paginate-arrow"
             @click="goToPage(pagination.current_page - 1)"
             :disabled="!pagination.has_prev"
+            aria-label="Предыдущая страница"
           >
             <i class="fa fa-angle-left"></i>
           </button>
 
           <div class="paginate-btns">
             <button
-              v-for="page in visiblePages"
-              :key="page"
-              class="btn-outline paginate"
-              :class="{ active: page === pagination.current_page }"
-              @click="goToPage(page)"
+              v-for="(page, idx) in visiblePages"
+              :key="`p-${idx}-${page}`"
+              class="paginate-num"
+              :class="{ active: page === pagination.current_page, dots: page === '...' }"
+              :disabled="page === '...'"
+              @click="page !== '...' && goToPage(page)"
             >
               {{ page }}
             </button>
           </div>
 
           <button
-            class="btn-outline"
+            class="paginate-arrow"
             @click="goToPage(pagination.current_page + 1)"
             :disabled="!pagination.has_next"
+            aria-label="Следующая страница"
           >
             <i class="fa fa-angle-right"></i>
           </button>
@@ -273,23 +274,27 @@ let searchTimeout = null
 const filteredCount = computed(() => pagination.value.total || 0)
 
 const visiblePages = computed(() => {
-  const current = pagination.value.current_page
-  const total = pagination.value.pages
-  const delta = 2
-  const range = []
+    const current = pagination.value.current_page
+    const total = pagination.value.pages
+    const delta = 2
+    const pages = []
 
-  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-    range.push(i)
-  }
+    if (total <= 7) {
+        for (let i = 1; i <= total; i++) pages.push(i)
+        return pages
+    }
 
-  if (current - delta > 2) range.unshift('...')
-  if (current + delta < total - 1) range.push('...')
+    pages.push(1)
+    if (current - delta > 2) pages.push('...')
 
-  range.unshift(1)
+    const start = Math.max(2, current - delta)
+    const end = Math.min(total - 1, current + delta)
+    for (let i = start; i <= end; i++) pages.push(i)
 
-  if (total > 1) range.push(total)
+    if (current + delta < total - 1) pages.push('...')
+    pages.push(total)
 
-  return range.filter((v, i, a) => a.indexOf(v) === i)
+    return pages
 })
 
 const hasActiveFilters = computed(() => {
@@ -410,7 +415,9 @@ async function deleteMotorcycle(motoId) {
 </script>
 
 <style scoped>
-/* ===== СТАТИСТИКА ===== */
+/* ============================================
+   STATISTIC CARDS
+   ============================================ */
 .stat-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -421,14 +428,14 @@ async function deleteMotorcycle(motoId) {
 .stat-card {
     display: flex;
     gap: 16px;
-    justify-content: center;
+    align-items: center;
     padding: 12px 14px;
     background-color: var(--bg-card);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
+    min-width: 0;
 }
-
 .stat-card:hover {
     background-color: var(--accent-trans);
     border-color: var(--accent);
@@ -437,36 +444,38 @@ async function deleteMotorcycle(motoId) {
 .card-icon {
     width: 48px;
     height: 48px;
+    min-height: 48px; /* перебиваем reset.scss */
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     background-color: var(--accent-trans);
     color: var(--accent-text);
+    font-size: 18px;
+    flex-shrink: 0;
 }
+.card-icon.success { background-color: var(--success-trans); color: var(--success-text); }
+.card-icon.warning { background-color: var(--warning-trans); color: var(--warning-text); }
 
-.card-icon.success {
-    background-color: var(--success-trans);
-    color: var(--success-text);
-}
-
-.card-icon.warning {
-    background-color: var(--warning-trans);
-    color: var(--warning-text);
-}
-
+.card-body { min-width: 0; }
 .card-title {
     font-size: 14px;
     color: var(--text-secondary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
 .card-value {
     font-size: 21px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     color: var(--text-primary);
+    margin: 0;
 }
 
-/* ===== ФИЛЬТРЫ ===== */
+/* ============================================
+   FILTERS
+   ============================================ */
 .table-filters {
     display: flex;
     justify-content: center;
@@ -481,6 +490,7 @@ async function deleteMotorcycle(motoId) {
     flex-wrap: wrap;
     gap: 10px;
     flex: 1;
+    min-width: 0;
 }
 
 .filter-group {
@@ -493,76 +503,74 @@ async function deleteMotorcycle(motoId) {
     padding: 8px 14px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
-    transition: border 0.2s;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
 }
-
 .search-input:focus {
     border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
-
-.search-input::placeholder {
-    color: var(--text-muted);
-}
+.search-input::placeholder { color: var(--text-muted); }
 
 .filter-select {
     padding: 8px 14px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
-    transition: border 0.2s;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
     min-width: 150px;
 }
-
 .filter-select:focus {
     border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
+.filter-select option { background: var(--bg-input); }
 
-.filter-select option {
-    background: var(--bg-input);
-}
-
-.filters-actions {
-    display: flex;
-    gap: 8px;
-}
+.filters-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
 .btn-outline {
     padding: 8px 16px;
     background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-base);
     font-size: 14px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    min-height: 40px; /* не 44px из reset */
 }
-
 .btn-outline:hover {
     background: var(--border-light);
     border-color: var(--text-muted);
+}
+.btn-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .filter-results {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 8px 12px;
     background: var(--accent-trans);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     color: var(--text-muted);
     margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
 .clear-filters {
@@ -571,19 +579,23 @@ async function deleteMotorcycle(motoId) {
     color: var(--accent-text);
     cursor: pointer;
     font-size: 13px;
-    transition: color 0.2s;
+    transition: color var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
 }
+.clear-filters:hover { color: var(--accent); }
 
-.clear-filters:hover {
-    color: var(--accent);
-}
-
-/* ===== ТАБЛИЦА ===== */
+/* ============================================
+   TABLE
+   ============================================ */
 .table-section {
     background: var(--bg-card);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
     padding: 14px 16px;
+    margin-bottom: 0;
 }
 
 .loading-state {
@@ -594,179 +606,173 @@ async function deleteMotorcycle(motoId) {
     color: var(--text-secondary);
     gap: 12px;
 }
+.loading-state .fa-spinner { font-size: 24px; color: var(--accent); }
 
 .motorcycles-table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table-header {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 0.8fr 0.8fr 1fr 60px;
+    grid-template-columns: 2fr 1.2fr 0.9fr 1fr 1fr 60px;
+    gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-light);
     font-size: 13px;
     color: var(--text-muted);
-    font-weight: 500;
-    min-width: 700px;
+    font-weight: var(--fw-medium);
+    min-width: 720px;
 }
 
-.table-body {
-    display: flex;
-    flex-direction: column;
-}
+.table-body { display: flex; flex-direction: column; }
 
 .tr {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 0.8fr 0.8fr 1fr 60px;
+    grid-template-columns: 2fr 1.2fr 0.9fr 1fr 1fr 60px;
+    gap: 8px;
     padding: 10px 12px;
     align-items: center;
     border-bottom: 1px solid var(--border-light);
-    transition: background 0.2s;
-    min-width: 700px;
+    transition: background var(--transition-fast);
+    min-width: 720px;
 }
+.tr:hover { background: var(--border-light); }
+.tr:last-child { border-bottom: none; }
 
-.tr:hover {
-    background: var(--border-light);
-}
-
-.tr.empty-state {
-    cursor: default;
-}
-
-.tr.empty-state:hover {
-    background: transparent;
+.tr.empty-state { cursor: default; }
+.tr.empty-state:hover { background: transparent; }
+.tr.empty-state .td {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-secondary);
 }
 
 .td {
     font-size: 14px;
     color: var(--text-primary);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Moto cell */
+/* --- Moto cell --- */
 .moto-cell {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 }
-
 .moto-thumb {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    min-height: 40px;
+    border-radius: var(--radius-md);
     object-fit: cover;
     flex-shrink: 0;
 }
-
 .moto-placeholder {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    min-height: 40px;
+    border-radius: var(--radius-md);
     background: var(--bg-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
     flex-shrink: 0;
+    font-size: 16px;
 }
-
-.moto-info {
-    display: flex;
-    flex-direction: column;
-}
-
+.moto-info { display: flex; flex-direction: column; min-width: 0; }
 .moto-name {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     margin: 0;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
 .moto-meta {
     font-size: 12px;
     color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Owner cell */
-.owner-cell {
-    display: flex;
-    align-items: center;
-}
-
-.owner-info {
-    display: flex;
-    flex-direction: column;
-}
-
+/* --- Owner cell --- */
+.owner-cell { display: flex; align-items: center; min-width: 0; }
+.owner-info { display: flex; flex-direction: column; min-width: 0; }
 .owner-name {
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
 .owner-email {
     font-size: 12px;
     color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Mileage */
+/* --- Mileage --- */
+.mileage-cell { min-width: 0; }
 .mileage-value {
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     color: var(--text-primary);
 }
 
-/* Maintenance badge */
+/* --- Maintenance --- */
+.maintenance-cell { display: flex; }
 .maintenance-badge {
     display: inline-block;
     padding: 2px 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-full);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     text-align: center;
-    min-width: 30px;
+    min-width: 34px;
 }
+.badge-success { background: var(--success-trans); color: var(--success-text); }
+.badge-gray    { background: var(--bg-secondary);    color: var(--text-muted); }
 
-.badge-success {
-    background: var(--success-trans);
-    color: var(--success-text);
-}
-
-.badge-gray {
-    background: var(--bg-secondary);
-    color: var(--text-muted);
-}
-
+/* --- Date --- */
+.date-cell { min-width: 0; }
 .date-value {
     font-size: 13px;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Actions */
-.actions-cell {
-    display: flex;
-    gap: 6px;
-}
-
+/* --- Actions --- */
+.actions-cell { display: flex; gap: 6px; justify-content: flex-end; }
 .btn-small {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: var(--radius-md);
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
+    transition: all var(--transition-base);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
 }
+.btn-small.danger { background: var(--danger-trans); color: var(--danger-text); }
+.btn-small.danger:hover { background: var(--danger-trans); opacity: 0.8; }
 
-.btn-small.danger {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-}
-
-.btn-small.danger:hover {
-    background: var(--danger-trans);
-    opacity: 0.8;
-}
-
-/* ===== ПАГИНАЦИЯ ===== */
+/* ============================================
+   PAGINATION
+   ============================================ */
 .table-paginate {
     display: flex;
     justify-content: space-between;
@@ -779,184 +785,279 @@ async function deleteMotorcycle(motoId) {
 .paginate-show {
     color: var(--text-secondary);
     font-size: 14px;
+    margin: 0;
 }
 
 .paginate-ui {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .paginate-btns {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
-    min-width: 5vh;
+    flex-wrap: wrap;
 }
 
-.btn-outline.paginate {
-    border: none;
+/* Стрелки ← → */
+.paginate-arrow {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.paginate-arrow:hover:not(:disabled) {
+    background: var(--border-light);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+.paginate-arrow:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Номера страниц */
+.paginate-num {
     min-width: 34px;
     height: 34px;
-    padding: 0 8px;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: var(--fw-medium);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
 }
-
-.btn-outline.paginate.active {
-    background-color: var(--accent-trans);
+.paginate-num:hover:not(:disabled):not(.active) {
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+.paginate-num.active {
+    background: var(--accent-trans);
     color: var(--accent-text);
+    font-weight: var(--fw-semibold);
+}
+.paginate-num.dots {
+    cursor: default;
+    color: var(--text-muted);
+    pointer-events: none;
 }
 
-.btn-outline.paginate:hover:not(.active) {
-    background-color: var(--border-light);
+/* Кол-во на страницу */
+.show-per-page {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
-
 .show-per-page select {
     padding: 6px 12px;
     background: var(--bg-input);
     border: 1px solid var(--border-input);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
     cursor: pointer;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast);
+    min-height: 36px;
+}
+.show-per-page select:focus {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
 }
 
-/* ===== АДАПТИВНОСТЬ ===== */
+/* ============================================
+   АДАПТИВ
+   Шкала: 1024 → 820 → 640 → 480 → 400
+   ============================================ */
+
+/* --- Планшет: фильтры в колонку, stat-cards 2×2 --- */
 @media (max-width: 1024px) {
     .stat-cards {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
-}
 
-@media (max-width: 820px) {
     .table-filters {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
     }
+    .filters-row { flex-direction: column; }
+    .filter-group { min-width: 0; }
+    .filter-select,
+    .search-input { width: 100%; }
+    .filters-actions { width: 100%; }
+    .filters-actions .btn-outline { width: 100%; }
+}
 
-    .filters-row {
-        flex-direction: column;
-    }
-
-    .filter-group {
-        min-width: unset;
-    }
-
-    .filter-select {
-        width: 100%;
-    }
-
-    .stat-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .table-header {
-        display: none;
-    }
+/* --- Мобильный планшет: карточки вместо таблицы --- */
+@media (max-width: 820px) {
+    .table-header { display: none; }
 
     .tr {
         grid-template-columns: 1fr;
-        gap: 6px;
+        gap: 0;
         padding: 14px;
         border: 1px solid var(--border-light);
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         margin-bottom: 8px;
         background: var(--bg-primary);
         min-width: unset;
-        position: relative;
     }
+    .tr:hover { background: var(--bg-primary); }
+    .tr:last-child { border-bottom: 1px solid var(--border-light); }
 
-    .tr:hover {
-        background: var(--bg-primary);
-    }
-
+    /* Moto-cell — шапка карточки */
     .moto-cell {
         order: 1;
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid var(--border-light);
     }
 
-    .td:nth-child(2) {
-        order: 2;
-        padding-left: 52px;
+    /* Информационные строки */
+    .td.owner-cell,
+    .td.mileage-cell,
+    .td.maintenance-cell,
+    .td.date-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 0;
+        font-size: 13px;
     }
 
-    .td:nth-child(3) {
-        order: 3;
-        padding-left: 52px;
-    }
+    .td.owner-cell::before       { content: "Владелец";        color: var(--text-muted); font-weight: var(--fw-normal); flex-shrink: 0; }
+    .td.mileage-cell::before     { content: "Пробег";           color: var(--text-muted); font-weight: var(--fw-normal); flex-shrink: 0; }
+    .td.maintenance-cell::before { content: "Обслуживаний";     color: var(--text-muted); font-weight: var(--fw-normal); flex-shrink: 0; }
+    .td.date-cell::before        { content: "Дата добавления";  color: var(--text-muted); font-weight: var(--fw-normal); flex-shrink: 0; }
 
-    .td:nth-child(4) {
-        order: 4;
-        padding-left: 52px;
-    }
+    .owner-cell       { order: 2; }
+    .mileage-cell     { order: 3; }
+    .maintenance-cell { order: 4; }
+    .date-cell        { order: 5; }
 
-    .td:nth-child(5) {
-        order: 5;
-        padding-left: 52px;
+    /* Owner-info теперь горизонтально, т.к. label уже слева */
+    .owner-info {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 0;
     }
+    .owner-email { font-size: 11px; }
 
-    .td:nth-child(6) {
+    /* Actions — отдельной строкой */
+    .actions-cell {
         order: 6;
-        position: absolute;
-        right: 14px;
-        top: 14px;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-light);
+        justify-content: flex-end;
     }
 
-    .td:not(.moto-cell):not(.actions-cell)::before {
-        content: attr(data-label);
-        color: var(--text-muted);
-        font-weight: 400;
-        margin-right: 8px;
-        font-size: 12px;
-    }
-
-    .td:nth-child(2)::before {
-        content: "Владелец: ";
-    }
-    .td:nth-child(3)::before {
-        content: "Пробег: ";
-    }
-    .td:nth-child(4)::before {
-        content: "Обслуживаний: ";
-    }
-    .td:nth-child(5)::before {
-        content: "Дата: ";
-    }
-
-    .paginate-ui {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
+    /* Пагинация */
     .table-paginate {
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
     }
-
-    .paginate-show {
-        text-align: center;
-    }
-
-    .show-per-page {
-        display: flex;
-        justify-content: center;
-    }
+    .paginate-show { text-align: center; font-size: 13px; }
+    .paginate-ui { justify-content: center; }
+    .show-per-page { justify-content: center; }
 }
 
+/* --- Мобильные --- */
+@media (max-width: 640px) {
+    .table-section { padding: 12px; }
+
+    .tr { padding: 12px; }
+
+    .paginate-ui { gap: 6px; }
+    .paginate-arrow { width: 34px; height: 34px; min-height: 34px; }
+    .paginate-num {
+        min-width: 32px;
+        height: 32px;
+        min-height: 32px;
+        padding: 0 8px;
+        font-size: 13px;
+    }
+
+    .show-per-page select { width: 100%; }
+}
+
+/* --- Узкие мобильные --- */
 @media (max-width: 480px) {
     .moto-thumb {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
     }
-
     .moto-placeholder {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
         font-size: 14px;
     }
+    .moto-name { font-size: 14px; }
+    .moto-meta { font-size: 11px; }
 
-    .moto-name {
-        font-size: 13px;
+    .stat-card { padding: 10px 12px; gap: 12px; }
+    .card-icon {
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+        font-size: 16px;
+    }
+    .card-title { font-size: 12px; }
+    .card-value { font-size: 18px; }
+
+    /* Пагинация: оставляем только активную страницу + стрелки */
+    .paginate-num:not(.active):not(.dots) { display: none; }
+    .paginate-num.dots { display: none; }
+
+    /* Owner-info снова вертикально, т.к. места мало */
+    .owner-info {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0;
+    }
+    .owner-email { font-size: 11px; }
+}
+
+/* --- Экстра-узкие --- */
+@media (max-width: 400px) {
+    .stat-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .stat-card { padding: 10px; }
+
+    .actions-cell { justify-content: space-between; }
+    .btn-small {
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
     }
 }
 </style>

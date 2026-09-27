@@ -23,6 +23,7 @@ button,
   color: white;
   white-space: nowrap;
   overflow-y: hidden;
+  overflow-x: hidden;
 
   &:hover {
     background-color: var(--accent-hover);
