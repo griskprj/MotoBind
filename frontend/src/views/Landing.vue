@@ -76,6 +76,14 @@
             >
               Начать бесплатно
             </BaseButton>
+            <BaseButton
+              variant="outline"
+              size="lg"
+              icon="fa fa-file"
+              @click="goTo('/manuals')"
+            >
+              Смотреть мануалы
+            </BaseButton>
           </div>
         </div>
 
@@ -168,6 +176,15 @@
               Готовые инструкции по обслуживанию и ремонту мотоциклов
               для разных моделей — от замены масла до полной разборки.
             </p>
+            <BaseButton
+              variant="outline"
+              size="lg"
+              icon="fa fa-file"
+              @click="goTo('/manuals')"
+              class="split-button"
+            >
+              Смотреть мануалы
+            </BaseButton>
           </div>
         </div>
       </div>
@@ -295,7 +312,7 @@
 
           <div class="cta-right">
             <img
-              src="/cta-mockup.webp"
+              src="/16x9Auth-Bg.webp"
               alt="MotoBind — начните бесплатно"
               class="landing-img"
             >
@@ -695,6 +712,11 @@ function goTo(path) {
   line-height: var(--leading-relaxed);
 }
 
+.split-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .split-right {
   width: 100%;
   aspect-ratio: 16 / 10;
@@ -882,7 +904,7 @@ function goTo(path) {
   position: relative;
   z-index: 1;
   width: 100%;
-  aspect-ratio: 16 / 16;
+  aspect-ratio: 16 / 10;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-light);
@@ -1053,6 +1075,10 @@ function goTo(path) {
   .hero { padding: 40px 0 32px; }
   .hero-title { font-size: 28px; }
   .hero-desc { font-size: 14px; }
+  .hero-buttons {
+    display: flex;
+    flex-direction: column;
+  }
   .section-title { font-size: 22px; }
   .cta-title { font-size: 20px; }
   .cta-desc { font-size: 14px; }
