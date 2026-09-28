@@ -20,270 +20,302 @@
                         <i :class="statusIcon"></i>
                         {{ getStatusLabel(manual.status) }}
                     </span>
-                    <router-link
+
+                    <BaseButton
+                        v-if="manual"
+                        variant="secondary"
+                        size="sm"
+                        icon="fa fa-print"
+                        :disabled="pdfGenerating"
+                        @click="printManual"
+                        title="Печать"
+                    >
+                        Печать
+                    </BaseButton>
+
+                    <BaseButton
+                        v-if="manual"
+                        variant="primary"
+                        size="sm"
+                        icon="fa fa-file-pdf"
+                        :loading="pdfGenerating"
+                        :disabled="pdfGenerating"
+                        @click="savePdf"
+                        title="Сохранить в PDF"
+                    >
+                        {{ pdfGenerating ? 'Формируем...' : 'Сохранить' }}
+                    </BaseButton>
+
+                    <BaseButton
                         v-if="isAuthor && manual.status === 'rejected'"
+                        variant="warning"
+                        size="sm"
+                        icon="fa fa-edit"
+                        tag="router-link"
                         :to="`/manual-creator?edit=${manual.id}`"
-                        class="btn btn-warning btn-sm"
                     >
-                        <i class="fa fa-edit"></i> Редактировать
-                    </router-link>
+                        Редактировать
+                    </BaseButton>
                 </div>
             </div>
 
-            <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
-            <div class="block block-about">
-                <h1 class="manual-title">{{ manual.title }}</h1>
+            <div id="manual-printable">
+                <!-- ===== БЛОК 1: О МАНУАЛЕ ===== -->
+                <div class="block block-about">
+                    <h1 class="manual-title">{{ manual.title }}</h1>
 
-                <p v-if="manual.description" class="manual-description">
-                    {{ manual.description }}
-                </p>
+                    <p v-if="manual.description" class="manual-description">
+                        {{ manual.description }}
+                    </p>
 
-                <div class="about-meta">
-                    <div v-if="manual.motorcycle" class="about-item">
-                        <i class="fa fa-motorcycle"></i>
-                        <span><strong>Мотоцикл:</strong> {{ manual.motorcycle }}</span>
-                    </div>
-                    <div v-if="manual.time_estimate" class="about-item">
-                        <i class="fa fa-clock"></i>
-                        <span><strong>Время:</strong> {{ manual.time_estimate }}</span>
-                    </div>
-                    <div v-if="manual.interval" class="about-item">
-                        <i class="fa fa-repeat"></i>
-                        <span><strong>Периодичность:</strong> {{ manual.interval }}</span>
-                    </div>
-                    <div v-if="manual.difficult" class="about-item">
-                        <i class="fa fa-signal"></i>
-                        <span><strong>Сложность:</strong>
-                            <span class="difficulty-dots">
-                                <span class="dot" :class="{ filled: ['easy', 'medium', 'hard'].includes(manual.difficult) }"></span>
-                                <span class="dot" :class="{ filled: ['medium', 'hard'].includes(manual.difficult) }"></span>
-                                <span class="dot" :class="{ filled: manual.difficult === 'hard' }"></span>
+                    <div class="about-meta">
+                        <div v-if="manual.motorcycle" class="about-item">
+                            <i class="fa fa-motorcycle"></i>
+                            <span><strong>Мотоцикл:</strong> {{ manual.motorcycle }}</span>
+                        </div>
+                        <div v-if="manual.time_estimate" class="about-item">
+                            <i class="fa fa-clock"></i>
+                            <span><strong>Время:</strong> {{ manual.time_estimate }}</span>
+                        </div>
+                        <div v-if="manual.interval" class="about-item">
+                            <i class="fa fa-repeat"></i>
+                            <span><strong>Периодичность:</strong> {{ manual.interval }}</span>
+                        </div>
+                        <div v-if="manual.difficult" class="about-item">
+                            <i class="fa fa-signal"></i>
+                            <span><strong>Сложность:</strong>
+                                <span class="difficulty-dots">
+                                    <span class="dot" :class="{ filled: ['easy', 'medium', 'hard'].includes(manual.difficult) }"></span>
+                                    <span class="dot" :class="{ filled: ['medium', 'hard'].includes(manual.difficult) }"></span>
+                                    <span class="dot" :class="{ filled: manual.difficult === 'hard' }"></span>
+                                </span>
+                                {{ getDifficulty(manual.difficult) }}
                             </span>
-                            {{ getDifficulty(manual.difficult) }}
-                        </span>
-                    </div>
-                    <div v-if="manual.category" class="about-item">
-                        <i class="fa fa-tags"></i>
-                        <span><strong>Категория:</strong> {{ getCategory(manual.category) }}</span>
-                    </div>
-                    <div v-if="manual.author?.username" class="about-item">
-                        <i class="fa fa-user"></i>
-                        <span><strong>Автор:</strong> {{ manual.author.username }}</span>
-                    </div>
-                    <div v-if="manual.created_at" class="about-item">
-                        <i class="fa fa-calendar"></i>
-                        <span><strong>Создан:</strong> {{ formatDate(manual.created_at) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== БЛОК 2: БЕЗОПАСНОСТЬ ===== -->
-            <div v-if="manual.safety_tip || manual.warnings || manual.conditions" class="block block-safety">
-                <h3 class="block-title">
-                    <i class="fa fa-shield"></i> Безопасность и подготовка
-                </h3>
-
-                <div v-if="manual.safety_tip" class="safety-item safety-tip">
-                    <i class="fa fa-lightbulb"></i>
-                    <span>{{ manual.safety_tip }}</span>
-                </div>
-
-                <div v-if="manual.warnings" class="safety-item safety-warning">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    <span>{{ manual.warnings }}</span>
-                </div>
-
-                <div v-if="manual.conditions" class="safety-item safety-condition">
-                    <i class="fa fa-check-circle"></i>
-                    <span>{{ manual.conditions }}</span>
-                </div>
-            </div>
-
-            <!-- ===== БЛОК 3: ИНСТРУМЕНТЫ И МАТЕРИАЛЫ ===== -->
-            <div v-if="manual.instruments || manual.parts" class="block block-tools">
-                <h3 class="block-title">
-                    <i class="fa fa-wrench"></i> Инструменты и материалы
-                </h3>
-
-                <div class="tools-grid">
-                    <div v-if="manual.instruments" class="tools-item">
-                        <i class="fa fa-wrench"></i>
-                        <div>
-                            <span class="tools-label">Инструменты</span>
-                            <span class="tools-value">{{ manual.instruments }}</span>
                         </div>
-                    </div>
-
-                    <div v-if="manual.parts" class="tools-item">
-                        <i class="fa fa-cogs"></i>
-                        <div>
-                            <span class="tools-label">Материалы и запчасти</span>
-                            <span class="tools-value">{{ manual.parts }}</span>
+                        <div v-if="manual.category" class="about-item">
+                            <i class="fa fa-tags"></i>
+                            <span><strong>Категория:</strong> {{ getCategory(manual.category) }}</span>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== БЛОК 4: ССЫЛКИ НА ДОКУМЕНТАЦИЮ ===== -->
-            <div v-if="manual.docs_links && manual.docs_links.length > 0" class="block block-docs">
-                <h3 class="block-title">
-                    <i class="fa fa-link"></i> Ссылки на документацию
-                </h3>
-
-                <div class="docs-list">
-                    <a
-                        v-for="(link, index) in manual.docs_links"
-                        :key="index"
-                        :href="link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="docs-link"
-                    >
-                        <i class="fa fa-file-pdf"></i>
-                        <span>Документация {{ index + 1 }}</span>
-                        <i class="fa fa-external-link"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- ===== БЛОК 5: ТЕХНИЧЕСКИЕ ДАННЫЕ ===== -->
-            <div v-if="manual.specs && hasSpecs(manual.specs)" class="block block-specs">
-                <h3 class="block-title">
-                    <i class="fa fa-table"></i> Технические данные
-                </h3>
-
-                <!-- Моменты затяжки -->
-                <div v-if="manual.specs.torque && manual.specs.torque.length > 0" class="specs-section">
-                    <h4 class="specs-subtitle">Моменты затяжки</h4>
-                    <div class="torque-table">
-                        <div class="torque-header">
-                            <span>Название</span>
-                            <span>Момент (Н·м)</span>
-                            <span>Примечание</span>
+                        <div v-if="manual.author?.username" class="about-item">
+                            <i class="fa fa-user"></i>
+                            <span><strong>Автор:</strong> {{ manual.author.username }}</span>
                         </div>
-                        <div
-                            v-for="(item, index) in manual.specs.torque"
-                            :key="index"
-                            class="torque-row"
-                        >
-                            <span>{{ item.name || '—' }}</span>
-                            <span>{{ item.nm || '—' }}</span>
-                            <span>{{ item.note || '—' }}</span>
+                        <div v-if="manual.created_at" class="about-item">
+                            <i class="fa fa-calendar"></i>
+                            <span><strong>Создан:</strong> {{ formatDate(manual.created_at) }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Объёмы жидкостей -->
-                <div v-if="manual.specs.fluids" class="specs-section">
-                    <h4 class="specs-subtitle">Объёмы жидкостей</h4>
-                    <div class="fluids-grid">
-                        <div
-                            v-for="(value, key) in manual.specs.fluids"
-                            :key="key"
-                            class="fluid-item"
-                        >
-                            <span class="fluid-label">{{ getFluidLabel(key) }}</span>
-                            <span class="fluid-value">{{ value }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Допуски и зазоры -->
-                <div v-if="manual.specs.tolerances" class="specs-section">
-                    <h4 class="specs-subtitle">Допуски и зазоры</h4>
-                    <div class="tolerances-grid">
-                        <div
-                            v-for="(value, key) in manual.specs.tolerances"
-                            :key="key"
-                            class="tolerance-item"
-                        >
-                            <span class="tolerance-label">{{ getToleranceLabel(key) }}</span>
-                            <span class="tolerance-value">{{ value }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== БЛОК 6: ШАГИ ===== -->
-            <div v-if="manual.steps && manual.steps.length > 0" class="block block-steps">
-                <div class="steps-header">
-                    <h3 class="block-title" style="margin: 0;">
-                        <i class="fa fa-list-ol"></i> Шаги выполнения
+                <!-- ===== БЛОК 2: БЕЗОПАСНОСТЬ ===== -->
+                <div v-if="manual.safety_tip || manual.warnings || manual.conditions" class="block block-safety">
+                    <h3 class="block-title">
+                        <i class="fa fa-shield"></i> Безопасность и подготовка
                     </h3>
-                    <span class="steps-count">{{ manual.steps.length }} шаг{{ manual.steps.length > 1 ? 'а' : '' }}</span>
+
+                    <div v-if="manual.safety_tip" class="safety-item safety-tip">
+                        <i class="fa fa-lightbulb"></i>
+                        <span>{{ manual.safety_tip }}</span>
+                    </div>
+
+                    <div v-if="manual.warnings" class="safety-item safety-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <span>{{ manual.warnings }}</span>
+                    </div>
+
+                    <div v-if="manual.conditions" class="safety-item safety-condition">
+                        <i class="fa fa-check-circle"></i>
+                        <span>{{ manual.conditions }}</span>
+                    </div>
                 </div>
 
-                <div class="steps-list">
-                    <div
-                        v-for="(step, index) in manual.steps"
-                        :key="index"
-                        class="step-item"
-                        :class="{ 'step-completed': step.completed }"
-                    >
-                        <div class="step-marker">
-                            <span class="step-number">{{ step.order || index + 1 }}</span>
-                            <div class="step-line" v-if="index < manual.steps.length - 1"></div>
+                <!-- ===== БЛОК 3: ИНСТРУМЕНТЫ И МАТЕРИАЛЫ ===== -->
+                <div v-if="manual.instruments || manual.parts" class="block block-tools">
+                    <h3 class="block-title">
+                        <i class="fa fa-wrench"></i> Инструменты и материалы
+                    </h3>
+
+                    <div class="tools-grid">
+                        <div v-if="manual.instruments" class="tools-item">
+                            <i class="fa fa-wrench"></i>
+                            <div>
+                                <span class="tools-label">Инструменты</span>
+                                <span class="tools-value">{{ manual.instruments }}</span>
+                            </div>
                         </div>
 
-                        <div class="step-body">
-                            <div class="step-header-inner">
-                                <span class="step-title">{{ step.title }}</span>
+                        <div v-if="manual.parts" class="tools-item">
+                            <i class="fa fa-cogs"></i>
+                            <div>
+                                <span class="tools-label">Материалы и запчасти</span>
+                                <span class="tools-value">{{ manual.parts }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== БЛОК 4: ССЫЛКИ НА ДОКУМЕНТАЦИЮ ===== -->
+                <div v-if="manual.docs_links && manual.docs_links.length > 0" class="block block-docs">
+                    <h3 class="block-title">
+                        <i class="fa fa-link"></i> Ссылки на документацию
+                    </h3>
+
+                    <div class="docs-list">
+                        <a
+                            v-for="(link, index) in manual.docs_links"
+                            :key="index"
+                            :href="link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="docs-link"
+                        >
+                            <i class="fa fa-file-pdf"></i>
+                            <span>Документация {{ index + 1 }}</span>
+                            <i class="fa fa-external-link"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ===== БЛОК 5: ТЕХНИЧЕСКИЕ ДАННЫЕ ===== -->
+                <div v-if="manual.specs && hasSpecs(manual.specs)" class="block block-specs">
+                    <h3 class="block-title">
+                        <i class="fa fa-table"></i> Технические данные
+                    </h3>
+
+                    <!-- Моменты затяжки -->
+                    <div v-if="manual.specs.torque && manual.specs.torque.length > 0" class="specs-section">
+                        <h4 class="specs-subtitle">Моменты затяжки</h4>
+                        <div class="torque-table">
+                            <div class="torque-header">
+                                <span>Название</span>
+                                <span>Момент (Н·м)</span>
+                                <span>Примечание</span>
+                            </div>
+                            <div
+                                v-for="(item, index) in manual.specs.torque"
+                                :key="index"
+                                class="torque-row"
+                            >
+                                <span>{{ item.name || '—' }}</span>
+                                <span>{{ item.nm || '—' }}</span>
+                                <span>{{ item.note || '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Объёмы жидкостей -->
+                    <div v-if="manual.specs.fluids" class="specs-section">
+                        <h4 class="specs-subtitle">Объёмы жидкостей</h4>
+                        <div class="fluids-grid">
+                            <div
+                                v-for="(value, key) in manual.specs.fluids"
+                                :key="key"
+                                class="fluid-item"
+                            >
+                                <span class="fluid-label">{{ getFluidLabel(key) }}</span>
+                                <span class="fluid-value">{{ value }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Допуски и зазоры -->
+                    <div v-if="manual.specs.tolerances" class="specs-section">
+                        <h4 class="specs-subtitle">Допуски и зазоры</h4>
+                        <div class="tolerances-grid">
+                            <div
+                                v-for="(value, key) in manual.specs.tolerances"
+                                :key="key"
+                                class="tolerance-item"
+                            >
+                                <span class="tolerance-label">{{ getToleranceLabel(key) }}</span>
+                                <span class="tolerance-value">{{ value }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== БЛОК 6: ШАГИ ===== -->
+                <div v-if="manual.steps && manual.steps.length > 0" class="block block-steps">
+                    <div class="steps-header">
+                        <h3 class="block-title" style="margin: 0;">
+                            <i class="fa fa-list-ol"></i> Шаги выполнения
+                        </h3>
+                        <span class="steps-count">{{ manual.steps.length }} шаг{{ manual.steps.length > 1 ? 'а' : '' }}</span>
+                    </div>
+
+                    <div class="steps-list">
+                        <div
+                            v-for="(step, index) in manual.steps"
+                            :key="index"
+                            class="step-item"
+                            :class="{ 'step-completed': step.completed }"
+                        >
+                            <div class="step-marker">
+                                <span class="step-number">{{ step.order || index + 1 }}</span>
+                                <div class="step-line" v-if="index < manual.steps.length - 1"></div>
                             </div>
 
-                            <p v-if="step.text" class="step-text">{{ step.text }}</p>
-
-                            <div v-if="step.image" class="step-image">
-                                <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
-                            </div>
-
-                            <div class="step-meta">
-                                <div v-if="step.warning" class="step-warning">
-                                    <i class="fa fa-exclamation-triangle"></i>
-                                    <span>{{ step.warning }}</span>
+                            <div class="step-body">
+                                <div class="step-header-inner">
+                                    <span class="step-title">{{ step.title }}</span>
                                 </div>
-                                <div v-if="step.tip" class="step-tip">
-                                    <i class="fa fa-lightbulb"></i>
-                                    <span>{{ step.tip }}</span>
+
+                                <p v-if="step.text" class="step-text">{{ step.text }}</p>
+
+                                <div v-if="step.image" class="step-image">
+                                    <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
                                 </div>
-                                <div v-if="step.result" class="step-result">
-                                    <i class="fa fa-check-circle"></i>
-                                    <span>{{ step.result }}</span>
+
+                                <div class="step-meta">
+                                    <div v-if="step.warning" class="step-warning">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        <span>{{ step.warning }}</span>
+                                    </div>
+                                    <div v-if="step.tip" class="step-tip">
+                                        <i class="fa fa-lightbulb"></i>
+                                        <span>{{ step.tip }}</span>
+                                    </div>
+                                    <div v-if="step.result" class="step-result">
+                                        <i class="fa fa-check-circle"></i>
+                                        <span>{{ step.result }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- ===== БЛОК 7: ПОСЛЕ ЗАВЕРШЕНИЯ ===== -->
-            <div v-if="manual.aftercare" class="block block-aftercare">
-                <h3 class="block-title">
-                    <i class="fa fa-check-circle"></i> После завершения
-                </h3>
+                <!-- ===== БЛОК 7: ПОСЛЕ ЗАВЕРШЕНИЯ ===== -->
+                <div v-if="manual.aftercare" class="block block-aftercare">
+                    <h3 class="block-title">
+                        <i class="fa fa-check-circle"></i> После завершения
+                    </h3>
 
-                <div class="aftercare-content">
-                    <i class="fa fa-info-circle"></i>
-                    <span>{{ manual.aftercare }}</span>
+                    <div class="aftercare-content">
+                        <i class="fa fa-info-circle"></i>
+                        <span>{{ manual.aftercare }}</span>
+                    </div>
+                </div>
+
+                <!-- ===== СОВЕТ ===== -->
+                <div v-if="manual.tip" class="block block-tip">
+                    <h3 class="block-title">
+                        <i class="fa fa-lightbulb"></i> Совет
+                    </h3>
+
+                    <div class="tip-content">
+                        <i class="fa fa-quote-left"></i>
+                        <span>{{ manual.tip }}</span>
+                    </div>
+                </div>
+
+                <!-- ===== ПУСТОЕ СОСТОЯНИЕ ===== -->
+                <div v-if="!manual.steps || manual.steps.length === 0" class="empty-steps">
+                    <i class="fa fa-file-text"></i>
+                    <p>Нет шагов для отображения</p>
                 </div>
             </div>
 
-            <!-- ===== СОВЕТ ===== -->
-            <div v-if="manual.tip" class="block block-tip">
-                <h3 class="block-title">
-                    <i class="fa fa-lightbulb"></i> Совет
-                </h3>
-
-                <div class="tip-content">
-                    <i class="fa fa-quote-left"></i>
-                    <span>{{ manual.tip }}</span>
-                </div>
-            </div>
-
-            <!-- ===== ПУСТОЕ СОСТОЯНИЕ ===== -->
-            <div v-if="!manual.steps || manual.steps.length === 0" class="empty-steps">
-                <i class="fa fa-file-text"></i>
-                <p>Нет шагов для отображения</p>
-            </div>
         </section>
 
         <!-- === ЗАГРУЗКА === -->
@@ -313,7 +345,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useManualsStore, useAuthStore } from '@/stores'
@@ -330,6 +362,7 @@ import formatDate from '@/utils/DateFormatter.js'
 
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
+import { BaseButton } from '@/components/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -339,6 +372,9 @@ const manualsStore = useManualsStore()
 const authStore = useAuthStore()
 
 const { current: manual, loadingCurrent: loading } = storeToRefs(manualsStore)
+
+// ===== PDF state =====
+const pdfGenerating = ref(false)
 
 // ===== Computed =====
 const statusClass = computed(() => {
@@ -416,6 +452,139 @@ function hasSpecs(specs) {
 function getImageUrl(path) {
   return getManualImageUrl(path)
 }
+
+// ===== Печать =====
+function printManual() {
+  window.print()
+}
+
+// ===== Сохранение в PDF =====
+async function savePdf() {
+  if (!manual.value || pdfGenerating.value) return
+
+  pdfGenerating.value = true
+
+  try {
+    const html2pdfModule = await import('html2pdf.js')
+    const html2pdf = html2pdfModule.default || html2pdfModule
+
+    await nextTick()
+
+    const element = document.getElementById('manual-printable')
+    if (!element) throw new Error('Контент мануала не найден')
+
+    const safeTitle = (manual.value.title || 'manual')
+      .replace(/[^\wа-яА-ЯёЁ\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 60)
+
+    const opt = {
+      margin: [12, 12, 20, 12],
+      filename: `MotoBind_${safeTitle}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0A0A0F',
+        scrollY: 0,
+        windowWidth: element.scrollWidth,
+        logging: false,
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+        compress: true,
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy'],
+        avoid: ['.step-item', '.block-title', '.safety-item', '.torque-table', '.tools-item'],
+      },
+    }
+
+    await html2pdf()
+      .set(opt)
+      .from(element)
+      .toPdf()
+      .get('pdf')
+      .then((pdf) => {
+        addWatermark(pdf)
+        addFooter(pdf, manual.value)
+      })
+      .save()
+
+    toast.success('PDF сохранён')
+  } catch (err) {
+    console.error('Failed to generate PDF:', err)
+    toast.error('Не удалось создать PDF')
+  } finally {
+    pdfGenerating.value = false
+  }
+}
+
+// ===== Вотермарка =====
+function addWatermark(pdf) {
+  const pageCount = pdf.internal.getNumberOfPages()
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+
+  for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i)
+
+    try {
+      const gState = new pdf.GState({ opacity: 0.08 })
+      pdf.setGState(gState)
+    } catch {
+    }
+
+    pdf.setTextColor(139, 92, 246)
+    pdf.setFontSize(72)
+    pdf.setFont('helvetica', 'bold')
+
+    pdf.text('MotoBind', pageWidth / 2, pageHeight / 2, {
+      align: 'center',
+      angle: 30,
+    })
+
+    pdf.setFontSize(12)
+    pdf.setFont('helvetica', 'normal')
+    pdf.text('motobind.ru', pageWidth / 2, pageHeight / 2 + 12, {
+      align: 'center',
+      angle: 30,
+    })
+
+    try {
+      pdf.setGState(new pdf.GState({ opacity: 1 }))
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+// ===== Футер =====
+function addFooter(pdf, manualData) {
+  const pageCount = pdf.internal.getNumberOfPages()
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+
+  pdf.setFontSize(8)
+  pdf.setTextColor(120, 120, 140)
+
+  const title = (manualData?.title || '').slice(0, 50)
+
+  for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i)
+
+    pdf.text('MotoBind - motobind.ru', 12, pageHeight - 8)
+
+    pdf.text(title, pageWidth / 2, pageHeight - 8, { align: 'center' })
+
+    pdf.text(`${i} / ${pageCount}`, pageWidth - 12, pageHeight - 8, {
+      align: 'right',
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -473,37 +642,6 @@ function getImageUrl(path) {
 .status-draft {
     background: var(--accent-trans);
     color: var(--accent-text);
-}
-
-/* ===== КНОПКИ ===== */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.btn-sm {
-    padding: 6px 14px;
-    font-size: 13px;
-}
-
-.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--border-color);
 }
 
 /* ===== БЛОКИ ===== */
@@ -1260,5 +1398,58 @@ function getImageUrl(path) {
     .empty-state p {
         font-size: 14px;
     }
+}
+
+
+
+@media print {
+  .sidebar,
+  .sidebar-toggle,
+  .page-header .header-right,
+  .manual-nav,
+  .back-to-top,
+  .footer,
+  .toast-container {
+    display: none !important;
+  }
+
+  .app-content {
+    margin-left: 0 !important;
+  }
+
+  .page-content {
+    padding: 0 !important;
+  }
+
+  body,
+  .animated-bg,
+  .container,
+  .block {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .block {
+    border: 1px solid #ddd !important;
+    page-break-inside: avoid;
+  }
+
+  .step-item,
+  .safety-item {
+    page-break-inside: avoid;
+  }
+
+  .manual-section::after {
+    content: 'MotoBind';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 120px;
+    font-weight: 900;
+    color: rgba(139, 92, 246, 0.08);
+    z-index: 9999;
+    pointer-events: none;
+  }
 }
 </style>
