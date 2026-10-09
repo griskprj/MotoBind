@@ -38,7 +38,7 @@ export default [
   {
     path: '/garage',
     name: 'garage',
-    component: () => import('../../views/Garage.vue'),
+    component: () => import('../../views/garage/Garage.vue'),
     meta: {
       requiresAuth: true,
       title: 'MotoBind - Гараж мотоцикла',

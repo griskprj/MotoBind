@@ -1,11 +1,12 @@
 import re
-from datetime import datetime, date
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from datetime import date, datetime
+from typing import List, Optional
 
 from app.schemas.mixins import ISO8601Mixin
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 # --------- Request-схемы ---------
+
 
 class MotorcycleValidatorMixin:
     """Общие валидаторы для схем мотоцикла"""
@@ -87,6 +88,7 @@ class MaintenanceShortSchema(ISO8601Mixin, BaseModel):
     status: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    mileage_updated_at: Optional[datetime] = None
 
 
 class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
@@ -107,6 +109,7 @@ class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
     photo_url: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    mileage_updated_at: Optional[datetime] = None
 
 
 class MotorcycleDetailSchema(MotorcycleShortSchema):

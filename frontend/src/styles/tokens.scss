@@ -1,62 +1,147 @@
-/* ============================================
-   Design Tokens — MotoBind
-   В компонентах использовать только var(--*), не хардкодить.
-   ============================================ */
-
 :root {
-  /* ===== ПАЛИТРА (тёмная тема — по умолчанию) ===== */
+  /* =========================
+     Brand
+     ========================= */
+
+  --color-primary: #7C5CFC;
+  --color-primary-hover: #6B4AE8;
+  --color-primary-active: #5A3BD4;
+  --color-primary-light: #EEEBFF;
+
+  /* =========================
+     Backgrounds
+     ========================= */
+
+  --color-bg: #F5F6F8;
+  --color-bg-secondary: #EEF0F3;
+
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F8F9FB;
+  --color-surface-hover: #F0F2F5;
+  --color-surface-active: #E9EBF0;
+
+  /* =========================
+     Sidebar / Header
+     ========================= */
+
+  --color-sidebar: #0D141C;
+  --color-sidebar-secondary: #121B25;
+  --color-sidebar-hover: #182532;
+  --color-sidebar-active: #203142;
+
+  --color-header: #101820;
+
+  /* =========================
+     Text
+     ========================= */
+
+  --color-text: #171B21;
+  --color-text-secondary: #66707D;
+  --color-text-tertiary: #929BA7;
+  --color-text-disabled: #B5BCC5;
+
+  --color-text-inverse: #FFFFFF;
+  --color-text-inverse-secondary: #C8D0D9;
+
+  /* =========================
+     Borders
+     ========================= */
+
+  --color-border: #DDE1E7;
+  --color-border-light: #E9ECF0;
+  --color-border-dark: #C9CED6;
+
+  /* =========================
+     Status
+     ========================= */
+
+  --color-success: #18A66A;
+  --color-success-light: #E7F7F0;
+  --color-success-dark: #128455;
+
+  --color-warning: #D88919;
+  --color-warning-light: #FFF4DF;
+  --color-warning-dark: #B56F0F;
+
+  --color-danger: #D94A4A;
+  --color-danger-light: #FCEAEA;
+  --color-danger-dark: #B93636;
+
+  --color-info: #3E82D7;
+  --color-info-light: #EAF3FD;
+  --color-info-dark: #2E68B3;
+
+  /* =========================
+     Shadows
+     ========================= */
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 10px 30px rgba(16, 24, 40, 0.08);
+  --shadow-modal: 0 8px 24px rgba(16, 24, 40, 0.12);
+  --shadow-focus: 0 0 0 3px var(--color-focus);
+
+  --color-focus: rgba(124, 92, 252, 0.25);
+
+  /* ============================================
+     BRIDGE — старые имена токенов → новые --color-*
+     Чтобы base.scss / components.scss работали без правок
+     ============================================ */
 
   /* Фоны */
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #111118;
-  --bg-card: #1A1A24;
-  --bg-card-hover: #202036;
-  --bg-input: #0f0f1a;
-  --bg-dropdown: #0f0f1a;
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-card: var(--color-surface);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-input: var(--color-surface);
+  --bg-dropdown: var(--color-surface);
 
   /* Текст */
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #64748B;
-  --text-inverse: #0A0A0F;
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --text-inverse: var(--color-text-inverse);
 
   /* Границы */
-  --border-color: #2D2D3A;
-  --border-light: rgba(255, 255, 255, 0.05);
-  --border-input: rgba(255, 255, 255, 0.08);
+  --border-color: var(--color-border);
+  --border-light: var(--color-border-light);
+  --border-input: var(--color-border);
 
   /* Акцент */
-  --accent: #8B5CF6;
-  --accent-hover: #7C3AED;
-  --accent-light: #2D2A3E;
-  --accent-trans: rgba(138, 92, 246, 0.2);
-  --accent-text: #a78bfa;
+  --accent: var(--color-primary);
+  --accent-hover: var(--color-primary-hover);
+  --accent-light: var(--color-primary-light);
+  --accent-trans: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  --accent-text: var(--color-primary);
 
   /* Danger */
-  --danger: #EF4444;
-  --danger-hover: #DC2626;
-  --danger-trans: rgba(240, 69, 69, 0.2);
-  --danger-text: #ef4444;
+  --danger: var(--color-danger);
+  --danger-hover: var(--color-danger-dark);
+  --danger-trans: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  --danger-text: var(--color-danger);
 
   /* Success */
-  --success: #10B981;
-  --success-hover: #10cb8d;
-  --success-trans: rgba(16, 185, 129, 0.2);
-  --success-text: #4ade80;
+  --success: var(--color-success);
+  --success-hover: var(--color-success-dark);
+  --success-trans: color-mix(in srgb, var(--color-success) 15%, transparent);
+  --success-text: var(--color-success);
 
   /* Warning */
-  --warning: #F59E0B;
-  --warning-hover: #c97704;
-  --warning-trans: rgba(245, 159, 11, 0.1);
-  --warning-text: #fbbf24;
+  --warning: var(--color-warning);
+  --warning-hover: var(--color-warning-dark);
+  --warning-trans: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  --warning-text: var(--color-warning);
 
   /* Info */
-  --info: #3B82F6;
-  --info-hover: #2563EB;
-  --info-trans: rgba(59, 130, 246, 0.1);
-  --info-text: #60A5FA;
+  --info: var(--color-info);
+  --info-hover: var(--color-info-dark);
+  --info-trans: color-mix(in srgb, var(--color-info) 15%, transparent);
+  --info-text: var(--color-info);
 
-  /* ===== SPACING SCALE ===== */
+  /* =========================
+     SPACING SCALE
+     ========================= */
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -66,7 +151,10 @@
   --space-8: 48px;
   --space-10: 64px;
 
-  /* ===== TYPOGRAPHY ===== */
+  /* =========================
+     TYPOGRAPHY
+     ========================= */
+
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --font-mono: 'Courier New', ui-monospace, monospace;
 
@@ -87,7 +175,10 @@
   --leading-base: 1.5;
   --leading-relaxed: 1.6;
 
-  /* ===== RADIUS ===== */
+  /* =========================
+     RADIUS
+     ========================= */
+
   --radius-sm: 6px;
   --radius: 0.75rem;
   --radius-md: 10px;
@@ -95,20 +186,19 @@
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* ===== SHADOWS ===== */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6);
-  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-focus: 0 0 0 3px var(--accent-trans);
+  /* =========================
+     TRANSITIONS
+     ========================= */
 
-  /* ===== TRANSITIONS ===== */
   --transition-fast: 0.15s ease;
   --transition-base: 0.25s ease;
   --transition-slow: 0.4s ease;
   --transition-bounce: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* ===== Z-INDEX ===== */
+  /* =========================
+     Z-INDEX
+     ========================= */
+
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-overlay: 1000;
@@ -117,61 +207,139 @@
   --z-toast: 9999;
 }
 
-/* ===== СВЕТЛАЯ ТЕМА ===== */
-[data-theme="light"] {
-  /* Фоны */
-  --bg-primary: #F8FAFC;
-  --bg-secondary: #F1F5F9;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F8FAFC;
-  --bg-input: #FFFFFF;
-  --bg-dropdown: #FFFFFF;
+/* ============================================
+   ТЁМНАЯ ТЕМА — [data-theme="dark"]
+   ============================================ */
 
-  /* Текст */
-  --text-primary: #0F172A;
-  --text-secondary: #334155;
-  --text-muted: #94A3B8;
-  --text-inverse: #FFFFFF;
+[data-theme="dark"] {
+  /* =========================
+     Backgrounds
+     ========================= */
 
-  /* Границы */
-  --border-color: #E2E8F0;
-  --border-light: rgba(0, 0, 0, 0.05);
-  --border-input: #E2E8F0;
+  --color-bg: #0D1117;
+  --color-bg-secondary: #111820;
 
-  /* Акцент */
-  --accent: #7C3AED;
-  --accent-hover: #6D28D9;
-  --accent-light: #EDE9FE;
-  --accent-trans: rgba(124, 58, 237, 0.1);
-  --accent-text: #7C3AED;
+  --color-surface: #151B23;
+  --color-surface-secondary: #1A212A;
+  --color-surface-hover: #202832;
+  --color-surface-active: #26313D;
 
-  /* Danger */
-  --danger: #EF4444;
-  --danger-hover: #DC2626;
-  --danger-trans: rgba(239, 68, 68, 0.1);
-  --danger-text: #DC2626;
+  /* =========================
+     Sidebar / Header
+     ========================= */
 
-  /* Success */
-  --success: #10B981;
-  --success-hover: #059669;
-  --success-trans: rgba(16, 185, 129, 0.1);
-  --success-text: #059669;
+  --color-sidebar: #090E14;
+  --color-sidebar-secondary: #0F161F;
+  --color-sidebar-hover: #16212C;
+  --color-sidebar-active: #1D2B39;
 
-  /* Warning */
-  --warning: #F59E0B;
-  --warning-hover: #D97706;
-  --warning-trans: rgba(245, 159, 11, 0.1);
-  --warning-text: #D97706;
+  --color-header: #0B1118;
 
-  /* Info */
-  --info: #3B82F6;
-  --info-hover: #2563EB;
-  --info-trans: rgba(59, 130, 246, 0.1);
-  --info-text: #2563EB;
+  /* =========================
+     Text
+     ========================= */
 
-  /* Тени */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --color-text: #F1F3F5;
+  --color-text-secondary: #9AA5B1;
+  --color-text-tertiary: #6F7A87;
+  --color-text-disabled: #4E5966;
+
+  --color-text-inverse: #161A20;
+  --color-text-inverse-secondary: #66707D;
+
+  /* =========================
+     Borders
+     ========================= */
+
+  --color-border: #2A333F;
+  --color-border-light: #222B35;
+  --color-border-dark: #394452;
+
+  /* =========================
+     Brand
+     ========================= */
+
+  --color-primary: #8B7CFF;
+  --color-primary-hover: #9A8DFF;
+  --color-primary-active: #7869EA;
+  --color-primary-light: #27223F;
+
+  /* =========================
+     Status
+     ========================= */
+
+  --color-success: #35C98A;
+  --color-success-light: #18382D;
+  --color-success-dark: #4ADE9C;
+
+  --color-warning: #F2A93B;
+  --color-warning-light: #3A2C18;
+  --color-warning-dark: #FFC15C;
+
+  --color-danger: #F06A6A;
+  --color-danger-light: #3D2023;
+  --color-danger-dark: #FF8585;
+
+  --color-info: #62A4F2;
+  --color-info-light: #1C2E45;
+  --color-info-dark: #82B7F5;
+
+  /* =========================
+     Shadows
+     ========================= */
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --color-focus: rgba(139, 124, 255, 0.35);
+  --shadow-focus: 0 0 0 3px var(--color-focus);
+
+  /* ============================================
+     BRIDGE — переопределяем старые имена под тёмную
+     (значения --color-* уже переопределены выше)
+     ============================================ */
+
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-card: var(--color-surface);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-input: var(--color-surface-secondary);
+  --bg-dropdown: var(--color-surface-secondary);
+
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --text-inverse: var(--color-text-inverse);
+
+  --border-color: var(--color-border);
+  --border-light: var(--color-border-light);
+  --border-input: var(--color-border);
+
+  --accent: var(--color-primary);
+  --accent-hover: var(--color-primary-hover);
+  --accent-light: var(--color-primary-light);
+  --accent-trans: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --accent-text: var(--color-primary);
+
+  --danger: var(--color-danger);
+  --danger-hover: var(--color-danger-dark);
+  --danger-trans: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --danger-text: var(--color-danger);
+
+  --success: var(--color-success);
+  --success-hover: var(--color-success-dark);
+  --success-trans: color-mix(in srgb, var(--color-success) 20%, transparent);
+  --success-text: var(--color-success);
+
+  --warning: var(--color-warning);
+  --warning-hover: var(--color-warning-dark);
+  --warning-trans: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  --warning-text: var(--color-warning);
+
+  --info: var(--color-info);
+  --info-hover: var(--color-info-dark);
+  --info-trans: color-mix(in srgb, var(--color-info) 20%, transparent);
+  --info-text: var(--color-info);
 }
