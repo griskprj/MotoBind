@@ -1,3 +1,6 @@
+from app.models.business_account import BusinessAccount
+from app.models.business_client import BusinessClient
+from app.models.business_client_vehicle import BusinessClientVehicle
 from app.models.maintenance import Maintenance
 from app.models.manual import Manual, ManualStep
 from app.models.motorcycle import Motorcycle
@@ -8,6 +11,7 @@ from app.models.post_like import PostLike
 from app.models.post_report import PostReport
 from app.models.reminder import Reminder
 from app.models.reports import Report
+from app.models.service import Service
 from app.models.user import User
 
 __all__ = [
@@ -23,4 +27,7 @@ __all__ = [
     "PostReport",
     "Notification",
     "Reminder",
+    "BusinessAccount",
+    "BusinessClient",
+    "BusinessClientVehicle",
 ]

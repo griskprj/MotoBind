@@ -7,9 +7,9 @@
 
     <div class="sidebar-overlay" v-if="isSidebarOpen && !isDesktop" @click="closeSidebar"></div>
 
-    <aside 
-        class="sidebar" 
-        :class="{ 
+    <aside
+        class="sidebar"
+        :class="{
             'sidebar-open': isSidebarOpen,
             'sidebar-collapsed': isCollapsed && isDesktop
         }"
@@ -61,7 +61,7 @@
                     <i class="fa fa-book"></i>
                     <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                 </router-link>
-                <router-link 
+                <router-link
                     to="/social"
                     class="nav-link"
                     :class="{ active: $route.path === '/social' }"
@@ -69,6 +69,15 @@
                 >
                     <i class="fa fa-users"></i>
                     <span>MotoSocial</span>
+                </router-link>
+                <router-link
+                    to="/business"
+                    class="nav-link"
+                    :class="{ active: $route.path === '/business' }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-suitcase"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Кабинет бизнеса</span>
                 </router-link>
                 <router-link
                     to="/profile"
@@ -128,6 +137,10 @@
                         <i class="fa fa-motorcycle"></i>
                         <span v-if="!isCollapsed || !isDesktop">Мотоциклы</span>
                     </router-link>
+                </div>
+
+                <div class="admin-nav-group">
+                    <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">МОДЕРАЦИЯ</p>
                     <router-link
                         to="/admin/manuals"
                         class="nav-link"
@@ -145,6 +158,15 @@
                     >
                         <i class="fa fa-flag"></i>
                         <span v-if="!isCollapsed || !isDesktop">Репорты</span>
+                    </router-link>
+                    <router-link
+                        to="/admin/services"
+                        class="nav-link"
+                        :class="{ active: $route.path === '/admin/services' }"
+                        @click="closeSidebar"
+                    >
+                        <i class="fa fa-wrench"></i>
+                        <span v-if="!isCollapsed || !isDesktop">Услуги</span>
                     </router-link>
                 </div>
 
@@ -164,7 +186,7 @@
         <div class="sidebar-footer">
             <button
                 v-if="!isDesktop"
-                class="theme-toggle" 
+                class="theme-toggle"
                 @click="toggleTheme"
                 :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
             >
@@ -251,7 +273,7 @@ export default {
             const theme = this.isDark ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
-            
+
             const icon = this.$el.querySelector('.theme-toggle i');
             if (icon) {
                 icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';
@@ -389,24 +411,24 @@ export default {
     .sidebar.sidebar-open {
         transform: translateX(0);
     }
-    
+
     /* На мобильных сворачивание отключено */
     .sidebar-collapsed {
         width: 280px;
         padding: 24px 20px;
     }
-    
+
     .sidebar-collapsed .nav-link span,
     .sidebar-collapsed .logo-text,
     .sidebar-collapsed .btn-logout-sidebar span {
         display: inline !important;
     }
-    
+
     .sidebar-collapsed .nav-link {
         justify-content: flex-start;
         padding: 10px 14px;
     }
-    
+
     .sidebar-collapsed .nav-link i {
         margin: 0 14px 0 0;
     }

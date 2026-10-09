@@ -186,6 +186,22 @@
 
                 <div class="settings-card">
                     <div class="settings-card-header">
+                        <i class="fa fa-briefcase"></i>
+                        <h3>Бизнес</h3>
+                    </div>
+                    <div class="settings-card-body">
+                        <p class="hint-text">
+                        <i class="fa fa-info-circle"></i>
+                        Ведёте обслуживание мотоциклов как мастер или СТО? Создайте бизнес-аккаунт.
+                        </p>
+                        <button class="outline-btn" style="width: 100%;" @click="goToBusiness">
+                        <i class="fa fa-briefcase"></i> Открыть кабинет бизнеса
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header">
                         <i class="fa fa-envelope"></i>
                         <h3>Уведомления и рассылки</h3>
                     </div>
@@ -472,6 +488,12 @@ async function copyProfileLink() {
       toast.success('Ссылка на профиль скопирована!')
     }
   }
+}
+
+
+// ===== Business account =====
+function goToBusiness() {
+  router.push('/business')
 }
 </script>
 

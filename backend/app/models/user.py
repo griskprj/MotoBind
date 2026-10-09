@@ -1,11 +1,14 @@
-from sqlalchemy import func
 from datetime import datetime, timezone
-from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.extensions import db
 from app.models.post import Post
+from sqlalchemy import func
+from werkzeug.security import check_password_hash, generate_password_hash
+
 
 class User(db.Model):
     """User model"""
+
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -59,26 +62,28 @@ class User(db.Model):
         back_populates="user",
         lazy="dynamic",
         cascade="all, delete-orphan",
-        passive_deletes=True
+        passive_deletes=True,
     )
 
     maintenances = db.relationship(
-        'Maintenance', 
-        back_populates='author', 
-        lazy='dynamic'
+        "Maintenance", back_populates="author", lazy="dynamic"
     )
     notifications = db.relationship(
-        'Notification', 
-        back_populates='user', 
-        cascade='all, delete-orphan'
+        "Notification", back_populates="user", cascade="all, delete-orphan"
     )
 
     posts = db.relationship(
-        'Post', 
-        back_populates='author', 
-        cascade='all, delete-orphan'
+        "Post", back_populates="author", cascade="all, delete-orphan"
     )
-    
+
+    business_account = db.relationship(
+        "BusinessAccount",
+        foreign_keys="BusinessAccount.owner_id",
+        back_populates="owner",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
     def set_password(self, password):
         """Set hash password"""
         self.password = generate_password_hash(password)
@@ -103,26 +108,34 @@ class User(db.Model):
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "last_login": self.last_login.isoformat() if self.last_login else None,
-            'email_notifications_enabled': self.email_notifications_enabled,
-            'email_newsletter_enabled': self.email_newsletter_enabled,
-            'email_verification_enabled': self.email_verification_enabled,
-            'reminders_mileage_enabled': self.reminders_mileage_enabled,
-            'reminders_maintenance_enabled': self.reminders_maintenance_enabled,
+            "email_notifications_enabled": self.email_notifications_enabled,
+            "email_newsletter_enabled": self.email_newsletter_enabled,
+            "email_verification_enabled": self.email_verification_enabled,
+            "reminders_mileage_enabled": self.reminders_mileage_enabled,
+            "reminders_maintenance_enabled": self.reminders_maintenance_enabled,
         }
-        
+
         if include_moto:
             data["motorcycles"] = [m.to_dict() for m in self.motorcycles]
 
         if include_stats:
-            stats = db.session.query(
-                func.count(Post.id).label("posts_count"),
-                func.coalesce(func.sum(Post.likes_count), 0).label("likes_received"),
-                func.coalesce(func.sum(Post.comments_count), 0).label("comments_received"),
-            ).filter(Post.author_id == self.id).one()
+            stats = (
+                db.session.query(
+                    func.count(Post.id).label("posts_count"),
+                    func.coalesce(func.sum(Post.likes_count), 0).label(
+                        "likes_received"
+                    ),
+                    func.coalesce(func.sum(Post.comments_count), 0).label(
+                        "comments_received"
+                    ),
+                )
+                .filter(Post.author_id == self.id)
+                .one()
+            )
             data["stats"] = {
                 "posts_count": stats.posts_count,
                 "likes_received": stats.likes_received,
-                "comments_received": stats.comments_received
+                "comments_received": stats.comments_received,
             }
 
         return data

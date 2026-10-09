@@ -1,9 +1,11 @@
 from functools import wraps
-from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
-from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
+from app.extensions import db
+from app.models.business_account import BusinessAccount
 from app.models.motorcycle import Motorcycle
+from flask import g, jsonify
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 
 def admin_required(fn):
@@ -100,6 +102,33 @@ def moto_owner_required(fn):
         if int(moto.owner_id) != int(user_id):
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+def business_owner_required(fn):
+    """
+    Проверяет, что у текущего пользователя есть бизнес-аккаунт.
+    Кладёт его в flask.g.business_account.
+
+    Использование:
+        @business_owner_required
+        def my_endpoint():
+            ba = g.business_account
+            ...
+    """
+
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        user_id = int(get_jwt_identity())
+
+        account = BusinessAccount.query.filter_by(owner_id=user_id).first()
+        if not account:
+            return jsonify({"error": "У вас нет бизнес-аккаунта. Создайте его."}), 403
+
+        g.business_account = account
         return fn(*args, **kwargs)
 
     return wrapper

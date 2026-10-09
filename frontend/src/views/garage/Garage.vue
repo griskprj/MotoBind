@@ -330,6 +330,43 @@
               </p>
             </div>
 
+            <!-- ===== Я КЛИЕНТ У МАСТЕРОВ ===== -->
+            <div v-if="myMasters.length > 0" class="sidebar-card my-masters-card">
+              <div class="sidebar-card-header">
+                <i class="fa fa-user-tie"></i>
+                <h4>Я клиент у мастеров</h4>
+              </div>
+
+              <div class="master-list-mini">
+                <div
+                  v-for="m in myMasters"
+                  :key="m.client_id"
+                  class="master-mini-item"
+                >
+                  <div class="master-mini-avatar">
+                    <img
+                      v-if="m.business?.logo_url"
+                      :src="getBusinessLogoUrl(m.business.logo_url)"
+                      alt=""
+                      @error="(e) => (e.target.style.display = 'none')"
+                    >
+                    <i v-else class="fa" :class="m.business?.type === 'station' ? 'fa-warehouse' : 'fa-user-gear'"></i>
+                  </div>
+                  <div class="master-mini-body">
+                    <div class="master-mini-name">{{ m.business?.name || 'Мастер' }}</div>
+                    <div class="master-mini-meta">
+                      <span v-if="m.business?.city">
+                        <i class="fa fa-map-marker"></i> {{ m.business.city }}
+                      </span>
+                      <span v-if="m.vehicles?.length">
+                        <i class="fa fa-motorcycle"></i> {{ m.vehicles.length }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="maintenances-section">
               <div class="section-header">
                 <div class="section-header-left">
@@ -566,7 +603,8 @@ import DeleteMaintenanceModal from '@/components/modals/maintenance/DeleteMainte
 import MarkPlanMaintenanceModal from '@/components/modals/maintenance/MarkPlanMaintenanceModal.vue'
 import DiagnosticsModal from '@/components/modals/diagnostics/DiagnosticsModal.vue'
 
-import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore } from '@/stores'
+import { getBusinessLogoUrl } from '../../utils/mediaUrl'
+import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore, useBusinessStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
 import {
   formatMileage,
@@ -587,6 +625,8 @@ const remindersStore = useRemindersStore()
 
 // ===== Store refs =====
 const { items: motorcycles, selectedId: selectedMotoId, loading } = storeToRefs(motorcyclesStore)
+const businessStore = useBusinessStore()
+const { myMasters } = storeToRefs(businessStore)
 
 // ===== Computed =====
 const selectedMotorcycle = computed(() => motorcyclesStore.selected)
@@ -665,6 +705,8 @@ onMounted(async () => {
       remindersStore.loadPending(),
     ])
     refreshTip()
+
+    await businessStore.loadMyMasters()
   } catch (err) {
     console.error('Failed to load garage data:', err)
     toast.error('Не удалось загрузить гараж')
@@ -1838,6 +1880,68 @@ function handleWriteToMasterFromDiagnostics() {
     margin: 0;
 }
 .mileage-card-empty .mileage-empty-text i { color: var(--text-muted); }
+
+/* === My masters === */
+.my-masters-card { display: flex; flex-direction: column; gap: 12px; }
+
+.master-list-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.master-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+.master-mini-item:hover { background: var(--bg-card-hover); }
+
+.master-mini-avatar {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: var(--accent-trans);
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.master-mini-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.master-mini-body { flex: 1; min-width: 0; }
+.master-mini-name {
+  font-size: 13px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.master-mini-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.master-mini-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
 
 /* Мобильная адаптация */
 @media (max-width: 400px) {

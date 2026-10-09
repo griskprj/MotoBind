@@ -90,11 +90,13 @@ def create_app(config_override=None):
 
     from app.api.admin import admin
     from app.api.auth import auth
+    from app.api.business import business
     from app.api.maintenance import maintenance
     from app.api.manuals import manual
     from app.api.motorcycle import motorcycle
     from app.api.notifications import notifications_bp
     from app.api.reminders import reminders_bp
+    from app.api.services import services
     from app.api.social import social_bp
     from app.api.statistic import statistic
     from app.api.user import user
@@ -109,5 +111,7 @@ def create_app(config_override=None):
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(social_bp, url_prefix="/api/social")
     app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
+    app.register_blueprint(business, url_prefix="/api/business")
+    app.register_blueprint(services, url_prefix="/api/services")
 
     return app
