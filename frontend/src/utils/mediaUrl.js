@@ -20,3 +20,7 @@ export function getAvatarUrl(path) {
 export function getManualImageUrl(path) {
   return getUploadUrl(path) || '/ManualImgDefault.webp'
 }
+
+export function getBusinessLogoUrl(path) {
+  return getUploadUrl(path) || '/ManualImgDefault.webp'
+}

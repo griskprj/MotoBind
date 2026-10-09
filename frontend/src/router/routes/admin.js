@@ -67,4 +67,17 @@ export default [
       showHeader: true,
     },
   },
+  {
+    path: '/admin/services',
+    name: 'admin-services',
+    component: () => import('../../views/admin/AdminServices.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'MotoBind - Модерация услуг',
+      description: 'Модерация услуг мастеров и СТО.',
+      showFooter: true,
+      showHeader: true,
+    },
+  },
 ]

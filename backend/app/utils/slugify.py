@@ -1,5 +1,6 @@
 """Транслитерация и генерация URL-slug."""
 import re
+import uuid
 
 _CYRILLIC = {
     "а": "a",
@@ -52,16 +53,15 @@ def slugify(value: str) -> str:
 def unique_slug(base: str, exists_fn, max_attempts: int = 50) -> str:
     """
     Генерирует slug с суффиксом -1, -2, ... пока не станет уникальным.
-    exists_fn: callable(slug) -> bool
+
+    exists_fn: callable(slug) -> bool (проверяет, занят ли slug)
     """
-    slug = slugify(base) or "item"
+    slug = slugify(base) or "business"
     if not exists_fn(slug):
         return slug
     for i in range(1, max_attempts):
         candidate = f"{slug}-{i}"
         if not exists_fn(candidate):
             return candidate
-    # крайний случай — добавим хеш
-    import uuid
-
+    # Крайний случай — добавим хеш
     return f"{slug}-{uuid.uuid4().hex[:6]}"
