@@ -118,7 +118,7 @@
                 </div>
               </div>
 
-              <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
+              <button v-if="motorcycles.length !== 0" @click="showAddMotoModal = true" class="add-btn btn-secondary">
                 <i class="fa fa-plus"></i>
                 <span>Добавить мотоцикл</span>
               </button>
@@ -299,6 +299,25 @@
               </button>
             </div>
 
+            <!-- ===== ДИАГНОСТИКА ===== -->
+            <section v-if="selectedMotorcycle" class="diagnostics-section">
+              <div class="section-header">
+                <div class="section-header-left">
+                  <i class="fa fa-stethoscope"></i>
+                  <h4>Диагностика</h4>
+                </div>
+              </div>
+
+              <p class="diag-title">Проведите онлайн-диагностику, указав симптомы</p>
+              <p class="diag-hint">Важно: результаты диагностики не являются профессиональными рекомендациями!</p>
+
+              <div class="diagnostics-actions">
+                <button @click="showDiagnosticsModal = true" class="diag-cta">
+                  Провести онлайн-диагностику
+                </button>
+              </div>
+            </section>
+
             <!-- Если мотоцикл не выбран -->
             <div v-else class="sidebar-card mileage-card mileage-card-empty">
               <div class="sidebar-card-header">
@@ -358,25 +377,6 @@
               </div>
             </div>
           </div>
-
-          <!-- ===== ДИАГНОСТИКА ===== -->
-          <section v-if="selectedMotorcycle" class="diagnostics-section">
-            <div class="section-header">
-              <div class="section-header-left">
-                <i class="fa fa-stethoscope"></i>
-                <h4>Диагностика</h4>
-              </div>
-            </div>
-
-            <p class="diag-title">Проведите онлайн-диагностику, указав симптомы</p>
-            <p class="diag-hint">Важно: результаты диагностики не являются профессиональными рекомендациями!</p>
-
-            <div class="diagnostics-actions">
-              <button @click="showDiagnosticsModal = true" class="diag-cta">
-                Провести онлайн-диагностику
-              </button>
-            </div>
-          </section>
 
           <!-- ===== ПОЛЕЗНЫЕ СТАТЬИ ===== -->
           <section class="articles-section">
