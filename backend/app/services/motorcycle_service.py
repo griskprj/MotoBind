@@ -1,22 +1,28 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy.orm import selectinload
-
 from app.exceptions import ValidationError
 from app.extensions import db
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
-from app.utils.files import save_moto_photo, delete_file
+from app.utils.files import delete_file, save_moto_photo
 from app.utils.helpers import get_motorcycle_or_404
+from sqlalchemy.orm import selectinload
 
 
 class MotorcycleService:
     """Сервис для работы с мотоциклами"""
 
     ALLOWED_UPDATE_FIELDS = {
-        "name", "years", "volume", "mileage", "color",
-        "drive_type", "license_plate", "vin", "note",
+        "name",
+        "years",
+        "volume",
+        "mileage",
+        "color",
+        "drive_type",
+        "license_plate",
+        "vin",
+        "note",
     }
 
     @staticmethod
@@ -33,7 +39,8 @@ class MotorcycleService:
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
         updates = {
-            k: v for k, v in kwargs.items()
+            k: v
+            for k, v in kwargs.items()
             if k in MotorcycleService.ALLOWED_UPDATE_FIELDS and v is not None
         }
 
@@ -75,6 +82,7 @@ class MotorcycleService:
             type=Reminder.TYPE_MILEAGE_UPDATE,
             status=Reminder.STATUS_PENDING,
         ).delete(synchronize_session=False)
+        db.session.commit()
 
     @staticmethod
     def set_mileage(moto: Motorcycle, new_mileage: int) -> bool:
@@ -94,9 +102,7 @@ class MotorcycleService:
         return True
 
     @staticmethod
-    def update_note(
-        moto_id: int, user_id: int, note_text: Optional[str]
-    ) -> Motorcycle:
+    def update_note(moto_id: int, user_id: int, note_text: Optional[str]) -> Motorcycle:
         """Обновляет заметки мотоцикла."""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
@@ -123,16 +129,13 @@ class MotorcycleService:
     def get_user_motorcycles(user_id: int) -> List[Motorcycle]:
         """Получает все мотоциклы пользователя с предзагрузкой ТО."""
         return (
-            Motorcycle.query
-            .options(selectinload(Motorcycle.maintenances))
+            Motorcycle.query.options(selectinload(Motorcycle.maintenances))
             .filter_by(owner_id=user_id)
             .all()
         )
 
     @staticmethod
-    def get_motorcycle_by_id(
-        moto_id: int, user_id: Optional[int] = None
-    ) -> Motorcycle:
+    def get_motorcycle_by_id(moto_id: int, user_id: Optional[int] = None) -> Motorcycle:
         """Получает мотоцикл по ID с проверкой прав."""
         return get_motorcycle_or_404(moto_id, user_id)
 

@@ -52,253 +52,405 @@
         </div>
       </div>
 
-      <!-- Мотоциклы -->
-      <div class="motorcycles-container">
-        <div class="motorcycles-list">
-          <div
-            v-for="moto in motorcycles"
-            :key="moto.id"
-            class="moto-list-item"
-            :class="{ active: selectedMotoId === moto.id }"
-            @click="selectMotorcycle(moto)"
-          >
-            <div class="moto-card-wrapper">
-              <div class="moto-list-preview">
-                <img
-                  v-if="moto.photo_url"
-                  :src="getMotoPhotoUrl(moto.photo_url)"
-                  :alt="moto.name"
-                  @error="handleImageError"
-                  loading="lazy"
-                >
-                <div v-else class="moto-list-placeholder">
-                  <i class="fa fa-motorcycle"></i>
-                </div>
-              </div>
+      <!-- Основная сетка: контент + сайдбар -->
+      <div class="garage-layout">
+        <!-- ===== ЛЕВАЯ КОЛОНКА ===== -->
+        <div class="garage-main">
+          <!-- Мотоциклы -->
+          <section class="motorcycles-section">
+            <div class="motorcycles-list">
+              <div
+                v-for="moto in motorcycles"
+                :key="moto.id"
+                class="moto-list-item"
+                :class="{ active: selectedMotoId === moto.id }"
+                @click="selectMotorcycle(moto)"
+              >
+                <div class="moto-card-wrapper">
+                  <div class="moto-list-preview">
+                    <img
+                      v-if="moto.photo_url"
+                      :src="getMotoPhotoUrl(moto.photo_url)"
+                      :alt="moto.name"
+                      @error="handleImageError"
+                      loading="lazy"
+                    >
+                    <div v-else class="moto-list-placeholder">
+                      <i class="fa fa-motorcycle"></i>
+                    </div>
+                  </div>
 
-              <div class="moto-list-info">
-                <div class="moto-list-header">
-                  <h3 class="moto-list-name">{{ moto.name }}</h3>
-                  <span class="moto-list-year">{{ moto.years }}</span>
-                  <span class="moto-list-volume">{{ moto.volume }} см³</span>
+                  <div class="moto-list-info">
+                    <div class="moto-list-header">
+                      <h3 class="moto-list-name">{{ moto.name }}</h3>
+                      <span class="moto-list-year">{{ moto.years }}</span>
+                      <span class="moto-list-volume">{{ moto.volume }} см³</span>
+                    </div>
+                    <div class="moto-list-meta">
+                      <span class="moto-list-mileage">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        {{ formatMileage(moto.mileage) }}
+                      </span>
+                      <span class="moto-list-color">
+                        <span class="color-dot-sm" :style="{ background: moto.color }"></span>
+                      </span>
+                      <span v-if="moto.maintenances?.length" class="moto-list-maintenances">
+                        <i class="fa fa-wrench"></i>
+                        {{ moto.maintenances.length }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="moto-list-meta">
-                  <span class="moto-list-mileage">
+
+                <div class="moto-list-actions" @click.stop>
+                  <button @click="openEditMoto(moto)" class="icon-btn" title="Редактировать">
+                    <i class="fa fa-pen"></i>
+                  </button>
+                  <button @click="openUpdateMileage(moto)" class="icon-btn" title="Обновить пробег">
                     <i class="fa-solid fa-gauge-high"></i>
-                    {{ formatMileage(moto.mileage) }}
-                  </span>
-                  <span class="moto-list-color">
-                    <span class="color-dot-sm" :style="{ background: moto.color }"></span>
-                  </span>
-                  <span v-if="moto.maintenances?.length" class="moto-list-maintenances">
-                    <i class="fa fa-wrench"></i>
-                    {{ moto.maintenances.length }}
-                  </span>
+                  </button>
+                  <button @click="openPhoto(moto)" class="icon-btn" title="Фото">
+                    <i class="fa fa-camera"></i>
+                  </button>
+                  <button @click="openDeleteMoto(moto)" class="icon-btn danger" title="Удалить">
+                    <i class="fa fa-trash"></i>
+                  </button>
                 </div>
               </div>
-            </div>
 
-            <div class="moto-list-actions" @click.stop>
-              <button @click="openEditMoto(moto)" class="icon-btn" title="Редактировать">
-                <i class="fa fa-pen"></i>
-              </button>
-              <button @click="openUpdateMileage(moto)" class="icon-btn" title="Обновить пробег">
-                <i class="fa-solid fa-gauge-high"></i>
-              </button>
-              <button @click="openPhoto(moto)" class="icon-btn" title="Фото">
-                <i class="fa fa-camera"></i>
-              </button>
-              <button @click="openDeleteMoto(moto)" class="icon-btn danger" title="Удалить">
-                <i class="fa fa-trash"></i>
+              <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
+                <i class="fa fa-plus"></i>
+                <span>Добавить мотоцикл</span>
               </button>
             </div>
-          </div>
 
-          <button @click="showAddMotoModal = true" class="add-btn btn-secondary">
-            <i class="fa fa-plus"></i>
-            <span>Добавить мотоцикл</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-if="motorcycles.length === 0 && !loading" class="empty-state">
-        <div class="empty-icon">
-          <i class="fa fa-motorcycle"></i>
-        </div>
-        <h3>Ваш гараж пуст</h3>
-        <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
-        <button @click="showAddMotoModal = true" class="btn-primary">
-          Добавить мотоцикл
-        </button>
-      </div>
-
-      <!-- Quick Start Promo -->
-      <div v-if="selectedMotorcycle && !selectedMotorcycle.maintenances?.length" class="quick-start-promo">
-        <div class="promo-icon">
-          <i class="fa fa-rocket"></i>
-        </div>
-        <div class="promo-content">
-          <h4>Настройте обслуживание за 30 секунд</h4>
-          <p>Мы автоматически создадим базовое расписание на основе пробега и условий эксплуатации</p>
-        </div>
-        <button @click="showQuickStartModal = true" class="btn-primary">
-          <i class="fa fa-bolt"></i>
-          Быстрый старт
-        </button>
-      </div>
-
-      <!-- Детальная информация -->
-      <div v-if="selectedMotorcycle" class="moto-detail">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fa-solid fa-gauge-high"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Пробег</span>
-              <span class="stat-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fa fa-wrench"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Обслуживаний</span>
-              <span class="stat-value">{{ selectedMotorcycle.maintenances?.length || 0 }}</span>
-            </div>
-          </div>
-
-          <div class="stat-card" :class="{ 'stat-warning': nextMaintenance?.isOverdue }">
-            <div class="stat-icon">
-              <i class="fa fa-calendar-check"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Следующее ТО</span>
-              <span class="stat-value">
-                <template v-if="nextMaintenance">
-                  <span v-if="nextMaintenance.isOverdue" class="text-danger">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
-                  </span>
-                  <span v-else>
-                    через {{ Math.round(nextMaintenance.distanceToNext) }} км
-                  </span>
-                </template>
-                <span v-else class="text-muted">Все выполнены</span>
-              </span>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fa fa-ruble-sign"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Расходы на ТО</span>
-              <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-grid">
-          <div class="detail-card">
-            <h4 class="detail-title">Характеристики</h4>
-            <div class="spec-list">
-              <div class="spec-item">
-                <span class="spec-label">Год выпуска</span>
-                <span class="spec-value">{{ selectedMotorcycle.years }}</span>
+            <!-- Empty State -->
+            <div v-if="motorcycles.length === 0 && !loading" class="empty-state">
+              <div class="empty-icon">
+                <i class="fa fa-motorcycle"></i>
               </div>
-              <div class="spec-item">
-                <span class="spec-label">Двигатель</span>
-                <span class="spec-value">{{ selectedMotorcycle.volume }} см³</span>
-              </div>
-              <div class="spec-item">
-                <span class="spec-label">Цвет</span>
-                <span class="spec-value">
-                  <span class="color-dot" :style="{ background: selectedMotorcycle.color }"></span>
-                </span>
-              </div>
-              <div class="spec-item">
-                <span class="spec-label">Пробег</span>
-                <span class="spec-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
-              </div>
-              <div class="spec-item full" v-if="selectedMotorcycle.vin">
-                <span class="spec-label">VIN</span>
-                <span class="spec-value spec-code">{{ selectedMotorcycle.vin }}</span>
-              </div>
-              <div class="spec-item full" v-if="selectedMotorcycle.license_plate">
-                <span class="spec-label">Гос. номер</span>
-                <span class="spec-value spec-code">{{ selectedMotorcycle.license_plate }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-card notes-card">
-            <div class="detail-header">
-              <h4 class="detail-title">Заметки</h4>
-              <button @click="showEditMotoNoteModal = true" class="icon-btn small" title="Редактировать заметку">
-                <i class="fa fa-pen"></i>
+              <h3>Ваш гараж пуст</h3>
+              <p>Добавьте свой первый мотоцикл и начните вести учёт обслуживаний</p>
+              <button @click="showAddMotoModal = true" class="btn-primary">
+                Добавить мотоцикл
               </button>
             </div>
-            <div class="notes-content">
-              <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
-              <p v-else class="notes-empty">
-                <i class="fa fa-pen"></i>
-                Добавьте заметку о мотоцикле
-              </p>
-            </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="maintenances-section">
-          <div class="section-header">
-            <div class="section-header-left">
-              <i class="fa fa-wrench"></i>
-              <h4>Последние обслуживания</h4>
+          <!-- Quick Start Promo -->
+          <div v-if="selectedMotorcycle && !selectedMotorcycle.maintenances?.length" class="quick-start-promo">
+            <div class="promo-icon">
+              <i class="fa fa-rocket"></i>
             </div>
-            <button @click="router.push('/maintenance')" class="btn-link">
-              Все записи <i class="fa fa-arrow-right"></i>
+            <div class="promo-content">
+              <h4>Настройте обслуживание за 30 секунд</h4>
+              <p>Мы автоматически создадим базовое расписание на основе пробега и условий эксплуатации</p>
+            </div>
+            <button @click="showQuickStartModal = true" class="btn-primary">
+              <i class="fa fa-bolt"></i>
+              Быстрый старт
             </button>
           </div>
 
-          <div v-if="recentMaintenances.length > 0" class="maintenances-list">
-            <div
-              v-for="item in recentMaintenances"
-              :key="item.id"
-              class="maintenance-item"
-              @click="openMaintenanceDetails(item)"
-            >
-              <div class="maint-icon" :class="'maint-icon-' + item.status">
-                <i class="fa fa-wrench"></i>
-              </div>
-              <div class="maint-info">
-                <div class="maint-title">{{ item.title }}</div>
-                <div class="maint-meta">
-                  <span>{{ formatDate(item.completed_date || item.planned_date) }}</span>
-                  <span class="dot">•</span>
-                  <span>{{ item.completed_mileage || item.planned_mileage || '—' }} км</span>
-                  <span class="dot">•</span>
-                  <span>{{ item.cost ? formatCost(item.cost) : '—' }}</span>
+          <!-- Детальная информация -->
+          <div v-if="selectedMotorcycle" class="moto-detail">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Пробег</span>
+                  <span class="stat-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
                 </div>
               </div>
-              <div class="maint-status">
-                <span :class="'badge badge-' + getStatusBadgeVariant(item.status)">
-                  {{ getStatusLabel(item.status) }}
-                </span>
-                <i class="fa fa-chevron-right"></i>
+
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fa fa-wrench"></i>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Обслуживаний</span>
+                  <span class="stat-value">{{ selectedMotorcycle.maintenances?.length || 0 }}</span>
+                </div>
+              </div>
+
+              <div class="stat-card" :class="{ 'stat-warning': nextMaintenance?.isOverdue }">
+                <div class="stat-icon">
+                  <i class="fa fa-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Следующее ТО</span>
+                  <span class="stat-value">
+                    <template v-if="nextMaintenance">
+                      <span v-if="nextMaintenance.isOverdue" class="text-danger">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        {{ Math.round(nextMaintenance.distanceOverdue) }} км просрочено
+                      </span>
+                      <span v-else>
+                        через {{ Math.round(nextMaintenance.distanceToNext) }} км
+                      </span>
+                    </template>
+                    <span v-else class="text-muted">Все выполнены</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <i class="fa fa-ruble-sign"></i>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-label">Расходы на ТО</span>
+                  <span class="stat-value">{{ formatCost(maintenanceSpends) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-card">
+                <h4 class="detail-title">Характеристики</h4>
+                <div class="spec-list">
+                  <div class="spec-item">
+                    <span class="spec-label">Год выпуска</span>
+                    <span class="spec-value">{{ selectedMotorcycle.years }}</span>
+                  </div>
+                  <div class="spec-item">
+                    <span class="spec-label">Двигатель</span>
+                    <span class="spec-value">{{ selectedMotorcycle.volume }} см³</span>
+                  </div>
+                  <div class="spec-item">
+                    <span class="spec-label">Цвет</span>
+                    <span class="spec-value">
+                      <span class="color-dot" :style="{ background: selectedMotorcycle.color }"></span>
+                    </span>
+                  </div>
+                  <div class="spec-item">
+                    <span class="spec-label">Пробег</span>
+                    <span class="spec-value">{{ formatMileage(selectedMotorcycle.mileage) }}</span>
+                  </div>
+                  <div class="spec-item full" v-if="selectedMotorcycle.vin">
+                    <span class="spec-label">VIN</span>
+                    <span class="spec-value spec-code">{{ selectedMotorcycle.vin }}</span>
+                  </div>
+                  <div class="spec-item full" v-if="selectedMotorcycle.license_plate">
+                    <span class="spec-label">Гос. номер</span>
+                    <span class="spec-value spec-code">{{ selectedMotorcycle.license_plate }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card notes-card">
+                <div class="detail-header">
+                  <h4 class="detail-title">Заметки</h4>
+                  <button @click="showEditMotoNoteModal = true" class="icon-btn small" title="Редактировать заметку">
+                    <i class="fa fa-pen"></i>
+                  </button>
+                </div>
+                <div class="notes-content">
+                  <p v-if="selectedMotorcycle.note" class="notes-text">{{ selectedMotorcycle.note }}</p>
+                  <p v-else class="notes-empty">
+                    <i class="fa fa-pen"></i>
+                    Добавьте заметку о мотоцикле
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== ОБНОВЛЕНИЕ ПРОБЕГА ===== -->
+            <div v-if="selectedMotorcycle" class="sidebar-card mileage-card">
+              <div class="sidebar-card-header">
+                <i class="fa-solid fa-gauge-high"></i>
+                <h4>Пробег</h4>
+              </div>
+
+              <div class="mileage-display">
+                <div class="mileage-value">
+                  {{ formatMileage(selectedMotorcycle.mileage) }}
+                </div>
+                <div class="mileage-updated">
+                  <i class="fa fa-clock"></i>
+                  Обновлён {{ formatDate(selectedMotorcycle.updated_at || new Date()) }}
+                </div>
+              </div>
+
+              <div class="mileage-quick-add">
+                <span class="quick-add-label">Быстро добавить:</span>
+                <div class="quick-add-buttons">
+                  <button
+                    v-for="step in quickMileageSteps"
+                    :key="step"
+                    class="quick-add-btn"
+                    :disabled="mileageUpdating"
+                    @click="quickAddMileage(step)"
+                  >
+                    +{{ step }}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                class="btn-primary mileage-submit"
+                :disabled="mileageUpdating"
+                @click="openUpdateMileage(selectedMotorcycle)"
+              >
+                <i :class="mileageUpdating ? 'fa fa-spinner fa-spin' : 'fa fa-pen'"></i>
+                {{ mileageUpdating ? 'Обновление...' : 'Ввести точное значение' }}
+              </button>
+            </div>
+
+            <!-- Если мотоцикл не выбран -->
+            <div v-else class="sidebar-card mileage-card mileage-card-empty">
+              <div class="sidebar-card-header">
+                <i class="fa-solid fa-gauge-high"></i>
+                <h4>Пробег</h4>
+              </div>
+              <p class="mileage-empty-text">
+                <i class="fa fa-info-circle"></i>
+                Выберите мотоцикл, чтобы обновить пробег
+              </p>
+            </div>
+
+            <div class="maintenances-section">
+              <div class="section-header">
+                <div class="section-header-left">
+                  <i class="fa fa-wrench"></i>
+                  <h4>Последние обслуживания</h4>
+                </div>
+                <button @click="router.push('/maintenance')" class="btn-link">
+                  Все записи <i class="fa fa-arrow-right"></i>
+                </button>
+              </div>
+
+              <div v-if="recentMaintenances.length > 0" class="maintenances-list">
+                <div
+                  v-for="item in recentMaintenances"
+                  :key="item.id"
+                  class="maintenance-item"
+                  @click="openMaintenanceDetails(item)"
+                >
+                  <div class="maint-icon" :class="'maint-icon-' + item.status">
+                    <i class="fa fa-wrench"></i>
+                  </div>
+                  <div class="maint-info">
+                    <div class="maint-title">{{ item.title }}</div>
+                    <div class="maint-meta">
+                      <span>{{ formatDate(item.completed_date || item.planned_date) }}</span>
+                      <span class="dot">•</span>
+                      <span>{{ item.completed_mileage || item.planned_mileage || '—' }} км</span>
+                      <span class="dot">•</span>
+                      <span>{{ item.cost ? formatCost(item.cost) : '—' }}</span>
+                    </div>
+                  </div>
+                  <div class="maint-status">
+                    <span :class="'badge badge-' + getStatusBadgeVariant(item.status)">
+                      {{ getStatusLabel(item.status) }}
+                    </span>
+                    <i class="fa fa-chevron-right"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="empty-small">
+                <i class="fa fa-wrench"></i>
+                <p>Нет записей обслуживания</p>
+                <span class="hint">Перейдите в раздел "Обслуживание" чтобы добавить</span>
               </div>
             </div>
           </div>
 
-          <div v-else class="empty-small">
-            <i class="fa fa-wrench"></i>
-            <p>Нет записей обслуживания</p>
-            <span class="hint">Перейдите в раздел "Обслуживание" чтобы добавить</span>
-          </div>
+          <!-- ===== ДИАГНОСТИКА ===== -->
+          <section v-if="selectedMotorcycle" class="diagnostics-section">
+            <div class="section-header">
+              <div class="section-header-left">
+                <i class="fa fa-stethoscope"></i>
+                <h4>Диагностика</h4>
+              </div>
+            </div>
+
+            <p class="diag-title">Проведите онлайн-диагностику, указав симптомы</p>
+            <p class="diag-hint">Важно: результаты диагностики не являются профессиональными рекомендациями!</p>
+
+            <div class="diagnostics-actions">
+              <button @click="showDiagnosticsModal = true" class="diag-cta">
+                Провести онлайн-диагностику
+              </button>
+            </div>
+          </section>
+
+          <!-- ===== ПОЛЕЗНЫЕ СТАТЬИ ===== -->
+          <section class="articles-section">
+            <div class="section-header">
+              <div class="section-header-left">
+                <i class="fa fa-book-open"></i>
+                <h4>Полезные статьи</h4>
+              </div>
+            </div>
+
+            <div class="articles-grid">
+              <article
+                v-for="article in filteredArticles"
+                :key="article.id"
+                class="article-card"
+              >
+                <div class="article-cover" :class="'article-cover-' + article.tone">
+                  <i :class="article.icon"></i>
+                </div>
+                <div class="article-body">
+                  <span class="article-tag">{{ article.tag }}</span>
+                  <h5 class="article-title">{{ article.title }}</h5>
+                  <p class="article-excerpt">{{ article.excerpt }}</p>
+                  <div class="article-footer">
+                    <span class="article-time">
+                      <i class="fa fa-clock"></i>
+                      {{ article.readTime }} мин
+                    </span>
+                    <button class="btn-link small">Читать <i class="fa fa-arrow-right"></i></button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
         </div>
+
+        <!-- ===== ПРАВАЯ КОЛОНКА (САЙДБАР) ===== -->
+        <aside class="garage-sidebar">
+          <!-- ===== ЗАПИСЬ К МАСТЕРУ ===== -->
+          <div class="sidebar-card appointment-card">
+            <div class="sidebar-card-header">
+              <i class="fa fa-calendar-plus"></i>
+              <h4>Запись к мастеру</h4>
+            </div>
+
+            <div class="appointment-success">
+              <div class="success-icon">
+                <i class="fa fa-wrench"></i>
+              </div>
+              <p>Запишитесь к проверенному мастеру в вашем городе.</p>
+            </div>
+
+            <button
+              class="btn-primary appointment-submit"
+              @click="toast.info('Функция в разработке.')"
+            >
+              <i class="fa fa-paper-plane"></i>
+              Записаться
+            </button>
+          </div>
+
+          <!-- ===== СОВЕТ ДНЯ ===== -->
+          <div class="sidebar-card tip-card">
+            <div class="sidebar-card-header">
+              <i class="fa fa-lightbulb"></i>
+              <h4>Совет дня</h4>
+            </div>
+            <p class="tip-text">{{ dailyTip }}</p>
+            <button class="btn-link small" @click="refreshTip">
+              <i class="fa fa-rotate-right"></i>
+              Другой совет
+            </button>
+          </div>
+        </aside>
       </div>
     </div>
 
@@ -383,6 +535,12 @@
       @submit="handleMarkMaintenance"
       @close="showMarkModal = false"
     />
+
+    <DiagnosticsModal
+      :is-open="showDiagnosticsModal"
+      @close="showDiagnosticsModal = false"
+      @write-to-master="handleWriteToMasterFromDiagnostics"
+    />
   </div>
 </template>
 
@@ -406,6 +564,7 @@ import MaintenanceDetailsModal from '@/components/modals/maintenance/Maintenance
 import EditMaintenanceModal from '@/components/modals/maintenance/EditMaintenanceModal.vue'
 import DeleteMaintenanceModal from '@/components/modals/maintenance/DeleteMaintenanceModal.vue'
 import MarkPlanMaintenanceModal from '@/components/modals/maintenance/MarkPlanMaintenanceModal.vue'
+import DiagnosticsModal from '@/components/modals/diagnostics/DiagnosticsModal.vue'
 
 import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
@@ -454,12 +613,49 @@ const showUpdateMotoMileageModal = ref(false)
 const showEditMotoNoteModal = ref(false)
 const showPhotoModal = ref(false)
 const showQuickStartModal = ref(false)
+const showDiagnosticsModal = ref(false)
 
 // Maintenance modals
 const showDetailsMaintenanceModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const showMarkModal = ref(false)
+
+// ===== Mileage quick update =====
+const mileageUpdating = ref(false)
+const quickMileageSteps = [50, 100, 500, 1000]
+
+async function quickAddMileage(step) {
+  const moto = selectedMotorcycle.value
+  if (!moto?.id || mileageUpdating.value) return
+
+  mileageUpdating.value = true
+  try {
+    await motorcyclesStore.updateMileage(moto.id, moto.mileage + step || 0 + step)
+    await remindersStore.loadPending()
+    toast.success(`Пробег увеличен на ${step} км`)
+  } catch (err) {
+    console.error('Failed to update mileage:', err)
+    toast.error(err.response?.data?.error || 'Не удалось обновить пробег')
+  } finally {
+    mileageUpdating.value = false
+  }
+}
+
+// ===== Tips =====
+const tips = [
+  'Проверяйте давление в шинах раз в неделю — это влияет на управляемость и расход.',
+  'Мойте цепь перед смазкой — так смазка держится дольше.',
+  'Следите за уровнем антифриза перед длительными поездками.',
+  'Храните мотоцикл с полным баком — меньше конденсата в баке.',
+  'Проверяйте натяжение цепи каждые 500 км.',
+]
+const dailyTip = ref(tips[0])
+
+function refreshTip() {
+  const idx = Math.floor(Math.random() * tips.length)
+  dailyTip.value = tips[idx]
+}
 
 // ===== Lifecycle =====
 onMounted(async () => {
@@ -468,6 +664,7 @@ onMounted(async () => {
       motorcyclesStore.loadAll(),
       remindersStore.loadPending(),
     ])
+    refreshTip()
   } catch (err) {
     console.error('Failed to load garage data:', err)
     toast.error('Не удалось загрузить гараж')
@@ -490,8 +687,7 @@ function handleImageError(e) {
 // ===== Moto actions =====
 function openEditMoto(moto) {
   selectMotorcycle(moto)
-  showEditMotoModal.value = true
-}
+  showEditMotoModal.value = true}
 
 function openUpdateMileage(moto) {
   selectMotorcycle(moto)
@@ -671,9 +867,43 @@ function handleReminderAction(reminder) {
     router.push('/maintenance')
   }
 }
+
+
+function handleWriteToMasterFromDiagnostics() {
+  showDiagnosticsModal.value = false
+  document.querySelector('.appointment-card')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
 </script>
 
 <style scoped>
+/* ============================================
+   LAYOUT: MAIN + SIDEBAR
+   ============================================ */
+.garage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.garage-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.garage-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 24px;
+}
+
 /* ============================================
    QUICK START PROMO
    ============================================ */
@@ -685,7 +915,6 @@ function handleReminderAction(reminder) {
     background: linear-gradient(135deg, var(--accent-trans), rgba(139, 92, 246, 0.05));
     border: 2px solid var(--accent);
     border-radius: var(--radius-lg);
-    margin-bottom: 24px;
 }
 
 .promo-icon {
@@ -710,11 +939,6 @@ function handleReminderAction(reminder) {
 .promo-content { flex: 1; min-width: 0; }
 .promo-content h4 { margin: 0 0 4px; font-size: 16px; color: var(--text-primary); }
 .promo-content p { margin: 0; font-size: 14px; color: var(--text-secondary); }
-
-@media (max-width: 1020px) {
-    .quick-start-promo { flex-direction: column; text-align: center; }
-    .quick-start-promo .btn-primary { width: 100%; justify-content: center; }
-}
 
 /* ============================================
    REMINDERS BANNER
@@ -759,7 +983,6 @@ function handleReminderAction(reminder) {
     justify-content: center;
     font-size: 16px;
     flex-shrink: 0;
-    /* Перебиваем reset.scss, чтобы не растягивался до 44px */
     min-height: 40px;
 }
 
@@ -790,7 +1013,7 @@ function handleReminderAction(reminder) {
     font-weight: var(--fw-medium);
     transition: all var(--transition-base);
     white-space: nowrap;
-    min-height: 32px; /* компактнее глобального 44px */
+    min-height: 32px;
 }
 
 .reminder-btn.primary {
@@ -843,8 +1066,6 @@ function handleReminderAction(reminder) {
 /* ============================================
    MOTORCYCLES LIST
    ============================================ */
-.motorcycles-container { margin-bottom: 28px; }
-
 .motorcycles-list {
     display: flex;
     flex-direction: column;
@@ -1010,7 +1231,6 @@ function handleReminderAction(reminder) {
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-xl);
     text-align: center;
-    margin-bottom: var(--space-6);
     transition: all var(--transition-base);
 }
 .empty-state:hover { border-color: var(--border-color); }
@@ -1038,9 +1258,7 @@ function handleReminderAction(reminder) {
    DETAIL SECTION
    ============================================ */
 .moto-detail {
-    margin-top: 28px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border-light);
+    padding-top: 4px;
 }
 
 .stats-grid {
@@ -1198,7 +1416,6 @@ function handleReminderAction(reminder) {
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
     padding: 20px 24px;
-    margin-bottom: 24px;
 }
 
 .section-header {
@@ -1230,6 +1447,8 @@ function handleReminderAction(reminder) {
     min-height: 32px;
 }
 .btn-link:hover { color: var(--accent); gap: 10px; background: var(--accent-trans); }
+.btn-link:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-link.small { font-size: 12px; padding: 4px 8px; }
 
 .maintenances-list { display: flex; flex-direction: column; gap: 6px; }
 
@@ -1308,8 +1527,463 @@ function handleReminderAction(reminder) {
 .empty-small .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
 /* ============================================
+   DIAGNOSTICS
+   ============================================ */
+.diagnostics-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+}
+
+.diagnostics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.diagnostic-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    min-width: 0;
+}
+.diagnostic-card:hover { background: var(--bg-card-hover); }
+
+.diag-ok      { border-left-color: var(--success); }
+.diag-warning { border-left-color: var(--warning); }
+.diag-unknown { border-left-color: var(--text-muted); }
+
+.diag-icon {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+}
+.diag-ok .diag-icon      { background: var(--success-trans); color: var(--success-text); }
+.diag-warning .diag-icon { background: var(--warning-trans); color: var(--warning-text); }
+.diag-unknown .diag-icon { background: var(--border-light);   color: var(--text-muted); }
+
+.diag-body { flex: 1; min-width: 0; }
+.diag-title {
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    margin-bottom: 8px;
+}
+.diag-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.diag-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
+}
+.diag-badge-ok      { background: var(--success-trans); color: var(--success-text); }
+.diag-badge-warning { background: var(--warning-trans); color: var(--warning-text); }
+.diag-badge-unknown { background: var(--border-light);   color: var(--text-muted); }
+
+.diagnostics-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.diag-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    min-height: 40px;
+}
+.diag-cta:hover { background: var(--accent-trans); color: var(--text-primary); }
+
+/* ============================================
+   ARTICLES
+   ============================================ */
+.articles-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    display: none;
+}
+
+.articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.article-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+.article-card:hover {
+    border-color: var(--border-color);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.article-cover {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+.article-cover-accent  { background: var(--accent-trans);  color: var(--accent-text); }
+.article-cover-warning { background: var(--warning-trans); color: var(--warning-text); }
+.article-cover-success { background: var(--success-trans); color: var(--success-text); }
+
+.article-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+.article-tag {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-text);
+    background: var(--accent-trans);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
+
+.article-title {
+    font-size: 14px;
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: var(--leading-tight);
+}
+
+.article-excerpt {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: var(--leading-base);
+    flex: 1;
+}
+
+.article-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+}
+
+.article-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ============================================
+   SIDEBAR CARDS
+   ============================================ */
+.sidebar-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    transition: all var(--transition-base);
+}
+.sidebar-card:hover { border-color: var(--border-color); }
+
+.sidebar-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.sidebar-card-header i { color: var(--accent-text); font-size: 16px; }
+.sidebar-card-header h4 { font-size: 14px; font-weight: var(--fw-semibold); margin: 0; }
+
+/* --- Mileage card --- */
+.mileage-card { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+.mileage-display {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+.mileage-value {
+    font-size: 26px;
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+.mileage-updated {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.mileage-updated i { font-size: 10px; }
+
+.mileage-quick-add { display: flex; flex-direction: column; gap: 8px; }
+
+.quick-add-label {
+    font-size: 11px;
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+}
+
+.quick-add-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.quick-add-btn {
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    min-height: 36px;
+    font-family: var(--font-mono);
+}
+.quick-add-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-trans);
+    color: var(--accent-text);
+    transform: translateY(-1px);
+}
+.quick-add-btn:active:not(:disabled) { transform: translateY(0); }
+.quick-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mileage-submit {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all var(--transition-base);
+    min-height: 40px;
+}
+.mileage-submit:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+.mileage-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mileage-card-empty .mileage-empty-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+.mileage-card-empty .mileage-empty-text i { color: var(--text-muted); }
+
+/* Мобильная адаптация */
+@media (max-width: 400px) {
+    .quick-add-buttons { grid-template-columns: repeat(2, 1fr); }
+    .mileage-value { font-size: 22px; }
+}
+
+/* --- Appointment form --- */
+.appointment-form { display: flex; flex-direction: column; gap: 12px; }
+
+.appointment-field { display: flex; flex-direction: column; gap: 4px; }
+.appointment-field label {
+    font-size: 11px;
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-muted);
+}
+
+.appointment-input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+    transition: border var(--transition-base);
+    min-height: 38px;
+}
+.appointment-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+}
+
+.master-list { display: flex; flex-direction: column; gap: 4px; }
+
+.master-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: left;
+    min-height: 40px;
+}
+.master-chip:hover { border-color: var(--accent); }
+.master-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-trans);
+}
+
+.master-avatar {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: var(--fw-bold);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.master-info { display: flex; flex-direction: column; min-width: 0; }
+.master-name { font-size: 12px; font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.master-spec { font-size: 11px; color: var(--text-muted); }
+
+.appointment-submit {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all var(--transition-base);
+    min-height: 40px;
+}
+.appointment-submit:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+.appointment-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.appointment-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 8px 0;
+}
+.success-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--success-trans);
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+.appointment-success h5 { margin: 0; font-size: 15px; color: var(--text-primary); }
+.appointment-success p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.appointment-success .btn-outline {
+    margin-top: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+}
+.appointment-success .btn-outline:hover { border-color: var(--accent); color: var(--accent-text); }
+
+/* --- Tip card --- */
+.tip-card { display: flex; flex-direction: column; gap: 12px; }
+.tip-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+}
+
+/* ============================================
    ICON BUTTON
-   ВАЖНО: перебиваем глобальный min-height: 44px из reset.scss
    ============================================ */
 .icon-btn {
     display: inline-flex;
@@ -1337,11 +2011,12 @@ function handleReminderAction(reminder) {
 
 /* ============================================
    АДАПТИВ
-   Шкала: 1100 → 820 → 640 → 480 → 400
    ============================================ */
 
 /* --- Планшеты --- */
 @media (max-width: 1100px) {
+    .garage-layout { grid-template-columns: 1fr; }
+    .garage-sidebar { position: static; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -1350,11 +2025,23 @@ function handleReminderAction(reminder) {
     .stats-grid  { grid-template-columns: repeat(2, 1fr); }
     .quick-start-promo { flex-direction: column; text-align: center; }
     .quick-start-promo .btn-primary { width: 100%; justify-content: center; }
+    .stats-grid { display: flex; flex-direction: column; }
+
+    .maintenances-section,
+    .diagnostics-section,
+    .articles-section { padding: 14px 16px; }
+    .maintenance-item { padding: 10px 12px; gap: 10px; }
+    .maint-icon { width: 32px; height: 32px; min-height: 32px; font-size: 12px; }
+    .maint-title { font-size: 12px; }
+    .maint-meta { font-size: 11px; }
+    .maint-status i { display: none; }
+
+    .diagnostics-grid { grid-template-columns: 1fr 1fr; }
+    .articles-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* --- Мобильные (широкие) --- */
 @media (max-width: 640px) {
-    /* Напоминания */
     .reminder-item { flex-wrap: wrap; gap: 10px; }
     .reminder-body { flex-basis: calc(100% - 54px); }
     .reminder-text { white-space: normal; }
@@ -1366,50 +2053,49 @@ function handleReminderAction(reminder) {
     }
     .reminder-btn.primary { flex: 1; justify-content: center; }
 
-    /* Статистика гаража */
     .garage-stats { gap: 6px; }
     .stat-chip { width: 100%; font-size: 12px; padding: 6px 12px; }
 
-    /* Карточки статистики */
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .stat-card { padding: 12px 14px; gap: 10px; }
     .stat-icon { width: 36px; height: 36px; min-height: 36px; font-size: 15px; }
     .stat-value { font-size: 15px; }
 
-    /* Детали */
     .detail-card { padding: 14px 16px; }
     .spec-list { gap: 4px 12px; }
     .spec-value { font-size: 13px; }
 
-    /* Обслуживания */
     .maintenances-section { padding: 14px 16px; }
     .maintenance-item { padding: 10px 12px; gap: 10px; }
     .maint-icon { width: 32px; height: 32px; min-height: 32px; font-size: 12px; }
     .maint-title { font-size: 12px; }
     .maint-meta { font-size: 11px; }
-    .maint-status i { display: none; } /* стрелку убираем, badge и так понятен */
+    .maint-status i { display: none; }
 
-    /* Список мотоциклов */
     .moto-list-item { padding: 10px 12px; gap: 10px; }
     .moto-list-preview { width: 48px; height: 48px; }
     .moto-list-name { font-size: 14px; }
 
-    /* Действия НЕ переносим — держим справа от превью */
     .moto-list-actions { opacity: 1; gap: 0; }
     .icon-btn { width: 32px; height: 32px; min-height: 32px; font-size: 13px; }
 
-    /* Пустое состояние */
     .empty-state { padding: 40px 16px; }
     .empty-icon { width: 60px; height: 60px; font-size: 26px; }
     .empty-state h3 { font-size: 18px; }
 
-    /* Хедер секции */
     .section-header { gap: 8px; }
+    .article-filters { width: 100%; }
+    .article-filter-btn { flex: 1; text-align: center; }
+
+    .diagnostics-grid { grid-template-columns: 1fr; }
+    .articles-grid { grid-template-columns: 1fr; }
+
+    .diagnostics-actions { justify-content: stretch; }
+    .diag-cta { width: 100%; justify-content: center; }
 }
 
 /* --- Мобильные (узкие) --- */
 @media (max-width: 480px) {
-    /* Кнопки действий в списке — переносим вниз на всю ширину */
     .moto-list-item { flex-wrap: wrap; }
     .moto-card-wrapper { flex-basis: 100%; }
     .moto-list-actions {
@@ -1420,13 +2106,11 @@ function handleReminderAction(reminder) {
         opacity: 1;
     }
 
-    /* Промо */
     .quick-start-promo { padding: 16px; gap: 12px; }
     .promo-icon { width: 44px; height: 44px; font-size: 18px; }
     .promo-content h4 { font-size: 15px; }
     .promo-content p { font-size: 13px; }
 
-    /* Обслуживание: badge переносим под текст */
     .maintenance-item { flex-wrap: wrap; }
     .maint-info { flex-basis: calc(100% - 52px); }
     .maint-status {
@@ -1445,11 +2129,9 @@ function handleReminderAction(reminder) {
     .moto-list-volume { font-size: 11px; padding: 1px 10px; }
     .stat-card { padding: 10px 12px; }
 
-    /* Чипы статистики — компактнее */
     .stat-chip { padding: 6px 10px; font-size: 11px; }
     .stat-chip i { font-size: 12px; }
 
-    /* Кнопки действий — по 2 в ряд, чтобы не сжимались */
     .moto-list-actions { justify-content: space-between; }
     .icon-btn { width: 34px; height: 34px; min-height: 34px; }
 }
