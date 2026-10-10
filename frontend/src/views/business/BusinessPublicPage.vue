@@ -22,6 +22,29 @@
           <div v-if="account.city" class="public-city">
             <i class="fa fa-map-marker"></i> {{ account.city }}
           </div>
+
+          <BaseButton
+            v-if="isAuthenticated && !isOwner"
+            variant="primary"
+            icon="fa fa-calendar-plus"
+            class="public-book-btn"
+            @click="openBookingModal"
+          >
+            Записаться
+          </BaseButton>
+
+          <router-link
+            v-else-if="!isAuthenticated"
+            :to="{ name: 'login', query: { redirect: $route.fullPath } }"
+            class="public-book-btn login-cta"
+          >
+            <i class="fa fa-sign-in-alt"></i> Войдите, чтобы записаться
+          </router-link>
+
+          <p v-else class="public-book-btn owner-note">
+            <i class="fa fa-info-circle"></i> Это ваш бизнес-аккаунт
+          </p>
+
           <p v-if="account.description" class="public-desc">
             {{ account.description }}
           </p>
@@ -99,15 +122,27 @@
       <h3>Мастер не найден</h3>
     </div>
   </div>
+
+  <CreateBookingModal
+    v-if="account && isAuthenticated"
+    :is-open="showBookingModal"
+    :business="account"
+    :services="services"
+    :motorcycles="motorcyclesStore.items"
+    @close="showBookingModal = false"
+    @created="onBookingCreated"
+  />
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api/api'
-import { useServicesStore } from '@/stores'
+import { useServicesStore, useAuthStore, useBookingsStore, useMotorcyclesStore } from '@/stores'
 import { getBusinessLogoUrl } from '@/utils/mediaUrl'
+import { BaseButton } from '@/components/ui'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import CreateBookingModal from '../../components/modals/bookings/CreateBookingModal.vue'
 
 const route = useRoute()
 const loading = ref(true)
@@ -115,6 +150,14 @@ const account = ref(null)
 
 const servicesStore = useServicesStore()
 const services = computed(() => servicesStore.publicServices)
+
+const auth = useAuthStore()
+const bookingsStore = useBookingsStore()
+const motorcyclesStore = useMotorcyclesStore()
+
+const isAuthenticated = computed(() => auth.isAuthenticated)
+const isOwner = computed(() => auth.user?.id && auth.user.id === account.value?.owner_id)
+const showBookingModal = ref(false)
 
 onMounted(async () => {
   try {
@@ -129,6 +172,17 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+async function openBookingModal() {
+  if (!motorcyclesStore.items.length) {
+    try { await motorcyclesStore.loadAll() } catch {}
+  }
+  showBookingModal.value = true
+}
+
+function onBookingCreated() {
+  showBookingModal.value = false
+}
 
 function categoryIcon(c) {
   return {
@@ -260,6 +314,30 @@ function categoryIcon(c) {
   font-size: 14px;
   color: var(--text-primary);
   word-break: break-word;
+}
+
+.public-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: var(--fw-semibold);
+  font-size: 14px;
+  text-decoration: none;
+}
+.login-cta {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.login-cta:hover { border-color: var(--accent); color: var(--accent-text); }
+.owner-note {
+  color: var(--text-muted);
+  font-size: 13px;
+  background: transparent;
+  padding: 0;
 }
 
 .public-services {

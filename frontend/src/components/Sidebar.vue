@@ -24,86 +24,146 @@
 
         <!-- Пользовательская навигация -->
         <nav class="sidebar-nav">
-            <div v-if="!$route.path.startsWith('/admin')" class="user-nav">
+            <!-- Пользовательская навигация -->
+            <template v-if="!$route.path.startsWith('/admin')">
+                <!-- === ГАРАЖ === -->
+                <div class="nav-group">
+                <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">Гараж</p>
+
                 <router-link
                     to="/garage"
                     class="nav-link"
-                    :class="{ active: $route.path === '/garage' }"
+                    :class="{ active: isActive('/garage') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-motorcycle"></i>
-                    <span v-if="!isCollapsed || !isDesktop">Гараж</span>
+                    <span v-if="!isCollapsed || !isDesktop">Мой гараж</span>
                 </router-link>
+
                 <router-link
                     to="/maintenance"
                     class="nav-link"
-                    :class="{ active: $route.path === '/maintenance' }"
+                    :class="{ active: isActive('/maintenance') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-tools"></i>
                     <span v-if="!isCollapsed || !isDesktop">Обслуживание</span>
                 </router-link>
+
                 <router-link
-                    to="/repair"
+                    to="/bookings"
                     class="nav-link"
-                    :class="{ active: $route.path === '/repair' }"
+                    :class="{ active: isActive('/bookings') }"
                     @click="closeSidebar"
                 >
-                    <i class="fa fa-wrench"></i>
-                    <span v-if="!isCollapsed || !isDesktop">Ремонт</span>
+                    <i class="fa fa-calendar-check"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Мои заявки</span>
+                    <span
+                    v-if="myBookingsBadge > 0 && (!isCollapsed || !isDesktop)"
+                    class="nav-badge"
+                    >{{ myBookingsBadge }}</span>
                 </router-link>
+                </div>
+
+                <!-- === СООБЩЕСТВО === -->
+                <div class="nav-group">
+                <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">Сообщество</p>
+
+                <router-link
+                    to="/masters"
+                    class="nav-link"
+                    :class="{ active: isActive('/masters') }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-user-tie"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Мастера и СТО</span>
+                </router-link>
+
                 <router-link
                     to="/manuals"
                     class="nav-link"
-                    :class="{ active: $route.path === '/manuals' }"
+                    :class="{ active: isActive('/manuals') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-book"></i>
                     <span v-if="!isCollapsed || !isDesktop">Мануалы</span>
                 </router-link>
+
                 <router-link
                     to="/social"
                     class="nav-link"
-                    :class="{ active: $route.path === '/social' }"
+                    :class="{ active: isActive('/social') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-users"></i>
-                    <span>MotoSocial</span>
+                    <span v-if="!isCollapsed || !isDesktop">MotoSocial</span>
                 </router-link>
+                </div>
+
+                <!-- === МОЙ БИЗНЕС === (только если есть бизнес-аккаунт) -->
+                <div v-if="hasBusinessAccount" class="nav-group">
+                <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">Мой бизнес</p>
+
                 <router-link
                     to="/business"
                     class="nav-link"
-                    :class="{ active: $route.path === '/business' }"
+                    :class="{ active: isActive('/business', { exact: true }) }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-suitcase"></i>
                     <span v-if="!isCollapsed || !isDesktop">Кабинет бизнеса</span>
                 </router-link>
+
                 <router-link
-                    to="/profile"
+                    to="/business/clients"
                     class="nav-link"
-                    :class="{ active: $route.path === '/profile' }"
+                    :class="{ active: isActive('/business/clients') }"
                     @click="closeSidebar"
                 >
-                    <i class="fa fa-user"></i>
-                    <span v-if="!isCollapsed || !isDesktop">Профиль</span>
+                    <i class="fa fa-users"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Клиенты</span>
                 </router-link>
 
-                <!-- Админ-панель -->
+                <router-link
+                    to="/business/services"
+                    class="nav-link"
+                    :class="{ active: isActive('/business/services') }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-wrench"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Мои услуги</span>
+                </router-link>
+
+                <router-link
+                    to="/business/bookings"
+                    class="nav-link"
+                    :class="{ active: isActive('/business/bookings') }"
+                    @click="closeSidebar"
+                >
+                    <i class="fa fa-inbox"></i>
+                    <span v-if="!isCollapsed || !isDesktop">Заявки мастеру</span>
+                    <span
+                    v-if="pendingMasterBookings > 0 && (!isCollapsed || !isDesktop)"
+                    class="nav-badge"
+                    >{{ pendingMasterBookings }}</span>
+                </router-link>
+                </div>
+
+                <!-- === Админ-панель (для админа) === -->
                 <router-link
                     v-if="isAdmin"
                     to="/admin/panel"
                     class="nav-link admin-link"
-                    :class="{ active: $route.path === '/admin/panel' }"
+                    :class="{ active: isActive('/admin/panel') }"
                     @click="closeSidebar"
                 >
                     <i class="fa fa-shield"></i>
                     <span v-if="!isCollapsed || !isDesktop">Админ-панель</span>
                 </router-link>
-            </div>
+            </template>
 
             <!-- Админская навигация -->
-            <div v-if="$route.path.startsWith('/admin')" class="admin-nav">
+            <div v-else class="admin-nav">
                 <div class="admin-nav-group">
                     <p v-if="!isCollapsed || !isDesktop" class="nav-group-title">ГЛАВНАЯ</p>
                     <router-link
@@ -184,17 +244,29 @@
 
         <!-- Нижняя часть сайдбара -->
         <div class="sidebar-footer">
-            <button
-                v-if="!isDesktop"
+            <div v-if="!isDesktop" class="footer-row-mobile">
+                <button
                 class="theme-toggle"
                 @click="toggleTheme"
-                :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
-            >
+                :title="isDark ? 'Включить светлую тему' : 'Включить тёмную тему'"
+                >
                 <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
-            </button>
-            <button v-if="!isDesktop" @click="mobileNotif()" class="theme-toggle">
+                </button>
+                <button class="theme-toggle" @click="mobileNotif">
                 <i class="fa fa-bell"></i>
-            </button>
+                </button>
+            </div>
+
+            <router-link
+                to="/profile"
+                class="nav-link profile-link"
+                :class="{ active: isActive('/profile') }"
+                @click="closeSidebar"
+            >
+                <i class="fa fa-user"></i>
+                <span v-if="!isCollapsed || !isDesktop">Профиль</span>
+            </router-link>
+
             <button class="btn-logout-sidebar" @click="logout">
                 <i class="fa fa-sign-out"></i>
                 <span v-if="!isCollapsed || !isDesktop">Выйти</span>
@@ -207,6 +279,8 @@
 import api from '../api/api';
 import router from '../router';
 import { useAuthStore } from '../stores/auth';
+import { useBusinessStore } from '../stores/business'
+import { useBookingsStore } from '../stores/bookings'
 
 export default {
     data() {
@@ -214,17 +288,28 @@ export default {
             isSidebarOpen: false,
             isCollapsed: false,
             isDesktop: window.innerWidth > 770,
-            isDark: true
+            isDark: true,
+            myBookingsCount: 0,
+            pendingBookingsCount: 0,
         }
     },
 
     computed: {
         isAdmin() {
             return useAuthStore().isAdmin
-        }
+        },
+        hasBusinessAccount() {
+            return useBusinessStore().hasAccount
+        },
+        myBookingsBadge() {
+            return this.myBookingsCount
+        },
+        pendingMasterBookings() {
+            return this.pendingBookingsCount
+        },
     },
 
-    mounted() {
+    async mounted() {
         window.addEventListener('resize', this.handleResize);
 
         const savedTheme = localStorage.getItem('theme');
@@ -236,6 +321,16 @@ export default {
             this.isDark = prefersDark;
             document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
         }
+
+        const auth = useAuthStore()
+        if (auth.isAuthenticated) {
+            try {
+                const business = useBusinessStore()
+                await business.loadAccount()
+            } catch {
+            }
+            this.loadBadges()
+        }
     },
 
     beforeDestroy() {
@@ -243,6 +338,30 @@ export default {
     },
 
     methods: {
+        isActive(path, { exact = false } = {}) {
+            const current = this.$route.path
+            if (exact) return current === path
+            return current === path || current.startsWith(path + '/')
+        },
+
+        async loadBadges() {
+            const bookings = useBookingsStore()
+            try {
+                const mine = await bookings.loadMyBookings()
+                this.myBookingsCount = mine.filter(
+                    (b) => b.status === 'pending' || b.status === 'confirmed'
+                ).length
+
+                if (this.hasBusinessAccount) {
+                    const master = await bookings.loadMasterBookings()
+                    this.pendingBookingsCount = master.filter(
+                        (b) => b.status === 'pending'
+                    ).length
+                }
+            } catch {
+            }
+        },
+
         mobileNotif() {
             this.$router.push('/notifications')
             this.closeSidebar()
@@ -269,15 +388,10 @@ export default {
         },
 
         toggleTheme() {
-            this.isDark = !this.isDark;
-            const theme = this.isDark ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-
-            const icon = this.$el.querySelector('.theme-toggle i');
-            if (icon) {
-                icon.className = this.isDark ? 'fa fa-sun' : 'fa fa-moon';
-            }
+            this.isDark = !this.isDark
+            const theme = this.isDark ? 'dark' : 'light'
+            document.documentElement.setAttribute('data-theme', theme)
+            localStorage.setItem('theme', theme)
         },
 
         async logout() {
@@ -522,6 +636,96 @@ export default {
 @media (max-width: 770px) {
     .collapse-toggle {
         display: none !important;
+    }
+}
+
+/* === Группы навигации === */
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 14px;
+}
+
+.nav-group:last-child {
+    margin-bottom: 0;
+}
+
+.nav-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 0 4px 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.sidebar-collapsed .nav-group {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-collapsed .nav-group:last-child {
+    border-bottom: none;
+}
+
+/* === Бейджи === */
+.nav-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-full, 9999px);
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.nav-link.active .nav-badge {
+    background: #fff;
+    color: var(--accent);
+}
+
+/* === Футер === */
+.footer-row-mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.footer-row-mobile .theme-toggle {
+    margin-bottom: 0;
+}
+
+.profile-link {
+    margin-bottom: 8px;
+    /* чтобы не сливался с «Выйти» */
+}
+
+/* На мобильных группы не нужны — там вертикальный список короткий */
+@media (max-width: 770px) {
+    .nav-group {
+        margin-bottom: 8px;
+    }
+
+    .nav-group:not(:first-child)::before {
+        content: '';
+        display: block;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.05);
+        margin: 8px 0;
+    }
+
+    .nav-group-title {
+        margin-left: 4px;
     }
 }
 

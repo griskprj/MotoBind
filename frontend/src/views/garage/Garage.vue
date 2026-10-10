@@ -337,7 +337,7 @@
                 <h4>Я клиент у мастеров</h4>
               </div>
 
-              <div class="master-list-mini">
+              <div v-if="myMasters.length" class="master-list-mini">
                 <div
                   v-for="m in myMasters"
                   :key="m.client_id"
@@ -365,6 +365,14 @@
                   </div>
                 </div>
               </div>
+
+              <p v-else class="masters-empty-hint">
+                Вы ещё не записывались к мастерам
+              </p>
+
+              <router-link to="/masters" class="btn-outline discover-masters">
+                <i class="fa fa-search"></i> Найти мастера
+              </router-link>
             </div>
 
             <div class="maintenances-section">
@@ -466,13 +474,13 @@
               <p>Запишитесь к проверенному мастеру в вашем городе.</p>
             </div>
 
-            <button
+            <router-link
               class="btn-primary appointment-submit"
-              @click="toast.info('Функция в разработке.')"
+              to="/masters"
             >
-              <i class="fa fa-paper-plane"></i>
-              Записаться
-            </button>
+              <i class="fa fa-search"></i>
+              Найти мастера
+            </router-link>
           </div>
 
           <!-- ===== СОВЕТ ДНЯ ===== -->
@@ -1941,6 +1949,12 @@ function handleWriteToMasterFromDiagnostics() {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+}
+.masters-empty-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  text-align: center;
 }
 
 /* Мобильная адаптация */

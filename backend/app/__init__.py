@@ -90,6 +90,7 @@ def create_app(config_override=None):
 
     from app.api.admin import admin
     from app.api.auth import auth
+    from app.api.booking import booking
     from app.api.business import business
     from app.api.maintenance import maintenance
     from app.api.manuals import manual
@@ -113,5 +114,6 @@ def create_app(config_override=None):
     app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
     app.register_blueprint(business, url_prefix="/api/business")
     app.register_blueprint(services, url_prefix="/api/services")
+    app.register_blueprint(booking, url_prefix="/api/bookings")
 
     return app
