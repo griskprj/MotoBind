@@ -192,6 +192,42 @@ export default [
     },
   },
   {
+    path: '/bookings',
+    name: 'bookings',
+    component: () => import('../../views/Bookings.vue'),
+    meta: {
+      requiresAuth: true,
+      title: 'MotoBind - Мои заявки',
+      description: 'Записи к мастерам и станциям.',
+      showFooter: true,
+      showHeader: true,
+    },
+  },
+  {
+    path: '/business/bookings',
+    name: 'business-bookings',
+    component: () => import('../../views/business/BusinessBookings.vue'),
+    meta: {
+      requiresAuth: true,
+      title: 'MotoBind - Заявки',
+      description: 'Управление заявками.',
+      showFooter: true,
+      showHeader: true,
+    },
+  },
+  {
+    path: '/masters',
+    name: 'masters',
+    component: () => import('../../views/Masters.vue'),
+    meta: {
+      requiresAuth: true,
+      title: 'MotoBind - Мастера и СТО',
+      description: 'Каталог мастеров и станций. Найдите специалиста для обслуживания мотоцикла.',
+      showFooter: true,
+      showHeader: true,
+    },
+  },
+  {
     path: '/notifications',
     name: 'notifications',
     component: () => import('../../views/Notifications.vue'),

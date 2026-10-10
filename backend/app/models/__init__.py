@@ -12,6 +12,7 @@ from app.models.post_report import PostReport
 from app.models.reminder import Reminder
 from app.models.reports import Report
 from app.models.service import Service
+from app.models.service_booking import ServiceBooking
 from app.models.user import User
 
 __all__ = [
@@ -30,4 +31,6 @@ __all__ = [
     "BusinessAccount",
     "BusinessClient",
     "BusinessClientVehicle",
+    "Service",
+    "ServiceBooking",
 ]

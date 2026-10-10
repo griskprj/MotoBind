@@ -105,10 +105,10 @@
           </div>
 
           <div class="service-actions">
-            <button class="icon-btn" title="Редактировать" @click="openEditModal(s)">
+            <button class="outline-btn" title="Редактировать" @click="openEditModal(s)">
               <i class="fa fa-pen"></i>
             </button>
-            <button class="icon-btn danger" title="Удалить" @click="askDelete(s)">
+            <button class="btn-danger" title="Удалить" @click="askDelete(s)">
               <i class="fa fa-trash"></i>
             </button>
           </div>
@@ -442,6 +442,9 @@ function formatDuration(min) {
   justify-content: flex-end;
   border-top: 1px solid var(--border-light);
   padding-top: 10px;
+}
+.service-actions button {
+  width: 100%;
 }
 
 .empty-tab {

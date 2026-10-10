@@ -211,6 +211,15 @@
               </div>
               <i class="fa fa-chevron-right quick-arrow"></i>
             </router-link>
+
+            <router-link to="/business/bookings" class="quick-card">
+              <div class="quick-icon"><i class="fa fa-calendar-check"></i></div>
+              <div class="quick-body">
+                <div class="quick-title">Заявки</div>
+                <div class="quick-desc">Записи клиентов и их статусы</div>
+              </div>
+              <i class="fa fa-chevron-right quick-arrow"></i>
+            </router-link>
           </div>
         </main>
       </div>
@@ -673,6 +682,11 @@ async function copySlug() {
   letter-spacing: 0.4px;
 }
 
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .quick-actions h4 {
   font-size: 15px;
   margin: 0 0 12px;
