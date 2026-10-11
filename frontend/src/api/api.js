@@ -114,7 +114,7 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     if (
-      (error.response?.status === 401 || error.response?.status === 422) &&
+      (error.response?.status === 401) &&
       !originalRequest._retry &&
       !originalRequest.url?.includes('/auth/refresh')
     ) {
@@ -140,11 +140,19 @@ api.interceptors.response.use(
           refresh_token: refreshToken,
         })
 
-        const { access_token, refresh_token } = response.data
-        localStorage.setItem(TOKEN_KEY, access_token)
-        localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token)
+        const { access_token, refresh_token: newRefreshToken } = response.data
 
-        await syncStoreAfterRefresh(access_token, refresh_token)
+        if (!access_token) {
+          throw new Error('Refresh response has no access_token')
+        }
+
+        localStorage.setItem(TOKEN_KEY, access_token)
+
+        if (newRefreshToken) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken)
+        }
+
+        await syncStoreAfterRefresh(access_token, newRefreshToken || refreshToken)
 
         originalRequest.headers.Authorization = `Bearer ${access_token}`
         processQueue(null, access_token)

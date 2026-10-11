@@ -29,9 +29,11 @@ export const useAuthStore = defineStore('auth', () => {
     // ---- actions ----
     function setTokens(newAccess, newRefresh) {
         accessToken.value = newAccess
-        refreshToken.value = newRefresh
+        refreshToken.value = newRefresh ?? null
         localStorage.setItem(TOKEN_KEY, newAccess)
-        localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        if (newRefresh) {
+            localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        }
     }
 
     /**
@@ -40,7 +42,10 @@ export const useAuthStore = defineStore('auth', () => {
      */
     function setTokensFromRefresh(newAccess, newRefresh) {
         accessToken.value = newAccess
-        refreshToken.value = newRefresh
+        if (newRefresh) {
+            refreshToken.value = newRefresh
+            localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        }
     }
 
     function setUser(newUser) {
