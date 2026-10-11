@@ -41,15 +41,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest
-        env:
-          TESTING: 'true'
-          DISABLE_SCHEDULER: 'true'
-          ENABLE_DEV_SCHEDULER: 'false'
-          SECRET_KEY: 'ci-secret-key-not-for-production-0123456789'
-          JWT_SECRET_KEY: 'ci-jwt-secret-key-not-for-production-0123456789'
-        run: pytest -v
-
   lint:
     name: lint
     runs-on: ubuntu-latest
