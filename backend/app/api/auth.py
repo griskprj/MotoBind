@@ -3,23 +3,27 @@ Auth API — тонкие контроллеры.
 
 Вся бизнес-логика — в app/services/auth_service.py.
 """
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-
 from app.schemas.auth import (
-    LoginSchema, RefreshSchema, RegisterSchema,
-    LoginResponseSchema, RegisterResponseSchema,
-    RefreshResponseSchema, VerifyEmailResponseSchema,
-    UserResponseSchema, MessageResponseSchema,
-    CheckVerificationResponseSchema, CheckResetTokenResponseSchema,
+    CheckResetTokenResponseSchema,
+    LoginResponseSchema,
+    LoginSchema,
+    MessageResponseSchema,
+    RefreshResponseSchema,
+    RefreshSchema,
+    RegisterResponseSchema,
+    RegisterSchema,
+    UserResponseSchema,
 )
 from app.services.auth_service import AuthService
 from app.utils.helpers import get_current_user
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 
 auth = Blueprint("auth", __name__)
 
 
 # ---- Registration / Login ----
+
 
 @auth.route("/register", methods=["POST"])
 def register():
@@ -52,6 +56,7 @@ def login():
 
 # ---- Current user ----
 
+
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def get_me():
@@ -61,6 +66,7 @@ def get_me():
 
 
 # ---- Refresh / logout ----
+
 
 @auth.route("/refresh", methods=["POST"])
 def refresh():
@@ -78,52 +84,28 @@ def logout():
     """Выход из системы."""
     user = get_current_user()
     AuthService.logout(user)
-    return jsonify(MessageResponseSchema(message="Успешно вышли из системы").model_dump()), 200
-
-
-# ---- Email verification ----
-
-@auth.route("/send-verification", methods=["POST"])
-@jwt_required()
-def send_verification():
-    """Отправить письмо с подтверждением."""
-    user = get_current_user()
-    message = AuthService.send_verification(user)
-    return jsonify(MessageResponseSchema(message=message).model_dump()), 200
-
-
-@auth.route("/verify-email/<token>", methods=["GET"])
-def verify_email(token):
-    """Подтверждение email по токену."""
-    result = AuthService.verify_email(token=token)
-    return jsonify(VerifyEmailResponseSchema.model_validate(result).model_dump()), 200
-
-
-@auth.route("/resend-verification", methods=["POST"])
-@jwt_required()
-def resend_verification():
-    """Отправить письмо повторно."""
-    user = get_current_user()
-    message = AuthService.send_verification(user)
-    return jsonify(MessageResponseSchema(message=message).model_dump()), 200
-
-
-@auth.route("/check-verification", methods=["GET"])
-@jwt_required()
-def check_verification():
-    """Проверить, подтверждён ли email."""
-    user = get_current_user()
-    return jsonify(CheckVerificationResponseSchema(is_verified=user.is_verified).model_dump()), 200
+    return (
+        jsonify(MessageResponseSchema(message="Успешно вышли из системы").model_dump()),
+        200,
+    )
 
 
 # ---- Password reset ----
+
 
 @auth.route("/forgot-password", methods=["POST"])
 def forgot_password():
     """Запрос на сброс пароля."""
     data = request.get_json() or {}
     AuthService.forgot_password(email=data.get("email"))
-    return jsonify(MessageResponseSchema(message="Если такой email существует, письмо будет отправлено").model_dump()), 200
+    return (
+        jsonify(
+            MessageResponseSchema(
+                message="Если такой email существует, письмо будет отправлено"
+            ).model_dump()
+        ),
+        200,
+    )
 
 
 @auth.route("/reset-password", methods=["POST"])
@@ -134,11 +116,17 @@ def reset_password():
         token=data.get("token"),
         new_password=data.get("new_password"),
     )
-    return jsonify(MessageResponseSchema(message="Пароль успешно изменен").model_dump()), 200
+    return (
+        jsonify(MessageResponseSchema(message="Пароль успешно изменен").model_dump()),
+        200,
+    )
 
 
 @auth.route("/check-reset-token/<token>", methods=["GET"])
 def check_reset_token(token):
     """Проверка валидности reset-токена."""
     email = AuthService.check_reset_token(token=token)
-    return jsonify(CheckResetTokenResponseSchema(valid=True, email=email).model_dump()), 200
+    return (
+        jsonify(CheckResetTokenResponseSchema(valid=True, email=email).model_dump()),
+        200,
+    )

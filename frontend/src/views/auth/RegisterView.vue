@@ -352,13 +352,6 @@
       </div>
     </div>
   </div>
-
-  <VerificationModal
-    :isOpen="showVerificationModal"
-    :email="formData.email"
-    @verified="onVerified"
-    @close="onVerificationClosed"
-  />
 </template>
 
 <script setup>
@@ -367,7 +360,6 @@ import { useRouter } from 'vue-router'
 import { BaseButton } from '@/components/ui'
 import { useAuthStore } from '@/stores'
 import api from '@/api/api'
-import VerificationModal from '@/components/modals/VerificationModal.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -397,9 +389,6 @@ const formData = reactive({
 const error = ref(null)
 const loading = ref(false)
 const skipMotorcycleMode = ref(false)
-
-const showVerificationModal = ref(false)
-const pendingUser = ref(null)
 
 const fileInput = ref(null)
 
@@ -478,20 +467,6 @@ function getParticleStyle(index) {
   }
 }
 
-function onVerified() {
-  showVerificationModal.value = false
-  router.push('/garage')
-}
-
-function onVerificationClosed() {
-  showVerificationModal.value = false
-  if (auth.isAuthenticated) {
-    router.push('/garage')
-  } else {
-    router.push('/login')
-  }
-}
-
 async function finishRegistration() {
   error.value = null
   loading.value = true
@@ -513,11 +488,6 @@ async function finishRegistration() {
 
     auth.setTokens(access_token, refresh_token)
     auth.setUser(user)
-
-    if (requires_verification) {
-      showVerificationModal.value = true
-      pendingUser.value = user
-    }
 
     let motoId = null
     if (!skipMotorcycleMode.value && formData.motorcycle.name) {
@@ -561,9 +531,7 @@ async function finishRegistration() {
 
     const role = user.role || formData.role
     const targetRoute = role === 'admin' ? '/admin/panel' : '/garage'
-    if (!requires_verification) {
-      router.push(targetRoute)
-    }
+    router.push(targetRoute)
   } catch (err) {
     if (err.response?.data?.detail) {
       const details = err.response.data.detail

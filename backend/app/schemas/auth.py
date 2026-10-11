@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas.mixins import ISO8601Mixin
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
 
 class RegisterSchema(BaseModel):
     email: EmailStr
@@ -23,12 +24,14 @@ class RefreshSchema(BaseModel):
 
 # --------- Response-схемы ---------
 
+
 class UserResponseSchema(ISO8601Mixin, BaseModel):
     """
     Схема пользоавтеля в ответах auth.
 
     Поля совпадают с User.to_dict() (без include_moto, без include_stats).
     """
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -53,6 +56,7 @@ class UserResponseSchema(ISO8601Mixin, BaseModel):
 
 class LoginResponseSchema(BaseModel):
     """Ответ POST /api/auth/login."""
+
     message: str
     access_token: str
     refresh_token: Optional[str] = None
@@ -61,38 +65,29 @@ class LoginResponseSchema(BaseModel):
 
 class RegisterResponseSchema(BaseModel):
     """Ответ POST /api/auth/register."""
+
     message: str
     access_token: str
     refresh_token: str
     user: UserResponseSchema
-    requires_verification: bool = True
+    requires_verification: bool = False
 
 
 class RefreshResponseSchema(BaseModel):
     """Ответ POST /api/auth/refresh."""
+
     access_token: str
     refresh_token: str
 
 
-class VerifyEmailResponseSchema(BaseModel):
-    """Ответ GET /api/auth/verify-email/<token>."""
-    message: str
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
-    user: Optional[UserResponseSchema] = None
-
-
 class MessageResponseSchema(BaseModel):
     """Универсальный ответ с message (logout, send-verification, forgot-password, reset-password)."""
+
     message: str
-
-
-class CheckVerificationResponseSchema(BaseModel):
-    """Ответ GET /api/auth/check-verification."""
-    is_verified: bool
 
 
 class CheckResetTokenResponseSchema(BaseModel):
     """Ответ GET /api/auth/check-reset-token/<token>."""
+
     valid: bool
     email: Optional[str] = None
