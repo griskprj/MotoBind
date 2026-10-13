@@ -43,7 +43,7 @@ import { reactive, ref, watch } from 'vue'
 import type { FormInst, FormRules } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { useUserStore, useAuthStore } from '@/stores'
-import { useToast } from '@/shared/composables/useToast'
+import { useToast } from '@/composables/useToast'
 import { AppButton, AppModal } from '@/shared/ui'
 
 const props = defineProps<{ isOpen: boolean }>()
