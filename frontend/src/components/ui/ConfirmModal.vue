@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import ModalWrapper from '../modals/ModalWrapper.vue'
+import ModalWrapper from '@/components/modals/ModalWrapper.vue'
 import { BaseButton } from '../ui'
 
 defineProps({

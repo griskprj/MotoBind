@@ -1,92 +1,70 @@
 <template>
-  <BaseModal
+  <AppModal
     :is-open="isOpen"
     title="Смена пароля"
     subtitle="Для безопасности используйте надёжный пароль"
     icon="lock"
-    variant="default"
-    size="md"
     @close="close"
   >
-    <form @submit.prevent="submit" class="form-stack">
-      <BaseInput
-        v-model="form.currentPassword"
-        type="password"
-        label="Текущий пароль"
-        placeholder="Введите текущий пароль"
-        autocomplete="current-password"
-        required
-      />
+    <n-form ref="formRef" :model="form" :rules="rules">
+      <n-form-item path="currentPassword" label="Текущий пароль">
+        <n-input
+          v-model:value="form.currentPassword"
+          type="password"
+          show-password-on="click"
+          placeholder="Введите текущий пароль"
+        />
+      </n-form-item>
 
-      <BaseInput
-        v-model="form.newPassword"
-        type="password"
-        label="Новый пароль"
-        placeholder="Введите новый пароль"
-        autocomplete="new-password"
-        required
-      />
+      <n-form-item path="newPassword" label="Новый пароль">
+        <n-input
+          v-model:value="form.newPassword"
+          type="password"
+          show-password-on="click"
+          placeholder="Введите новый пароль"
+        />
+      </n-form-item>
 
-      <BaseInput
-        v-model="form.repeatPassword"
-        type="password"
-        label="Повторите новый пароль"
-        placeholder="Повторите новый пароль"
-        autocomplete="new-password"
-        :error="repeatError"
-        required
-      />
+      <n-form-item path="repeatPassword" label="Повторите новый пароль">
+        <n-input
+          v-model:value="form.repeatPassword"
+          type="password"
+          show-password-on="click"
+          placeholder="Повторите новый пароль"
+        />
+      </n-form-item>
 
-      <div class="modal-info-block info">
-        <div class="modal-info-icon">
-          <i class="fa fa-shield-alt"></i>
-        </div>
-        <div>
-          <p class="modal-info-text">
-            <strong>Рекомендации по созданию надёжного пароля:</strong>
-          </p>
-          <ul class="password-tips">
-            <li>Минимум 8 символов</li>
-            <li>Используйте буквы в разных регистрах</li>
-            <li>Добавьте цифры и специальные символы</li>
-            <li>Не используйте личную информацию</li>
-          </ul>
-        </div>
-      </div>
-    </form>
+      <n-alert type="info" :bordered="false" title="Рекомендации:">
+        <ul class="password-tips">
+          <li>Минимум 8 символов</li>
+          <li>Буквы в разных регистрах</li>
+          <li>Цифры и специальные символы</li>
+        </ul>
+      </n-alert>
+    </n-form>
 
     <template #actions>
-      <BaseButton variant="secondary" block type="button" @click="close">
-        Отменить
-      </BaseButton>
-      <BaseButton
-        variant="primary"
-        icon="fa fa-key"
-        block
-        type="submit"
-        :disabled="!isFormValid"
-        :loading="loading"
-        @click="submit"
-      >
+      <AppButton variant="secondary" block @click="close">Отменить</AppButton>
+      <AppButton variant="primary" block :loading="loading" @click="submit">
         Изменить пароль
-      </BaseButton>
+      </AppButton>
     </template>
-  </BaseModal>
+  </AppModal>
 </template>
 
-<script setup>
-import { computed, reactive, ref, watch } from 'vue'
-import { BaseModal, BaseButton, BaseInput } from '@/components/ui'
-import { useToast } from '@/composables/useToast'
+<script setup lang="ts">
+import { reactive, ref, watch } from 'vue'
+import type { FormInst, FormRules } from 'naive-ui'
 import { useUserStore } from '@/stores'
+import { useToast } from '@/shared/composables/useToast'
+import { AppButton, AppModal } from '@/shared/ui'
 
-const props = defineProps({
-  isOpen: { type: Boolean, required: true, default: false },
-})
+const props = defineProps<{ isOpen: boolean }>()
+const emit = defineEmits<{ close: [] }>()
 
-const emit = defineEmits(['close'])
 const toast = useToast()
 const userStore = useUserStore()
+const formRef = ref<FormInst | null>(null)
 
 const form = reactive({
   currentPassword: '',
@@ -94,25 +72,27 @@ const form = reactive({
   repeatPassword: '',
 })
 
+const rules: FormRules = {
+  currentPassword: [
+    { required: true, message: 'Введите текущий пароль', trigger: 'blur' },
+  ],
+  newPassword: [
+    { required: true, message: 'Введите новый пароль', trigger: 'blur' },
+    { min: 6, message: 'Минимум 6 символов', trigger: 'blur' },
+  ],
+  repeatPassword: [
+    { required: true, message: 'Повторите пароль', trigger: 'blur' },
+    {
+      validator: (_rule, value) => {
+        if (value !== form.newPassword) return new Error('Пароли не совпадают')
+        return true
+      },
+      trigger: ['blur', 'password-change'],
+    },
+  ],
+}
+
 const loading = ref(false)
-
-const repeatError = computed(() => {
-  if (!form.repeatPassword) return ''
-  if (form.newPassword !== form.repeatPassword) return 'Пароли не совпадают'
-  return ''
-})
-
-const isFormValid = computed(() => {
-  return (
-    form.currentPassword &&
-    form.currentPassword.length >= 6 &&
-    form.newPassword &&
-    form.newPassword.length >= 6 &&
-    form.repeatPassword &&
-    form.newPassword === form.repeatPassword &&
-    form.newPassword !== form.currentPassword
-  )
-})
 
 watch(
   () => props.isOpen,
@@ -134,18 +114,12 @@ function close() {
 }
 
 async function submit() {
-  if (!form.currentPassword) {
-    toast.error('Введите текущий пароль')
+  try {
+    await formRef.value?.validate()
+  } catch {
     return
   }
-  if (!form.newPassword || form.newPassword.length < 6) {
-    toast.error('Новый пароль должен содержать минимум 6 символов')
-    return
-  }
-  if (form.newPassword !== form.repeatPassword) {
-    toast.error('Новые пароли не совпадают')
-    return
-  }
+
   if (form.newPassword === form.currentPassword) {
     toast.error('Новый пароль должен отличаться от текущего')
     return
@@ -159,10 +133,9 @@ async function submit() {
     })
     resetForm()
     emit('close')
-    toast.success('Пароль успешно изменён')
-  } catch (err) {
-    console.error('Failed to change password:', err)
-    toast.error(err.response?.data?.message || 'Ошибка при смене пароля')
+    toast.success('Пароль изменён')
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Ошибка смены пароля')
   } finally {
     loading.value = false
   }
@@ -170,65 +143,10 @@ async function submit() {
 </script>
 
 <style scoped>
-.form-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal-info-block {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-}
-
-.modal-info-block.info {
-  background: var(--accent-trans);
-  border: 1px solid var(--accent-light);
-}
-
-.modal-info-icon {
-  font-size: 18px;
-  color: var(--accent-text);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.modal-info-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0 0 4px 0;
-  line-height: 1.5;
-}
-
 .password-tips {
-  margin: 4px 0 0 0;
+  margin: 4px 0 0;
   padding-left: 20px;
-  color: var(--text-muted);
   font-size: 13px;
   line-height: 1.8;
-}
-
-.password-tips li {
-  list-style-type: disc;
-}
-
-@media (max-width: 640px) {
-  .modal-info-block {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .modal-info-icon {
-    margin-top: 0;
-  }
-
-  .password-tips {
-    text-align: left;
-    padding-left: 16px;
-  }
 }
 </style>

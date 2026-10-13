@@ -1,561 +1,179 @@
 <template>
-  <div class="register-wizard-container">
-    <div class="wizard-card animate-slide-in">
-      <div class="background-image"></div>
-
-      <div class="background-overlay"></div>
-
-      <div class="progress-section">
-        <div class="step-indicator">{{ currentStep }} из {{ totalSteps }}</div>
-        <div class="progress-bar">
-          <div
-            class="progress-fill"
-            :style="{ width: progressPercent + '%' }"
-          ></div>
-        </div>
+  <div class="register-page">
+    <BaseCard class="register-card">
+      <div class="register-header">
+        <i class="fa fa-motorcycle" />
+        <h1>Регистрация в MotoBind</h1>
+        <p>Создайте аккаунт, чтобы начать вести учёт обслуживания</p>
       </div>
 
-      <div class="step-content">
-        <!-- Шаг 7 -->
-        <div v-if="currentStep === 7" class="step completion-step">
-          <div class="completion-glow"></div>
+      <form @submit.prevent="submit" class="form-group">
+        <BaseInput
+          v-model="values.username"
+          label="Имя пользователя"
+          type="text"
+          placeholder="Как к вам обращаться"
+          autocomplete="username"
+          required
+          :error="errors.username"
+          @blur="validateNow"
+        />
 
-          <div class="particles-container">
-            <div
-              v-for="i in 40"
-              :key="i"
-              class="particle"
-              :style="getParticleStyle(i)"
-            ></div>
-          </div>
+        <BaseInput
+          v-model="values.email"
+          label="Email"
+          type="email"
+          placeholder="motorcycle@moto.com"
+          autocomplete="email"
+          required
+          :error="errors.email"
+          @blur="validateNow"
+          class="field-gap "
+        />
 
-          <div class="blur-blobs">
-            <div class="blob blob-1"></div>
-            <div class="blob blob-2"></div>
-            <div class="blob blob-3"></div>
-          </div>
+        <BaseInput
+          v-model="values.password"
+          label="Пароль"
+          type="password"
+          placeholder="Минимум 6 символов"
+          autocomplete="new-password"
+          required
+          :error="errors.password"
+          @blur="validateNow"
+          class="field-gap"
+        />
 
-          <div class="completion-icon">
-            <i class="fa fa-check-circle"></i>
-          </div>
-          <h2 class="step-title">Вы всё настроили!</h2>
-          <p class="step-subtitle">
-            Ваш мотоцикл добавлен. Теперь вы можете вести учет обслуживания и
-            получать напоминания о ТО.
-          </p>
+        <BaseInput
+          v-model="values.confirmPassword"
+          label="Подтверждение пароля"
+          type="password"
+          placeholder="Повторите пароль"
+          autocomplete="new-password"
+          required
+          :error="errors.confirmPassword"
+          @blur="validateNow"
+          class="field-gap"
+        />
 
-          <div class="step-actions">
-            <BaseButton
-              variant="primary"
-              :loading="loading"
-              @click="finishRegistration"
-            >
-              Перейти в приложение
-            </BaseButton>
-          </div>
+        <div class="agree-wrap" :class="{ 'has-error': errors.agree }">
+          <label class="agree-checkbox">
+            <input v-model="values.agree" type="checkbox">
+            <span>
+              Я согласен с
+              <router-link to="/rules" target="_blank">правилами сервиса</router-link>
+              и
+              <router-link to="/privacy" target="_blank">политикой конфиденциальности</router-link>
+            </span>
+          </label>
+          <p v-if="errors.agree" class="agree-error">{{ errors.agree }}</p>
         </div>
 
-        <!-- Шаг 1 -->
-        <div v-else-if="currentStep === 1" class="step">
-          <h2 class="step-title">Выберите, что вас описывает</h2>
-          <p class="step-subtitle">Мы настроим приложение под ваши задачи.</p>
+        <BaseButton
+          variant="primary"
+          type="submit"
+          block
+          :loading="loading"
+          class="submit-btn"
+        >
+          Зарегистрироваться
+        </BaseButton>
+      </form>
 
-          <div class="role-cards">
-            <div
-              class="role-card"
-              :class="{ selected: formData.role === 'motorcyclist' }"
-              @click="selectRole('motorcyclist')"
-            >
-              <div class="role-icon">
-                <i class="fa fa-motorcycle"></i>
-              </div>
-              <div class="role-info">
-                <h3>Я владелец мотоцикла</h3>
-                <p>Хочу вести учет обслуживания своего мотоцикла.</p>
-              </div>
-              <div class="role-check" v-if="formData.role === 'motorcyclist'">
-                <i class="fa fa-check-circle"></i>
-              </div>
-            </div>
-
-            <div
-              class="role-card"
-              :class="{ selected: formData.role === 'motoclub' }"
-              @click="error = 'Эта роль находится в разработке'"
-            >
-              <div class="role-icon">
-                <i class="fa fa-store"></i>
-              </div>
-              <div class="role-info">
-                <h3>Я представляю сервис</h3>
-                <p>Хочу управлять мотоциклами клиентов.</p>
-              </div>
-              <div class="role-check" v-if="formData.role === 'motoclub'">
-                <i class="fa fa-check-circle"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="router.push('/welcome')">
-              Отмена
-            </BaseButton>
-            <BaseButton
-              variant="primary"
-              :disabled="!formData.role"
-              @click="nextStep"
-            >
-              Продолжить
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Шаг 2 -->
-        <div v-else-if="currentStep === 2" class="step">
-          <h2 class="step-title">Давайте познакомимся</h2>
-          <p class="step-subtitle">Это поможет сделать MotoBind удобнее для вас.</p>
-
-          <div class="form-group">
-            <label for="username">
-              <i class="fa fa-user"></i> Как к вам обращаться?
-            </label>
-            <input
-              id="username"
-              v-model="formData.username"
-              type="text"
-              placeholder="Ваше имя"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="email">
-              <i class="fa fa-envelope"></i> Email
-            </label>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              placeholder="motorcycle@moto.com"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">
-              <i class="fa fa-lock"></i> Пароль
-            </label>
-            <input
-              id="password"
-              v-model="formData.password"
-              type="password"
-              placeholder="Минимум 6 символов"
-              required
-            />
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
-            <BaseButton
-              variant="primary"
-              :disabled="!isStep2Valid"
-              @click="nextStep"
-            >
-              Продолжить
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Шаг 3 -->
-        <div v-else-if="currentStep === 3" class="step">
-          <h2 class="step-title">Добавьте свой первый мотоцикл</h2>
-          <p class="step-subtitle">
-            Начнем с основного мотоцикла. Потом можно добавить еще.
-          </p>
-
-          <div class="empty-moto-card">
-            <i class="fa fa-motorcycle empty-icon"></i>
-            <h3>Мотоциклов пока нет</h3>
-            <p>Добавьте свой мотоцикл, чтобы начать вести учет обслуживания.</p>
-            <BaseButton variant="primary" @click="addMotorcycle">
-              Добавить мотоцикл
-            </BaseButton>
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
-            <BaseButton variant="outline" @click="skipMotorcycle">
-              Добавить позже
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Шаг 4 -->
-        <div v-else-if="currentStep === 4" class="step">
-          <h2 class="step-title">Добавление мотоцикла</h2>
-
-          <div class="form-group">
-            <label for="motoName">Название <span class="required">*</span></label>
-            <input
-              id="motoName"
-              v-model="formData.motorcycle.name"
-              type="text"
-              placeholder="Например: Honda CBR600RR"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="motoYear">Год выпуска</label>
-            <input
-              id="motoYear"
-              v-model.number="formData.motorcycle.years"
-              type="number"
-              placeholder="2020"
-              min="1900"
-              :max="currentYear"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="motoVolume">Объем двигателя (см³)</label>
-            <input
-              id="motoVolume"
-              v-model.number="formData.motorcycle.volume"
-              type="number"
-              placeholder="600"
-              min="49"
-              max="4000"
-            />
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
-            <BaseButton
-              variant="primary"
-              :disabled="!formData.motorcycle.name"
-              @click="nextStep"
-            >
-              Продолжить
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Шаг 5 -->
-        <div v-else-if="currentStep === 5" class="step">
-          <h2 class="step-title">Добавление мотоцикла</h2>
-
-          <div class="form-group">
-            <label for="motoColor">Цвет</label>
-            <input
-              id="motoColor"
-              v-model="formData.motorcycle.color"
-              type="color"
-              value="#8B5CF6"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="motoMileage">Пробег (км)</label>
-            <input
-              id="motoMileage"
-              v-model.number="formData.motorcycle.mileage"
-              type="number"
-              placeholder="0"
-              min="0"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="motoPlate">Гос номер (необязательно)</label>
-            <input
-              id="motoPlate"
-              v-model="formData.motorcycle.licensePlate"
-              type="text"
-              placeholder="A123BC"
-            />
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
-            <BaseButton variant="primary" @click="nextStep">
-              Продолжить
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Шаг 6 -->
-        <div v-else-if="currentStep === 6" class="step">
-          <h2 class="step-title">Добавление мотоцикла</h2>
-
-          <div class="form-group">
-            <label for="motoVin">VIN (необязательно)</label>
-            <input
-              id="motoVin"
-              v-model="formData.motorcycle.vin"
-              type="text"
-              placeholder="17 символов"
-              maxlength="17"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="motoNote">Заметки (необязательно)</label>
-            <textarea
-              id="motoNote"
-              v-model="formData.motorcycle.note"
-              rows="3"
-              placeholder="Дополнительная информация"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Фото мотоцикла</label>
-            <div class="upload-card" @click="fileInput?.click()">
-              <div class="upload-icon">
-                <i class="fa fa-cloud-upload-alt"></i>
-              </div>
-              <div class="upload-info">
-                <p>Добавить фото мотоцикла</p>
-                <span>JPG, webp до 10 МБ</span>
-              </div>
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                @change="handleFileUpload"
-                style="display: none"
-              />
-            </div>
-            <div v-if="formData.motorcycle.photo" class="photo-preview">
-              <img :src="formData.motorcycle.photo" alt="Мотоцикл" />
-              <BaseButton
-                variant="danger"
-                size="sm"
-                icon="fa fa-times"
-                @click="removePhoto"
-              />
-            </div>
-          </div>
-
-          <div class="step-actions">
-            <BaseButton variant="secondary" @click="prevStep">Назад</BaseButton>
-            <BaseButton variant="primary" @click="nextStep">
-              Сохранить мотоцикл
-            </BaseButton>
-          </div>
-        </div>
+      <div class="register-footer">
+        <span>Уже есть аккаунт?</span>
+        <router-link to="/login">Войти</router-link>
       </div>
-
-      <div v-if="error" class="error-message">
-        <i class="fa fa-exclamation-circle"></i> {{ error }}
-      </div>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { BaseButton } from '@/components/ui'
 import { useAuthStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import { useForm } from '@/composables/useForm'
+import { BaseButton, BaseCard, BaseInput } from '@/components/ui'
 import api from '@/api/api'
 
 const router = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 
-const currentStep = ref(1)
-const totalSteps = 7
-const currentYear = new Date().getFullYear()
+const { values, errors, loading, validateNow, submit: submitForm } = useForm({
+  initial: {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agree: false,
+  },
+  validate: (v) => {
+    const errs = {}
+    if (!v.username) errs.username = 'Введите имя'
+    else if (v.username.length < 2 || v.username.length > 32) {
+      errs.username = 'От 2 до 32 символов'
+    }
 
-const formData = reactive({
-  role: '',
-  username: '',
-  email: '',
-  password: '',
-  motorcycle: {
-    name: '',
-    years: null,
-    volume: null,
-    color: '#8B5CF6',
-    mileage: null,
-    licensePlate: '',
-    vin: '',
-    note: '',
-    photo: null,
+    if (!v.email) errs.email = 'Введите email'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) {
+      errs.email = 'Некорректный email'
+    }
+
+    if (!v.password) errs.password = 'Введите пароль'
+    else if (v.password.length < 6) {
+      errs.password = 'Минимум 6 символов'
+    }
+
+    if (!v.confirmPassword) {
+      errs.confirmPassword = 'Повторите пароль'
+    } else if (v.confirmPassword !== v.password) {
+      errs.confirmPassword = 'Пароли не совпадают'
+    }
+
+    if (!v.agree) {
+      errs.agree = 'Необходимо согласие с правилами'
+    }
+
+    return errs
+  },
+  onSubmit: async (v) => {
+    const { data } = await api.post('/auth/register', {
+      email: v.email,
+      username: v.username,
+      password: v.password,
+      role: 'motorcyclist',
+    })
+    return data
+  },
+  onSuccess: (data) => {
+    auth.setTokens(data.access_token, data.refresh_token)
+    auth.setUser(data.user)
+    toast.success('Регистрация успешна!')
+    router.push('/garage')
+  },
+  onError: (err) => {
+    const detail = err.response?.data?.error || err.response?.data?.detail
+    if (Array.isArray(detail)) {
+      toast.error(detail.map((d) => d.msg || d).join(', '))
+    } else {
+      toast.error(detail || 'Ошибка регистрации')
+    }
   },
 })
 
-const error = ref(null)
-const loading = ref(false)
-const skipMotorcycleMode = ref(false)
-
-const fileInput = ref(null)
-
-const progressPercent = computed(() => {
-  return ((currentStep.value - 1) / (totalSteps - 1)) * 100
-})
-
-const isStep2Valid = computed(() => {
-  return (
-    formData.username.length >= 2 &&
-    formData.email.includes('@') &&
-    formData.password.length >= 6
-  )
-})
-
-function selectRole(role) {
-  formData.role = role
-}
-
-function nextStep() {
-  if (currentStep.value < totalSteps) {
-    currentStep.value++
-    error.value = null
-  }
-}
-
-function prevStep() {
-  if (currentStep.value > 1) {
-    currentStep.value--
-    error.value = null
-  }
-}
-
-function addMotorcycle() {
-  skipMotorcycleMode.value = false
-  currentStep.value = 4
-}
-
-function skipMotorcycle() {
-  skipMotorcycleMode.value = true
-  currentStep.value = 7
-}
-
-function handleFileUpload(event) {
-  const file = event.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      formData.motorcycle.photo = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
-}
-
-function removePhoto() {
-  formData.motorcycle.photo = null
-  if (fileInput.value) fileInput.value.value = ''
-}
-
-function getParticleStyle(index) {
-  const size = Math.random() * 6 + 2
-  const x = Math.random() * 100
-  const y = Math.random() * 100
-  const duration = Math.random() * 20 + 15
-  const delay = Math.random() * 10
-  const opacity = Math.random() * 0.4 + 0.1
-
-  return {
-    width: size + 'px',
-    height: size + 'px',
-    left: x + '%',
-    top: y + '%',
-    animationDuration: duration + 's',
-    animationDelay: delay + 's',
-    opacity: opacity,
-  }
-}
-
-async function finishRegistration() {
-  error.value = null
-  loading.value = true
-
-  try {
-    const registerPayload = {
-      email: formData.email,
-      username: formData.username,
-      password: formData.password,
-      role: formData.role,
-    }
-
-    const registerResponse = await api.post('/auth/register', registerPayload)
-    const { access_token, refresh_token, user, requires_verification } = registerResponse.data
-
-    if (!access_token || !refresh_token || !user) {
-      throw new Error('Сервер не вернул токены авторизации')
-    }
-
-    auth.setTokens(access_token, refresh_token)
-    auth.setUser(user)
-
-    let motoId = null
-    if (!skipMotorcycleMode.value && formData.motorcycle.name) {
-      const motoPayload = {
-        name: formData.motorcycle.name,
-        years: formData.motorcycle.years || null,
-        volume: formData.motorcycle.volume || null,
-        color: formData.motorcycle.color || null,
-        mileage: formData.motorcycle.mileage || null,
-        licensePlate: formData.motorcycle.licensePlate || null,
-        vin: formData.motorcycle.vin || null,
-        note: formData.motorcycle.note || null,
-      }
-
-      const motoResponse = await api.post('/motorcycle/', motoPayload, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
-
-      motoId = motoResponse.data.id
-
-      if (formData.motorcycle.photo) {
-        try {
-          const response = await fetch(formData.motorcycle.photo)
-          const blob = await response.blob()
-          const file = new File([blob], 'motorcycle_photo.jpg', { type: 'image/jpeg' })
-
-          const uploadFormData = new FormData()
-          uploadFormData.append('photo', file)
-
-          await api.post(`/motorcycle/${motoId}/photo`, uploadFormData, {
-            headers: {
-              Authorization: `Bearer ${access_token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          })
-        } catch (photoError) {
-          console.warn('Не удалось загрузить фото:', photoError)
-        }
-      }
-    }
-
-    const role = user.role || formData.role
-    const targetRoute = role === 'admin' ? '/admin/panel' : '/garage'
-    router.push(targetRoute)
-  } catch (err) {
-    if (err.response?.data?.detail) {
-      const details = err.response.data.detail
-      if (Array.isArray(details)) {
-        error.value = details.map((d) => d.msg || d).join(', ')
-      } else {
-        error.value = details
-      }
-    } else {
-      error.value = err.response?.data?.error || err.message || 'Ошибка регистрации. Попробуйте снова.'
-    }
-
-    if (error.value && (error.value.includes('email') || error.value.includes('username') || error.value.includes('password'))) {
-      currentStep.value = 2
-    }
-  } finally {
-    loading.value = false
-  }
+async function submit() {
+  await submitForm()
 }
 </script>
 
 <style scoped>
-/* Основной контейнер */
-.register-wizard-container {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -563,714 +181,102 @@ async function finishRegistration() {
   padding: 16px;
 }
 
-.wizard-card {
-  max-width: 700px;
-  width: 100%;
-  background-color: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 32px 40px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Фоновое изображение (десктоп) */
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('/16x9Auth-Bg.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.15;
-  z-index: 0;
-}
-
-/* Затемнение для читаемости */
-.background-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(10, 10, 15, 0.92) 0%,
-    rgba(10, 10, 15, 0.85) 50%,
-    rgba(10, 10, 15, 0.92) 100%
-  );
-  z-index: 1;
-}
-
-.animate-slide-in {
-  animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-/* Прогресс */
-.progress-section {
-  margin-bottom: 32px;
-  position: relative;
-  z-index: 2;
-}
-
-.step-indicator {
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 6px;
-  background-color: var(--bg-secondary);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
-  transition: width 0.4s ease;
-  border-radius: 10px;
-}
-
-/* Шаги */
-.step-content {
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 2;
-}
-
-.step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  animation: fadeIn 0.3s ease;
-  position: relative;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.step-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.step-subtitle {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  margin-top: -12px;
-  margin-bottom: 4px;
-}
-
-.required {
-  color: var(--danger);
-}
-
-/* ============================================ */
-/* ФИНАЛЬНЫЙ ШАГ С ПАРТИКЛАМИ */
-/* ============================================ */
-.completion-step {
-  align-items: center;
-  text-align: center;
-  min-height: 400px;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.completion-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 60%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(139, 92, 246, 0.25) 0%,
-    rgba(139, 92, 246, 0.08) 40%,
-    transparent 70%
-  );
-  animation: pulseGlow 4s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
-}
-
-.blur-blobs {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.08;
-}
-
-.blob-1 {
-  width: 200px;
-  height: 200px;
-  background: var(--accent);
-  top: 10%;
-  right: -10%;
-  animation: floatBlob 12s ease-in-out infinite;
-}
-
-.blob-2 {
-  width: 150px;
-  height: 150px;
-  background: #a78bfa;
-  bottom: 10%;
-  left: -10%;
-  animation: floatBlob 16s ease-in-out infinite reverse;
-}
-
-.blob-3 {
-  width: 120px;
-  height: 120px;
-  background: #7c3aed;
-  top: 40%;
-  left: 30%;
-  animation: floatBlob 14s ease-in-out infinite 2s;
-}
-
-@keyframes floatBlob {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(20px, -30px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
-.particles-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: floatParticle linear infinite;
-  pointer-events: none;
-  will-change: transform;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
-}
-
-@keyframes floatParticle {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(calc(var(--dx, 30px)), calc(var(--dy, -80px))) scale(0.5);
-    opacity: 0;
-  }
-}
-
-.particle:nth-child(odd) {
-  --dx: 40px;
-  --dy: -100px;
-}
-
-.particle:nth-child(even) {
-  --dx: -30px;
-  --dy: -70px;
-}
-
-.particle:nth-child(3n) {
-  --dx: 50px;
-  --dy: -60px;
-}
-
-.particle:nth-child(5n) {
-  --dx: -50px;
-  --dy: -90px;
-}
-
-.particle:nth-child(7n) {
-  --dx: 20px;
-  --dy: -120px;
-}
-
-.completion-icon {
-  text-align: center;
-  font-size: 64px;
-  color: var(--accent);
-  margin: 16px 0 8px;
-  position: relative;
-  z-index: 2;
-  filter: drop-shadow(0 0 30px var(--accent-trans));
-}
-
-.completion-step .step-title,
-.completion-step .step-subtitle,
-.completion-step {
-  position: relative;
-  z-index: 2;
-}
-
-.step-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 20px;
-  width: 100%;
-}
-
-.completion-step .step-title {
-  margin-bottom: 8px;
-}
-
-.completion-step .step-subtitle {
+.register-card {
   max-width: 440px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
-/* ============================================ */
-/* ОСТАЛЬНЫЕ СТИЛИ */
-/* ============================================ */
-
-.role-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 8px 0 16px;
-}
-
-.role-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
-  background-color: var(--bg-secondary);
-  border: 2px solid transparent;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.2s;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.role-card:hover {
-  background-color: var(--bg-card-hover);
-  transform: translateY(-2px);
-}
-
-.role-card.selected {
-  border-color: var(--accent);
-  background-color: var(--accent-light);
-  box-shadow: 0 0 0 2px rgba(138, 92, 246, 0.2);
-}
-
-.role-icon {
-  font-size: 28px;
-  color: var(--accent);
-  width: 48px;
+.register-header {
   text-align: center;
+  margin-bottom: 24px;
 }
 
-.role-info {
-  flex: 1;
-}
-
-.role-info h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-}
-
-.role-info p {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.role-check {
-  font-size: 24px;
-  color: var(--accent);
-}
-
-.empty-moto-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 24px;
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius);
-  border: 2px dashed var(--border-color);
-  gap: 12px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.empty-icon {
+.register-header i {
   font-size: 48px;
-  color: var(--text-muted);
+  line-height: 1;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
-.empty-moto-card h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.empty-moto-card p {
-  color: var(--text-secondary);
+.register-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
   margin: 0 0 8px 0;
 }
 
-.empty-moto-card .btn {
-  width: 100%;
-  max-width: 280px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.form-group label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-group label i {
-  color: var(--accent);
-  font-size: 14px;
-}
-
-.form-group input,
-.form-group textarea {
-  padding: 0.7rem 1rem;
-  border-radius: 10px;
-  border: 2px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  transition: border 0.2s;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  border-color: var(--accent);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(138, 92, 246, 0.15);
-}
-
-.form-group input[type="color"] {
-  padding: 4px;
-  height: 48px;
-  cursor: pointer;
-}
-
-.upload-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
-  background-color: var(--bg-secondary);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.2s;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.upload-card:hover {
-  border-color: var(--accent);
-  background-color: var(--bg-card-hover);
-  transform: translateY(-2px);
-}
-
-.upload-icon {
-  font-size: 32px;
-  color: var(--accent);
-}
-
-.upload-info p {
-  margin: 0;
-  font-weight: 500;
-}
-
-.upload-info span {
-  font-size: 0.85rem;
+.register-header p {
   color: var(--text-muted);
+  margin: 0;
+  font-size: 0.95rem;
 }
 
-.photo-preview {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
+.field-gap {
+  margin-top: 14px;
 }
 
-.photo-preview img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 2px solid var(--border-color);
-}
-
-.step-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 20px;
-  justify-content: flex-end;
-}
-
-.error-message {
+.agree-wrap {
   margin-top: 16px;
-  padding: 12px 16px;
-  background-color: var(--danger-trans);
-  border: 1px solid var(--danger);
-  border-radius: 10px;
-  color: var(--danger);
+  margin-bottom: 4px;
+}
+
+.agree-checkbox {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  z-index: 2;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  user-select: none;
 }
 
-/* ============================================ */
-/* АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ */
-/* ============================================ */
-@media (max-width: 768px) {
-  .register-wizard-container {
-    padding: 0;
-    align-items: stretch;
-  }
-
-  .wizard-card {
-    max-width: 100%;
-    border-radius: 0;
-    min-height: 100vh;
-    padding: 24px 20px;
-    box-shadow: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Фоновое изображение на весь экран */
-  .background-image {
-    opacity: 0.25;
-    background-image: url('/9x16Auth-Bg.webp');
-    background-size: cover;
-    background-position: center;
-  }
-
-  .background-overlay {
-    background: linear-gradient(
-      180deg,
-      rgba(10, 10, 15, 0.85) 0%,
-      rgba(10, 10, 15, 0.75) 30%,
-      rgba(10, 10, 15, 0.85) 70%,
-      rgba(10, 10, 15, 0.95) 100%
-    );
-  }
-
-  .step-content {
-    flex: 1;
-    min-height: auto;
-  }
-
-  .step {
-    min-height: auto;
-    gap: 16px;
-  }
-
-  .step-title {
-    font-size: 1.5rem;
-  }
-
-  .step-subtitle {
-    font-size: 0.95rem;
-    margin-top: -8px;
-  }
-
-  .role-card {
-    padding: 14px 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .role-icon {
-    font-size: 24px;
-    width: 40px;
-  }
-
-  .role-info h3 {
-    font-size: 1rem;
-  }
-
-  .role-info p {
-    font-size: 0.85rem;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .step-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-    padding-top: 16px;
-  }
-
-  .empty-moto-card {
-    padding: 24px 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .upload-card {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  /* Финальный шаг */
-  .completion-step {
-    min-height: auto;
-    padding: 20px 0;
-  }
-
-  .completion-icon {
-    font-size: 48px;
-  }
-
-  .completion-glow {
-    width: 90%;
-    height: 50%;
-  }
-
-  .blob {
-    display: none;
-  }
-
-  .particles-container {
-    opacity: 0.6;
-  }
+.agree-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
 }
 
-@media (max-width: 480px) {
-  .wizard-card {
-    padding: 20px 16px;
-  }
+.agree-checkbox a {
+  color: var(--accent);
+  text-decoration: none;
+}
 
-  .step-title {
-    font-size: 1.3rem;
-  }
+.agree-checkbox a:hover {
+  text-decoration: underline;
+}
 
-  .progress-section {
-    margin-bottom: 20px;
-  }
+.agree-wrap.has-error .agree-checkbox {
+  color: var(--danger-text);
+}
 
-  .role-card {
-    padding: 12px 14px;
-    gap: 12px;
-  }
+.agree-error {
+  font-size: var(--text-xs);
+  color: var(--danger-text);
+  margin: 4px 0 0;
+}
 
-  .role-icon {
-    font-size: 20px;
-    width: 32px;
-  }
+.submit-btn {
+  margin-top: 16px;
+}
 
-  .completion-icon {
-    font-size: 40px;
-  }
+.register-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--text-secondary);
+}
 
-  .empty-moto-card {
-    padding: 20px 16px;
-  }
+.register-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: 8px;
+  text-decoration: none;
+}
 
-  .empty-icon {
-    font-size: 36px;
-  }
-
-  .upload-card {
-    padding: 16px;
-  }
-
-  .upload-icon {
-    font-size: 24px;
-  }
-
-  .background-image {
-    opacity: 0.2;
-  }
+.register-footer a:hover {
+  text-decoration: underline;
 }
 </style>

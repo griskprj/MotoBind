@@ -1,129 +1,89 @@
 <template>
-  <BaseModal
+  <AppModal
     :is-open="isOpen"
     title="Редактирование профиля"
-    subtitle="Измените информацию о себе. Эти данные будут видны другим пользователям."
+    subtitle="Эти данные будут видны другим пользователям"
     icon="user"
-    variant="default"
-    size="md"
+    size="lg"
     @close="close"
   >
-    <form @submit.prevent="submit" class="form-stack">
-      <BaseInput
-        v-model="form.username"
-        label="Имя пользователя"
-        placeholder="Введите имя пользователя"
-        required
-      />
+    <n-form ref="formRef" :model="form" :rules="rules">
+      <n-form-item path="username" label="Имя пользователя">
+        <n-input v-model:value="form.username" placeholder="Введите имя" />
+      </n-form-item>
 
-      <BaseInput
-        v-model="form.email"
-        type="email"
-        label="Email"
-        placeholder="user@example.com"
-        required
-      />
+      <n-form-item path="email" label="Email">
+        <n-input v-model:value="form.email" placeholder="user@example.com" />
+      </n-form-item>
 
-      <BaseTextarea
-        v-model="form.bio"
-        label="О себе"
-        placeholder="Расскажите немного о себе, своём опыте и мотоцикле..."
-        :rows="3"
-        :maxlength="1000"
-      />
+      <n-form-item path="bio" label="О себе">
+        <n-input
+          v-model:value="form.bio"
+          type="textarea"
+          :rows="3"
+          :maxlength="1000"
+          show-count
+          placeholder="Расскажите о себе..."
+        />
+      </n-form-item>
 
       <div class="form-row">
-        <BaseInput
-          v-model="form.location"
-          label="Город/Регион"
-          placeholder="Например: Москва"
+        <n-form-item path="location" label="Город/Регион">
+          <n-input v-model:value="form.location" placeholder="Москва" />
+        </n-form-item>
+        <n-form-item path="motorcycle" label="Мой мотоцикл">
+          <n-input v-model:value="form.motorcycle" placeholder="BMW S1000RR" />
+        </n-form-item>
+      </div>
+
+      <n-form-item path="experience" label="Опыт вождения">
+        <n-select
+          v-model:value="form.experience"
+          :options="experienceOptions"
+          placeholder="Не указано"
+          clearable
         />
-        <BaseInput
-          v-model="form.motorcycle"
-          label="Мой мотоцикл"
-          placeholder="Например: BMW S1000RR"
-        />
-      </div>
-
-      <BaseSelect
-        v-model="form.experience"
-        label="Опыт вождения"
-        placeholder="Не указано"
-      >
-        <option value="beginner">Новичок</option>
-        <option value="intermediate">Опытный</option>
-        <option value="expert">Эксперт</option>
-      </BaseSelect>
-
-      <div class="form-field">
-        <label class="form-label">Социальные сети</label>
-        <div class="social-links-editor">
-          <div
-            v-for="platform in socialPlatforms"
-            :key="platform"
-            class="social-link-row"
-          >
-            <i :class="getSocialIcon(platform)" class="social-icon"></i>
-            <BaseInput
-              v-model="form.social_links[platform]"
-              :placeholder="`Ссылка на ${platform}`"
-            />
-            <BaseButton
-              v-if="form.social_links[platform]"
-              variant="ghost"
-              icon="fa fa-times"
-              :block="false"
-              @click="form.social_links[platform] = ''"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-info-block info">
-        <div class="modal-info-icon">
-          <i class="fa fa-info-circle"></i>
-        </div>
-        <p class="modal-info-text">
-          Эти данные будут отображаться в вашем публичном профиле.
-        </p>
-      </div>
-    </form>
+      </n-form-item>
+    </n-form>
 
     <template #actions>
-      <BaseButton variant="secondary" block type="button" @click="close">
-        Отменить
-      </BaseButton>
-      <BaseButton
-        variant="primary"
-        icon="fa fa-save"
+      <AppButton
+        variant="secondary"
         block
-        type="submit"
+        @click="close"
+        style="margin-bottom: 8px;"
+      >
+        Отменить
+      </AppButton>
+      <AppButton
+        variant="primary"
+        block
         :loading="loading"
         @click="submit"
       >
         Сохранить
-      </BaseButton>
+      </AppButton>
     </template>
-  </BaseModal>
+  </AppModal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import { BaseModal, BaseButton, BaseInput, BaseTextarea, BaseSelect } from '@/components/ui'
-import { useToast } from '@/composables/useToast'
+import type { FormInst, FormRules } from 'naive-ui'
 import { useUserStore } from '@/stores'
-import { getSocialIcon } from '@/utils/formatters'
+import { useToast } from '@/shared/composables/useToast'
+import { AppButton, AppModal } from '@/shared/ui'
 
-const props = defineProps({
-  isOpen: { type: Boolean, default: false, required: true },
-  user: { type: Object, default: null },
-})
+const props = defineProps<{
+  isOpen: boolean
+  user: Record<string, any> | null
+}>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{ close: [] }>()
+
 const toast = useToast()
 const userStore = useUserStore()
-
-const socialPlatforms = ['youtube', 'telegram', 'vk']
+const formRef = ref<FormInst | null>(null)
 
 const form = reactive({
   username: '',
@@ -131,13 +91,25 @@ const form = reactive({
   bio: '',
   location: '',
   motorcycle: '',
-  experience: '',
-  social_links: {
-    youtube: '',
-    telegram: '',
-    vk: '',
-  },
+  experience: 'beginner',
 })
+
+const rules: FormRules = {
+  username: [
+    { required: true, message: 'Введите имя', trigger: 'blur' },
+    { min: 2, message: 'Минимум 2 символа', trigger: 'blur' },
+  ],
+  email: [
+    { required: true, message: 'Введите email', trigger: 'blur' },
+    { type: 'email', message: 'Некорректный email', trigger: 'blur' },
+  ],
+}
+
+const experienceOptions = [
+  { label: 'Новичок', value: 'beginner' },
+  { label: 'Опытный', value: 'intermediate' },
+  { label: 'Эксперт', value: 'expert' },
+]
 
 const loading = ref(false)
 
@@ -150,14 +122,6 @@ watch(
   { immediate: true }
 )
 
-watch(
-  () => props.user,
-  (newVal) => {
-    if (props.isOpen && newVal) loadFormData()
-  },
-  { deep: true }
-)
-
 function loadFormData() {
   if (!props.user) return
   Object.assign(form, {
@@ -166,12 +130,7 @@ function loadFormData() {
     bio: props.user.bio || '',
     location: props.user.location || '',
     motorcycle: props.user.motorcycle || '',
-    experience: props.user.experience || '',
-    social_links: {
-      youtube: props.user.social_links?.youtube || '',
-      telegram: props.user.social_links?.telegram || '',
-      vk: props.user.social_links?.vk || '',
-    },
+    experience: props.user.experience || 'beginner',
   })
 }
 
@@ -181,12 +140,9 @@ function close() {
 }
 
 async function submit() {
-  if (!form.username || form.username.trim().length < 2) {
-    toast.error('Имя пользователя должно содержать минимум 2 символа')
-    return
-  }
-  if (!form.email || !form.email.includes('@')) {
-    toast.error('Введите корректный email адрес')
+  try {
+    await formRef.value?.validate()
+  } catch {
     return
   }
 
@@ -198,18 +154,12 @@ async function submit() {
       bio: form.bio?.trim() || '',
       location: form.location?.trim() || '',
       motorcycle: form.motorcycle?.trim() || '',
-      experience: form.experience || '',
-      social_links: {
-        youtube: form.social_links.youtube?.trim() || '',
-        telegram: form.social_links.telegram?.trim() || '',
-        vk: form.social_links.vk?.trim() || '',
-      },
+      experience: form.experience || 'beginner',
     })
     emit('close')
     toast.success('Профиль обновлён')
-  } catch (err) {
-    console.error('Failed to update profile:', err)
-    toast.error(err.response?.data?.message || 'Ошибка при обновлении профиля')
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Ошибка обновления')
   } finally {
     loading.value = false
   }
@@ -217,43 +167,32 @@ async function submit() {
 </script>
 
 <style scoped>
-.form-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.form-field {
+.actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: var(--text-sm);
-  font-weight: var(--fw-semibold);
-  color: var(--text-secondary);
+  gap: 8px;
 }
 
 .social-links-editor {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 
 .social-link-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
 }
 
-.social-link-row > *:nth-child(2) {
+.social-link-row > :last-child {
   flex: 1;
 }
 
@@ -261,49 +200,12 @@ async function submit() {
   width: 24px;
   font-size: 18px;
   color: var(--text-muted);
-  padding-bottom: 10px;
-}
-
-.modal-info-block {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-}
-
-.modal-info-block.info {
-  background: var(--accent-trans);
-  border: 1px solid var(--accent-light);
-}
-
-.modal-info-icon {
-  font-size: 18px;
-  color: var(--accent-text);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.modal-info-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
   .form-row {
     grid-template-columns: 1fr;
-  }
-
-  .modal-info-block {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .modal-info-icon {
-    margin-top: 0;
   }
 }
 </style>
