@@ -1,173 +1,152 @@
 <template>
   <div class="container">
-    <n-spin :show="loading">
-      <!-- ==================== PROFILE ==================== -->
-      <div v-if="profile" class="profile-layout">
-        <!-- Header -->
-        <n-card :bordered="false" class="profile-header-card">
-          <div class="profile-header">
-            <n-avatar
-              :size="120"
-              :src="getAvatarUrl(profile.user.avatar)"
-              round
-              class="profile-avatar"
-            />
+    <!-- Загрузка -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner" />
+    </div>
 
-            <div class="profile-info">
-              <h1 class="profile-username">{{ profile.user.username }}</h1>
+    <!-- Профиль -->
+    <div v-else-if="profile" class="profile-layout">
+      <!-- Header -->
+      <BaseCard class="profile-header-card">
+        <div class="profile-header">
+          <AppAvatar
+            :src="getAvatarUrl(profile.user.avatar)"
+            :size="120"
+            round
+            class="profile-avatar"
+          />
 
-              <div class="profile-meta">
-                <span v-if="profile.user.location" class="meta-item">
-                  <i class="fa fa-map-marker" />
-                  {{ profile.user.location }}
-                </span>
-                <span v-if="profile.user.motorcycle" class="meta-item">
-                  <i class="fa fa-motorcycle" />
-                  {{ profile.user.motorcycle }}
-                </span>
-                <span v-if="profile.user.experience" class="meta-item">
-                  <i class="fa fa-signal" />
-                  {{ getExperienceLabel(profile.user.experience) }}
-                </span>
-                <span class="meta-item">
-                  <i class="fa fa-calendar" />
-                  С нами с {{ formatDate(profile.user.created_at) }}
-                </span>
-              </div>
+          <div class="profile-info">
+            <h1 class="profile-username">{{ profile.user.username }}</h1>
 
-              <div v-if="profile.user.bio" class="profile-bio">
-                <i class="fa fa-quote-left" />
-                {{ profile.user.bio }}
-              </div>
+            <div class="profile-meta">
+              <span v-if="profile.user.location" class="meta-item">
+                <i class="fa fa-map-marker" />
+                {{ profile.user.location }}
+              </span>
+              <span v-if="profile.user.motorcycle" class="meta-item">
+                <i class="fa fa-motorcycle" />
+                {{ profile.user.motorcycle }}
+              </span>
+              <span v-if="profile.user.experience" class="meta-item">
+                <i class="fa fa-signal" />
+                {{ getExperienceLabel(profile.user.experience) }}
+              </span>
+              <span class="meta-item">
+                <i class="fa fa-calendar" />
+                С нами с {{ formatDate(profile.user.created_at) }}
+              </span>
+            </div>
+
+            <div v-if="profile.user.bio" class="profile-bio">
+              <i class="fa fa-quote-left" />
+              {{ profile.user.bio }}
             </div>
           </div>
+        </div>
 
-          <!-- Статистика -->
-          <div class="profile-stats">
-            <n-statistic label="Постов" :value="profile.user.stats?.posts_count || 0" />
-            <n-statistic label="Лайков" :value="profile.user.stats?.likes_received || 0" />
-            <n-statistic label="Комментариев" :value="profile.user.stats?.comments_received || 0" />
+        <!-- Статистика -->
+        <div class="profile-stats">
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.posts_count || 0 }}</span>
+            <span class="stat__label">Постов</span>
           </div>
-        </n-card>
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.likes_received || 0 }}</span>
+            <span class="stat__label">Лайков</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.comments_received || 0 }}</span>
+            <span class="stat__label">Комментариев</span>
+          </div>
+        </div>
+      </BaseCard>
 
-        <!-- Посты -->
-        <n-card :bordered="false" class="posts-card">
-          <template #header>
-            <div class="section-title">
-              <i class="fa fa-newspaper-o" />
-              Посты {{ profile.user.username }}
-            </div>
-          </template>
+      <!-- Посты -->
+      <BaseCard class="posts-card">
+        <template #header>
+          <div class="section-title">
+            <i class="fa fa-newspaper-o" />
+            Посты {{ profile.user.username }}
+          </div>
+        </template>
 
-          <div v-if="profile.recent_posts?.length" class="posts-grid">
-            <n-card
-              v-for="post in profile.recent_posts"
-              :key="post.id"
-              :bordered="false"
-              hoverable
-              class="post-preview"
-              @click="goToPost(post.id)"
+        <div v-if="profile.recent_posts?.length" class="posts-grid">
+          <article
+            v-for="post in profile.recent_posts"
+            :key="post.id"
+            class="post-preview"
+            @click="goToPost(post.id)"
+          >
+            <img
+              v-if="post.image"
+              :src="getUploadUrl(post.image)"
+              :alt="post.content"
+              class="post-image"
             >
-              <template v-if="post.image" #cover>
-                <img :src="getUploadUrl(post.image)" :alt="post.content" class="post-image">
-              </template>
 
+            <div class="post-preview__body">
               <p class="post-content">{{ post.content }}</p>
 
               <div class="post-meta">
-                <span>
-                  <i class="fa fa-heart" />
-                  {{ post.likes_count || 0 }}
-                </span>
-                <span>
-                  <i class="fa fa-comment" />
-                  {{ post.comments_count || 0 }}
-                </span>
+                <span><i class="fa fa-heart" /> {{ post.likes_count || 0 }}</span>
+                <span><i class="fa fa-comment" /> {{ post.comments_count || 0 }}</span>
                 <span>{{ formatDate(post.created_at) }}</span>
               </div>
-            </n-card>
-          </div>
-
-          <n-empty
-            v-else
-            description="Пока нет постов"
-            class="empty-posts"
-          >
-            <template #icon>
-              <i class="fa fa-newspaper-o" />
-            </template>
-          </n-empty>
-        </n-card>
-
-        <!-- Кнопка «Назад» -->
-        <div class="back-wrapper">
-          <AppButton variant="secondary" @click="goBack" class="back-btn">
-            <template #icon><i class="fa fa-arrow-left" /></template>
-            Назад
-          </AppButton>
+            </div>
+          </article>
         </div>
-      </div>
 
-      <!-- ==================== ERROR ==================== -->
-      <n-result
-        v-else-if="!loading && error"
-        status="404"
+        <BaseEmptyState
+          v-else
+          icon="fa fa-newspaper"
+          title="Пока нет постов"
+          description="Пользователь ещё не публиковал посты"
+        />
+      </BaseCard>
+
+      <!-- Назад -->
+      <div class="back-wrapper">
+        <BaseButton variant="secondary" icon="fa fa-arrow-left" @click="goBack">
+          Назад
+        </BaseButton>
+      </div>
+    </div>
+
+    <!-- Ошибка -->
+    <BaseCard v-else-if="!loading && error" class="error-card">
+      <BaseEmptyState
+        icon="fa fa-user-slash"
+        variant="danger"
         title="Профиль не найден"
         :description="error"
       >
-        <template #footer>
-          <AppButton variant="primary" @click="goBack">Вернуться</AppButton>
-        </template>
-      </n-result>
-    </n-spin>
+        <BaseButton variant="primary" @click="goBack">Вернуться</BaseButton>
+      </BaseEmptyState>
+    </BaseCard>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getAvatarUrl, getUploadUrl } from '@/utils/mediaUrl'
 import { getUserExperienceLabel, formatDate } from '@/utils/formatters'
-import { AppButton } from '@/shared/ui'
+import { BaseButton, BaseCard, BaseEmptyState, AppAvatar } from '@/components/ui'
 import api from '@/api/api'
-
-interface ProfileResponse {
-  user: {
-    id: number
-    username: string
-    avatar?: string | null
-    location?: string | null
-    motorcycle?: string | null
-    experience?: string | null
-    bio?: string | null
-    created_at?: string
-    stats?: {
-      posts_count?: number
-      likes_received?: number
-      comments_received?: number
-    }
-  }
-  recent_posts?: Array<{
-    id: number
-    content: string
-    image?: string | null
-    likes_count?: number
-    comments_count?: number
-    created_at?: string
-  }>
-}
 
 const route = useRoute()
 const router = useRouter()
 
 const loading = ref(true)
-const profile = ref<ProfileResponse | null>(null)
-const error = ref<string | null>(null)
+const profile = ref(null)
+const error = ref(null)
 
 const getExperienceLabel = getUserExperienceLabel
 
 onMounted(() => {
-  const userId = route.params.id as string
+  const userId = route.params.id
   if (userId) {
     loadProfile(userId)
   } else {
@@ -176,12 +155,12 @@ onMounted(() => {
   }
 })
 
-async function loadProfile(userId: string) {
+async function loadProfile(userId) {
   loading.value = true
   try {
     const { data } = await api.get(`/user/profile/${userId}`)
     profile.value = data
-  } catch (err: any) {
+  } catch (err) {
     console.error('Ошибка загрузки профиля:', err)
     error.value = err.response?.data?.error || 'Пользователь не найден'
   } finally {
@@ -189,7 +168,7 @@ async function loadProfile(userId: string) {
   }
 }
 
-function goToPost(postId: number) {
+function goToPost(postId) {
   router.push(`/social/post/${postId}`)
 }
 
@@ -202,7 +181,6 @@ function goBack() {
 .container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .profile-layout {
@@ -212,6 +190,10 @@ function goBack() {
 }
 
 /* ===== Header ===== */
+.profile-header-card :deep(.base-card__body) {
+  padding: 24px;
+}
+
 .profile-header {
   display: flex;
   gap: 24px;
@@ -283,6 +265,28 @@ function goBack() {
   border-radius: var(--radius-md);
 }
 
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat__value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.stat__label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: var(--fw-semibold);
+}
+
 /* ===== Posts ===== */
 .section-title {
   display: flex;
@@ -303,12 +307,19 @@ function goBack() {
 }
 
 .post-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
 }
 
 .post-preview:hover {
   transform: translateY(-4px);
+  border-color: var(--accent);
 }
 
 .post-image {
@@ -318,21 +329,32 @@ function goBack() {
   display: block;
 }
 
+.post-preview__body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
 .post-content {
   font-size: 14px;
   color: var(--text-primary);
-  margin: 0 0 10px;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.5;
 }
 
 .post-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   font-size: 13px;
   color: var(--text-muted);
+  margin-top: auto;
 }
 
 .post-meta span {
@@ -341,13 +363,36 @@ function goBack() {
   gap: 4px;
 }
 
-.empty-posts {
-  padding: 32px 0;
-}
-
+/* ===== Back ===== */
 .back-wrapper {
   display: flex;
   justify-content: flex-start;
+  margin-top: 4px;
+}
+
+/* ===== Loading ===== */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Error ===== */
+.error-card :deep(.base-card__body) {
+  padding: 0;
 }
 
 /* ===== Adaptive ===== */
@@ -363,10 +408,11 @@ function goBack() {
   }
 
   .profile-stats {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    padding: 12px;
+  }
+
+  .stat__value {
+    font-size: 20px;
   }
 
   .posts-grid {
@@ -377,14 +423,14 @@ function goBack() {
     width: 100%;
   }
 
-  .back-btn {
+  .back-wrapper :deep(.base-btn) {
     width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding: 12px;
+  .profile-header-card :deep(.base-card__body) {
+    padding: 16px;
   }
 
   .profile-username {
@@ -392,8 +438,16 @@ function goBack() {
   }
 
   .profile-stats {
-    grid-template-columns: 1fr 1fr 1fr;
-    padding: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat__value {
+    font-size: 18px;
+  }
+
+  .stat__label {
+    font-size: 10px;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <article class="manual-card" @click="emit('click', manual)">
+  <article class="manual-card" @click="openManual(manual.id)">
     <!-- Превью -->
     <div class="manual-card__preview">
       <img
@@ -70,6 +70,10 @@ const CATEGORY_LABELS = {
 
 function categoryLabel(cat) {
   return CATEGORY_LABELS[cat] || cat
+}
+
+function openManal(id) {
+  router.push(`/manuals/${id}`)
 }
 </script>
 

@@ -71,7 +71,7 @@
 import { reactive, ref, watch } from 'vue'
 import type { FormInst, FormRules } from 'naive-ui'
 import { useUserStore } from '@/stores'
-import { useToast } from '@/shared/composables/useToast'
+import { useToast } from '@/composables/useToast'
 import { AppButton, AppModal } from '@/shared/ui'
 
 const props = defineProps<{
