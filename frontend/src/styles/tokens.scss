@@ -343,3 +343,68 @@
   --info-trans: color-mix(in srgb, var(--color-info) 20%, transparent);
   --info-text: var(--color-info);
 }
+
+
+/* ============================================
+   Naive UI — глобальные токены компонентов
+   Там, где themeOverrides не хватает
+   ============================================ */
+
+/* === Кнопки === */
+.n-button {
+  --n-height: 40px;
+  --n-border-radius: 10px;
+  --n-padding: 0 16px;
+  --n-font-size: 14px;
+  --n-font-weight: 500;
+  --n-icon-size: 16px;
+  --n-icon-margin: 6px;
+}
+
+.n-button--small-type {
+  --n-height: 32px;
+  --n-padding: 0 12px;
+  --n-font-size: 13px;
+  --n-icon-size: 14px;
+}
+
+.n-button--large-type {
+  --n-height: 48px;
+  --n-padding: 0 24px;
+  --n-font-size: 16px;
+  --n-icon-size: 18px;
+}
+
+/* === Инпуты === */
+.n-input {
+  --n-height: 40px;
+  --n-border-radius: 10px;
+  --n-font-size: 14px;
+  --n-padding-left: 12px;
+  --n-padding-right: 12px;
+}
+
+.n-input--small-type {
+  --n-height: 32px;
+  --n-font-size: 13px;
+}
+
+.n-input--large-type {
+  --n-height: 48px;
+  --n-font-size: 16px;
+}
+
+/* === Теги === */
+.n-tag {
+  --n-height: 24px;
+  --n-border-radius: 12px;
+  --n-font-size: 12px;
+}
+
+/* === Switch === */
+.n-switch {
+  --n-height: 22px;
+  --n-width: 44px;
+  --n-rail-height: 22px;
+  --n-rail-width: 44px;
+}

@@ -19,8 +19,7 @@ export default [
       requiresAuth: false,
       title: 'MotoBind - Контакты',
       description: 'Свяжитесь с нами через Telegram или Email',
-      showFooter: true,
-      showHeader: true,
+      layout: 'public'
     },
   },
   {
@@ -31,8 +30,7 @@ export default [
       requiresAuth: false,
       title: 'MotoBind - Учёт обслуживания мотоциклов',
       description: 'Сервис для мотоциклистов: планируйте ТО, ведите историю обслуживания, считайте расходы и получайте мануалы от сообщества. Бесплатно.',
-      showFooter: true,
-      showHeader: false,
+      layout: 'public'
     },
   },
   {
@@ -45,6 +43,7 @@ export default [
       description: 'Ведите историю обслуживания всех мотоциклов, планируйте ТО, отслеживайте пробег и контролируйте расходы. Удобный гараж для вашего байка.',
       showFooter: true,
       showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -55,20 +54,18 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Ремонт мотоциклов',
       description: 'Пошаговые инструкции по ремонту мотоциклов. Выбирайте обслуживание и получайте подробные мануалы от сообщества.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
     path: '/maintenance',
     name: 'maintenance',
-    component: () => import('../../views/Maintenance.vue'),
+    component: () => import('../../views/maintenance/Maintenance.vue'),
     meta: {
       requiresAuth: true,
       title: 'MotoBind - Обслуживание мотоцикла',
       description: 'Добавляйте и планируйте обслуживание мотоцикла. Следите за состоянием байка, получайте напоминания о ТО и контролируйте расходы.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -79,8 +76,7 @@ export default [
       requiresAuth: false,
       title: 'MotoBind - Мануалы по ремонту',
       description: 'База инструкций по ремонту и обслуживанию мотоциклов от сообщества. Находите мануалы для своего мотоцикла и делитесь своим опытом.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'public'
     },
   },
   {
@@ -91,8 +87,7 @@ export default [
       requiresAuth: false,
       title: 'MotoBind - Мануал по ремонту мотоцикла',
       description: 'Подробная страница с инструкцией по ремонту мотоцикла',
-      showFooter: true,
-      showHeader: true,
+      layout: 'public'
     },
   },
   {
@@ -103,8 +98,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Конструктор мануалов',
       description: 'Создавайте пошаговые мануалы по ремонту и обслуживанию мотоциклов. Делитесь своим опытом с сообществом.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -115,8 +109,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Профиль пользователя',
       description: 'Управляйте личными данными, настройками аккаунта и безопасностью. Меняйте аватар и пароль в один клик.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -127,8 +120,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Профиль пользователя',
       description: 'Публичный профиль пользователя MotoBind',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -139,8 +131,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Кабинет бизнеса',
       description: 'Управляйте своим бизнес-аккаунтом: мастер или СТО.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -151,8 +142,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Мои клиенты',
       description: 'Список клиентов вашего бизнес-аккаунта.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -163,8 +153,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Карточка клиента',
       description: 'Информация о клиенте и его мотоциклах.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -175,8 +164,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Мои услуги',
       description: 'Управляйте каталогом услуг.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -187,8 +175,7 @@ export default [
       requiresAuth: false,
       title: 'MotoBind - Мастер',
       description: 'Публичная страница мастера или СТО.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -199,8 +186,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Мои заявки',
       description: 'Записи к мастерам и станциям.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -211,8 +197,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Заявки',
       description: 'Управление заявками.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -223,8 +208,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Мастера и СТО',
       description: 'Каталог мастеров и станций. Найдите специалиста для обслуживания мотоцикла.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -235,8 +219,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Уведомления',
       description: 'Все ваши уведомления',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -247,8 +230,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - MotoSocial',
       description: 'Социальная сеть для мотоциклистов. Делитесь опытом, общайтесь и вдохновляйтесь',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
   {
@@ -259,8 +241,7 @@ export default [
       requiresAuth: true,
       title: 'MotoBind - Просмотр поста',
       description: 'Просмотр поста в социальной сети MotoSocial',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default',
     },
   },
 ]

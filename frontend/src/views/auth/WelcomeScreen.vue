@@ -17,9 +17,9 @@
           </p>
 
           <div class="right-actions">
-            <BaseButton variant="primary" block @click="goToRegister">
+            <AppButton variant="primary" block @click="goToRegister">
               Начать
-            </BaseButton>
+            </AppButton>
             <p class="login-hint">
               Уже есть аккаунт?
               <router-link to="/login" class="login-link">Войти</router-link>
@@ -31,9 +31,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { BaseButton } from '@/components/ui'
+import { AppButton } from '@/shared/ui'
 
 const router = useRouter()
 

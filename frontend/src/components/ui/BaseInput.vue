@@ -42,7 +42,7 @@ export default {
 
   props: {
     modelValue: {
-      type: [String, Number, null],
+      type: [String, Number],
       default: '',
     },
     label: {

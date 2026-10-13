@@ -56,6 +56,18 @@ export function useForm({ initial = {}, validate = null, onSubmit, onSuccess, on
     return Object.keys(errs).length === 0
   }
 
+  function validateField(name) {
+    if (!validate) return true
+    const allErrs = validate(values)
+    if (allErrs[name]) {
+      errors.value = { ...errors.value, [name]: allErrs[name] }
+    } else {
+      const { [name]: _, ...rest } = errors.value
+      errors.value = rest
+    }
+    return !allErrs[name]
+  }
+
   async function submit() {
     touched.value = true
 
@@ -95,6 +107,7 @@ export function useForm({ initial = {}, validate = null, onSubmit, onSuccess, on
     clearErrors,
     reset,
     validateNow,
+    validateField,
     submit,
   }
 }

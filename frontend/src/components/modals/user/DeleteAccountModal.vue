@@ -1,85 +1,76 @@
 <template>
-  <BaseModal
+  <AppModal
     :is-open="isOpen"
     title="Удаление аккаунта"
-    subtitle="Это действие нельзя отменить. Все данные будут удалены безвозвратно"
+    subtitle="Это действие нельзя отменить"
     icon="user-slash"
     variant="danger"
-    size="md"
     @close="close"
   >
-    <div class="modal-info-block danger">
-      <div class="modal-info-icon">
-        <i class="fa fa-exclamation-triangle"></i>
-      </div>
-      <div>
-        <p class="modal-info-text modal-info-text--strong">
-          Вы уверены, что хотите удалить аккаунт?
-        </p>
-        <p class="modal-info-text">
-          Будут удалены все ваши данные: мотоциклы, записи об обслуживании,
-          мануалы, фотографии и личная информация. Восстановление невозможно.
-        </p>
-      </div>
-    </div>
+    <n-alert type="error" :bordered="false" title="Внимание!">
+      Будут удалены все ваши данные: мотоциклы, записи об обслуживании, мануалы, фото.
+      Восстановление невозможно.
+    </n-alert>
 
-    <div class="danger-input">
-      <BaseInput
-        v-model="password"
-        type="password"
-        label="Введите пароль для подтверждения"
-        placeholder="Введите текущий пароль"
-        autocomplete="current-password"
-        required
-        @keydown.enter="submit"
-      />
-    </div>
+    <n-form ref="formRef" :model="form" :rules="rules" class="mt-3">
+      <n-form-item path="password" label="Введите пароль для подтверждения">
+        <n-input
+          v-model:value="form.password"
+          type="password"
+          show-password-on="click"
+          placeholder="Текущий пароль"
+          @keydown.enter="submit"
+        />
+      </n-form-item>
+    </n-form>
 
     <template #actions>
-      <BaseButton variant="secondary" block @click="close">
-        Отменить
-      </BaseButton>
-      <BaseButton
+      <AppButton variant="secondary" block @click="close">Отменить</AppButton>
+      <AppButton
         variant="danger"
-        icon="fa fa-trash"
         block
-        :disabled="!isFormValid"
         :loading="loading"
         @click="submit"
       >
         Удалить аккаунт
-      </BaseButton>
+      </AppButton>
     </template>
-  </BaseModal>
+  </AppModal>
 </template>
 
-<script setup>
-import { computed, ref, watch } from 'vue'
-import { BaseModal, BaseButton, BaseInput } from '@/components/ui'
-import { useToast } from '@/composables/useToast'
-import { useUserStore, useAuthStore } from '@/stores'
+<script setup lang="ts">
+import { reactive, ref, watch } from 'vue'
+import type { FormInst, FormRules } from 'naive-ui'
 import { useRouter } from 'vue-router'
+import { useUserStore, useAuthStore } from '@/stores'
+import { useToast } from '@/shared/composables/useToast'
+import { AppButton, AppModal } from '@/shared/ui'
 
-const props = defineProps({
-  isOpen: { type: Boolean, default: false, required: true },
-})
+const props = defineProps<{ isOpen: boolean }>()
+const emit = defineEmits<{ close: [] }>()
 
-const emit = defineEmits(['close'])
-const toast = useToast()
 const router = useRouter()
+const toast = useToast()
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const formRef = ref<FormInst | null>(null)
 
-const password = ref('')
+const form = reactive({ password: '' })
+
+const rules: FormRules = {
+  password: [
+    { required: true, message: 'Введите пароль', trigger: 'blur' },
+    { min: 6, message: 'Минимум 6 символов', trigger: 'blur' },
+  ],
+}
+
 const loading = ref(false)
-
-const isFormValid = computed(() => password.value && password.value.length >= 6)
 
 watch(
   () => props.isOpen,
   (newVal) => {
     if (!newVal) {
-      password.value = ''
+      form.password = ''
       loading.value = false
     }
   }
@@ -91,8 +82,9 @@ function close() {
 }
 
 async function submit() {
-  if (!password.value || password.value.length < 6) {
-    toast.error('Введите корректный пароль (минимум 6 символов)')
+  try {
+    await formRef.value?.validate()
+  } catch {
     return
   }
 
@@ -102,13 +94,12 @@ async function submit() {
 
   loading.value = true
   try {
-    await userStore.deleteAccount(password.value)
+    await userStore.deleteAccount(form.password)
     emit('close')
     authStore.logout()
-    router.push('/login')
-  } catch (err) {
-    console.error('Failed to delete account:', err)
-    toast.error(err.response?.data?.message || 'Ошибка при удалении аккаунта')
+    router.push('/landing')
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Ошибка удаления аккаунта')
   } finally {
     loading.value = false
   }
@@ -116,59 +107,7 @@ async function submit() {
 </script>
 
 <style scoped>
-.modal-info-block {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-}
-
-.modal-info-block.danger {
-  background: var(--danger-trans);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.modal-info-icon {
-  font-size: 20px;
-  color: var(--danger-text);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.modal-info-text {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.modal-info-text--strong {
-  font-weight: 600;
-  color: var(--danger-text);
-}
-
-.danger-input {
-  padding: 14px 16px;
-  background: var(--danger-trans);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  border-radius: 10px;
-}
-
-@media (max-width: 640px) {
-  .modal-info-block {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .modal-info-icon {
-    margin-top: 0;
-  }
-
-  .danger-input {
-    padding: 12px 14px;
-  }
+.mt-3 {
+  margin-top: 16px;
 }
 </style>

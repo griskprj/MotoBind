@@ -319,6 +319,7 @@ import { getTemplatesByCategory } from '@/constants/maintenanceTemplates'
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
   motorcycles: { type: Array, default: () => [] },
+  preselectedMotoId: { type: Number, default: null },
 })
 
 const emit = defineEmits(['close', 'created'])
@@ -402,6 +403,12 @@ watch(
     if (newVal) resetForm()
   }
 )
+watch(
+  () => props.preselectedMotoId,
+  (id) => {
+    if (props.isOpen && id) form.motorcycleId = id
+  }
+)
 
 function formatDate(dateString) {
   if (!dateString) return '—'
@@ -453,7 +460,7 @@ function closeModal() {
 function resetForm() {
   currentStep.value = 1
   selectedType.value = null
-  form.motorcycleId = null
+  form.motorcycleId = props.preselectedMotoId || null
   form.category = ''
   form.templateId = ''
   form.title = ''

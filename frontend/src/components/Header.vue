@@ -9,71 +9,30 @@
       <NotificationBell v-if="isAuthenticated" />
       <button
         class="theme-toggle"
+        :title="isDark ? 'Включить светлую тему' : 'Включить тёмную тему'"
         @click="toggleTheme"
-        :title="isDark ? 'Включить светлую тему' : 'Включить темную тему'"
       >
-        <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'"></i>
+        <i :class="isDark ? 'fa fa-sun' : 'fa fa-moon'" />
       </button>
     </div>
   </header>
 </template>
 
-<script>
-import NotificationBell from './NotificationBell.vue';
-import { useAuthStore } from '../stores/auth.js';
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/shared/theme/useTheme'
+import NotificationBell from './NotificationBell.vue'
 
-export default {
-    name: 'Header',
+defineProps<{
+  title: string
+  subtitle?: string
+}>()
 
-    components: { NotificationBell },
+const auth = useAuthStore()
+const { isDark, toggle: toggleTheme } = useTheme()
 
-    data() {
-        return {
-            isDark: true
-        }
-    },
-
-    props: {
-        title: {
-            type: String,
-            default: '',
-            required: true
-        },
-
-        subtitle: {
-            type: String,
-            default: '',
-            required: true
-        }
-    },
-
-    computed: {
-    isAuthenticated() {
-      return useAuthStore().isAuthenticated
-    },
-  },
-
-    mounted() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            this.isDark = savedTheme === 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            this.isDark = prefersDark;
-            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-        }
-    },
-
-    methods: {
-        toggleTheme() {
-            this.isDark = !this.isDark;
-            const theme = this.isDark ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-        },
-    }
-}
+const isAuthenticated = computed(() => auth.isAuthenticated)
 </script>
 
 <style scoped>

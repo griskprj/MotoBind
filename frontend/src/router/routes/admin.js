@@ -11,8 +11,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Админ-панель',
       description: 'Административная панель MotoBind. Управление пользователями, мануалами и контентом.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -24,8 +23,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Управление пользователями',
       description: 'Управление пользователями MotoBind. Просмотр, блокировка, редактирование и удаление пользователей.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -37,8 +35,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Управление мануалами',
       description: 'Модерация и управление мануалами MotoBind. Просмотр, одобрение, отклонение и удаление инструкций.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -50,8 +47,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Управление мотоциклами',
       description: 'Управление мотоциклами MotoBind. Просмотр и удаление мотоциклов пользователей',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -63,8 +59,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Управление репортами',
       description: 'Модерация жалоб на посты. Просмотр, рассмотрение и принятие решений по репортам пользователей.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
   {
@@ -76,8 +71,7 @@ export default [
       requiresAdmin: true,
       title: 'MotoBind - Модерация услуг',
       description: 'Модерация услуг мастеров и СТО.',
-      showFooter: true,
-      showHeader: true,
+      layout: 'default'
     },
   },
 ]
