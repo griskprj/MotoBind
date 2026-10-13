@@ -133,7 +133,7 @@ import DiagnosticsModal from '@/components/modals/diagnostics/DiagnosticsModal.v
 
 import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore, useManualsStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
-import { getEffectiveStatus, getMaintenanceDistance } from '@/utils/maintenanceStatus'
+import { getEffectiveStatus, getMaintenanceDistance } from '@/utils/maintenanceStatus.js'
 
 const router = useRouter()
 const toast = useToast()
