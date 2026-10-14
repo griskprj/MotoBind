@@ -54,8 +54,6 @@ defineProps({
   manual: { type: Object, required: true },
 })
 
-const emit = defineEmits(['click'])
-
 const CATEGORY_LABELS = {
   engine: 'Двигатель',
   drive: 'Привод',
@@ -72,7 +70,7 @@ function categoryLabel(cat) {
   return CATEGORY_LABELS[cat] || cat
 }
 
-function openManal(id) {
+function openManual(id) {
   router.push(`/manuals/${id}`)
 }
 </script>
