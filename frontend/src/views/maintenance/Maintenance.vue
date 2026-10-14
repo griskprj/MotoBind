@@ -398,12 +398,22 @@ function handleWriteToMasterFromDiagnostics() {
 
 <style scoped>
 .maintenance-page {
-  padding-bottom: var(--space-6);
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.container > * {
+  max-width: 100%;
+  min-width: 0;
 }
 </style>

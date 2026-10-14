@@ -95,19 +95,55 @@ function onSort(v) {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
+  width: 100%;
 }
 
 .filters__row {
   display: grid;
-  grid-template-columns: 1fr 160px 160px 160px auto;
+  grid-template-columns: minmax(0, 1fr) 180px 180px 180px auto;
   gap: var(--space-2);
   align-items: end;
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .filters__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .filters__search {
+    grid-column: 1 / -1;
+  }
+
+  .filters__row > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .filters__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .filters__row > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filters__search input {
+    font-size: 14px;
+  }
 }
 
 .filters__search {
   position: relative;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .filters__search i {
@@ -120,6 +156,7 @@ function onSort(v) {
 
 .filters__search input {
   width: 100%;
+  min-width: 0;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
   min-height: 40px;
   border: 1px solid var(--border-input);
@@ -134,17 +171,5 @@ function onSort(v) {
   outline: none;
   border-color: var(--accent);
   box-shadow: var(--shadow-focus);
-}
-
-@media (max-width: 1024px) {
-  .filters__row {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .filters__row {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

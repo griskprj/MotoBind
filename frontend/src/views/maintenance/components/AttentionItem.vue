@@ -3,19 +3,21 @@
     <div class="att-item__icon">
       <i :class="item.isOverdue ? 'fa fa-exclamation-triangle' : 'fa fa-clock'" />
     </div>
-
     <div class="att-item__body">
-      <h4 class="att-item__title">{{ item.title }}</h4>
-      <p class="att-item__meta">
-        <template v-if="item.isOverdue">
-          Просрочено на <strong>{{ Math.abs(item.distance) }} км</strong>
-        </template>
-        <template v-else>
-          Через <strong>{{ item.distance }} км</strong>
-        </template>
-        <span class="att-item__dot">•</span>
-        План: {{ item.planned_mileage }} км
-      </p>
+
+      <div class="att-item__info">
+        <h4 class="att-item__title">{{ item.title }}</h4>
+        <p class="att-item__meta">
+          <template v-if="item.isOverdue">
+            Просрочено на <strong>{{ Math.abs(item.distance) }} км</strong>
+          </template>
+          <template v-else>
+            Через <strong>{{ item.distance }} км</strong>
+          </template>
+          <span class="att-item__dot">•</span>
+          План: {{ item.planned_mileage }} км
+        </p>
+      </div>
     </div>
 
     <div class="att-item__actions">
@@ -72,6 +74,17 @@ const emit = defineEmits(['open', 'complete', 'open-manual', 'find-master'])
   border-left: 3px solid var(--warning);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.att-item__body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
 }
 
 .att-item--overdue {
@@ -98,7 +111,10 @@ const emit = defineEmits(['open', 'complete', 'open-manual', 'find-master'])
 }
 
 .att-item__body {
+  display: flex;
+  flex-direction: row;
   flex: 1;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -108,8 +124,6 @@ const emit = defineEmits(['open', 'complete', 'open-manual', 'find-master'])
   margin: 0 0 2px;
   color: var(--text-primary);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .att-item__meta {
@@ -131,22 +145,33 @@ const emit = defineEmits(['open', 'complete', 'open-manual', 'find-master'])
   display: flex;
   gap: var(--space-1);
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 920px) {
   .att-item {
+    flex-direction: column;
+    align-items: stretch;
     flex-wrap: wrap;
   }
 
+  .att-item__icon {
+    width: 100%;
+    height: 30px;
+    justify-content: center;
+    padding-left: var(--space-3);
+    box-sizing: border-box;
+  }
+
   .att-item__body {
-    flex-basis: calc(100% - 56px);
+    flex-basis: auto;
+    width: 100%;
   }
 
   .att-item__actions {
     width: 100%;
-    justify-content: flex-end;
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--border-light);
+    justify-content: center;
   }
 }
 </style>

@@ -186,4 +186,10 @@ function onCancelled(updated) {
   text-decoration: none;
   font-weight: var(--fw-semibold);
 }
+
+@media (max-width: 1060px) {
+  .tabs {
+    flex-direction: column;
+  }
+}
 </style>

@@ -42,6 +42,10 @@ const tabs = [
   padding-bottom: 2px;
   border-bottom: 1px solid var(--border-light);
   scrollbar-width: none;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tabs::-webkit-scrollbar { display: none; }
@@ -90,13 +94,14 @@ const tabs = [
   text-align: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 990px) {
   .tabs__item span:not(.tabs__badge) {
     display: none;
   }
 
   .tabs__item {
     padding: var(--space-2) var(--space-3);
+    flex-shrink: 0;
   }
 }
 </style>

@@ -113,6 +113,10 @@ class User(db.Model):
             "email_verification_enabled": self.email_verification_enabled,
             "reminders_mileage_enabled": self.reminders_mileage_enabled,
             "reminders_maintenance_enabled": self.reminders_maintenance_enabled,
+            "has_business_account": self.business_account is not None,
+            "business_account_type": (
+                self.business_account.type if self.business_account else None
+            ),
         }
 
         if include_moto:

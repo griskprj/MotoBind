@@ -39,6 +39,7 @@ const showFooter = computed(() => route.meta.showFooter !== false)
   flex: 1;
   padding: 24px 32px;
   width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 770px) {

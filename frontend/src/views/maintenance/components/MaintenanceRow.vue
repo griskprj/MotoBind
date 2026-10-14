@@ -71,6 +71,9 @@ function badgeVariant(status) {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .maint-row:hover {
@@ -158,5 +161,15 @@ function badgeVariant(status) {
 @media (max-width: 640px) {
   .maint-row__status > i { display: none; }
   .maint-row__meta { font-size: 11px; }
+
+  .maint-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .maint-row__icon {
+    height: 30px;
+    width: 100%;
+  }
 }
 </style>

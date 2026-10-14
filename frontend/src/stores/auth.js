@@ -26,6 +26,11 @@ export const useAuthStore = defineStore('auth', () => {
     const isAdmin = computed(() => user.value?.role === 'admin')
     const isPremium = computed(() => user.value?.is_premium === true)
 
+    const hasBusinessAccount = computed(() => user.value?.has_business_account === true)
+    const businessAccountType = computed(() => user.value?.business_account_type ?? null)
+    const isMaster = computed(() => businessAccountType.value === 'master')
+    const isStation = computed(() => businessAccountType.value === 'station')
+
     // ---- actions ----
     function setTokens(newAccess, newRefresh) {
         accessToken.value = newAccess
@@ -57,6 +62,16 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    function setBusinessAccount(type) {
+        if (!user.value) return
+        user.value = {
+            ...user.value,
+            has_business_account: !!type,
+            business_account_type: type ?? null,
+        }
+        localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    }
+
     function logout() {
         accessToken.value = null
         refreshToken.value = null
@@ -73,9 +88,14 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         isPremium,
         isAdmin,
+        hasBusinessAccount,
+        businessAccountType,
+        isMaster,
+        isStation,
         setTokens,
         setTokensFromRefresh,
         setUser,
+        setBusinessAccount,
         logout,
     }
 })
