@@ -34,7 +34,6 @@
           v-for="m in manuals"
           :key="m.id"
           :manual="m"
-          @click="emit('open-manual', m)"
         />
       </div>
     </template>
@@ -51,7 +50,7 @@ defineProps({
   loading: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['open-manual', 'create-manual'])
+const emit = defineEmits(['create-manual'])
 </script>
 
 <style scoped>
