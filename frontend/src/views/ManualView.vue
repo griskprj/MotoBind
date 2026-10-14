@@ -22,31 +22,6 @@
                     </span>
 
                     <BaseButton
-                        v-if="manual"
-                        variant="secondary"
-                        size="sm"
-                        icon="fa fa-print"
-                        :disabled="pdfGenerating"
-                        @click="printManual"
-                        title="Печать"
-                    >
-                        Печать
-                    </BaseButton>
-
-                    <BaseButton
-                        v-if="manual"
-                        variant="primary"
-                        size="sm"
-                        icon="fa fa-file-pdf"
-                        :loading="pdfGenerating"
-                        :disabled="pdfGenerating"
-                        @click="savePdf"
-                        title="Сохранить в PDF"
-                    >
-                        {{ pdfGenerating ? 'Формируем...' : 'Сохранить' }}
-                    </BaseButton>
-
-                    <BaseButton
                         v-if="isAuthor && manual.status === 'rejected'"
                         variant="warning"
                         size="sm"
