@@ -73,7 +73,7 @@ function categoryLabel(cat) {
 }
 
 function openManual(id) {
-  router.push(`/manuals/${id}`)
+  router.push(`/manual/${id}`)
 }
 </script>
 
