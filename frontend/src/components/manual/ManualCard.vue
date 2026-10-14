@@ -54,6 +54,8 @@ defineProps({
   manual: { type: Object, required: true },
 })
 
+const router = useRouter()
+
 const CATEGORY_LABELS = {
   engine: 'Двигатель',
   drive: 'Привод',
