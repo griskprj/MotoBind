@@ -92,7 +92,7 @@ onBeforeUnmount(() => {
   box-shadow: var(--shadow-lg);
   overflow-y: auto;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: 100dvh;
 }
 
 .app-drawer--left {

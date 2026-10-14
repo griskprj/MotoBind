@@ -53,6 +53,9 @@ class UserResponseSchema(ISO8601Mixin, BaseModel):
     reminders_mileage_enabled: bool = True
     reminders_maintenance_enabled: bool = True
 
+    has_business_account: bool = False
+    business_account_type: Optional[str] = None
+
 
 class LoginResponseSchema(BaseModel):
     """Ответ POST /api/auth/login."""

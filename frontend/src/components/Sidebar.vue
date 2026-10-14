@@ -34,7 +34,6 @@ const isDrawerOpen = ref(false)
 </script>
 
 <style scoped>
-/* Без изменений — тот же CSS, что был */
 .sidebar {
   position: fixed;
   top: 0;

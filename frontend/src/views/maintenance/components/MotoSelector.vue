@@ -36,6 +36,8 @@ const emit = defineEmits(['select'])
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
+  width: 100%;
 }
 
 .moto-selector__label {
@@ -55,6 +57,7 @@ const emit = defineEmits(['select'])
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .moto-chip {
@@ -71,6 +74,9 @@ const emit = defineEmits(['select'])
   font-family: inherit;
   text-align: left;
   min-height: 48px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .moto-chip:hover {
@@ -87,6 +93,10 @@ const emit = defineEmits(['select'])
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);
   color: var(--text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .moto-chip--active .moto-chip__name {

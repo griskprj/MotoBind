@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { useAuthStore } from '@/stores/auth'
@@ -58,25 +58,13 @@ const emit = defineEmits(['navigate'])
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-const business = useBusinessStore()
 const bookings = useBookingsStore()
 const { isDark, toggle: toggleTheme } = useTheme()
 const isDesktop = useMediaQuery('(min-width: 771px)')
 
 const isAdmin = computed(() => auth.isAdmin)
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
-const hasBusinessAccount = computed(() => business.hasAccount)
-
-// === Бейджи ===
-const myBookingsCount = computed(
-  () =>
-    bookings.myBookings?.filter(
-      (b) => b.status === 'pending' || b.status === 'confirmed'
-    ).length || 0
-)
-const pendingMasterBookings = computed(
-  () => bookings.masterBookings?.filter((b) => b.status === 'pending').length || 0
-)
+const { hasBusinessAccount } = storeToRefs(auth)
 
 // === Меню ===
 const menuOptions = computed(() => {
@@ -126,7 +114,6 @@ const menuOptions = computed(() => {
           label: 'Мои заявки',
           key: '/bookings',
           icon: 'fa fa-calendar-check',
-          ...(myBookingsCount.value > 0 ? { badge: myBookingsCount.value } : {}),
         },
       ],
     },
@@ -155,9 +142,6 @@ const menuOptions = computed(() => {
           label: 'Заявки мастеру',
           key: '/business/bookings',
           icon: 'fa fa-inbox',
-          ...(pendingMasterBookings.value > 0
-            ? { badge: pendingMasterBookings.value }
-            : {}),
         },
       ],
     })
@@ -200,20 +184,6 @@ async function logout() {
     router.push('/login')
   }
 }
-
-// === Инициализация ===
-onMounted(async () => {
-  if (!auth.isAuthenticated) return
-  try {
-    await business.loadAccount()
-  } catch {}
-  try {
-    await bookings.loadMyBookings()
-    if (business.hasAccount) {
-      await bookings.loadMasterBookings()
-    }
-  } catch {}
-})
 </script>
 
 <style scoped>
