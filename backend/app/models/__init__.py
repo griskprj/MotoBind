@@ -1,6 +1,7 @@
 from app.models.business_account import BusinessAccount
 from app.models.business_client import BusinessClient
 from app.models.business_client_vehicle import BusinessClientVehicle
+from app.models.diagnostic_report import DiagnosticReport
 from app.models.maintenance import Maintenance
 from app.models.manual import Manual, ManualStep
 from app.models.motorcycle import Motorcycle
@@ -33,4 +34,5 @@ __all__ = [
     "BusinessClientVehicle",
     "Service",
     "ServiceBooking",
+    "DiagnosticReport",
 ]

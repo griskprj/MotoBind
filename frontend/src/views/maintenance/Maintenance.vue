@@ -99,12 +99,6 @@
       @close="showMarkModal = false"
       @submit="handleMarkMaintenance"
     />
-
-    <DiagnosticsModal
-      :is-open="showDiagnosticsModal"
-      @close="showDiagnosticsModal = false"
-      @write-to-master="handleWriteToMasterFromDiagnostics"
-    />
   </div>
 </template>
 
@@ -129,7 +123,6 @@ import EditMaintenanceModal from '@/components/modals/maintenance/EditMaintenanc
 import DeleteMaintenanceModal from '@/components/modals/maintenance/DeleteMaintenanceModal.vue'
 import MaintenanceDetailsModal from '@/components/modals/maintenance/MaintenanceDetailsModal.vue'
 import MarkPlanMaintenanceModal from '@/components/modals/maintenance/MarkPlanMaintenanceModal.vue'
-import DiagnosticsModal from '@/components/modals/diagnostics/DiagnosticsModal.vue'
 
 import { useMotorcyclesStore, useMaintenancesStore, useRemindersStore, useManualsStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
@@ -236,7 +229,6 @@ const showDetailsModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const showMarkModal = ref(false)
-const showDiagnosticsModal = ref(false)
 const selectedMaintenance = ref(null)
 
 // ===== Lifecycle =====
@@ -314,11 +306,6 @@ function openMarkMaintenance() {
   showMarkModal.value = true
 }
 
-function openDiagnostics() {
-  showDiagnosticsModal.value = true
-}
-
-
 function openManualFor(maintenance) {
   // TODO: связать maintenance → manual через manualsStore.loadForMaintenance
   router.push('/manuals')
@@ -388,11 +375,6 @@ async function handleMarkMaintenance(formData) {
   } catch (err) {
     toast.error(err.response?.data?.error || 'Ошибка завершения')
   }
-}
-
-function handleWriteToMasterFromDiagnostics() {
-  showDiagnosticsModal.value = false
-  router.push('/masters')
 }
 </script>
 
