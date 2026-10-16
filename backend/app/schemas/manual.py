@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -11,7 +12,7 @@ class ManualStepSchema(BaseModel):
     tip: Optional[str] = Field(None, max_length=256)
     warning: Optional[str] = Field(None, max_length=256)
     text: Optional[str] = Field(None, max_length=5000)
-    
+
     image: Optional[str] = Field(None)
     result: Optional[str] = Field(None, max_length=500)
 
@@ -31,21 +32,21 @@ class CreateManualSchema(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     difficult: str = Field(default="easy")
     motorcycle: str = Field(..., min_length=1, max_length=100)
-    
+
     time_estimate: Optional[str] = Field(None, max_length=64)
     interval: Optional[str] = Field(None, max_length=64)
-    
+
     safety_tip: Optional[str] = Field(None, max_length=1000)
     warnings: Optional[str] = Field(None, max_length=1000)
     conditions: Optional[str] = Field(None, max_length=1000)
-    
+
     instruments: Optional[str] = Field(None, max_length=500)
     parts: Optional[str] = Field(None, max_length=500)
 
     docs_links: Optional[List[str]] = Field(None, max_length=10)
-    
+
     specs: Optional[Dict[str, Any]] = Field(None)
-    
+
     aftercare: Optional[str] = Field(None, max_length=2000)
     tip: Optional[str] = Field(None, max_length=256)
 
@@ -85,6 +86,7 @@ class CreateManualSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
+
 class UpdateManualSchema(BaseModel):
     """Схема для обновления мануала"""
 
@@ -93,21 +95,21 @@ class UpdateManualSchema(BaseModel):
     category: Optional[str] = Field(None, min_length=1, max_length=100)
     difficult: Optional[str] = Field(None)
     motorcycle: Optional[str] = Field(None, min_length=1, max_length=100)
-    
+
     time_estimate: Optional[str] = Field(None, max_length=64)
     interval: Optional[str] = Field(None, max_length=64)
-    
+
     safety_tip: Optional[str] = Field(None, max_length=1000)
     warnings: Optional[str] = Field(None, max_length=1000)
     conditions: Optional[str] = Field(None, max_length=1000)
-    
+
     instruments: Optional[str] = Field(None, max_length=500)
     parts: Optional[str] = Field(None, max_length=500)
-    
+
     docs_links: Optional[List[str]] = Field(None, max_length=10)
     specs: Optional[Dict[str, Any]] = Field(None)
     aftercare: Optional[str] = Field(None, max_length=2000)
-    
+
     tip: Optional[str] = Field(None, max_length=256)
 
     steps: Optional[List[ManualStepSchema]] = Field(None, min_length=1)
@@ -143,6 +145,7 @@ class UpdateManualSchema(BaseModel):
 
 class ManualStepResponseSchema(BaseModel):
     """Шаг мануала в ответе API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -158,6 +161,7 @@ class ManualStepResponseSchema(BaseModel):
 
 class ManualResponseSchema(BaseModel):
     """Мануал в ответе API. Совпадает с Manual.to_dict()."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -189,6 +193,7 @@ class ManualResponseSchema(BaseModel):
 
 class MaintenanceManualStepSchema(BaseModel):
     """Шаг мануала для ответа на /api/manual/ (без id и manual_id)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     order: int
@@ -199,8 +204,10 @@ class MaintenanceManualStepSchema(BaseModel):
     image: Optional[str] = None
     result: Optional[str] = None
 
+
 class ManualForMaintenanceResponseSchema(BaseModel):
     """Мануал для /api/manual/ (get_manual_for_maintenance_endpoint)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -221,3 +228,17 @@ class ManualForMaintenanceResponseSchema(BaseModel):
     motorcycle: str
     tip: Optional[str] = None
     steps: list[MaintenanceManualStepSchema] = []
+
+
+class ManualForDiagnosticSchema(BaseModel):
+    """Краткая схема мануала для результата диагностики."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    category: str
+    difficult: Optional[str] = None
+    time_estimate: Optional[str] = None
+    motorcycle: Optional[str] = None
+    description: Optional[str] = None

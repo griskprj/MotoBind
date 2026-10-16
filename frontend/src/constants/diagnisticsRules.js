@@ -18,7 +18,7 @@
 // СИМПТОМЫ
 // ============================================================
 export const SYMPTOM_GROUPS = [
-  { id: 'engine',    label: 'Двигатель',        icon: 'fa fa-engine' },
+  { id: 'engine',    label: 'Двигатель',        icon: 'fa fa-motorcycle' },
   { id: 'drive',     label: 'Привод и цепь',    icon: 'fa fa-link' },
   { id: 'brakes',    label: 'Тормоза',          icon: 'fa fa-hand' },
   { id: 'electrics', label: 'Электрика',        icon: 'fa fa-bolt' },
@@ -73,11 +73,13 @@ export const SYMPTOMS = [
 // ============================================================
 // УТОЧНЯЮЩИЕ ВОПРОСЫ
 // ============================================================
-// showIf — функция (selectedSymptoms: Set) => boolean
+// showIf — необязательный override.
+// Основной механизм — автоматический сбор из rule.answers в getRelevantQuestions.
 export const QUESTIONS = [
-  // Двигатель
+  // === Двигатель ===
   {
     id: 'q_engine_when',
+    group: 'engine',
     text: 'Когда проявляется проблема с двигателем?',
     options: [
       { id: 'cold',   label: 'На холодную' },
@@ -88,6 +90,7 @@ export const QUESTIONS = [
   },
   {
     id: 'q_engine_start_sound',
+    group: 'engine',
     text: 'Что слышно при попытке запуска?',
     options: [
       { id: 'click',   label: 'Щелчок, но не крутит' },
@@ -98,6 +101,7 @@ export const QUESTIONS = [
   },
   {
     id: 'q_smoke_color',
+    group: 'engine',
     text: 'Какого цвета дым?',
     options: [
       { id: 'white', label: 'Белый' },
@@ -108,6 +112,7 @@ export const QUESTIONS = [
   },
   {
     id: 'q_overheat_when',
+    group: 'engine',
     text: 'Когда перегревается?',
     options: [
       { id: 'idle',   label: 'На холостых / в пробке' },
@@ -118,6 +123,7 @@ export const QUESTIONS = [
   },
   {
     id: 'q_engine_noise_type',
+    group: 'engine',
     text: 'Какой характер шума?',
     options: [
       { id: 'knock',   label: 'Стук/цоканье' },
@@ -127,9 +133,10 @@ export const QUESTIONS = [
     showIf: (s) => s.has('engine_noise'),
   },
 
-  // Привод
+  // === Привод ===
   {
     id: 'q_chain_condition',
+    group: 'drive',
     text: 'Состояние цепи?',
     options: [
       { id: 'dry',     label: 'Сухая, без смазки' },
@@ -140,31 +147,34 @@ export const QUESTIONS = [
     showIf: (s) => s.has('chain_noise') || s.has('chain_slack') || s.has('chain_rust'),
   },
 
-  // Тормоза
+  // === Тормоза ===
   {
     id: 'q_brake_when',
+    group: 'brakes',
     text: 'Когда проявляется проблема с тормозами?',
     options: [
-      { id: 'dry',   label: 'На сухую' },
-      { id: 'wet',   label: 'В дождь / после мойки' },
-      { id: 'always',label: 'Всегда' },
+      { id: 'dry',    label: 'На сухую' },
+      { id: 'wet',    label: 'В дождь / после мойки' },
+      { id: 'always', label: 'Всегда' },
     ],
     showIf: (s) => s.has('brake_squeal') || s.has('brake_grind') || s.has('brake_vibration'),
   },
   {
     id: 'q_brake_fluid',
+    group: 'brakes',
     text: 'Когда последний раз меняли тормозную жидкость?',
     options: [
-      { id: 'lt_year',  label: 'Меньше года назад' },
-      { id: 'gt_year',  label: 'Больше года назад' },
-      { id: 'never',    label: 'Не помню / никогда' },
+      { id: 'lt_year', label: 'Меньше года назад' },
+      { id: 'gt_year', label: 'Больше года назад' },
+      { id: 'never',   label: 'Не помню / никогда' },
     ],
     showIf: (s) => s.has('brake_soft'),
   },
 
-  // Электрика
+  // === Электрика ===
   {
     id: 'q_battery_age',
+    group: 'electrics',
     text: 'Возраст аккумулятора?',
     options: [
       { id: 'lt_year', label: 'Меньше года' },
@@ -176,6 +186,7 @@ export const QUESTIONS = [
   },
   {
     id: 'q_lights_when',
+    group: 'electrics',
     text: 'Когда свет тускнеет?',
     options: [
       { id: 'idle',   label: 'На холостых' },
@@ -185,9 +196,10 @@ export const QUESTIONS = [
     showIf: (s) => s.has('lights_dim') || s.has('dash_flicker'),
   },
 
-  // Подвеска
+  // === Подвеска ===
   {
     id: 'q_suspension_when',
+    group: 'suspension',
     text: 'Когда проявляется проблема с подвеской?',
     options: [
       { id: 'bumps',  label: 'На кочках/ямах' },
@@ -197,16 +209,17 @@ export const QUESTIONS = [
     showIf: (s) => s.has('suspension_knock') || s.has('suspension_wobble') || s.has('suspension_soft'),
   },
 
-  // Колёса
+  // === Колёса ===
   {
     id: 'q_tire_when',
+    group: 'wheels',
     text: 'Когда проявляется проблема с колёсами?',
     options: [
       { id: 'low',    label: 'На малой скорости' },
       { id: 'high',   label: 'На высокой скорости' },
       { id: 'always', label: 'Всегда' },
     ],
-    showIf: (s) => s.has('wheel_vibration') || s.has('wheel_noise'),
+    showIf: (s) => s.has('wheel_vibration') || s.has('wheel_noise') || s.has('tire_wear'),
   },
 ]
 
@@ -227,17 +240,28 @@ export const QUESTIONS = [
 export const RULES = [
   // === ДВИГАТЕЛЬ ===
   {
-    id: 'r_battery_discharge',
-    title: 'Разряженный или умирающий аккумулятор',
+    id: 'r_battery_weak',
+    title: 'Аккумулятор не держит заряд',
     severity: 'warning',
     category: 'electrics',
-    symptomsAny: ['engine_wont_start', 'starter_weak', 'battery_dead', 'lights_dim'],
+    symptomsAny: ['battery_dead', 'starter_weak'],
     answers: {
       q_engine_start_sound: ['click', 'silent'],
-      q_battery_age: ['gt_3', 'unknown'],
     },
-    cause: 'Аккумулятор не держит заряд или имеет высокое внутреннее сопротивление.',
-    advice: 'Проверьте напряжение мультиметром (норма 12.6–12.8 В в покое). Если ниже 12 В — зарядите или замените АКБ.',
+    cause: 'АКБ разряжен или имеет высокое внутреннее сопротивление — стартер не крутит.',
+    advice: 'Замерьте напряжение в покое (норма 12.6–12.8 В). Если ниже 12 В — зарядите. Если не держит — замена.',
+  },
+  {
+    id: 'r_battery_old',
+    title: 'Аккумулятор старше ресурса',
+    severity: 'info',
+    category: 'electrics',
+    symptomsAny: ['battery_dead', 'starter_weak'],
+    answers: {
+      q_battery_age: ['gt_3'],
+    },
+    cause: 'АКБ старше 3 лет — ёмкость снижена, ресурс на исходе.',
+    advice: 'Плановая замена АКБ. При покупке проверяйте дату выпуска.',
   },
   {
     id: 'r_spark_plugs',
@@ -246,7 +270,6 @@ export const RULES = [
     category: 'engine',
     symptomsAny: ['engine_wont_start', 'engine_rough_idle', 'engine_stalls', 'engine_loss_power'],
     answers: {
-      q_engine_start_sound: ['cranks'],
       q_engine_when: ['cold', 'always'],
     },
     cause: 'Свечи изношены, залиты или имеют неверный зазор.',
@@ -257,7 +280,7 @@ export const RULES = [
     title: 'Проблемы с подачей топлива',
     severity: 'warning',
     category: 'engine',
-    symptomsAny: ['engine_stalls', 'engine_rough_idle', 'engine_loss_power', 'engine_wont_start'],
+    symptoms: ['engine_wont_start'],
     answers: {
       q_engine_start_sound: ['cranks'],
     },
@@ -265,28 +288,49 @@ export const RULES = [
     advice: 'Проверьте фильтр, при карбюраторе — прочистите жиклёры. На инжекторе — диагностика давления в рампе.',
   },
   {
-    id: 'r_overheat_coolant',
-    title: 'Система охлаждения',
+    id: 'r_idle_jet_clogged',
+    title: 'Засорение жиклёра холостого хода',
+    severity: 'warning',
+    category: 'engine',
+    symptoms: ['engine_stalls', 'engine_rough_idle'],
+    cause: 'Жиклёр холостого хода забит — смесь на ХХ нестабильна.',
+    advice: 'Прочистите карбюратор, проверьте винт качества смеси. На инжекторе — чистка форсунок и дросселя.',
+  },
+  {
+    id: 'r_coolant_fan',
+    title: 'Вентилятор не включается',
     severity: 'danger',
     category: 'engine',
     symptoms: ['engine_overheats'],
     answers: {
-      q_overheat_when: ['idle', 'load', 'always'],
+      q_overheat_when: ['idle'],
     },
-    cause: 'Низкий уровень антифриза, воздушная пробка, неисправный термостат или вентилятор.',
-    advice: 'Проверьте уровень и герметичность. Убедитесь, что вентилятор включается. Не продолжайте движение при перегреве.',
+    cause: 'Перегрев в пробке при рабочем обдуве — датчик или реле вентилятора не срабатывает.',
+    advice: 'Проверьте, включается ли вентилятор при прогреве. Если нет — датчик, реле или мотор вентилятора.',
+  },
+  {
+    id: 'r_coolant_system',
+    title: 'Проблема с системой охлаждения',
+    severity: 'danger',
+    category: 'engine',
+    symptoms: ['engine_overheats'],
+    answers: {
+      q_overheat_when: ['load', 'always'],
+    },
+    cause: 'Перегрев под нагрузкой — низкий уровень антифриза, воздушная пробка, забитый радиатор или термостат.',
+    advice: 'Проверьте уровень и герметичность, состояние радиатора. Не продолжайте движение при перегреве.',
   },
   {
     id: 'r_oil_burn',
     title: 'Расход масла / износ ЦПГ',
-    severity: 'danger',
+    severity: 'warning',
     category: 'engine',
     symptoms: ['engine_smoke'],
     answers: {
       q_smoke_color: ['blue'],
     },
-    cause: 'Маслосъёмные кольца или направляющие клапанов изношены — масло попадает в камеру сгорания.',
-    advice: 'Проверьте уровень масла и компрессию. Скорее всего, требуется ремонт двигателя.',
+    cause: 'Синий дым — масло попадает в камеру сгорания. Причина: износ маслосъёмных колец, направляющих клапанов или колпачков. Если дым только при запуске — это колпачки, если постоянно — кольца.',
+    advice: 'Замерьте компрессию. Проверьте расход масла на 1000 км. При большом расходе — ремонт двигателя.',
   },
   {
     id: 'r_rich_mixture',
@@ -301,41 +345,50 @@ export const RULES = [
     advice: 'Проверьте воздушный фильтр и систему впрыска/карбюратор.',
   },
   {
-    id: 'r_coolant_leak',
-    title: 'Попадание антифриза в цилиндр',
-    severity: 'danger',
+    id: 'r_white_smoke',
+    title: 'Белый дым',
+    severity: 'info',
     category: 'engine',
     symptoms: ['engine_smoke'],
     answers: {
       q_smoke_color: ['white'],
     },
-    cause: 'Пробита прокладка ГБЦ или трещина в головке — антифриз попадает в камеру сгорания.',
-    advice: 'Проверьте уровень антифриза и наличие эмульсии в масле. Не эксплуатируйте мотоцикл.',
+    cause: 'Белый дым бывает двух типов. Конденсат: тонкий пар, пропадает после прогрева — это норма. Антифриз: густой белый дым, сладковатый запах, уровень в бачке падает — пробита прокладка ГБЦ или трещина в головке.',
+    advice: 'Понаблюдайте: если дым пропадает после прогрева — норма. Если постоянный — проверьте уровень антифриза и наличие эмульсии в масле. При эмульсии — не эксплуатируйте мотоцикл.',
   },
   {
     id: 'r_valve_clearance',
     title: 'Нерегулированные клапаны',
     severity: 'warning',
     category: 'engine',
-    symptomsAny: ['engine_noise', 'engine_loss_power', 'engine_rough_idle'],
+    symptoms: ['engine_noise'],
     answers: {
       q_engine_noise_type: ['knock', 'rattle'],
     },
-    cause: 'Увеличенные тепловые зазоры клапанов.',
+    cause: 'Увеличенные тепловые зазоры клапанов — характерный стук/цоканье на прогретом двигателе.',
     advice: 'Проверьте и отрегулируйте зазоры согласно регламенту.',
+  },
+  {
+    id: 'r_power_loss_general',
+    title: 'Потеря мощности без явных причин',
+    severity: 'info',
+    category: 'engine',
+    symptoms: ['engine_loss_power'],
+    cause: 'Потеря мощности может быть вызвана засорённым воздушным фильтром, износом свечей, проблемами с топливом или зажиганием.',
+    advice: 'Начните с простого: воздушный фильтр, свечи, топливный фильтр. Если не помогло — диагностика в сервисе.',
   },
 
   // === ПРИВОД ===
   {
     id: 'r_chain_dry',
-    title: 'Сухая / неизношенная цепь',
+    title: 'Цепь без смазки / с ржавчиной',
     severity: 'info',
     category: 'drive',
     symptomsAny: ['chain_noise', 'chain_rust'],
     answers: {
       q_chain_condition: ['dry', 'rusty'],
     },
-    cause: 'Цепь без смазки или с поверхностной ржавчиной.',
+    cause: 'Цепь пересохла или покрыта поверхностной ржавчиной — ускоренный износ.',
     advice: 'Очистите цепь щёткой, нанесите цепную смазку. При сильной ржавчине — замените.',
   },
   {
@@ -409,18 +462,6 @@ export const RULES = [
 
   // === ЭЛЕКТРИКА ===
   {
-    id: 'r_battery_age',
-    title: 'Старый аккумулятор',
-    severity: 'warning',
-    category: 'electrics',
-    symptomsAny: ['battery_dead', 'starter_weak'],
-    answers: {
-      q_battery_age: ['gt_3'],
-    },
-    cause: 'Аккумулятор старше 3 лет — ресурс на исходе.',
-    advice: 'Замените АКБ. При покупке проверьте дату выпуска.',
-  },
-  {
     id: 'r_charging_system',
     title: 'Неисправность зарядки',
     severity: 'danger',
@@ -433,13 +474,25 @@ export const RULES = [
     advice: 'Замерьте напряжение на АКБ при 3000 об/мин — должно быть 13.8–14.5 В. Если меньше — диагностика генератора.',
   },
   {
-    id: 'r_fuse_issue',
-    title: 'Проблема с предохранителями / проводкой',
+    id: 'r_short_circuit',
+    title: 'Короткое замыкание в проводке',
     severity: 'danger',
     category: 'electrics',
-    symptomsAny: ['fuse_blows', 'dash_flicker'],
-    cause: 'Короткое замыкание или окисленные контакты.',
-    advice: 'Проверьте жгуты на потёртости. Замените перегоревшие предохранители на номинал из мануала.',
+    symptoms: ['fuse_blows'],
+    cause: 'Потёртый жгут, окисленный разъём или неисправный потребитель замыкает цепь.',
+    advice: 'Не ставьте предохранитель больше номинала. Ищите место КЗ: осмотрите жгуты, разъёмы, фары, поворотники.',
+  },
+  {
+    id: 'r_bad_ground',
+    title: 'Плохая масса / окисленный контакт',
+    severity: 'warning',
+    category: 'electrics',
+    symptomsAny: ['dash_flicker', 'lights_dim'],
+    answers: {
+      q_lights_when: ['idle', 'always'],
+    },
+    cause: 'Окисленная масса или разъём — плавающий контакт, мерцание приборки и света.',
+    advice: 'Зачистите клеммы массы (рама, двигатель, АКБ), проверьте разъёмы приборной панели.',
   },
 
   // === ПОДВЕСКА ===
@@ -512,79 +565,34 @@ export const RULES = [
     advice: 'Проверьте люфт колеса. Замена подшипника обязательна.',
   },
   {
-    id: 'r_tire_wear_align',
-    title: 'Неравномерный износ шины',
-    severity: 'info',
+    id: 'r_tire_align_wear',
+    title: 'Нарушен развал / сход',
+    severity: 'warning',
     category: 'wheels',
     symptoms: ['tire_wear'],
-    cause: 'Неправильное давление, развал или агрессивная езда.',
-    advice: 'Проверьте давление и развал. Замените шину при износе ниже 1.6 мм.',
+    answers: {
+      q_tire_when: ['high', 'always'],
+    },
+    cause: 'Неправильная установка колеса или износ сайлентблоков → односторонний износ.',
+    advice: 'Проверьте развал и балансировку. Осмотрите сайлентблоки маятника и рычагов.',
+  },
+  {
+    id: 'r_tire_pressure_low',
+    title: 'Низкое давление в шине',
+    severity: 'warning',
+    category: 'wheels',
+    symptoms: ['tire_wear'],
+    answers: {
+      q_tire_when: ['low', 'always'],
+    },
+    cause: 'Постоянно низкое давление → ускоренный износ протектора по краям, перегрев шины.',
+    advice: 'Проверяйте давление манометром каждые 2 недели. Норма — по мануалу мотоцикла.',
   },
 ]
 
 // ============================================================
 // ХЕЛПЕРЫ
 // ============================================================
-
-/**
- * Возвращает список вопросов, релевантных выбранным симптомам.
- */
-export function getRelevantQuestions(selectedSymptoms) {
-  const set = selectedSymptoms instanceof Set ? selectedSymptoms : new Set(selectedSymptoms)
-  return QUESTIONS.filter((q) => q.showIf(set))
-}
-
-/**
- * Считает score правила: доля совпавших условий.
- * Возвращает число от 0 до 1.
- */
-function scoreRule(rule, selectedSymptoms, answers) {
-  let matched = 0
-  let total = 0
-
-  // Симптомы (все обязательны)
-  if (rule.symptoms?.length) {
-    total += rule.symptoms.length
-    matched += rule.symptoms.filter((s) => selectedSymptoms.has(s)).length
-  }
-
-  // Хотя бы один из symptomsAny
-  if (rule.symptomsAny?.length) {
-    total += 1
-    if (rule.symptomsAny.some((s) => selectedSymptoms.has(s))) matched += 1
-  }
-
-  // Ответы
-  if (rule.answers) {
-    for (const [qId, allowed] of Object.entries(rule.answers)) {
-      total += 1
-      const userAnswer = answers[qId]
-      if (userAnswer && allowed.includes(userAnswer)) matched += 1
-    }
-  }
-
-  return total > 0 ? matched / total : 0
-}
-
-/**
- * Прогоняет все правила и возвращает подходящие, отсортированные по score.
- * @param {Set<string>} selectedSymptoms
- * @param {Object} answers — { q_id: option_id }
- * @param {number} threshold — минимальный score (по умолчанию 0.5)
- */
-export function diagnose(selectedSymptoms, answers, threshold = 0.5) {
-  const set = selectedSymptoms instanceof Set ? selectedSymptoms : new Set(selectedSymptoms)
-
-  const results = []
-  for (const rule of RULES) {
-    const score = scoreRule(rule, set, answers || {})
-    if (score >= threshold) {
-      results.push({ ...rule, score })
-    }
-  }
-
-  return results.sort((a, b) => b.score - a.score)
-}
 
 /**
  * Справочник симптомов по id.
@@ -595,3 +603,168 @@ export const SYMPTOM_BY_ID = Object.fromEntries(SYMPTOMS.map((s) => [s.id, s]))
  * Справочник вопросов по id.
  */
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]))
+
+/**
+ * Справочник групп по id.
+ */
+export const SYMPTOM_GROUP_BY_ID = Object.fromEntries(
+  SYMPTOM_GROUPS.map((g) => [g.id, g])
+)
+
+/**
+ * Возвращает симптомы для группы или все, если groupId = null.
+ * @param {string|null} groupId
+ */
+export function getSymptomsForGroup(groupId) {
+  if (!groupId) return SYMPTOMS
+  return SYMPTOMS.filter((s) => s.group === groupId)
+}
+
+/**
+ * Проверяет, может ли правило сматчиться по симптомам (без учёта ответов).
+ * Используется для сбора релевантных вопросов и фильтра по узлу.
+ */
+function ruleMayMatch(rule, selectedSymptoms) {
+  if (rule.symptoms?.length) {
+    if (!rule.symptoms.every((s) => selectedSymptoms.has(s))) return false
+  }
+  if (rule.symptomsAny?.length) {
+    if (!rule.symptomsAny.some((s) => selectedSymptoms.has(s))) return false
+  }
+  return true
+}
+
+/**
+ * Определяет узел правила.
+ * Приоритет: rule.category → группа первого симптома.
+ */
+function ruleCategory(rule) {
+  if (rule.category) return rule.category
+  const firstSymptomId = rule.symptoms?.[0] || rule.symptomsAny?.[0]
+  return firstSymptomId ? SYMPTOM_BY_ID[firstSymptomId]?.group : null
+}
+
+/**
+ * Возвращает список вопросов, релевантных выбранным симптомам.
+ *
+ * Логика:
+ *  1. Если задан lockedGroup — отсекаем правила не из этого узла.
+ *  2. Собираем вопросы из answers тех правил, что могут сматчиться.
+ *  3. Дополняем вопросами, у которых showIf вернул true (override).
+ *
+ * @param {Set<string>|string[]} selectedSymptoms
+ * @param {{ lockedGroup?: string|null }} options
+ */
+export function getRelevantQuestions(selectedSymptoms, { lockedGroup = null } = {}) {
+  const set =
+    selectedSymptoms instanceof Set ? selectedSymptoms : new Set(selectedSymptoms)
+
+  const neededQuestionIds = new Set()
+
+  for (const rule of RULES) {
+    if (!rule.answers) continue
+
+    if (lockedGroup && ruleCategory(rule) !== lockedGroup) continue
+
+    if (!ruleMayMatch(rule, set)) continue
+
+    Object.keys(rule.answers).forEach((qId) => neededQuestionIds.add(qId))
+  }
+
+  return QUESTIONS.filter((q) => {
+    if (neededQuestionIds.has(q.id)) {
+      if (lockedGroup && q.group && q.group !== lockedGroup) return false
+      return true
+    }
+    return q.showIf ? q.showIf(set) : false
+  })
+}
+
+
+// ============================================================
+// ДВИЖОК
+// ============================================================
+
+/**
+ * Считает симптомный score: насколько полно совпали симптомы.
+ * @returns {number} 0..1
+ */
+function scoreSymptoms(rule, selectedSymptoms) {
+  if (rule.symptoms?.length) {
+    const matched = rule.symptoms.filter((s) => selectedSymptoms.has(s)).length
+    if (matched !== rule.symptoms.length) return 0
+    if (!rule.symptomsAny?.length) return 1
+  }
+
+  if (rule.symptomsAny?.length) {
+    const matched = rule.symptomsAny.filter((s) => selectedSymptoms.has(s)).length
+    if (matched === 0) return 0
+    const ratio = matched / rule.symptomsAny.length
+    return Math.sqrt(ratio)
+  }
+
+  return 1
+}
+
+/**
+ * Считает ответный score: доля совпавших ответов среди заданных.
+ * Неотвеченные вопросы игнорируются (total не растёт).
+ * @returns {number} 0..1
+ */
+function scoreAnswers(rule, answers) {
+  if (!rule.answers) return 1
+
+  let matched = 0
+  let total = 0
+
+  for (const [qId, allowed] of Object.entries(rule.answers)) {
+    const userAnswer = answers[qId]
+    if (userAnswer === undefined) continue
+    total += 1
+    if (allowed.includes(userAnswer)) matched += 1
+    else return 0
+  }
+
+  if (total === 0) return 1
+  return matched / total
+}
+
+/**
+ * Итоговый score правила.
+ * Формула: symptomScore × (0.5 + 0.5 × answerScore)
+ * Ответы усиливают/ослабляют, но не обнуляют правило.
+ */
+function scoreRule(rule, selectedSymptoms, answers) {
+  const sScore = scoreSymptoms(rule, selectedSymptoms)
+  if (sScore === 0) return 0
+
+  const aScore = scoreAnswers(rule, answers)
+  if (aScore === 0) return 0
+
+  return sScore * (0.5 + 0.5 * aScore)
+}
+
+/**
+ * Прогоняет все правила и возвращает подходящие, отсортированные по score.
+ *
+ * @param {Set<string>|string[]} selectedSymptoms
+ * @param {Object} answers — { q_id: option_id }
+ * @param {{ lockedGroup?: string|null, threshold?: number }} options
+ */
+export function diagnose(selectedSymptoms, answers, { lockedGroup = null, threshold = 0.5 } = {}) {
+  const set =
+    selectedSymptoms instanceof Set ? selectedSymptoms : new Set(selectedSymptoms)
+
+  const results = []
+
+  for (const rule of RULES) {
+    if (lockedGroup && ruleCategory(rule) !== lockedGroup) continue
+
+    const score = scoreRule(rule, set, answers || {})
+    if (score >= threshold) {
+      results.push({ ...rule, score })
+    }
+  }
+
+  return results.sort((a, b) => b.score - a.score)
+}
