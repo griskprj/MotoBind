@@ -107,16 +107,12 @@ const percent = computed(() => {
   font-weight: var(--fw-semibold);
   color: var(--text-primary);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .my-course__progress-text {
   font-size: var(--text-xs);
   color: var(--text-muted);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .my-course__progress-bar {
@@ -145,6 +141,19 @@ const percent = computed(() => {
 @media (max-width: 640px) {
   .my-course__pct {
     font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 420px) {
+  .my-course {
+    flex-direction: column
+  }
+
+  .my-course__cover {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    height: 128px;
   }
 }
 </style>
