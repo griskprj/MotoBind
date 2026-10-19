@@ -483,8 +483,6 @@ function formatDuration(seconds) {
   font-weight: var(--fw-medium);
   color: var(--text-primary);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .lesson-item__meta {
