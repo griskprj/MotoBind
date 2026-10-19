@@ -5,12 +5,16 @@ import authRoutes from './routes/auth'
 import documentsRoutes from './routes/documents'
 import adminRoutes from './routes/admin'
 import mainRoutes from './routes/main'
+import learningRoutes from './routes/learning'
+import learningAdminRoutes from './routes/learningAdmin'
 
 const routes = [
   ...mainRoutes,
   ...authRoutes,
   ...documentsRoutes,
   ...adminRoutes,
+  ...learningRoutes,
+  ...learningAdminRoutes,
 ]
 
 const router = createRouter({

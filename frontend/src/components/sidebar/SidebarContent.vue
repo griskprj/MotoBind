@@ -89,6 +89,15 @@ const menuOptions = computed(() => {
       },
       {
         type: 'group',
+        label: 'Обучение',
+        key: 'admin-learning',
+        children: [
+          { label: 'Курсы', key: '/admin/learning/courses', icon: 'fa fa-book'},
+          { label: 'Статьи', key: '/admin/learning/articles', icon: 'fa fa-newspaper'}
+        ]
+      },
+      {
+        type: 'group',
         label: 'Модерация',
         key: 'admin-moderate',
         children: [
@@ -125,6 +134,7 @@ const menuOptions = computed(() => {
         { label: 'Мастера и СТО', key: '/masters', icon: 'fa fa-user-tie' },
         { label: 'Мануалы', key: '/manuals', icon: 'fa fa-book' },
         { label: 'MotoSocial', key: '/social', icon: 'fa fa-users' },
+        { label: 'Обучение', key: '/learning', icon: 'fa fa-graduation-cap'}
       ],
     },
   ]

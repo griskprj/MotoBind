@@ -93,6 +93,8 @@ def create_app(config_override=None):
     from app.api.booking import booking
     from app.api.business import business
     from app.api.diagnostics import diagnostics
+    from app.api.learning import learning
+    from app.api.learning_admin import learning_admin
     from app.api.maintenance import maintenance
     from app.api.manuals import manual
     from app.api.motorcycle import motorcycle
@@ -117,5 +119,7 @@ def create_app(config_override=None):
     app.register_blueprint(services, url_prefix="/api/services")
     app.register_blueprint(booking, url_prefix="/api/bookings")
     app.register_blueprint(diagnostics, url_prefix="/api/diagnostics")
+    app.register_blueprint(learning, url_prefix="/api/learning")
+    app.register_blueprint(learning_admin, url_prefix="/api/learning/admin")
 
     return app
