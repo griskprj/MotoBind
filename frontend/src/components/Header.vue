@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useTheme } from '@/shared/theme/useTheme'
+import { useTheme } from '@/composables/useTheme'
 import NotificationBell from './NotificationBell.vue'
 
 defineProps<{

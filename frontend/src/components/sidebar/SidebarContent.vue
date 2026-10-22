@@ -47,8 +47,6 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
 import { useAuthStore } from '@/stores/auth'
-import { useBusinessStore } from '@/stores/business'
-import { useBookingsStore } from '@/stores/bookings'
 import { useTheme } from '@/composables/useTheme'
 import { AppMenu } from '@/components/ui'
 import api from '@/api/api'
@@ -58,7 +56,6 @@ const emit = defineEmits(['navigate'])
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-const bookings = useBookingsStore()
 const { isDark, toggle: toggleTheme } = useTheme()
 const isDesktop = useMediaQuery('(min-width: 771px)')
 

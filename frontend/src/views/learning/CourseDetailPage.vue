@@ -159,6 +159,15 @@ onMounted(() => {
   learningStore.loadCourse(props.slug).catch(() => {})
 })
 
+watch(
+  () => props.slug,
+  (newSlug) => {
+    if (!newSlug) return
+    learningStore.currentCourse = null
+    learningStore.loadCourse(newSlug)
+  }
+)
+
 function startCourse() {
   if (!course.value) return
   const lastId = course.value.last_viewed_lesson_id
