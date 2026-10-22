@@ -1,28 +1,62 @@
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-const STORAGE_KEY = 'theme'
-const isDark = ref(document.documentElement.dataset.theme === 'dark')
+const STORAGE_KEY = 'motobind-theme'
 
-watch(
-  isDark,
-  (dark) => {
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-    localStorage.setItem(STORAGE_KEY, dark ? 'dark' : 'light')
-  },
-  { immediate: true }
-)
+function getInitialTheme() {
+  if (typeof window === 'undefined') return 'light'
 
-const saved = localStorage.getItem(STORAGE_KEY)
-if (saved === 'dark' || saved === 'light') {
-  isDark.value = saved === 'dark'
-} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-  isDark.value = true
-}
-
-export function useTheme() {
-  function toggle() {
-    isDark.value = !isDark.value
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved === 'light' || saved === 'dark') return saved
+  } catch {
+    /* ignore */
   }
 
-  return { isDark, toggle }
+  if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+    return 'dark'
+  }
+  return 'light'
+}
+
+const theme = ref(getInitialTheme())
+
+function applyTheme(value) {
+  if (typeof document === 'undefined') return
+  document.documentElement.setAttribute('data-theme', value)
+}
+
+applyTheme(theme.value)
+
+watch(
+  theme,
+  (value) => {
+    applyTheme(value)
+    try {
+      localStorage.setItem(STORAGE_KEY, value)
+    } catch {
+      /* ignore */
+    }
+  },
+  { flush: 'sync' }
+)
+
+export function useTheme() {
+  const isDark = computed(() => theme.value === 'dark')
+
+  function setTheme(value) {
+    if (value === 'light' || value === 'dark') {
+      theme.value = value
+    }
+  }
+
+  function toggle() {
+    theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  }
+
+  return {
+    theme,
+    isDark,
+    setTheme,
+    toggle,
+  }
 }
