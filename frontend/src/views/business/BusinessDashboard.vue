@@ -152,7 +152,11 @@
             </div>
             <div v-if="business.account.website" class="info-item">
               <i class="fa fa-globe"></i>
-              <a :href="business.account.website" target="_blank" rel="noopener">
+              <a
+                :href="normalizeWebsite(business.account.website)"
+                target="_blank"
+                rel="noopener"
+              >
                 {{ business.account.website }}
               </a>
             </div>
@@ -242,6 +246,7 @@ import { storeToRefs } from 'pinia'
 import { useBusinessStore } from '@/stores'
 import { useToast } from '../../composables/useToast'
 import { getBusinessLogoUrl } from '../../utils/mediaUrl'
+import { normalizeWebsite } from '@/utils/url'
 import Header from '../../components/Header.vue'
 import LoadingOverlay from '../../components/LoadingOverlay.vue'
 import { BaseButton, BaseInput } from '../../components/ui'
@@ -624,13 +629,10 @@ async function copySlug() {
   margin-bottom: 16px;
 }
 .info-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 13px;
   color: var(--text-secondary);
 }
-.info-item i { width: 16px; min-width: 16px; color: var(--accent-text); }
+.info-item i { width: 16px; min-width: 16px; color: var(--accent-text); margin-right: 8px; }
 .info-item a { color: var(--accent-text); }
 
 .account-actions { margin-top: 8px; }

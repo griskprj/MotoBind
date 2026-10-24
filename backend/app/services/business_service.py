@@ -1,11 +1,23 @@
-from datetime import datetime, timezone
+from urllib.parse import urlparse
 
-from app.exceptions import ForbiddenError, NotFoundError, ValidationError
+from app.exceptions import NotFoundError, ValidationError
 from app.extensions import db
 from app.models.business_account import BusinessAccount, BusinessType
 from app.models.user import User
 from app.utils.files import delete_file, save_business_logo
 from app.utils.slugify import unique_slug
+
+
+def _normalize_website(url: str | None) -> str | None:
+    if not url:
+        return None
+
+    url = url.strip()
+    if not url:
+        return None
+    if not urlparse(url).scheme:
+        url = "https://" + url
+    return url
 
 
 class BusinessAccountService:
@@ -44,7 +56,7 @@ class BusinessAccountService:
             city=kwargs.get("city"),
             address=kwargs.get("phone"),
             email=kwargs.get("email"),
-            website=kwargs.get("website"),
+            website=_normalize_website(kwargs.get("website")),
         )
 
         db.session.add(account)
@@ -82,7 +94,9 @@ class BusinessAccountService:
             )
 
         for key, value in updates.items():
-            if hasattr(account, key) and value is not None:
+            if key == "website":
+                value = _normalize_website(value)
+            if hasattr(account, key):
                 setattr(account, key, value)
 
         db.session.commit()

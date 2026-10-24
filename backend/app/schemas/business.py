@@ -28,7 +28,7 @@ class UpdateBusinessAccountSchema(BaseModel):
     website: Optional[str] = Field(None, max_length=256)
 
     def get_updates(self) -> dict:
-        return self.model_dump(exclude_unset=True, exclude_none=True)
+        return self.model_dump(exclude_unset=True)
 
 
 # ============================================================
