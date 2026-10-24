@@ -68,7 +68,13 @@
               <div class="contact-value">{{ account.email }}</div>
             </div>
           </a>
-          <a v-if="account.website" :href="account.website" target="_blank" rel="noopener" class="contact-item">
+          <a
+            v-if="account.website"
+            :href="normalizeWebsite(account.website)"
+            target="_blank"
+            rel="noopener"
+            class="contact-item"
+          >
             <i class="fa fa-globe"></i>
             <div>
               <div class="contact-label">Сайт</div>
@@ -138,8 +144,9 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api/api'
-import { useServicesStore, useAuthStore, useBookingsStore, useMotorcyclesStore } from '@/stores'
+import { useServicesStore, useAuthStore, useMotorcyclesStore } from '@/stores'
 import { getBusinessLogoUrl } from '@/utils/mediaUrl'
+import { normalizeWebsite } from '@/utils/url'
 import { BaseButton } from '@/components/ui'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import CreateBookingModal from '../../components/modals/bookings/CreateBookingModal.vue'
@@ -152,7 +159,6 @@ const servicesStore = useServicesStore()
 const services = computed(() => servicesStore.publicServices)
 
 const auth = useAuthStore()
-const bookingsStore = useBookingsStore()
 const motorcyclesStore = useMotorcyclesStore()
 
 const isAuthenticated = computed(() => auth.isAuthenticated)
