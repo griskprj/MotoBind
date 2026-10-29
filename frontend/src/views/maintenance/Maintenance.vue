@@ -301,7 +301,10 @@ function openDeleteMaintenance() {
   showDeleteModal.value = true
 }
 
-function openMarkMaintenance() {
+function openMarkMaintenance(item = null) {
+  if (item) {
+    selectedMaintenance.value = item
+  }
   showDetailsModal.value = false
   showMarkModal.value = true
 }
