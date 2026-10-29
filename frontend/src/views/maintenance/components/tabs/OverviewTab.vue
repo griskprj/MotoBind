@@ -70,7 +70,7 @@
         icon="fa fa-stethoscope"
         title="Диагностика"
         action-label="Запустить"
-        @action="emit('start-diagnostics')"
+        @action="emit('goto-tab', 'diagnostics')"
       >
         <p class="ov-empty">Не уверены, что с мотоциклом? Пройдите диагностику по симптомам.</p>
       </OverviewCard>
@@ -89,7 +89,7 @@ const props = defineProps({
   allMaintenances: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['open', 'goto-tab', 'start-diagnostics'])
+const emit = defineEmits(['open', 'goto-tab'])
 
 const plans = computed(() =>
   (props.motorcycle?.maintenances || []).filter((m) => m.status === 'planned')
