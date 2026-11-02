@@ -1,0 +1,35 @@
+// ============================================================
+// Breakpoints
+//
+// Единые точки для медиа-запросов. Mobile-first: базовые стили
+// пишем для мобилки, расширяем через @include sm / md / lg.
+//
+// Использование:
+//   @include md-up { padding: 32px; }
+//   @include sm-down { padding: 16px; }
+// ============================================================
+
+$bp-sm: 640px;
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1280px;
+
+// Min-width (mobile-first, «и шире»)
+@mixin sm-up { @media (min-width: $bp-sm) { @content; } }
+@mixin md-up { @media (min-width: $bp-md) { @content; } }
+@mixin lg-up { @media (min-width: $bp-lg) { @content; } }
+@mixin xl-up { @media (min-width: $bp-xl) { @content; } }
+
+// Max-width («и уже», для точечных фиксов)
+@mixin sm-down { @media (max-width: ($bp-sm - 0.02px)) { @content; } }
+@mixin md-down { @media (max-width: ($bp-md - 0.02px)) { @content; } }
+@mixin lg-down { @media (max-width: ($bp-lg - 0.02px)) { @content; } }
+
+// Системные предпочтения
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) { @content; }
+}
+
+@mixin high-contrast {
+  @media (prefers-contrast: more) { @content; }
+}
