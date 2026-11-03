@@ -71,6 +71,7 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: box-shadow var(--transition-fast);
+  min-width: 0; /* Защита от распирания */
 
   &:hover {
     box-shadow: var(--shadow-sm);
@@ -90,7 +91,7 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
 .m-item__content {
   flex: 1;
   padding: var(--space-3) var(--space-4);
-  min-width: 0;
+  min-width: 0; /* Важно! */
 }
 
 .m-item__header {
@@ -99,17 +100,23 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
   align-items: flex-start;
   gap: var(--space-2);
   margin-bottom: var(--space-1);
+  flex-wrap: wrap; /* Разрешаем перенос, если не влезает */
 }
 
 .m-item__title {
   font-size: var(--text-base);
   font-weight: var(--fw-semibold);
   color: var(--color-text);
+  word-break: break-word; /* Перенос длинных слов */
+  flex: 1;
+  min-width: 0;
 }
 
 .m-item__cost {
   font-weight: var(--fw-bold);
   color: var(--color-text);
+  white-space: nowrap; /* Цена всегда в одну строку */
+  flex-shrink: 0;
 }
 
 .m-item__desc {
@@ -120,6 +127,7 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .m-item__meta {
@@ -134,19 +142,6 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.m-item__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface-secondary);
-  border-left: 1px solid var(--color-border-light);
-
-  @include sm-down {
-    flex-direction: column;
-    justify-content: center;
-  }
+  white-space: nowrap; /* Иконка и текст всегда рядом */
 }
 </style>
