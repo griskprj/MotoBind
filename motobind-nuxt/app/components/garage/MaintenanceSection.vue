@@ -308,6 +308,16 @@ function formatDate(dateStr?: string | null) {
   gap: var(--space-3);
 }
 
+.m-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+
+  @include lg-up {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
 /* Заголовок */
 .m-header {
   display: flex;
