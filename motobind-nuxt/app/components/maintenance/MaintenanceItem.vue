@@ -110,7 +110,6 @@ const isPlanned = computed(() => props.maintenance.status === 'planned')
 .m-item__cost {
   font-weight: var(--fw-bold);
   color: var(--color-text);
-  white-space: nowrap;
 }
 
 .m-item__desc {
