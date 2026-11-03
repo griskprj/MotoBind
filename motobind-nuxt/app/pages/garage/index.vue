@@ -66,14 +66,19 @@ const { data: motorcycles, pending, error, refresh } = await useAsyncData(
       </template>
     </BaseEmptyState>
 
-    <!-- Список мотоциклов -->
-    <div v-else class="garage-grid">
-      <MotorcycleCard
-        v-for="moto in motorcycles"
-        :key="moto.id"
-        :motorcycle="moto"
-        @updated="refresh()"
-      />
+    <div v-else class="garage-body-wrapper">
+      <!-- Статистика гаража -->
+      <GarageStatistics/>
+
+      <!-- Список мотоциклов -->
+      <div class="garage-grid">
+        <MotorcycleCard
+          v-for="moto in motorcycles"
+          :key="moto.id"
+          :motorcycle="moto"
+          @updated="refresh()"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -113,8 +118,6 @@ const { data: motorcycles, pending, error, refresh } = await useAsyncData(
 }
 
 .garage-grid {
-  display: grid;
-  grid-template-columns: 1fr;
   gap: var(--space-4);
 
   @include sm-up {

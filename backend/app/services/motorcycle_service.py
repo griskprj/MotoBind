@@ -107,9 +107,6 @@ class MotorcycleService:
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
         note_text = note_text or ""
-        if len(note_text) > 128:
-            raise ValidationError("Длина заметок не более 128 символов")
-
         moto.note = note_text
         db.session.commit()
         return moto

@@ -41,7 +41,7 @@ class CreateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
-    note: Optional[str] = Field(None, max_length=128)
+    note: Optional[str] = Field(None)
 
     model_config = {"populate_by_name": True}
 
@@ -54,7 +54,7 @@ class UpdateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
-    note: Optional[str] = Field(None, max_length=128)
+    note: Optional[str] = Field(None)
 
     model_config = {"populate_by_name": True}
 

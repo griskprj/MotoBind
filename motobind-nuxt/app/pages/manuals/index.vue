@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Manual, ManualsListResponse } from '~/types'
+import type { Manual } from '~/types'
 
 useSeoMeta({
   title: 'Мануалы по ремонту мотоциклов',
@@ -11,10 +11,13 @@ const api = useApi()
 const route = useRoute()
 const router = useRouter()
 
-const searchQuery = ref('')
-const debouncedSearch = useDebounce(searchQuery, 1000)
+// --- Состояние фильтров ---
+const searchQuery = ref(String(route.query.search || ''))
+const debouncedSearch = useDebounce(searchQuery, 500)
 const selectedCategory = ref(String(route.query.category || 'all'))
 const selectedDifficulty = ref(String(route.query.difficult || 'all'))
+const selectedDuration = ref(String(route.query.duration || 'all'))
+const selectedModel = ref(String(route.query.model || 'all'))
 const page = ref(Number(route.query.page) || 1)
 
 const manuals = ref<Manual[]>([])
@@ -22,6 +25,7 @@ const totalPages = ref(1)
 const pending = ref(false)
 const error = ref<any>(null)
 
+// --- Загрузка данных ---
 async function loadManuals() {
   pending.value = true
   error.value = null
@@ -32,6 +36,9 @@ async function loadManuals() {
       search: debouncedSearch.value || undefined,
       category: selectedCategory.value !== 'all' ? selectedCategory.value : undefined,
       difficult: selectedDifficulty.value !== 'all' ? selectedDifficulty.value : undefined,
+      // Если на бэкенде есть фильтры по длительности или модели — раскомментируйте:
+      // duration: selectedDuration.value !== 'all' ? selectedDuration.value : undefined,
+      // model: selectedModel.value !== 'all' ? selectedModel.value : undefined,
       tab: 'all',
       status: 'approved',
     })
@@ -46,80 +53,122 @@ async function loadManuals() {
 }
 
 onMounted(loadManuals)
-watch([debouncedSearch, page, selectedCategory, selectedDifficulty], loadManuals)
 
-watch([searchQuery, selectedCategory, selectedDifficulty, page], () => {
+// Следим за изменениями (дебаунс для поиска)
+watch([debouncedSearch, page, selectedCategory, selectedDifficulty, selectedDuration, selectedModel], () => {
+  page.value = 1 // Сбрасываем страницу при смене фильтров
+  loadManuals()
+})
+
+// Синхронизация с URL
+watch([debouncedSearch, selectedCategory, selectedDifficulty, selectedDuration, selectedModel, page], () => {
   router.replace({
     query: {
       ...route.query,
       search: debouncedSearch.value || undefined,
       category: selectedCategory.value !== 'all' ? selectedCategory.value : undefined,
       difficult: selectedDifficulty.value !== 'all' ? selectedDifficulty.value : undefined,
+      duration: selectedDuration.value !== 'all' ? selectedDuration.value : undefined,
+      model: selectedModel.value !== 'all' ? selectedModel.value : undefined,
       page: page.value > 1 ? page.value : undefined,
     }
   })
 })
 
+// --- Константы ---
+const tabs = [
+  { id: 'all', label: 'Все мануалы', icon: 'fa-solid fa-border-all' },
+  { id: 'engine', label: 'Двигатель', icon: 'fa-solid fa-gear' },
+  { id: 'drive', label: 'Трансмиссия', icon: 'fa-solid fa-link' },
+  { id: 'brakes', label: 'Тормоза', icon: 'fa-solid fa-hand' },
+  { id: 'electronics', label: 'Электрика', icon: 'fa-solid fa-bolt' },
+  { id: 'maintenance', label: 'ТО', icon: 'fa-solid fa-wrench' },
+]
+
 const difficultyMap = {
-  easy: { label: 'Легко', color: 'var(--color-success)' },
-  medium: { label: 'Средне', color: 'var(--color-warning)' },
-  hard: { label: 'Сложно', color: 'var(--color-danger)' },
+  easy: { label: 'Легко', color: 'var(--color-success)', icon: 'fa-solid fa-signal' },
+  medium: { label: 'Средне', color: 'var(--color-warning)', icon: 'fa-solid fa-signal' },
+  hard: { label: 'Сложно', color: 'var(--color-danger)', icon: 'fa-solid fa-signal' },
 }
 
-const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', 'electronics', 'steering', 'fuel', 'cooling']
+const modelOptions = [
+  { value: 'all', label: 'Модель мотоцикла' },
+  { value: 'bajaj', label: 'Bajaj Pulsar NS 125' },
+  { value: 'yamaha', label: 'Yamaha MT-07' },
+]
+
+const durationOptions = [
+  { value: 'all', label: 'Длительность' },
+  { value: '15', label: 'До 15 мин' },
+  { value: '30', label: 'До 30 мин' },
+  { value: '60', label: 'До 1 часа' },
+]
 </script>
 
 <template>
-  <div class="page-manuals">
+  <div class="manuals-page">
+    <!-- Заголовок -->
     <header class="page-header">
-      <h1 class="page-title">Мануалы по ремонту</h1>
-      <p class="page-subtitle">Пошаговые руководства для самостоятельного обслуживания мотоциклов.</p>
-
-      <div class="header-wrapper">
-        <NuxtLink class="link" to="/manual-rules">Правила оформления мануалов</NuxtLink>
-
-        <BaseButton
-          size="sm"
-          variant="primary"
-          to="/manuals/new"
-        >
-          Добавить мануал
-        </BaseButton>
+      <div>
+        <h1 class="page-title">Мануалы по ремонту</h1>
+        <p class="page-subtitle">Пошаговые руководства для самостоятельного обслуживания мотоциклов.</p>
       </div>
+      <BaseButton size="md" variant="primary" to="/manuals/new">
+        <template #icon><i class="fa-solid fa-plus"></i></template>
+        Добавить мануал
+      </BaseButton>
     </header>
 
-    <!-- Фильтры -->
-    <div class="filters">
+    <!-- Табы категорий -->
+    <div class="category-tabs">
+      <button
+        v-for="tab in tabs"
+        :key="tab.id"
+        class="cat-tab"
+        :class="{ 'cat-tab--active': selectedCategory === tab.id }"
+        @click="selectedCategory = tab.id"
+      >
+        <i :class="tab.icon"></i>
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- Панель фильтров -->
+    <div class="filters-panel">
       <div class="search-wrap">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Поиск по названию, мотоциклу..."
+          placeholder="Поиск по названию, описанию..."
           class="search-input"
         />
       </div>
 
-      <div class="filter-group">
-        <select v-model="selectedCategory" class="filter-select">
-          <option value="all">Все категории</option>
-          <option v-for="cat in categories.filter(c => c !== 'all')" :key="cat" :value="cat">{{ cat }}</option>
+      <div class="filters-group">
+        <select v-model="selectedModel" class="filter-select">
+          <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
 
         <select v-model="selectedDifficulty" class="filter-select">
-          <option value="all">Любая сложность</option>
+          <option value="all">Сложность</option>
           <option value="easy">Легко</option>
           <option value="medium">Средне</option>
           <option value="hard">Сложно</option>
         </select>
+
+        <select v-model="selectedDuration" class="filter-select">
+          <option v-for="opt in durationOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
       </div>
     </div>
 
-    <!-- Загрузка / ошибка / пустота -->
-    <div v-if="pending" class="loading">
-      <BaseSkeleton height="200px" rounded v-for="i in 4" :key="i" />
+    <!-- Состояния -->
+    <div v-if="pending" class="loading-grid">
+      <BaseSkeleton height="320px" rounded v-for="i in 4" :key="i" />
     </div>
-    <div v-else-if="error" class="error">
+    <div v-else-if="error" class="error-state">
+      <i class="fa-solid fa-triangle-exclamation"></i>
       <p>Не удалось загрузить мануалы.</p>
       <BaseButton @click="loadManuals()">Повторить</BaseButton>
     </div>
@@ -128,30 +177,55 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
       <p>Ничего не найдено. Попробуйте изменить запрос.</p>
     </div>
 
-    <!-- Сетка -->
+    <!-- Сетка карточек -->
     <div v-else class="manuals-grid">
-      <BaseCard
+      <div
         v-for="manual in manuals"
         :key="manual.id"
-        hoverable
-        clickable
-        :to="`/manuals/${manual.id}`"
         class="manual-card"
+        @click="router.push(`/manuals/${manual.id}`)"
       >
-        <div class="card-header">
-          <span class="category-badge">{{ manual.category }}</span>
-          <span v-if="manual.difficult" class="difficulty" :style="{ color: difficultyMap[manual.difficult as keyof typeof difficultyMap]?.color }">
-            <i class="fa-solid fa-signal"></i> {{ difficultyMap[manual.difficult as keyof typeof difficultyMap]?.label }}
-          </span>
+        <!-- Обложка карточки -->
+        <div class="card-cover">
+          <span class="cover-badge">{{ manual.category }}</span>
+          <img
+            v-if="manual.image_url"
+            :src="manual.image_url"
+            :alt="manual.title"
+            class="cover-img"
+          />
+          <div v-else class="cover-placeholder">
+            <i class="fa-solid fa-motorcycle"></i>
+          </div>
         </div>
-        <h2 class="card-title">{{ manual.title }}</h2>
-        <p class="card-desc">{{ manual.description || 'Без описания' }}</p>
-        <div class="card-footer">
-          <span v-if="manual.time_estimate"><i class="fa-regular fa-clock"></i> {{ manual.time_estimate }}</span>
-          <span v-if="manual.steps"><i class="fa-solid fa-list-ol"></i> {{ manual.steps.length }} шагов</span>
-          <span v-if="manual.motorcycle"><i class="fa-solid fa-motorcycle"></i> {{ manual.motorcycle }}</span>
+
+        <!-- Контент карточки -->
+        <div class="card-content">
+          <h2 class="card-title">{{ manual.title }}</h2>
+          <p class="card-desc">{{ manual.description || 'Без описания' }}</p>
+
+          <!-- Мета-данные -->
+          <div class="card-meta">
+            <span class="meta-item difficulty" :style="{ color: difficultyMap[manual.difficult as keyof typeof difficultyMap]?.color || 'var(--color-text-secondary)' }">
+              <i :class="difficultyMap[manual.difficult as keyof typeof difficultyMap]?.icon || 'fa-solid fa-signal'"></i>
+              {{ difficultyMap[manual.difficult as keyof typeof difficultyMap]?.label || 'Любая' }}
+            </span>
+            <span class="meta-item" v-if="manual.time_estimate">
+              <i class="fa-regular fa-clock"></i> {{ manual.time_estimate }}
+            </span>
+            <span class="meta-item" v-if="manual.steps">
+              <i class="fa-solid fa-list-ol"></i> {{ manual.steps.length }} шагов
+            </span>
+          </div>
+
+          <!-- Кнопка -->
+          <div class="card-footer">
+            <BaseButton class="open-btn" variant="secondary" @click.stop="router.push(`/manuals/${manual.id}`)">
+              Открыть руководство <i class="fa-solid fa-arrow-right"></i>
+            </BaseButton>
+          </div>
         </div>
-      </BaseCard>
+      </div>
     </div>
 
     <!-- Пагинация -->
@@ -170,45 +244,50 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
 <style scoped lang="scss">
 @use '~/assets/styles/breakpoints' as *;
 
-.link {
-  color: var(--color-brand);
-}
-
-.page-manuals {
+.manuals-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
+/* Заголовок */
 .page-header {
-  margin-bottom: var(--space-2);
-}
-.header-wrapper {
   display: flex;
-  justify-content: space-between;
-  margin-top: var(--space-4);
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  @include sm-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
+
 .page-title {
   font-size: var(--text-3xl);
   font-weight: var(--fw-bold);
 }
+
 .page-subtitle {
   font-size: var(--text-base);
   color: var(--color-text-secondary);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
 }
 
-/* Фильтры */
-.filters {
+/* Баннер */
+.promo-banner {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  background: var(--color-surface);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  padding: var(--space-6);
+  background: linear-gradient(135deg, rgba(112, 0, 255, 0.15) 0%, rgba(30, 30, 40, 0.6) 100%);
+  border: 1px solid rgba(112, 0, 255, 0.3);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 
   @include md-up {
     flex-direction: row;
@@ -216,23 +295,145 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
     justify-content: space-between;
   }
 }
-.filter-group {
+
+.promo-content {
   display: flex;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 2;
 }
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+
+.promo-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(112, 0, 255, 0.2);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand);
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.promo-label {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: var(--color-brand);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.promo-title {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
   color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.promo-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 600px;
+}
+
+.promo-actions {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.promo-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background-image: url('https://www.transparentpng.com/thumb/motorcycle/Pulse-Motorcycle-PNG-Image.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: right center;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Табы */
+.category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+
+  @include md-up {
+    flex-wrap: nowrap;
+  }
+}
+
+.cat-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  i {
+    color: var(--color-text-tertiary);
+    transition: color 0.2s;
+  }
+
+  &:hover {
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+  }
+
+  &--active {
+    background: rgba(112, 0, 255, 0.15);
+    color: var(--color-brand);
+
+    i {
+      color: var(--color-brand);
+    }
+  }
+}
+
+/* Фильтры */
+.filters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+
+  @include lg-up {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .search-wrap {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  flex: 1;
+  min-width: 250px;
 }
+
 .search-icon {
   position: absolute;
   left: var(--space-3);
@@ -240,42 +441,45 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
   transform: translateY(-50%);
   color: var(--color-text-tertiary);
 }
+
 .search-input {
   width: 100%;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--color-surface-secondary);
   color: var(--color-text);
   font-size: var(--text-sm);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color 0.2s;
 
   &:focus {
     outline: none;
     border-color: var(--color-brand);
-    box-shadow: var(--shadow-focus);
   }
 }
 
-.categories {
+.filters-group {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-}
-.cat-btn {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  font-size: var(--text-sm);
-  background: var(--color-surface-secondary);
-  color: var(--color-text-secondary);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all var(--transition-fast);
 
-  &:hover { background: var(--color-surface-hover); }
-  &--active {
-    background: var(--color-brand-soft);
-    color: var(--color-brand);
+  @include lg-up {
+    flex-wrap: nowrap;
+  }
+}
+
+.filter-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  min-width: 140px;
+
+  &:focus {
+    outline: none;
     border-color: var(--color-brand);
   }
 }
@@ -283,34 +487,81 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
 /* Сетка */
 .manuals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
 }
 
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Карточка */
 .manual-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+  .open-btn {
+    width: 100%;
+  }
+
+  &:hover {
+    border-color: rgba(112, 0, 255, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
 }
 
-.card-header {
+/* Обложка */
+.card-cover {
+  position: relative;
+  height: 160px;
+  background: linear-gradient(135deg, rgba(112, 0, 255, 0.1), rgba(30, 30, 40, 0.8));
+  border-bottom: 1px solid var(--color-border);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-3);
+  justify-content: center;
+  overflow: hidden;
 }
-.category-badge {
-  font-size: var(--text-xs);
-  font-weight: var(--fw-semibold);
-  color: var(--color-brand);
+
+.cover-badge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
+  color: #fff;
+  background: rgba(112, 0, 255, 0.8);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  z-index: 2;
 }
-.difficulty {
-  font-size: var(--text-xs);
-  font-weight: var(--fw-medium);
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-placeholder {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.1);
+}
+
+/* Контент карточки */
+.card-content {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+  padding: var(--space-4);
+  flex: 1;
 }
 
 .card-title {
@@ -318,48 +569,75 @@ const categories = ['all', 'engine', 'drive', 'brakes', 'wheel', 'suspension', '
   font-weight: var(--fw-bold);
   color: var(--color-text);
   margin-bottom: var(--space-2);
-  line-height: var(--leading-tight);
-}
-.card-desc {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
-  flex: 1;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.card-footer {
+.card-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* Мета-данные */
+.card-meta {
   display: flex;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
-  border-top: 1px solid var(--color-border-light);
-  padding-top: var(--space-3);
 
-  span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  i {
+    font-size: 12px;
   }
 }
 
+.meta-item.difficulty {
+  font-weight: var(--fw-medium);
+}
+
+/* Футер */
+.card-footer {
+  margin-top: auto;
+}
+
+/* Состояния */
+.error-state,
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-10);
+  text-align: center;
   color: var(--color-text-tertiary);
 
   i { font-size: 48px; opacity: 0.5; }
 }
 
-@media (max-width: 380px) {
-  .filter-group {
-    flex-direction: column;
-  }
+/* Пагинация */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 </style>
