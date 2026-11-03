@@ -130,7 +130,7 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
 </script>
 
 <template>
-  <BaseCard padding="none" class="moto-card">
+  <BaseCard padding="none" class="moto-card" :to="maintenanceLink">
     <div class="moto-card__layout">
       <!-- Фото (слева) -->
       <div class="moto-card__image-wrap">

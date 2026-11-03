@@ -8,22 +8,37 @@ export const useAuthStore = defineStore('auth', () => {
 
   const user = ref<User | null>(null)
   const status = ref<AuthStatus>('idle')
+
+  let fetchPromise: Promise<User | null> | null = null
+
   const isAuthenticated = computed(() => status.value === 'authenticated' && !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isBusiness = computed(() => !!user.value?.has_business_account)
 
-  async function fetchUser(): Promise<User | null> {
+  async function fetchUser(force = false): Promise<User | null> {
+    if (!force && status.value === 'authenticated') return user.value
+    if (!force && status.value === 'guest') return null
+
+    if (fetchPromise) return fetchPromise
+
     status.value = 'loading'
-    try {
-      const me = await api.auth.me()
-      user.value = me
-      status.value = 'authenticated'
-      return me
-    } catch (e) {
-      user.value = null
-      status.value = 'guest'
-      return null
-    }
+
+    fetchPromise = (async () => {
+      try {
+        const me = await api.auth.me()
+        user.value = me
+        status.value = 'authenticated'
+        return me
+      } catch (e) {
+        user.value = null
+        status.value = 'guest'
+        return null
+      } finally {
+        fetchPromise = null
+      }
+    })()
+
+    return fetchPromise
   }
 
   async function login(payload: LoginPayload): Promise<User> {
@@ -58,7 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await api.auth.logout()
     } catch {
-      // logout
+      // ignore
     } finally {
       user.value = null
       status.value = 'guest'

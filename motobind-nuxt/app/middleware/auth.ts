@@ -1,7 +1,8 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
 
   if (auth.status === 'idle') {
+    await auth.fetchUser()
   }
 
   if (!auth.isAuthenticated) {
