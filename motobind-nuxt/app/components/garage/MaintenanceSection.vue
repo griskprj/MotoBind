@@ -257,34 +257,7 @@ function formatDate(dateStr?: string | null) {
       </div>
 
       <!-- Правая колонка: Статистика и График -->
-      <div class="m-side-col">
-        <!-- Сводка -->
-        <div class="m-widget">
-          <h3 class="widget-title">Сводка</h3>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <i class="fa-solid fa-gauge-high"></i>
-              <div class="summary-val">{{ stats.currentMileage.toLocaleString() }} км</div>
-              <div class="summary-lbl">Текущий пробег</div>
-            </div>
-            <div class="summary-item">
-              <i class="fa-solid fa-calendar-check"></i>
-              <div class="summary-val">{{ stats.totalEvents }}</div>
-              <div class="summary-lbl">Событий</div>
-            </div>
-            <div class="summary-item">
-              <i class="fa-solid fa-sack-dollar"></i>
-              <div class="summary-val">{{ stats.totalCost.toLocaleString() }} ₽</div>
-              <div class="summary-lbl">Затраты</div>
-            </div>
-          </div>
-        </div>
 
-        <div class="m-widget">
-          <h3 class="widget-title">Динамика затрат</h3>
-          <MaintenanceCostChart :chart-data="costChartData" />
-        </div>
-      </div>
     </div>
   </div>
 </template>
