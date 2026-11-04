@@ -70,6 +70,10 @@ const { data: motorcycles, pending, error, refresh } = await useAsyncData(
       <!-- Статистика гаража -->
       <GarageStatistics/>
 
+      <BaseCard style="margin-bottom: var(--space-4);">
+        <p>Привет от разраба!</p>
+      </BaseCard>
+
       <!-- Список мотоциклов -->
       <div class="garage-grid">
         <MotorcycleCard
