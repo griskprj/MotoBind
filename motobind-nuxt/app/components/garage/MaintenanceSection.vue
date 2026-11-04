@@ -283,12 +283,10 @@ function formatDate(dateStr?: string | null) {
         <!-- График затрат (обёрнут в ClientOnly, чтобы не было SSR-ошибок) -->
         <div class="m-widget">
           <h3 class="widget-title">Динамика затрат</h3>
-          <ClientOnly>
-            <MaintenanceCostChart :chart-data="costChartData" />
-            <template #fallback>
-              <div class="chart-placeholder">Загрузка графика...</div>
-            </template>
-          </ClientOnly>
+          <MaintenanceCostChart :chart-data="costChartData" />
+          <template #fallback>
+            <div class="chart-placeholder">Загрузка графика...</div>
+          </template>
         </div>
       </div>
     </div>
