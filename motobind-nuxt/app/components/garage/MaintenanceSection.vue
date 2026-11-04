@@ -140,7 +140,7 @@ function formatDate(dateStr?: string | null) {
         </div>
         <div>
           <h2 class="m-title">История мотоцикла</h2>
-          <p class="m-subtitle">Все события: обслуживание, ремонты, замены и важные заметки</p>
+          <p class="m-subtitle">Все события: обслуживание, ремонты, замены</p>
         </div>
       </div>
       <BaseButton v-if="!isFormOpen" variant="primary" @click="openCreate">
