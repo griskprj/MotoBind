@@ -15,6 +15,8 @@ const selectedMaintenance = ref<Maintenance | null>(null)
 const completingMaintenance = ref<Maintenance | null>(null)
 const deletingMaintenance = ref<Maintenance | null>(null)
 
+// --- Вычисляемые данные ---
+
 const planned = computed(() =>
   (props.motorcycle.maintenances || [])
     .filter(m => m.status === 'planned')
@@ -46,16 +48,9 @@ const groupedHistory = computed(() => {
 const stats = computed(() => {
   const totalCost = history.value.reduce((sum, m) => sum + (m.cost || 0), 0)
   const totalEvents = history.value.length
-  let ownershipDays = 0
-  if (history.value.length > 0) {
-    const dates = history.value.map(m => new Date(m.completed_date || m.created_at).getTime())
-    const firstDate = Math.min(...dates)
-    ownershipDays = Math.floor((Date.now() - firstDate) / (1000 * 60 * 60 * 24))
-  }
   return {
     totalCost,
     totalEvents,
-    ownershipDays,
     currentMileage: props.motorcycle.mileage || (history.value[0]?.completed_mileage || 0)
   }
 })
@@ -82,6 +77,8 @@ const costChartData = computed(() => {
 
   return monthsData
 })
+
+// --- Действия ---
 
 function openCreate() {
   editingMaintenance.value = null
@@ -283,10 +280,15 @@ function formatDate(dateStr?: string | null) {
           </div>
         </div>
 
-        <!-- График затрат -->
+        <!-- График затрат (обёрнут в ClientOnly, чтобы не было SSR-ошибок) -->
         <div class="m-widget">
           <h3 class="widget-title">Динамика затрат</h3>
-          <MaintenanceCostChart :chart-data="costChartData" />
+          <ClientOnly>
+            <MaintenanceCostChart :chart-data="costChartData" />
+            <template #fallback>
+              <div class="chart-placeholder">Загрузка графика...</div>
+            </template>
+          </ClientOnly>
         </div>
       </div>
     </div>
@@ -318,7 +320,6 @@ function formatDate(dateStr?: string | null) {
   }
 }
 
-/* Заголовок */
 .m-header {
   display: flex;
   justify-content: space-between;
@@ -360,7 +361,6 @@ function formatDate(dateStr?: string | null) {
   color: var(--color-text-secondary);
 }
 
-/* Сетка */
 .m-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -371,7 +371,6 @@ function formatDate(dateStr?: string | null) {
   }
 }
 
-/* Табы */
 .m-tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
@@ -407,7 +406,6 @@ function formatDate(dateStr?: string | null) {
   font-size: var(--text-xs);
 }
 
-/* Пустое состояние */
 .m-empty {
   padding: var(--space-6);
   text-align: center;
@@ -418,7 +416,6 @@ function formatDate(dateStr?: string | null) {
   border: 1px dashed var(--color-border);
 }
 
-/* --- ТАЙМЛАЙН --- */
 .timeline {
   display: flex;
   flex-direction: column;
@@ -545,7 +542,6 @@ function formatDate(dateStr?: string | null) {
   text-overflow: ellipsis;
 }
 
-/* --- ПРАВАЯ КОЛОНКА (ВИДЖЕТЫ) --- */
 .m-side-col {
   display: flex;
   flex-direction: column;
@@ -553,7 +549,7 @@ function formatDate(dateStr?: string | null) {
 }
 
 .m-widget {
-  min-width: 0; /* Важно для ApexCharts */
+  min-width: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -566,7 +562,6 @@ function formatDate(dateStr?: string | null) {
   margin-bottom: var(--space-3);
 }
 
-/* Сводка */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -597,5 +592,16 @@ function formatDate(dateStr?: string | null) {
 .summary-lbl {
   font-size: 10px;
   color: var(--color-text-tertiary);
+}
+
+.chart-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
 }
 </style>
