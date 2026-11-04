@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Motorcycle } from '~/types'
-
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
@@ -21,7 +19,6 @@ useSeoMeta({
   robots: 'noindex',
 })
 
-// Вкладки
 const activeTab = ref('overview')
 const tabs = [
   { id: 'overview', label: 'Обзор' },
@@ -35,7 +32,6 @@ async function onUpdated() {
   await refresh()
 }
 
-// Фоновое изображение для шапки
 const heroBackground = computed(() => {
   if (!motorcycle.value?.photo_url) return 'none'
   const url = mediaUrl(motorcycle.value.photo_url)
