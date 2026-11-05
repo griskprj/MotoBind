@@ -13,7 +13,6 @@ from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 from app.models.user import User
 
-
 # ============================================================
 # КОНСТАНТЫ
 # ============================================================
@@ -21,12 +20,14 @@ from app.models.user import User
 MILEAGE_STALE_DAYS = 30
 MILEAGE_REPEAT_DAYS = 14
 MAINTENANCE_SOON_THRESHOLD_KM = 500
+MAINTENANCE_SOON_THRESHOLD_DAYS = 14
 MAINTENANCE_OVERDUE_REPEAT_DAYS = 7
 
 
 def _now() -> datetime:
     """Всегда UTC. Единая точка правды для тестов."""
     return datetime.now(timezone.utc)
+
 
 def _ensure_aware(dt: Optional[datetime]) -> Optional[datetime]:
     """
@@ -41,7 +42,6 @@ def _ensure_aware(dt: Optional[datetime]) -> Optional[datetime]:
 
 
 class ReminderService:
-
     # ========================================================
     # ПУБЛИЧНЫЙ API — одна точка входа
     # ========================================================
@@ -104,8 +104,7 @@ class ReminderService:
 
         for user in users:
             if not (
-                user.reminders_mileage_enabled
-                or user.reminders_maintenance_enabled
+                user.reminders_mileage_enabled or user.reminders_maintenance_enabled
             ):
                 continue
 
@@ -192,10 +191,12 @@ class ReminderService:
             for r in Reminder.query.filter(
                 Reminder.motorcycle_id == moto.id,
                 Reminder.status == Reminder.STATUS_PENDING,
-                Reminder.type.in_([
-                    Reminder.TYPE_MAINTENANCE_SOON,
-                    Reminder.TYPE_MAINTENANCE_OVERDUE,
-                ]),
+                Reminder.type.in_(
+                    [
+                        Reminder.TYPE_MAINTENANCE_SOON,
+                        Reminder.TYPE_MAINTENANCE_OVERDUE,
+                    ]
+                ),
             ).all()
         }
 
@@ -218,13 +219,15 @@ class ReminderService:
                     dismissed_auto += 1
 
                 if key not in existing:
-                    db.session.add(Reminder(
-                        user_id=user.id,
-                        motorcycle_id=moto.id,
-                        maintenance_id=maint.id,
-                        type=Reminder.TYPE_MAINTENANCE_OVERDUE,
-                        status=Reminder.STATUS_PENDING,
-                    ))
+                    db.session.add(
+                        Reminder(
+                            user_id=user.id,
+                            motorcycle_id=moto.id,
+                            maintenance_id=maint.id,
+                            type=Reminder.TYPE_MAINTENANCE_OVERDUE,
+                            status=Reminder.STATUS_PENDING,
+                        )
+                    )
                     created += 1
 
             elif km_left <= MAINTENANCE_SOON_THRESHOLD_KM:
@@ -232,13 +235,15 @@ class ReminderService:
                 active_keys.add(key)
 
                 if key not in existing:
-                    db.session.add(Reminder(
-                        user_id=user.id,
-                        motorcycle_id=moto.id,
-                        maintenance_id=maint.id,
-                        type=Reminder.TYPE_MAINTENANCE_SOON,
-                        status=Reminder.STATUS_PENDING,
-                    ))
+                    db.session.add(
+                        Reminder(
+                            user_id=user.id,
+                            motorcycle_id=moto.id,
+                            maintenance_id=maint.id,
+                            type=Reminder.TYPE_MAINTENANCE_SOON,
+                            status=Reminder.STATUS_PENDING,
+                        )
+                    )
                     created += 1
 
         for key, reminder in existing.items():
@@ -281,7 +286,11 @@ class ReminderService:
                 continue
 
             try:
-                notif_title, notif_content, notif_link = ReminderService._build_notification_payload(reminder)
+                (
+                    notif_title,
+                    notif_content,
+                    notif_link,
+                ) = ReminderService._build_notification_payload(reminder)
                 NotificationService.send_notification(
                     user_id=user.id,
                     type="reminder",
@@ -296,7 +305,9 @@ class ReminderService:
                 )
                 stats["notifications_created"] += 1
             except Exception as e:
-                print(f"[ReminderService] Failed to create notification for reminder {reminder.id}: {e}")
+                print(
+                    f"[ReminderService] Failed to create notification for reminder {reminder.id}: {e}"
+                )
 
             if EmailService.can_send_reminder(user, reminder.type):
                 ok = EmailService.send_reminder_email(user, reminder)
@@ -388,7 +399,7 @@ class ReminderService:
     @staticmethod
     def dismiss(reminder_id: int, user_id: int) -> Reminder:
         """Скрывает напоминание навсегда."""
-        from app.exceptions import NotFoundError, ForbiddenError
+        from app.exceptions import ForbiddenError, NotFoundError
 
         reminder = db.session.get(Reminder, reminder_id)
         if not reminder:
@@ -404,7 +415,7 @@ class ReminderService:
     @staticmethod
     def snooze(reminder_id: int, user_id: int, days: int = 7) -> Reminder:
         """Откладывает напоминание на N дней."""
-        from app.exceptions import NotFoundError, ForbiddenError
+        from app.exceptions import ForbiddenError, NotFoundError
 
         reminder = db.session.get(Reminder, reminder_id)
         if not reminder:

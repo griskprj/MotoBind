@@ -92,10 +92,12 @@ def create_app(config_override=None):
     from app.api.auth import auth
     from app.api.booking import booking
     from app.api.business import business
+    from app.api.components import components
     from app.api.diagnostics import diagnostics
     from app.api.learning import learning
     from app.api.learning_admin import learning_admin
     from app.api.maintenance import maintenance
+    from app.api.maintenance_event import maintenance_events
     from app.api.manuals import manual
     from app.api.motorcycle import motorcycle
     from app.api.notifications import notifications_bp
@@ -121,5 +123,9 @@ def create_app(config_override=None):
     app.register_blueprint(diagnostics, url_prefix="/api/diagnostics")
     app.register_blueprint(learning, url_prefix="/api/learning")
     app.register_blueprint(learning_admin, url_prefix="/api/learning/admin")
+    app.register_blueprint(
+        components, url_prefix="/api/motorcycle/<int:moto_id>/components"
+    )
+    app.register_blueprint(maintenance_events, url_prefix="/api/maintenance/events")
 
     return app

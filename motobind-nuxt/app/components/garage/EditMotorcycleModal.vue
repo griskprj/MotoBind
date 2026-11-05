@@ -21,6 +21,7 @@ const form = reactive({
   name: '',
   years: '',
   volume: '' as string | number,
+  drive_type: 'chain' as 'chain' | 'belt' | 'shaft',
   color: '',
   licensePlate: '',
   vin: '',
@@ -34,6 +35,7 @@ onMounted(() => {
   form.name = props.motorcycle.name || ''
   form.years = props.motorcycle.years || ''
   form.volume = props.motorcycle.volume || ''
+  form.drive_type = props.motorcycle.drive_type || 'chain'
   form.color = props.motorcycle.color || '#FFFFFF'
   form.licensePlate = props.motorcycle.license_plate || ''
   form.vin = props.motorcycle.vin || ''
@@ -91,6 +93,7 @@ async function onSave() {
       name: safeString(form.name).trim(),
       years: safeString(form.years).trim() || null,
       volume: form.volume ? Number(form.volume) : null,
+      drive_type: form.drive_type,
       color: form.color || null,
       licensePlate: safeString(form.licensePlate).trim().toUpperCase() || null,
       vin: safeString(form.vin).trim().toUpperCase() || null,
@@ -146,6 +149,16 @@ async function onSave() {
         <div class="form-grid">
           <BaseInput v-model="form.name" label="Название" required class="span-2" :error="errors.name" />
           <BaseInput v-model="form.years" label="Год выпуска" :error="errors.years" />
+          <BaseSelect
+            v-model="form.drive_type"
+            label="Тип привода"
+            :options="[
+              { value: 'chain', label: 'Цепь' },
+              { value: 'belt', label: 'Ремень' },
+              { value: 'shaft', label: 'Кардан' }
+            ]"
+            :error="errors.drive_type"
+          />
           <BaseInput v-model="form.volume" type="number" label="Объем (см³)" :error="errors.volume" />
           <BaseColorPicker v-model="form.color" label="Цвет" :error="errors.color" />
           <BaseInput v-model="form.licensePlate" label="Госномер" style="text-transform: uppercase;" :error="errors.licensePlate" />

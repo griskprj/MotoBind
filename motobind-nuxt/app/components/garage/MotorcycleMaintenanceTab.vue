@@ -1,22 +1,27 @@
 <script setup lang="ts">
-import type { Motorcycle, Maintenance } from '~/types'
+import { type Motorcycle, type Maintenance, type MotorcycleComponent, type MaintenanceEvent } from '~/types'
 
 const props = defineProps<{
   motorcycle: Motorcycle
+  initialComponentId?: number | null
 }>()
 
-const emit = defineEmits<{ updated: [] }>()
+const emit = defineEmits<{ updated: []; 'event-saved': [] }>()
 
 const api = useApi()
 const toast = useToast()
 const router = useRouter()
 
 const isFormOpen = ref(false)
+const isEventFormOpen = ref(false)
 const editingMaintenance = ref<Maintenance | null>(null)
+const editingEvent = ref<MaintenanceEvent | null>(null)
+const eventComponentId = ref<number | null>(null)
 
 const selectedMaintenance = ref<Maintenance | null>(null)
 const completingMaintenance = ref<Maintenance | null>(null)
 const deletingMaintenance = ref<Maintenance | null>(null)
+const components = ref<MotorcycleComponent[]>([])
 
 const currentMileage = computed(() => props.motorcycle.mileage || 0)
 
@@ -120,6 +125,15 @@ const filteredPlan = computed(() => {
   }
 })
 
+async function loadComponents() {
+  try {
+    const res = await api.components.list(props.motorcycle.id)
+    components.value = res.components
+  } catch {
+    components.value = []
+  }
+}
+
 function openCreate() {
   editingMaintenance.value = null
   isFormOpen.value = true
@@ -133,6 +147,21 @@ function openEdit(m: Maintenance) {
 
 function openDetails(m: Maintenance) {
   selectedMaintenance.value = m
+}
+
+function openEventCreate(componentId: number | null = null) {
+  editingEvent.value = null
+  eventComponentId.value = componentId
+  isEventFormOpen.value = true
+}
+
+function onEventSaved() {
+  isEventFormOpen.value = false
+  editingEvent.value = null
+  eventComponentId.value = null
+  loadComponents()
+  emit('updated')
+  emit('event-saved')
 }
 
 const onFormDone = () => {
@@ -154,6 +183,16 @@ const onCompleted = () => {
 const manualsLink = computed(() => `/manuals?motorcycle=${encodeURIComponent(props.motorcycle.name)}`)
 const trainingLink = '/training'
 const articlesLink = '/training'
+
+watch(
+  () => props.initialComponentId,
+  (v) => {
+    if (v != null) openEventCreate(v)
+  },
+  { immediate: true },
+)
+
+onMounted(loadComponents)
 </script>
 
 <template>
@@ -274,9 +313,9 @@ const articlesLink = '/training'
             </div>
           </div>
         </div>
-        <BaseButton variant="primary" block class="add-task-btn" @click="openCreate">
-          <template #icon><i class="fa-solid fa-plus"></i></template>
-          Добавить работу
+        <BaseButton variant="primary" block class="add-tast-btn" @click="openEventCreate">
+          <template #icon><i class="fa-solid fa-layer-group"></i></template>
+          Создать событие
         </BaseButton>
       </BaseCard>
 
@@ -380,6 +419,22 @@ const articlesLink = '/training'
       @close="deletingMaintenance = null"
       @deleted="onDelete"
     />
+
+    <BaseModal
+      v-if="isEventFormOpen"
+      :title="editingEvent ? 'Редактировать событие' : 'Новое событие обслуживания'"
+      @close="isEventFormOpen = false"
+    >
+      <MaintenanceEventForm
+        :motorcycle-id="motorcycle.id"
+        :current-mileage="motorcycle.mileage ?? null"
+        :components="components"
+        :initial-component-id="eventComponentId"
+        :event="editingEvent"
+        @saved="onEventSaved"
+        @cancel="isEventFormOpen = false"
+      />
+    </BaseModal>
   </div>
 </template>
 

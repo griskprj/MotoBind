@@ -4,6 +4,8 @@ import type { Maintenance } from './maintenance'
 // Motorcycle
 // ============================================================
 
+export type DriveType = 'chain' | 'belt' | 'shaft'
+
 /**
  * Краткая карточка мотоцикла (MotorcycleShortSchema).
  * GET /api/motorcycle/ отдаёт Detail (с maintenances), но
@@ -13,6 +15,7 @@ export interface MotorcycleShort {
   name: string
   years?: string | null
   volume?: number | null
+  drive_type?: DriveType | null
   color?: string | null
   license_plate?: string | null
   vin?: string | null
@@ -38,6 +41,7 @@ export interface CreateMotorcyclePayload {
   name: string
   years?: string | null
   volume?: number | null
+  drive_type?: DriveType
   color?: string | null
   licensePlate?: string | null
   vin?: string | null
@@ -51,6 +55,7 @@ export interface UpdateMotorcyclePayload {
   name?: string
   years?: string | null
   volume?: number | null
+  drive_type?: DriveType
   color?: string | null
   licensePlate?: string | null
   vin?: string | null
