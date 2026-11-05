@@ -1,11 +1,23 @@
 import type {
+  ApplyTemplatePayload,
   CreateMaintenancePayload,
+  CreateComponentPayload,
+  CreateMaintenanceEventPayload,
   CompleteMaintenancePayload,
   CompleteMaintenanceResponse,
   UpdateMaintenancePayload,
+  UpdateMaintenanceEventPayload,
+  UpdateComponentPayload,
   Maintenance,
+  MaintenanceEvent,
+  MaintenanceEventsListResponse,
   Motorcycle,
   MotorcycleShort,
+  MotorcycleHealth,
+  MotorcycleComponent,
+  ComponentListResponse,
+  ApplyTemplateResponse,
+  ComponentHistoryResponse,
   CreateMotorcyclePayload,
   UpdateMotorcyclePayload,
   LoginPayload,
@@ -56,6 +68,10 @@ export function useApi() {
     /** GET /motorcycle/<id> */
     get: (id: number | string) =>
       request(() => baseFetch<Motorcycle>(`/motorcycle/${id}`)),
+
+    /** GET /motorcycle/<id>/health — сводка состояния компонентов */
+    health: (id: number | string) =>
+      request(() => baseFetch<MotorcycleHealth>(`/motorcycle/${id}/health`)),
 
     /** POST /motorcycle/ */
     create: (payload: CreateMotorcyclePayload) =>
@@ -173,6 +189,132 @@ export function useApi() {
           method: 'POST',
           body: payload,
         }),
+      ),
+
+    /** События обслуживания */
+    events: {
+      /** GET /maintenance/events/?motorcycle_id=<id> */
+      list: (motorcycleId: number | string, params?: { page?: number; per_page?: number }) =>
+        request(() =>
+          baseFetch<MaintenanceEventsListResponse>('/maintenance/events/', {
+            query: { motorcycle_id: motorcycleId, ...params },
+          }),
+        ),
+
+      /** POST /maintenance/events/ */
+      create: (payload: CreateMaintenanceEventPayload) =>
+        request(() =>
+          baseFetch<MaintenanceEvent>('/maintenance/events/', {
+            method: 'POST',
+            body: payload,
+          }),
+        ),
+
+      /** GET /maintenance/events/<id>?motorcycle_id=<id> */
+      get: (eventId: number | string, motorcycleId: number | string) =>
+        request(() =>
+          baseFetch<MaintenanceEvent>(`/maintenance/events/${eventId}`, {
+            query: { motorcycle_id: motorcycleId },
+          }),
+        ),
+
+      /** PUT /maintenance/events/<id>?motorcycle_id=<id> */
+      update: (
+        eventId: number | string,
+        motorcycleId: number | string,
+        payload: UpdateMaintenanceEventPayload,
+      ) =>
+        request(() =>
+          baseFetch<MaintenanceEvent>(`/maintenance/events/${eventId}`, {
+            method: 'PUT',
+            query: { motorcycle_id: motorcycleId },
+            body: payload,
+          }),
+        ),
+
+      /** DELETE /maintenance/events/<id>?motorcycle_id=<id> */
+      remove: (eventId: number | string, motorcycleId: number | string) =>
+        request(() =>
+          baseFetch<{ message: string }>(`/maintenance/events/${eventId}`, {
+            method: 'DELETE',
+            query: { motorcycle_id: motorcycleId },
+          }),
+        ),
+    },
+  }
+
+  // ---------- COMPONENTS ----------
+  const components = {
+    /** GET /motorcycle/<motoId>/components */
+    list: (motoId: number | string, includeInactive = false) =>
+      request(() =>
+        baseFetch<ComponentListResponse>(
+          `/motorcycle/${motoId}/components/`,
+          { query: { include_inactive: includeInactive } },
+        ),
+      ),
+
+    /** GET /motorcycle/<motoId>/components/<id> */
+    get: (motoId: number | string, id: number | string) =>
+      request(() =>
+        baseFetch<MotorcycleComponent>(`/motorcycle/${motoId}/components/${id}`),
+      ),
+
+    /** POST /motorcycle/<motoId>/components/ */
+    create: (motoId: number | string, payload: CreateComponentPayload) =>
+      request(() =>
+        baseFetch<MotorcycleComponent>(`/motorcycle/${motoId}/components/`, {
+          method: 'POST',
+          body: payload,
+        }),
+      ),
+
+    /** PUT /motorcycle/<motoId>/components/<id> */
+    update: (
+      motoId: number | string,
+      id: number | string,
+      payload: UpdateComponentPayload,
+    ) =>
+      request(() =>
+        baseFetch<MotorcycleComponent>(
+          `/motorcycle/${motoId}/components/${id}`,
+          { method: 'PUT', body: payload },
+        ),
+      ),
+
+    /** DELETE /motorcycle/<motoId>/components/<id> — soft-delete */
+    remove: (motoId: number | string, id: number | string) =>
+      request(() =>
+        baseFetch<{ message: string }>(
+          `/motorcycle/${motoId}/components/${id}`,
+          { method: 'DELETE' },
+        ),
+      ),
+
+    /** POST /motorcycle/<motoId>/components/<id>/reactivate */
+    reactivate: (motoId: number | string, id: number | string) =>
+      request(() =>
+        baseFetch<MotorcycleComponent>(
+          `/motorcycle/${motoId}/components/${id}/reactivate`,
+          { method: 'POST' },
+        ),
+      ),
+
+    /** POST /motorcycle/<motoId>/components/apply-template — идемпотентно */
+    applyTemplate: (motoId: number | string, payload: ApplyTemplatePayload = {}) =>
+      request(() =>
+        baseFetch<ApplyTemplateResponse>(
+          `/motorcycle/${motoId}/components/apply-template`,
+          { method: 'POST', body: payload },
+        ),
+      ),
+
+    /** GET /motorcycle/<motoId>/components/<id>/history */
+    history: (motoId: number | string, id: number | string) =>
+      request(() =>
+        baseFetch<ComponentHistoryResponse>(
+          `/motorcycle/${motoId}/components/${id}/history`,
+        ),
       ),
   }
 
@@ -502,5 +644,16 @@ export function useApi() {
       request(() => baseFetch<{ message: string }>(`/notifications/${id}`, { method: 'DELETE' })),
   }
 
-  return { auth, motorcycle, maintenance, manuals, training, social, admin, user, notifications }
+  return {
+    auth,
+    motorcycle,
+    maintenance,
+    components,
+    manuals,
+    training,
+    social,
+    admin,
+    user,
+    notifications
+  }
 }

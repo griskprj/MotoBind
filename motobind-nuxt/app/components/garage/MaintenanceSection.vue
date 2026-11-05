@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { Motorcycle, Maintenance } from '~/types'
+import { computed, onMounted, ref } from 'vue'
+import type { Maintenance, MaintenanceEvent, Motorcycle, MotorcycleComponent } from '~/types'
 
 const props = defineProps<{ motorcycle: Motorcycle }>()
 const emit = defineEmits<{ updated: [] }>()
@@ -9,86 +9,31 @@ const api = useApi()
 const toast = useToast()
 
 const activeTab = ref<'planned' | 'history'>('history')
-const isFormOpen = ref(false)
+
+// ==========================================
+// LEGACY: Старая модель Maintenance
+// (только просмотр, редактирование и выполнение)
+// ==========================================
 const editingMaintenance = ref<Maintenance | null>(null)
 const selectedMaintenance = ref<Maintenance | null>(null)
 const completingMaintenance = ref<Maintenance | null>(null)
 const deletingMaintenance = ref<Maintenance | null>(null)
 
-// --- Вычисляемые данные ---
-
 const planned = computed(() =>
   (props.motorcycle.maintenances || [])
-    .filter(m => m.status === 'planned')
+    .filter((m) => m.status === 'planned')
     .sort((a, b) => {
-      if (a.planned_date && b.planned_date) return a.planned_date.localeCompare(b.planned_date)
+      if (a.planned_date && b.planned_date)
+        return a.planned_date.localeCompare(b.planned_date)
+      if (a.planned_mileage != null && b.planned_mileage != null)
+        return a.planned_mileage - b.planned_mileage
       return 0
-    })
+    }),
 )
-
-const history = computed(() =>
-  (props.motorcycle.maintenances || [])
-    .filter(m => m.status === 'completed')
-    .sort((a, b) => {
-      if (a.completed_date && b.completed_date) return b.completed_date.localeCompare(a.completed_date)
-      return b.id - a.id
-    })
-)
-
-const groupedHistory = computed(() => {
-  const groups: Record<string, Maintenance[]> = {}
-  for (const item of history.value) {
-    const year = item.completed_date ? new Date(item.completed_date).getFullYear().toString() : 'Без даты'
-    if (!groups[year]) groups[year] = []
-    groups[year].push(item)
-  }
-  return groups
-})
-
-const stats = computed(() => {
-  const totalCost = history.value.reduce((sum, m) => sum + (m.cost || 0), 0)
-  const totalEvents = history.value.length
-  return {
-    totalCost,
-    totalEvents,
-    currentMileage: props.motorcycle.mileage || (history.value[0]?.completed_mileage || 0)
-  }
-})
-
-const costChartData = computed(() => {
-  const monthsData: { label: string, value: number }[] = []
-  const now = new Date()
-
-  for (let i = 7; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const label = d.toLocaleString('ru-RU', { month: 'short' })
-    monthsData.push({ label, value: 0 })
-  }
-
-  for (const item of history.value) {
-    if (!item.completed_date || !item.cost) continue
-    const d = new Date(item.completed_date)
-    const label = d.toLocaleString('ru-RU', { month: 'short' })
-    const monthObj = monthsData.find(m => m.label === label)
-    if (monthObj) {
-      monthObj.value += item.cost
-    }
-  }
-
-  return monthsData
-})
-
-// --- Действия ---
-
-function openCreate() {
-  editingMaintenance.value = null
-  isFormOpen.value = true
-}
 
 function openEdit(m: Maintenance) {
   selectedMaintenance.value = null
   editingMaintenance.value = m
-  isFormOpen.value = true
 }
 
 function openDetails(m: Maintenance) {
@@ -106,7 +51,6 @@ function openDelete(m: Maintenance) {
 }
 
 function onFormDone() {
-  isFormOpen.value = false
   editingMaintenance.value = null
   emit('updated')
 }
@@ -121,15 +65,198 @@ function onDeleteDone() {
   emit('updated')
 }
 
+// ==========================================
+// EVENTS: Новая модель событий
+// ==========================================
+const events = ref<MaintenanceEvent[]>([])
+const eventsLoading = ref(false)
+const components = ref<MotorcycleComponent[]>([])
+
+const selectedEvent = ref<MaintenanceEvent | null>(null)
+const isEventFormOpen = ref(false)
+const editingEvent = ref<MaintenanceEvent | null>(null)
+const deletingEvent = ref<MaintenanceEvent | null>(null)
+
+async function loadEvents() {
+  eventsLoading.value = true
+  try {
+    const res = await api.maintenance.events.list(props.motorcycle.id, { per_page: 100 })
+    events.value = res.events
+  } catch {
+    events.value = []
+  } finally {
+    eventsLoading.value = false
+  }
+}
+
+async function loadComponents() {
+  try {
+    const res = await api.components.list(props.motorcycle.id)
+    components.value = res.components
+  } catch {
+    components.value = []
+  }
+}
+
+onMounted(() => {
+  loadEvents()
+  loadComponents()
+})
+
+function openEventCreate() {
+  editingEvent.value = null
+  isEventFormOpen.value = true
+}
+
+function openEventEdit(e: MaintenanceEvent) {
+  selectedEvent.value = null
+  editingEvent.value = e
+  isEventFormOpen.value = true
+}
+
+function onEventFormDone() {
+  isEventFormOpen.value = false
+  editingEvent.value = null
+  loadEvents()
+  emit('updated')
+}
+
+async function confirmDeleteEvent() {
+  if (!deletingEvent.value) return
+  try {
+    await api.maintenance.events.remove(deletingEvent.value.id, props.motorcycle.id)
+    toast.success('Событие удалено')
+    deletingEvent.value = null
+    loadEvents()
+    emit('updated')
+  } catch (e: any) {
+    toast.error(e?.message || 'Не удалось удалить событие')
+  }
+}
+
+// ==========================================
+// ОБЪЕДИНЕННЫЙ ТАЙМЛАЙН
+// ==========================================
+type TimelineItem =
+  | { source: 'legacy'; date: string; item: Maintenance }
+  | { source: 'event'; date: string; item: MaintenanceEvent }
+
+const combinedHistory = computed<TimelineItem[]>(() => {
+  const legacy: TimelineItem[] = (props.motorcycle.maintenances || [])
+    .filter((m) => m.status === 'completed')
+    .map((m) => ({
+      source: 'legacy',
+      date: m.completed_date || m.created_at?.slice(0, 10) || '',
+      item: m,
+    }))
+
+  const ev: TimelineItem[] = events.value.map((e) => ({
+    source: 'event',
+    date: e.date,
+    item: e,
+  }))
+
+  return [...legacy, ...ev].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+})
+
+const groupedHistory = computed<Record<string, TimelineItem[]>>(() => {
+  const groups: Record<string, TimelineItem[]> = {}
+  for (const it of combinedHistory.value) {
+    const year = it.date ? new Date(it.date).getFullYear().toString() : 'Без даты'
+    if (!groups[year]) groups[year] = []
+    groups[year].push(it)
+  }
+  return groups
+})
+
+function onTimelineItemClick(entry: TimelineItem) {
+  if (entry.source === 'legacy') {
+    openDetails(entry.item)
+  } else {
+    selectedEvent.value = entry.item
+  }
+}
+
+// ==========================================
+// СТАТИСТИКА И ГРАФИК
+// ==========================================
+function timelineCost(it: TimelineItem): number {
+  if (it.source === 'legacy') return it.item.cost || 0
+  return it.item.total_cost || 0
+}
+
+function timelineMileage(it: TimelineItem): number | null {
+  if (it.source === 'legacy') return it.item.completed_mileage ?? null
+  return it.item.mileage ?? null
+}
+
+const stats = computed(() => {
+  const totalCost = combinedHistory.value.reduce(
+    (sum, it) => sum + timelineCost(it),
+    0,
+  )
+  const totalEvents = combinedHistory.value.length
+  const lastMileage = combinedHistory.value
+    .map((it) => timelineMileage(it))
+    .find((v) => v != null)
+  return {
+    totalCost,
+    totalEvents,
+    currentMileage: props.motorcycle.mileage || lastMileage || 0,
+  }
+})
+
+const costChartData = computed(() => {
+  const monthsData: { label: string; value: number }[] = []
+  const now = new Date()
+
+  for (let i = 7; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const label = d.toLocaleString('ru-RU', { month: 'short' })
+    monthsData.push({ label, value: 0 })
+  }
+
+  for (const it of combinedHistory.value) {
+    if (!it.date) continue
+    const cost = timelineCost(it)
+    if (!cost) continue
+    const d = new Date(it.date)
+    const label = d.toLocaleString('ru-RU', { month: 'short' })
+    const monthObj = monthsData.find((m) => m.label === label)
+    if (monthObj) monthObj.value += cost
+  }
+
+  return monthsData
+})
+
+// ==========================================
+// ФОРМАТИРОВАНИЕ
+// ==========================================
 function formatDate(dateStr?: string | null) {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function eventTitle(e: MaintenanceEvent): string {
+  const titles = e.works
+    .map((w) => w.title)
+    .filter((t): t is string => !!t)
+  return titles.length ? titles.join(' · ') : 'Событие обслуживания'
+}
+
+function eventSubtitle(e: MaintenanceEvent): string {
+  if (e.comment) return e.comment
+  return `${e.works.length} работ`
 }
 </script>
 
 <template>
   <div class="m-section">
-    <!-- Заголовок с кнопкой -->
+    <!-- Заголовок -->
     <div class="m-header">
       <div class="m-header-title">
         <div class="m-icon-badge">
@@ -140,23 +267,29 @@ function formatDate(dateStr?: string | null) {
           <p class="m-subtitle">Все события: обслуживание, ремонты, замены</p>
         </div>
       </div>
-      <BaseButton v-if="!isFormOpen" variant="primary" @click="openCreate">
+      <!-- Оставили только создание события -->
+      <BaseButton variant="primary" @click="openEventCreate">
         <template #icon><i class="fa-solid fa-plus"></i></template>
-        Добавить событие
+        Создать событие
       </BaseButton>
     </div>
 
     <MaintenanceStats :maintenances="motorcycle.maintenances || []" />
 
-    <!-- Модалки -->
-    <BaseModal v-if="isFormOpen" :title="editingMaintenance ? 'Редактировать запись' : 'Новая запись'" @close="isFormOpen = false">
+    <!-- ============================================ -->
+    <!-- LEGACY МОДАЛКИ (только для просмотра/редактирования старых) -->
+    <!-- ============================================ -->
+    <BaseModal
+      v-if="editingMaintenance"
+      title="Редактировать запись"
+      @close="editingMaintenance = null"
+    >
       <MaintenanceForm
         :motorcycles="[motorcycle]"
         :default-motorcycle-id="motorcycle.id"
         :initial-data="editingMaintenance"
-        @created="onFormDone"
         @updated="onFormDone"
-        @cancel="isFormOpen = false"
+        @cancel="editingMaintenance = null"
       />
     </BaseModal>
 
@@ -184,20 +317,80 @@ function formatDate(dateStr?: string | null) {
       @deleted="onDeleteDone"
     />
 
-    <!-- Основной контент -->
-    <div v-if="!isFormOpen" class="m-layout">
-      <!-- Левая колонка: Таймлайн -->
+    <!-- ============================================ -->
+    <!-- EVENT МОДАЛКИ                                -->
+    <!-- ============================================ -->
+    <MaintenanceEventDetailsModal
+      v-if="selectedEvent"
+      :event="selectedEvent"
+      @close="selectedEvent = null"
+      @edit="openEventEdit(selectedEvent!)"
+      @delete="deletingEvent = selectedEvent; selectedEvent = null"
+    />
+
+    <BaseModal
+      v-if="isEventFormOpen"
+      :title="editingEvent ? 'Редактировать событие' : 'Новое событие обслуживания'"
+      @close="isEventFormOpen = false"
+    >
+      <MaintenanceEventForm
+        :motorcycle-id="motorcycle.id"
+        :current-mileage="motorcycle.mileage ?? null"
+        :components="components"
+        :event="editingEvent"
+        @saved="onEventFormDone"
+        @cancel="isEventFormOpen = false"
+      />
+    </BaseModal>
+
+    <BaseModal
+      v-if="deletingEvent"
+      title="Удалить событие?"
+      @close="deletingEvent = null"
+    >
+      <p>
+        Вы уверены, что хотите удалить событие от
+        <strong>{{ new Date(deletingEvent.date).toLocaleDateString('ru-RU') }}</strong>?
+        Это действие нельзя отменить, а история работ по компонентам будет пересчитана.
+      </p>
+      <template #footer>
+        <BaseButton variant="ghost" size="sm" @click="deletingEvent = null">
+          Отмена
+        </BaseButton>
+        <BaseButton variant="danger" size="sm" @click="confirmDeleteEvent">
+          Удалить
+        </BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- ============================================ -->
+    <!-- ОСНОВНОЙ КОНТЕНТ                             -->
+    <!-- ============================================ -->
+    <div class="m-layout">
+      <!-- Левая колонка -->
       <div class="m-main-col">
         <div class="m-tabs">
-          <button class="m-tab-btn" :class="{ 'm-tab-btn--active': activeTab === 'planned' }" @click="activeTab = 'planned'">
-            Планы <span v-if="planned.length" class="badge">{{ planned.length }}</span>
+          <button
+            class="m-tab-btn"
+            :class="{ 'm-tab-btn--active': activeTab === 'planned' }"
+            @click="activeTab = 'planned'"
+          >
+            Планы
+            <span v-if="planned.length" class="badge">{{ planned.length }}</span>
           </button>
-          <button class="m-tab-btn" :class="{ 'm-tab-btn--active': activeTab === 'history' }" @click="activeTab = 'history'">
-            История <span v-if="history.length" class="badge">{{ history.length }}</span>
+          <button
+            class="m-tab-btn"
+            :class="{ 'm-tab-btn--active': activeTab === 'history' }"
+            @click="activeTab = 'history'"
+          >
+            История
+            <span v-if="combinedHistory.length" class="badge">
+              {{ combinedHistory.length }}
+            </span>
           </button>
         </div>
 
-        <!-- ТАБ: Планы -->
+        <!-- ТАБ: Планы (Legacy) -->
         <div v-if="activeTab === 'planned'" class="m-content">
           <div v-if="planned.length === 0" class="m-empty">
             <p>Нет запланированных работ.</p>
@@ -214,38 +407,73 @@ function formatDate(dateStr?: string | null) {
           </div>
         </div>
 
-        <!-- ТАБ: История (Таймлайн) -->
+        <!-- ТАБ: История (Таймлайн: Legacy + Events) -->
         <div v-else class="m-content">
-          <div v-if="history.length === 0" class="m-empty">
+          <div v-if="eventsLoading" class="m-empty">
+            <p>Загрузка истории…</p>
+          </div>
+
+          <div v-else-if="combinedHistory.length === 0" class="m-empty">
             <p>История обслуживания пуста.</p>
           </div>
 
           <div v-else class="timeline">
-            <div v-for="(items, year) in groupedHistory" :key="year" class="timeline-year-group">
+            <div
+              v-for="(items, year) in groupedHistory"
+              :key="year"
+              class="timeline-year-group"
+            >
               <div class="timeline-year">
                 <span>{{ year }}</span>
               </div>
 
               <div class="timeline-items">
                 <div
-                  v-for="m in items"
-                  :key="m.id"
+                  v-for="entry in items"
+                  :key="`${entry.source}-${entry.item.id}`"
                   class="timeline-item"
-                  @click="openDetails(m)"
+                  @click="onTimelineItemClick(entry)"
                 >
-                  <div class="timeline-marker"></div>
+                  <div
+                    class="timeline-marker"
+                    :class="{ 'timeline-marker--event': entry.source === 'event' }"
+                  ></div>
                   <div class="timeline-card">
                     <div class="tc-header">
-                      <span class="tc-date">{{ formatDate(m.completed_date) }}</span>
-                      <span class="tc-mileage">{{ m.completed_mileage }} км</span>
+                      <span class="tc-date">
+                        {{ formatDate(entry.date) }}
+                        <BaseBadge
+                          v-if="entry.source === 'event'"
+                          variant="neutral"
+                          size="sm"
+                        >
+                          событие
+                        </BaseBadge>
+                      </span>
+                      <span class="tc-mileage">
+                        <template v-if="entry.source === 'legacy'">
+                          {{ entry.item.completed_mileage ? `${entry.item.completed_mileage.toLocaleString('ru-RU')} км` : '' }}
+                        </template>
+                        <template v-else>
+                          {{ entry.item.mileage ? `${entry.item.mileage.toLocaleString('ru-RU')} км` : '' }}
+                        </template>
+                      </span>
                     </div>
                     <div class="tc-body">
                       <div class="tc-icon">
                         <i class="fa-solid fa-wrench"></i>
                       </div>
                       <div class="tc-info">
-                        <h4 class="tc-title">{{ m.title }}</h4>
-                        <p class="tc-desc">{{ m.description || m.category }}</p>
+                        <template v-if="entry.source === 'legacy'">
+                          <h4 class="tc-title">{{ entry.item.title }}</h4>
+                          <p class="tc-desc">
+                            {{ entry.item.description || entry.item.category }}
+                          </p>
+                        </template>
+                        <template v-else>
+                          <h4 class="tc-title">{{ eventTitle(entry.item) }}</h4>
+                          <p class="tc-desc">{{ eventSubtitle(entry.item) }}</p>
+                        </template>
                       </div>
                     </div>
                   </div>
@@ -256,15 +484,16 @@ function formatDate(dateStr?: string | null) {
         </div>
       </div>
 
-      <!-- Правая колонка: Статистика и График -->
+      <!-- Правая колонка -->
       <div class="m-side-col">
-        <!-- Сводка -->
         <div class="m-widget">
           <h3 class="widget-title">Сводка</h3>
           <div class="summary-grid">
             <div class="summary-item">
               <i class="fa-solid fa-gauge-high"></i>
-              <div class="summary-val">{{ stats.currentMileage.toLocaleString() }} км</div>
+              <div class="summary-val">
+                {{ stats.currentMileage.toLocaleString('ru-RU') }} км
+              </div>
               <div class="summary-lbl">Текущий пробег</div>
             </div>
             <div class="summary-item">
@@ -274,7 +503,9 @@ function formatDate(dateStr?: string | null) {
             </div>
             <div class="summary-item">
               <i class="fa-solid fa-sack-dollar"></i>
-              <div class="summary-val">{{ stats.totalCost.toLocaleString() }} ₽</div>
+              <div class="summary-val">
+                {{ stats.totalCost.toLocaleString('ru-RU') }} ₽
+              </div>
               <div class="summary-lbl">Затраты</div>
             </div>
           </div>
@@ -353,16 +584,6 @@ function formatDate(dateStr?: string | null) {
 .m-subtitle {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-}
-
-.m-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-
-  @include lg-up {
-    grid-template-columns: 1fr 340px;
-  }
 }
 
 .m-tabs {
@@ -472,6 +693,11 @@ function formatDate(dateStr?: string | null) {
   border: 3px solid var(--color-surface);
   box-shadow: 0 0 0 2px var(--color-border);
   z-index: 1;
+
+  &--event {
+    background: var(--color-brand);
+    border-color: var(--color-brand);
+  }
 }
 
 .timeline-card {
@@ -586,16 +812,5 @@ function formatDate(dateStr?: string | null) {
 .summary-lbl {
   font-size: 10px;
   color: var(--color-text-tertiary);
-}
-
-.chart-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 220px;
-  color: var(--color-text-tertiary);
-  background: var(--color-surface-secondary);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
 }
 </style>

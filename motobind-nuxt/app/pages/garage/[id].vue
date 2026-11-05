@@ -22,6 +22,7 @@ useSeoMeta({
 const activeTab = ref('overview')
 const tabs = [
   { id: 'overview', label: 'Обзор' },
+  { id: 'components', label: 'Компоненты' },
   { id: 'maintenance', label: 'Обслуживание' },
   { id: 'history', label: 'История' },
   { id: 'diagnostics', label: 'Диагностика' },
@@ -37,6 +38,12 @@ const heroBackground = computed(() => {
   const url = mediaUrl(motorcycle.value.photo_url)
   return url ? `url(${url})` : 'none'
 })
+
+const pendingComponentId = ref<number | null>(null)
+function onOpenComponentEvent(componentId: number) {
+  pendingComponentId.value = componentId
+  activeTab.value = 'maintenance'
+}
 </script>
 
 <template>
@@ -111,13 +118,24 @@ const heroBackground = computed(() => {
           v-if="activeTab === 'overview'"
           :motorcycle="motorcycle"
           @updated="onUpdated"
+          @open-components="activeTab = 'components'"
+        />
+
+        <!-- Компоненты -->
+        <MotorcycleComponentsTab
+          v-else-if="activeTab === 'components'"
+          :motorcycle="motorcycle"
+          @updated="onUpdated"
+          @open-event="activeTab = 'maintenance'"
         />
 
         <!-- Обслуживание -->
         <MotorcycleMaintenanceTab
           v-else-if="activeTab === 'maintenance'"
           :motorcycle="motorcycle"
+          :initial-component-id="pendingComponentId"
           @updated="onUpdated"
+          @event-saved="pendingComponentId = null"
         />
 
         <!-- История -->

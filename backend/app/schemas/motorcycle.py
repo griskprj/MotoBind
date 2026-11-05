@@ -1,6 +1,6 @@
 import re
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from app.schemas.mixins import ISO8601Mixin
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -38,6 +38,7 @@ class CreateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    drive_type: Literal["chain", "belt", "shaft"] = "chain"
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
@@ -51,6 +52,7 @@ class UpdateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    drive_type: Optional[Literal["chain", "belt", "shaft"]] = None
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
@@ -102,6 +104,7 @@ class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
     years: Optional[int] = None
     volume: Optional[int] = None
     mileage: Optional[int] = None
+    drive_type: Optional[str] = None
     color: Optional[str] = None
     license_plate: Optional[str] = None
     note: Optional[str] = None

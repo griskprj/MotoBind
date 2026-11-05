@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import type { Motorcycle, Maintenance } from '~/types'
+import { computed, onMounted, ref } from 'vue'
+import type { Motorcycle, Maintenance, MotorcycleHealth } from '~/types'
+import MotorcycleHealthCard from './MotorcycleHealthCard.vue'
 
 const props = defineProps<{
   motorcycle: Motorcycle
 }>()
 
-const emit = defineEmits<{ updated: [] }>()
+const emit = defineEmits<{ updated: []; 'open-components': [] }>()
 
 const api = useApi()
 const router = useRouter()
 const mediaUrl = useMediaUrl()
 
-// Вычисляем статистику (как в GarageStatistics, но для одного мотоцикла)
+const health = ref<MotorcycleHealth | null>(null)
+const healthLoading = ref(false)
+
+async function loadHealth() {
+  if (!props.motorcycle?.id) return
+  healthLoading.value = true
+  try {
+    health.value = await api.motorcycle.health(props.motorcycle.id)
+  } catch {
+    health.value = null
+  } finally {
+    healthLoading.value = false
+  }
+}
+
+onMounted(loadHealth)
+
 const currentMileage = computed(() => props.motorcycle.mileage || 0)
 
 const plannedMaintenances = computed(() => {
@@ -101,6 +119,13 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
 
 <template>
   <div class="overview">
+    <!-- Здоровье мотоцикла -->
+    <MotorcycleHealthCard
+      :health="health"
+      :loading="healthLoading"
+      @open-components="emit('open-components')"
+    />
+
     <!-- Статистика -->
     <div class="stats-grid">
       <BaseCard padding="md" class="stat-card">

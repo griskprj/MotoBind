@@ -18,6 +18,7 @@ const form = reactive({
   name: '',
   years: '',
   volume: '' as string | number,
+  drive_type: 'chain' as 'chain' | 'belt' | 'shaft',
   color: '',
   licensePlate: '',
   vin: '',
@@ -61,6 +62,7 @@ async function onSubmit() {
       name: asString(form.name).trim(),
       years: asString(form.years).trim() || null,
       volume: form.volume ? Number(form.volume) : null,
+      drive_type: form.drive_type,
       color: form.color.trim() || null,
       licensePlate: asString(form.licensePlate).trim().toUpperCase() || null,
       vin: asString(form.vin).trim().toUpperCase() || null,
@@ -143,6 +145,16 @@ async function onSubmit() {
             label="Год выпуска"
             placeholder="2020"
             :error="errors.years"
+          />
+
+          <BaseSelect
+            v-model="form.drive_type"
+            label="Тип привода"
+            :options="[
+              { value: 'chain', label: 'Цепь' },
+              { value: 'belt', label: 'Ремень' },
+              { value: 'shaft', label: 'Кардан' },
+            ]"
           />
 
           <BaseInput

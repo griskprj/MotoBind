@@ -45,6 +45,19 @@ def get_user_moto(moto_id):
     return jsonify(_serialize_detail(motorcycle)), 200
 
 
+@motorcycle.route("/<int:moto_id>/health", methods=["GET"])
+@jwt_required()
+@moto_owner_required
+def get_motorcycle_health(moto_id):
+    """Сводка состояния компонентов мотоцикла (ориентировочная)."""
+    from app.services.health_service import HealthService
+
+    data = HealthService.get_motorcycle_health(
+        user_id=get_current_user_id(), moto_id=moto_id
+    )
+    return jsonify(data), 200
+
+
 @motorcycle.route("/", methods=["POST"])
 @jwt_required()
 def create_moto():
@@ -57,6 +70,7 @@ def create_moto():
         years=data.years,
         volume=data.volume,
         mileage=data.mileage,
+        drive_type=data.drive_type,
         color=data.color,
         license_plate=data.license_plate,
         vin=data.vin,
