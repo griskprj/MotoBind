@@ -197,9 +197,6 @@ onMounted(loadComponents)
 
 <template>
   <div class="maintenance-tab">
-    <!-- ============================================================
-         Статистика
-         ============================================================ -->
     <div class="stats-grid">
       <BaseCard padding="md" class="stat-card">
         <i class="fa-solid fa-wrench stat-icon"></i>
@@ -233,68 +230,53 @@ onMounted(loadComponents)
       </BaseCard>
     </div>
 
-    <!-- ============================================================
-         План обслуживания и Ближайшие задачи
-         ============================================================ -->
     <div class="middle-row">
-        <!-- План обслуживания -->
-        <BaseCard padding="lg" class="plan-card">
+      <BaseCard padding="lg" class="plan-card">
         <div class="section-header">
-            <h2 class="section-title">План обслуживания</h2>
-            <div class="plan-tabs">
-            <button
-                class="plan-tab"
-                :class="{ 'plan-tab--active': planTab === 'mileage' }"
-                @click="planTab = 'mileage'"
-            >
-                По пробегу
+          <h2 class="section-title">План обслуживания</h2>
+          <div class="plan-tabs">
+            <button class="plan-tab" :class="{ 'plan-tab--active': planTab === 'mileage' }" @click="planTab = 'mileage'">
+              По пробегу
             </button>
-            <button
-                class="plan-tab"
-                :class="{ 'plan-tab--active': planTab === 'date' }"
-                @click="planTab = 'date'"
-            >
-                По времени
+            <button class="plan-tab" :class="{ 'plan-tab--active': planTab === 'date' }" @click="planTab = 'date'">
+              По времени
             </button>
-            </div>
+          </div>
         </div>
 
         <div v-if="filteredPlan.length === 0" class="empty">
-            {{ planTab === 'mileage' ? 'Нет работ с указанным пробегом.' : 'Нет работ с указанной датой.' }}
+          {{ planTab === 'mileage' ? 'Нет работ с указанным пробегом.' : 'Нет работ с указанной датой.' }}
         </div>
         <ul v-else class="plan-list">
-            <li v-for="m in filteredPlan" :key="m.id" class="plan-item">
+          <li v-for="m in filteredPlan" :key="m.id" class="plan-item">
             <div class="plan-marker" :class="{ 'plan-marker--next': m.id === nextMaintenance?.maintenance.id }"></div>
             <div class="plan-content">
-                <div class="plan-title">{{ m.title }}</div>
-                <div class="plan-meta">
+              <div class="plan-title">{{ m.title }}</div>
+              <div class="plan-meta">
                 <span v-if="m.planned_mileage">{{ formatNumber(m.planned_mileage) }} км</span>
                 <span v-if="m.planned_date">{{ formatDate(m.planned_date) }}</span>
-                </div>
+              </div>
             </div>
             <div class="plan-status">
-                <!-- Бейдж для пробега -->
-                <BaseBadge
+              <BaseBadge
                 v-if="planTab === 'mileage' && m.planned_mileage"
                 :variant="m.planned_mileage <= currentMileage + 500 ? 'warning' : 'neutral'"
                 size="sm"
-                >
+              >
                 {{ m.planned_mileage <= currentMileage ? 'Просрочено' : `Через ${formatNumber(m.planned_mileage - currentMileage)} км` }}
-                </BaseBadge>
-                <!-- Бейдж для даты  -->
-                <BaseBadge
+              </BaseBadge>
+              <BaseBadge
                 v-else-if="planTab === 'date' && m.planned_date"
                 variant="neutral"
                 size="sm"
-                >
+              >
                 {{ formatDate(m.planned_date) }}
-                </BaseBadge>
+              </BaseBadge>
             </div>
-            </li>
+          </li>
         </ul>
-        </BaseCard>
+      </BaseCard>
 
-      <!-- Ближайшие задачи -->
       <BaseCard padding="lg" class="tasks-card">
         <div class="section-header">
           <h2 class="section-title">Ближайшие задачи</h2>
@@ -319,7 +301,6 @@ onMounted(loadComponents)
         </BaseButton>
       </BaseCard>
 
-      <!-- Полезное -->
       <BaseCard padding="lg" class="useful-card">
         <h2 class="section-title">Полезно</h2>
         <div class="useful-links">
@@ -351,9 +332,6 @@ onMounted(loadComponents)
       </BaseCard>
     </div>
 
-    <!-- ============================================================
-         История обслуживания
-         ============================================================ -->
     <BaseCard padding="lg">
       <div class="section-header">
         <h2 class="section-title">История обслуживания</h2>
@@ -382,9 +360,7 @@ onMounted(loadComponents)
       </div>
     </BaseCard>
 
-    <!-- ============================================================
-         Модалки
-         ============================================================ -->
+    <!-- Модалки -->
     <BaseModal v-if="isFormOpen" :title="editingMaintenance ? 'Редактировать запись' : 'Новая запись'" @close="isFormOpen = false">
       <MaintenanceForm
         :motorcycles="[motorcycle]"
@@ -438,8 +414,8 @@ onMounted(loadComponents)
   </div>
 </template>
 
-<style scoped lang="scss">
-@use '~/assets/styles/breakpoints' as *;
+<style scoped>
+/* ЧИСТЫЙ CSS БЕЗ SCSS МИКСИНОВ */
 
 .maintenance-tab {
   display: flex;
@@ -447,9 +423,7 @@ onMounted(loadComponents)
   gap: var(--space-5);
 }
 
-/* ============================================================
-   Статистика
-   ============================================================ */
+/* Статистика */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -502,14 +476,16 @@ onMounted(loadComponents)
 }
 
 /* ============================================================
-   Средний ряд (План, Задачи, Полезно)
+   АДАПТИВ (ЖЕСТКИЙ CSS)
    ============================================================ */
 .middle-row {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4);
+}
 
-  @include lg-up {
+@media (min-width: 1024px) {
+  .middle-row {
     grid-template-columns: 1.5fr 1fr 1fr;
   }
 }
@@ -530,7 +506,10 @@ onMounted(loadComponents)
   font-size: var(--text-sm);
   color: var(--color-brand);
   text-decoration: none;
-  &:hover { text-decoration: underline; }
+}
+
+.link:hover {
+  text-decoration: underline;
 }
 
 .plan-tabs {
@@ -550,12 +529,12 @@ onMounted(loadComponents)
   border: none;
   background: transparent;
   cursor: pointer;
+}
 
-  &--active {
-    background: var(--color-surface);
-    color: var(--color-brand);
-    box-shadow: var(--shadow-sm);
-  }
+.plan-tab--active {
+  background: var(--color-surface);
+  color: var(--color-brand);
+  box-shadow: var(--shadow-sm);
 }
 
 .plan-list {
@@ -573,8 +552,10 @@ onMounted(loadComponents)
   gap: var(--space-3);
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border-light);
+}
 
-  &:last-child { border-bottom: none; }
+.plan-item:last-child {
+  border-bottom: none;
 }
 
 .plan-marker {
@@ -583,11 +564,11 @@ onMounted(loadComponents)
   border-radius: 50%;
   border: 2px solid var(--color-border);
   flex-shrink: 0;
+}
 
-  &--next {
-    border-color: var(--color-brand);
-    background: var(--color-brand);
-  }
+.plan-marker--next {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
 }
 
 .plan-content {
@@ -624,8 +605,10 @@ onMounted(loadComponents)
   gap: var(--space-2);
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--color-border-light);
+}
 
-  &:last-child { border-bottom: none; }
+.task-item:last-child {
+  border-bottom: none;
 }
 
 .task-content {
@@ -668,15 +651,17 @@ onMounted(loadComponents)
   text-decoration: none;
   color: var(--color-text);
   transition: background var(--transition-fast);
+}
 
-  &:hover { background: var(--color-surface-hover); }
+.useful-link:hover {
+  background: var(--color-surface-hover);
+}
 
-  i:first-child {
-    font-size: 20px;
-    color: var(--color-brand);
-    width: 24px;
-    text-align: center;
-  }
+.useful-link i:first-child {
+  font-size: 20px;
+  color: var(--color-brand);
+  width: 24px;
+  text-align: center;
 }
 
 .useful-title {
@@ -698,7 +683,7 @@ onMounted(loadComponents)
 }
 
 /* ============================================================
-   История
+   История (Адаптив таблицы)
    ============================================================ */
 .history-table {
   display: flex;
@@ -725,8 +710,10 @@ onMounted(loadComponents)
   border-bottom: 1px solid var(--color-border-light);
   font-size: var(--text-sm);
   align-items: center;
+}
 
-  &:last-child { border-bottom: none; }
+.history-row:last-child {
+  border-bottom: none;
 }
 
 .history-date {
@@ -757,8 +744,10 @@ onMounted(loadComponents)
   cursor: pointer;
   padding: var(--space-1);
   border-radius: var(--radius-sm);
+}
 
-  &:hover { background: var(--color-surface-hover); }
+.history-action:hover {
+  background: var(--color-surface-hover);
 }
 
 .empty {
@@ -769,14 +758,20 @@ onMounted(loadComponents)
   border-radius: var(--radius-md);
 }
 
-@include md-down {
-  .history-header { display: none; }
+@media (max-width: 767.98px) {
+  .history-header {
+    display: none;
+  }
   .history-row {
     grid-template-columns: 1fr;
     gap: var(--space-1);
     padding: var(--space-3) 0;
   }
-  .history-date { font-size: var(--text-xs); }
-  .history-mileage { font-size: var(--text-xs); }
+  .history-date {
+    font-size: var(--text-xs);
+  }
+  .history-mileage {
+    font-size: var(--text-xs);
+  }
 }
 </style>
