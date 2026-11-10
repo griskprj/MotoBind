@@ -49,7 +49,8 @@ const adminNavItems = computed(() => {
         { name: 'Пользователи', to: '/admin/users', icon: 'fa-solid fa-users' },
         { name: 'Модерация мануалов', to: '/admin/manuals', icon: 'fa-solid fa-book-open' },
         { name: 'Жалобы', to: '/admin/reports', icon: 'fa-solid fa-flag' },
-        { name: 'Управление обучением', to: '/admin/learning/courses', icon: 'fa-solid fa-graduation-cap' },
+        { name: 'Управление курсами', to: '/admin/learning/courses', icon: 'fa-solid fa-graduation-cap' },
+        { name: 'Управление статьями', to: '/admin/learning/articles', icon: 'fa-solid fa-newspaper' },
       ]
     }
   ]

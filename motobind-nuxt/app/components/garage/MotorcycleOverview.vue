@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import type { Motorcycle, Maintenance, MotorcycleHealth } from '~/types'
 import MotorcycleHealthCard from './MotorcycleHealthCard.vue'
+import MileageWidget from './MileageWidget.vue' // <--- Импортируем новый виджет
 
 const props = defineProps<{
   motorcycle: Motorcycle
@@ -10,7 +11,6 @@ const props = defineProps<{
 const emit = defineEmits<{ updated: []; 'open-components': [] }>()
 
 const api = useApi()
-const router = useRouter()
 const mediaUrl = useMediaUrl()
 
 const health = ref<MotorcycleHealth | null>(null)
@@ -40,6 +40,8 @@ const plannedMaintenances = computed(() => {
       return 0
     })
 })
+
+// ... (остальные computed nextMaintenance, lastMaintenance, maintenanceStats и т.д. остаются без изменений) ...
 
 const nextMaintenance = computed(() => {
   const withMileage = plannedMaintenances.value.filter(m => m.planned_mileage != null)
@@ -109,12 +111,6 @@ const lastMaintenanceText = computed(() => {
   if (m.completed_date) return new Date(m.completed_date).toLocaleDateString('ru-RU')
   return '—'
 })
-
-// Ссылки для быстрых действий
-const maintenanceLink = computed(() => `/garage/${props.motorcycle.id}`)
-const diagnosticsLink = computed(() => `/garage/${props.motorcycle.id}#diagnostics`)
-const manualsLink = computed(() => `/manuals?motorcycle=${encodeURIComponent(props.motorcycle.name)}`)
-const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
 </script>
 
 <template>
@@ -126,41 +122,44 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
       @open-components="emit('open-components')"
     />
 
-    <!-- Статистика -->
-    <div class="stats-grid">
-      <BaseCard padding="md" class="stat-card">
-        <i class="fa-solid fa-gauge-high stat-icon"></i>
-        <div>
-          <span class="stat-label">Пробег</span>
-          <span class="stat-value">{{ formatNumber(currentMileage) }} км</span>
-        </div>
-      </BaseCard>
-      <BaseCard padding="md" class="stat-card">
-        <i class="fa-solid fa-calendar stat-icon"></i>
-        <div>
-          <span class="stat-label">Следующее ТО</span>
-          <span class="stat-value">{{ nextMaintenanceText }}</span>
-        </div>
-      </BaseCard>
-      <BaseCard padding="md" class="stat-card">
-        <i class="fa-solid fa-wrench stat-icon"></i>
-        <div>
-          <span class="stat-label">Последнее ТО</span>
-          <span class="stat-value">{{ lastMaintenanceText }}</span>
-        </div>
-      </BaseCard>
-      <BaseCard padding="md" class="stat-card">
-        <div class="progress-wrap">
-          <span class="stat-label">Состояние обслуживания</span>
-          <span class="stat-value">{{ maintenanceStats.completed }} из {{ maintenanceStats.total }} задач</span>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: `${maintenanceStats.percent}%` }" />
+    <!-- Статистика + Виджет пробега -->
+    <div class="dashboard-top">
+      <div class="stats-grid">
+        <BaseCard padding="md" class="stat-card">
+          <i class="fa-solid fa-calendar stat-icon"></i>
+          <div>
+            <span class="stat-label">Следующее ТО</span>
+            <span class="stat-value">{{ nextMaintenanceText }}</span>
           </div>
-        </div>
-      </BaseCard>
+        </BaseCard>
+        <BaseCard padding="md" class="stat-card">
+          <i class="fa-solid fa-wrench stat-icon"></i>
+          <div>
+            <span class="stat-label">Последнее ТО</span>
+            <span class="stat-value">{{ lastMaintenanceText }}</span>
+          </div>
+        </BaseCard>
+        <BaseCard padding="md" class="stat-card">
+          <div class="progress-wrap">
+            <span class="stat-label">Состояние обслуживания</span>
+            <span class="stat-value">{{ maintenanceStats.completed }} из {{ maintenanceStats.total }} задач</span>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: `${maintenanceStats.percent}%` }" />
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+
+      <!-- Новый блок пробега -->
+      <MileageWidget
+        :motorcycle-id="motorcycle.id"
+        :current-mileage="currentMileage"
+        :last-updated="motorcycle.mileage_updated_at"
+        @updated="emit('updated'); loadHealth()"
+      />
     </div>
 
-    <!-- Ближайшие работы -->
+    <!-- Ближайшие работы (без изменений) -->
     <BaseCard padding="lg">
       <div class="section-header">
         <h2 class="section-title">Ближайшие работы</h2>
@@ -175,7 +174,7 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
       </ul>
     </BaseCard>
 
-    <!-- О мотоцикле -->
+    <!-- О мотоцикле (без изменений) -->
     <BaseCard padding="lg">
       <h2 class="section-title">О мотоцикле</h2>
       <div class="specs-list">
@@ -184,11 +183,11 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
         <div class="spec-row"><span>Объём двигателя:</span> <strong>{{ motorcycle.volume ? `${motorcycle.volume} см³` : '—' }}</strong></div>
         <div class="spec-row"><span>Госномер:</span> <strong>{{ motorcycle.license_plate || '—' }}</strong></div>
         <div class="spec-row"><span>VIN:</span> <strong>{{ motorcycle.vin || '—' }}</strong></div>
-        <div class="spec-row"><span>Цвет:</span> <strong>{{ motorcycle.color || '—' }}</strong></div>
+        <div class="spec-row"><span>Цвет:</span> <div :style="`background-color: ${motorcycle.color};`" class="spec-row-color"></div></div>
       </div>
     </BaseCard>
 
-    <!-- Последние работы -->
+    <!-- Последние работы (без изменений) -->
     <BaseCard padding="lg">
       <div class="section-header">
         <h2 class="section-title">Последние работы</h2>
@@ -220,10 +219,25 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
 }
 
 /* Статистика */
+.dashboard-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+
+  @include lg-up {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-3);
+  align-content: start;
+
+  @include sm-up {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {
@@ -334,6 +348,12 @@ const historyLink = computed(() => `/garage/${props.motorcycle.id}#history`)
 
   &:last-child { border-bottom: none; }
   strong { color: var(--color-text); }
+}
+
+.spec-row-color {
+  width: 64px;
+  height: 32px;
+  border-radius: var(--radius-md);
 }
 
 /* История */

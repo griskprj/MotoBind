@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Motorcycle, ApiError } from '~/types'
+import type { ApiError } from '~/types'
 
 const props = defineProps<{
-  motorcycle: Motorcycle
+  motorcycleId: number | string
+  currentMileage: number
 }>()
 
 const emit = defineEmits<{
@@ -14,8 +15,7 @@ const api = useApi()
 const toast = useToast()
 const submitting = ref(false)
 
-const currentValue = ref(props.motorcycle.mileage || 0)
-const inputValue = ref(props.motorcycle.mileage || 0)
+const inputValue = ref(props.currentMileage || 0)
 
 const quickSteps = [50, 100, 500, 1000]
 
@@ -30,9 +30,14 @@ async function onSave() {
     return
   }
 
+  if (newMileage === props.currentMileage) {
+    emit('close')
+    return
+  }
+
   submitting.value = true
   try {
-    await api.motorcycle.update(props.motorcycle.id, { mileage: newMileage })
+    await api.motorcycle.update(props.motorcycleId, { mileage: newMileage })
     toast.success('Пробег обновлён')
     emit('updated')
     emit('close')
@@ -48,7 +53,7 @@ async function onSave() {
   <BaseModal title="Обновить пробег" size="sm" @close="emit('close')">
     <div class="mileage-form">
       <p class="info-text">
-        Текущий пробег: <strong>{{ motorcycle.mileage || 0 }} км</strong>
+        Текущий пробег: <strong>{{ currentMileage }} км</strong>
       </p>
 
       <!-- Ввод точного значения -->
