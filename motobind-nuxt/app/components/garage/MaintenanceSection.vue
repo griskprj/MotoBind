@@ -48,7 +48,8 @@ async function loadEvents() {
   try {
     const res = await api.maintenance.events.list(props.motorcycle.id, { per_page: 100 })
     events.value = res.events
-  } catch {
+  } catch (e) {
+    console.error(e)
     events.value = []
   } finally {
     eventsLoading.value = false
@@ -125,19 +126,47 @@ function timelineMileage(it: TimelineItem): number | null {
 }
 
 const stats = computed(() => {
-  const totalCost = combinedHistory.value.reduce((sum, it) => sum + timelineCost(it), 0)
-  const totalEvents = combinedHistory.value.length
-  const lastMileage = combinedHistory.value.map((it) => timelineMileage(it)).find((v) => v != null)
-  return { totalCost, totalEvents, currentMileage: props.motorcycle.mileage || lastMileage || 0 }
+  let totalCost = 0
+  let totalEvents = 0
+  let lastMileage: number | null = null
+
+  for (const m of props.motorcycle.maintenances || []) {
+    if (m.status === 'completed' && m.cost) {
+      totalCost += m.cost
+    }
+  }
+
+  for (const e of events.value) {
+    totalCost += e.total_cost || 0
+  }
+
+  totalEvents = combinedHistory.value.length
+
+  for (const it of combinedHistory.value) {
+    const mil = timelineMileage(it)
+    if (mil != null) {
+      lastMileage = mil
+      break
+    }
+  }
+
+  return {
+    totalCost,
+    totalEvents,
+    currentMileage: props.motorcycle.mileage || lastMileage || 0,
+  }
 })
 
 const costChartData = computed(() => {
   const monthsData: { label: string; value: number }[] = []
   const now = new Date()
+
   for (let i = 7; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    monthsData.push({ label: d.toLocaleString('ru-RU', { month: 'short' }), value: 0 })
+    const label = d.toLocaleString('ru-RU', { month: 'short' })
+    monthsData.push({ label, value: 0 })
   }
+
   for (const it of combinedHistory.value) {
     if (!it.date) continue
     const cost = timelineCost(it)
@@ -147,6 +176,7 @@ const costChartData = computed(() => {
     const monthObj = monthsData.find((m) => m.label === label)
     if (monthObj) monthObj.value += cost
   }
+
   return monthsData
 })
 
@@ -182,7 +212,10 @@ function eventSubtitle(e: MaintenanceEvent): string {
       </BaseButton>
     </div>
 
-    <MaintenanceStats :maintenances="motorcycle.maintenances || []" />
+    <MaintenanceStats
+      :maintenances="motorcycle.maintenances || []"
+      :events="events"
+    />
 
     <!-- LEGACY МОДАЛКИ -->
     <BaseModal v-if="editingMaintenance" title="Редактировать запись" @close="editingMaintenance = null">
