@@ -74,7 +74,7 @@ async function onSubmit() {
 
     <div class="form-row">
       <BaseSelect v-model="form.category" label="Категория" :options="[
-        { value: 'driving', label: 'Вождение' },
+        { value: 'riding', label: 'Вождение' },
         { value: 'repair', label: 'Ремонт' },
         { value: 'gear', label: 'Экипировка' },
         { value: 'first_aid', label: 'Первая помощь' },
