@@ -295,20 +295,26 @@ function eventSubtitle(e: MaintenanceEvent): string {
   </div>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 .m-section { display: flex; flex-direction: column; gap: var(--space-5); }
 .m-list { display: flex; flex-direction: column; gap: var(--space-3); }
 
 .m-layout {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-4);
 }
 
-@media (min-width: 1024px) {
-  .m-layout {
-    grid-template-columns: minmax(0, 1fr) 340px;
-  }
+.m-main-col {
+  flex: 1 1 600px;
+  min-width: 0;
+}
+
+.m-side-col {
+  flex: 0 1 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .m-header {
@@ -342,7 +348,6 @@ function eventSubtitle(e: MaintenanceEvent): string {
 .tc-info { flex: 1; min-width: 0; }
 .tc-title { font-size: var(--text-sm); font-weight: var(--fw-semibold); margin-bottom: 2px; word-break: break-word; }
 .tc-desc { font-size: var(--text-xs); color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.m-side-col { display: flex; flex-direction: column; gap: var(--space-4); }
 .m-widget { min-width: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); }
 .widget-title { font-size: var(--text-base); font-weight: var(--fw-semibold); margin-bottom: var(--space-3); }
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); text-align: center; }
