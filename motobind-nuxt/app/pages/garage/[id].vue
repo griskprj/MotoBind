@@ -263,6 +263,7 @@ function onOpenComponentEvent(componentId: number) {
   gap: var(--space-2);
   border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
 

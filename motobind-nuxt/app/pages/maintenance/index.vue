@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Motorcycle, Maintenance } from '~/types'
+import type { Motorcycle, Maintenance, MaintenanceEvent, MotorcycleComponent } from '~/types'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -9,23 +9,74 @@ useSeoMeta({
 })
 
 const api = useApi()
+const toast = useToast()
+
+// Загружаем мотоциклы
 const { data: motorcycles, pending, error, refresh } = await useAsyncData(
   'maintenance-center',
   () => api.motorcycle.list(),
   { default: () => [] }
 )
 
-// Состояние UI
-const activeTab = ref<'planned' | 'history'>('planned')
-const isFormOpen = ref(false)
+// Загружаем компоненты всех мотоциклов (для формы событий)
+const allComponents = ref<MotorcycleComponent[]>([])
+const componentsLoading = ref(false)
+
+async function loadAllComponents() {
+  if (!motorcycles.value?.length) return
+  componentsLoading.value = true
+  try {
+    const promises = motorcycles.value.map(m => api.components.list(m.id))
+    const results = await Promise.all(promises)
+    allComponents.value = results.flatMap((res: any) => res.components)
+  } catch {
+    allComponents.value = []
+  } finally {
+    componentsLoading.value = false
+  }
+}
+
+watch(motorcycles, loadAllComponents, { immediate: true })
+
+// --- СОСТОЯНИЕ UI ---
+const activeTab = ref<'planned' | 'history' | 'events'>('events') // По умолчанию открываем события
+const isLegacyFormOpen = ref(false)
 const editingMaintenance = ref<Maintenance | null>(null)
 const selectedMaintenance = ref<(Maintenance & { motorcycle: Motorcycle }) | null>(null)
+
+// Состояние для Событий
+const events = ref<MaintenanceEvent[]>([])
+const eventsLoading = ref(false)
+const isEventFormOpen = ref(false)
+const editingEvent = ref<MaintenanceEvent | null>(null)
+const selectedEvent = ref<MaintenanceEvent | null>(null)
+const deletingEvent = ref<MaintenanceEvent | null>(null)
+
+async function loadEvents() {
+  if (!motorcycles.value?.length) return
+  eventsLoading.value = true
+  try {
+    const promises = motorcycles.value.map(m => api.maintenance.events.list(m.id, { per_page: 100 }))
+    const results = await Promise.all(promises)
+    // Собираем все события в один список и сортируем по дате (новые сверху)
+    events.value = results
+      .flatMap((res: any) => res.events)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  } catch {
+    events.value = []
+  } finally {
+    eventsLoading.value = false
+  }
+}
+
+watch(motorcycles, loadEvents, { immediate: true })
+
 const quickStartMotorcycle = ref<Motorcycle | null>(null)
 
 // --- ФИЛЬТРЫ ---
 const searchQuery = ref('')
 const filterMotorcycleId = ref<number | 'all'>('all')
-const filterBy = ref<'all' | 'date' | 'mileage'>('date')
+const filterBy = ref<'all' | 'date' | 'mileage'>('all')
 const sortAsc = ref(true)
 
 // --- БАЗОВЫЕ ВЫЧИСЛЕНИЯ ---
@@ -55,7 +106,22 @@ const filteredWorks = computed(() => {
   return list
 })
 
-// --- СТАТИСТИКА (4 карточки) ---
+const filteredEvents = computed(() => {
+  let list = events.value
+  if (filterMotorcycleId.value !== 'all') {
+    list = list.filter(e => String(e.motorcycle_id) === String(filterMotorcycleId.value))
+  }
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(e =>
+      e.comment?.toLowerCase().includes(q) ||
+      e.works.some(w => w.title?.toLowerCase().includes(q))
+    )
+  }
+  return list
+})
+
+// --- СТАТИСТИКА ---
 const now = new Date()
 const twelveMonthsAgo = new Date()
 twelveMonthsAgo.setFullYear(now.getFullYear() - 1)
@@ -74,12 +140,16 @@ const completedLast12m = computed(() => {
   })
 })
 const totalCost = computed(() => {
-  return allWorks.value
-    .filter(m => m.status === 'completed' && m.cost)
-    .reduce((sum, m) => sum + (m.cost || 0), 0)
+  const legacyCost = allWorks.value.filter(m => m.status === 'completed' && m.cost).reduce((sum, m) => sum + (m.cost || 0), 0)
+  const eventsCost = filteredEvents.value.reduce((sum, e) => sum + (e.total_cost || 0), 0)
+  return legacyCost + eventsCost
 })
 const costLast12m = computed(() => {
-  return completedLast12m.value.reduce((sum, m) => sum + (m.cost || 0), 0)
+  const legacyCost = completedLast12m.value.reduce((sum, m) => sum + (m.cost || 0), 0)
+  const eventsCost = filteredEvents.value
+    .filter(e => e.date && new Date(e.date) >= twelveMonthsAgo)
+    .reduce((sum, e) => sum + (e.total_cost || 0), 0)
+  return legacyCost + eventsCost
 })
 
 // --- СПИСКИ ДЛЯ ТАБОВ ---
@@ -96,7 +166,18 @@ const planned = computed(() => {
       return sortAsc.value ? res : -res
     })
   } else {
-    list.sort((a, b) => sortAsc.value ? b.id - a.id : a.id - b.id)
+    list.sort((a, b) => {
+      const dateA = a.planned_date || '9999-12-31'
+      const dateB = b.planned_date || '9999-12-31'
+      if (dateA !== dateB) {
+        const res = dateA.localeCompare(dateB)
+        return sortAsc.value ? res : -res
+      }
+      const milA = a.planned_mileage || 9999999
+      const milB = b.planned_mileage || 9999999
+      const res = milA - milB
+      return sortAsc.value ? res : -res
+    })
   }
   return list
 })
@@ -117,7 +198,9 @@ const selectedMotorcycle = computed(() => {
 
 const hasNoWorksForSelected = computed(() => {
   if (!selectedMotorcycle.value) return false
-  return allWorks.value.filter(m => String(m.motorcycle.id) === String(selectedMotorcycle.value!.id)).length === 0
+  const hasLegacy = allWorks.value.some(m => String(m.motorcycle.id) === String(selectedMotorcycle.value!.id))
+  const hasEvents = events.value.some(e => String(e.motorcycle_id) === String(selectedMotorcycle.value!.id))
+  return !hasLegacy && !hasEvents
 })
 
 // --- ВИДЖЕТЫ СПРАВА ---
@@ -146,16 +229,20 @@ const formatCost = (val?: number | null) => {
   return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(val)
 }
 
+function getMotoName(motoId: number) {
+  return motorcycles.value?.find(m => m.id === motoId)?.name || 'Мотоцикл'
+}
+
 // --- ОБРАБОТЧИКИ ---
 function openCreate() {
   editingMaintenance.value = null
-  isFormOpen.value = true
+  isLegacyFormOpen.value = true
 }
 
 function openEdit(m: Maintenance) {
   selectedMaintenance.value = null
   editingMaintenance.value = m
-  isFormOpen.value = true
+  isLegacyFormOpen.value = true
 }
 
 function openDetails(m: Maintenance & { motorcycle: Motorcycle }) {
@@ -178,8 +265,37 @@ function openQuickStart() {
   if (selectedMotorcycle.value) quickStartMotorcycle.value = selectedMotorcycle.value
 }
 
+// Обработчики событий
+function openEventCreate() {
+  editingEvent.value = null
+  isEventFormOpen.value = true
+}
+function openEventEdit(e: MaintenanceEvent) {
+  selectedEvent.value = null
+  editingEvent.value = e
+  isEventFormOpen.value = true
+}
+function onEventFormDone() {
+  isEventFormOpen.value = false
+  editingEvent.value = null
+  loadEvents()
+  refresh() // Для обновления пробега и компонентов
+}
+async function confirmDeleteEvent() {
+  if (!deletingEvent.value) return
+  try {
+    await api.maintenance.events.remove(deletingEvent.value.id, deletingEvent.value.motorcycle_id)
+    toast.success('Событие удалено')
+    deletingEvent.value = null
+    loadEvents()
+    refresh()
+  } catch (e: any) {
+    toast.error(e?.message || 'Не удалось удалить событие')
+  }
+}
+
 function onQuickStartDone() { quickStartMotorcycle.value = null; refresh() }
-function onFormDone() { isFormOpen.value = false; editingMaintenance.value = null; refresh() }
+function onFormDone() { isLegacyFormOpen.value = false; editingMaintenance.value = null; refresh() }
 function onCompleted() { completingMaintenance.value = null; refresh() }
 function onDelete() { deletingMaintenance.value = null; refresh() }
 
@@ -198,22 +314,50 @@ const motoOptions = computed(() => [
         <p class="page-subtitle">Планируйте работы и ведите историю обслуживания</p>
       </div>
       <div class="header-actions">
-        <BaseButton v-if="motorcycles?.length" @click="openCreate">
-          <template #icon><i class="fa-solid fa-plus"></i></template>
-          Добавить запись
+        <BaseButton v-if="motorcycles?.length" variant="primary" @click="openEventCreate">
+          <template #icon><i class="fa-solid fa-layer-group"></i></template>
+          Создать событие
         </BaseButton>
       </div>
     </header>
 
-    <!-- Модалки -->
-    <BaseModal v-if="isFormOpen" :title="editingMaintenance ? 'Редактировать запись' : 'Новая запись'" @close="isFormOpen = false">
-      <MaintenanceForm :motorcycles="motorcycles || []" :default-motorcycle-id="motorcycles?.[0]?.id" :initial-data="editingMaintenance" @created="onFormDone" @updated="onFormDone" @cancel="isFormOpen = false" />
+    <!-- LEGACY МОДАЛКИ -->
+    <BaseModal v-if="isLegacyFormOpen" :title="editingMaintenance ? 'Редактировать запись' : 'Новая запись'" @close="isLegacyFormOpen = false">
+      <MaintenanceForm :motorcycles="motorcycles || []" :default-motorcycle-id="motorcycles?.[0]?.id" :initial-data="editingMaintenance" @created="onFormDone" @updated="onFormDone" @cancel="isLegacyFormOpen = false" />
     </BaseModal>
 
     <MaintenanceDetailsModal v-if="selectedMaintenance" :maintenance="selectedMaintenance" @close="selectedMaintenance = null" @updated="refresh(); selectedMaintenance = null" @edit="openEdit(selectedMaintenance)" @complete="openComplete(selectedMaintenance)" @delete="openDelete(selectedMaintenance)" />
     <CompleteMaintenanceModal v-if="completingMaintenance" :maintenance="completingMaintenance" @close="completingMaintenance = null" @completed="onCompleted" />
     <DeleteMaintenanceModal v-if="deletingMaintenance" :maintenance="deletingMaintenance" @close="deletingMaintenance = null" @deleted="onDelete" />
     <QuickStartModal v-if="quickStartMotorcycle" :motorcycle="quickStartMotorcycle" @close="quickStartMotorcycle = null" @created="onQuickStartDone" />
+
+    <!-- EVENT МОДАЛКИ -->
+    <BaseModal v-if="isEventFormOpen" :title="editingEvent ? 'Редактировать событие' : 'Новое событие обслуживания'" @close="isEventFormOpen = false">
+      <MaintenanceEventForm
+        :motorcycle-id="editingEvent?.motorcycle_id || (selectedMotorcycle?.id || motorcycles?.[0]?.id || 0)"
+        :current-mileage="motorcycles?.find(m => m.id === (editingEvent?.motorcycle_id || (selectedMotorcycle?.id || motorcycles?.[0]?.id)))?.mileage ?? null"
+        :components="allComponents.filter(c => c.motorcycle_id === (editingEvent?.motorcycle_id || (selectedMotorcycle?.id || motorcycles?.[0]?.id)))"
+        :event="editingEvent"
+        @saved="onEventFormDone"
+        @cancel="isEventFormOpen = false"
+      />
+    </BaseModal>
+
+    <MaintenanceEventDetailsModal
+      v-if="selectedEvent"
+      :event="selectedEvent"
+      @close="selectedEvent = null"
+      @edit="openEventEdit(selectedEvent!)"
+      @delete="deletingEvent = selectedEvent; selectedEvent = null"
+    />
+
+    <BaseModal v-if="deletingEvent" title="Удалить событие?" @close="deletingEvent = null">
+      <p>Вы уверены, что хотите удалить это событие? История работ по компонентам будет пересчитана.</p>
+      <template #footer>
+        <BaseButton variant="ghost" size="sm" @click="deletingEvent = null">Отмена</BaseButton>
+        <BaseButton variant="danger" size="sm" @click="confirmDeleteEvent">Удалить</BaseButton>
+      </template>
+    </BaseModal>
 
     <!-- Загрузка / Ошибки / Пустой гараж -->
     <div v-if="pending" class="loading">
@@ -254,7 +398,7 @@ const motoOptions = computed(() => [
           <div class="stat-icon"><i class="fa-regular fa-circle-check"></i></div>
           <div class="stat-info">
             <span class="stat-label">Выполнено за 12 мес.</span>
-            <span class="stat-value">{{ completedLast12m.length }}</span>
+            <span class="stat-value">{{ completedLast12m.length + filteredEvents.filter(e => new Date(e.date) >= twelveMonthsAgo).length }}</span>
           </div>
         </BaseCard>
         <BaseCard padding="md" class="stat-card">
@@ -272,18 +416,28 @@ const motoOptions = computed(() => [
         <div class="main-col">
           <!-- Фильтры -->
           <div class="filters-bar">
-            <BaseSelect
-              v-model="filterMotorcycleId"
-              :options="motoOptions"
-              class="filter-select"
-            />
+            <BaseSelect v-model="filterMotorcycleId" :options="motoOptions" class="filter-select" />
             <div class="search-box">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input v-model="searchQuery" type="text" placeholder="Поиск по работам..." class="search-input" />
+              <input v-model="searchQuery" type="text" placeholder="Поиск..." class="search-input" />
             </div>
+
+            <!-- Переключатель типа плана -->
+            <BaseSelect
+              v-if="activeTab === 'planned'"
+              v-model="filterBy"
+              :options="[
+                { value: 'all', label: 'Все планы' },
+                { value: 'date', label: 'По дате' },
+                { value: 'mileage', label: 'По пробегу' }
+              ]"
+              class="filter-select"
+              style="max-width: 150px;"
+            />
+
             <div class="filters-actions">
               <button class="btn-sort" @click="sortAsc = !sortAsc">
-                <i class="fa-solid fa-arrow-down-up-across-line"></i> Сортировка: {{ sortAsc ? 'по возрастанию' : 'по убыванию' }}
+                <i class="fa-solid fa-arrow-down-up-across-line"></i> {{ sortAsc ? 'По возрастанию' : 'По убыванию' }}
               </button>
             </div>
           </div>
@@ -302,21 +456,49 @@ const motoOptions = computed(() => [
 
           <!-- Табы -->
           <div class="tabs">
+            <button class="tab-btn" :class="{ 'tab-btn--active': activeTab === 'events' }" @click="activeTab = 'events'">
+              События <span v-if="filteredEvents.length" class="badge">{{ filteredEvents.length }}</span>
+            </button>
             <button class="tab-btn" :class="{ 'tab-btn--active': activeTab === 'planned' }" @click="activeTab = 'planned'">
               План <span v-if="planned.length" class="badge">{{ planned.length }}</span>
             </button>
             <button class="tab-btn" :class="{ 'tab-btn--active': activeTab === 'history' }" @click="activeTab = 'history'">
-              История <span v-if="history.length" class="badge">{{ history.length }}</span>
+              Старая история <span v-if="history.length" class="badge">{{ history.length }}</span>
             </button>
           </div>
 
           <!-- СПИСОК (Таблица) -->
           <div class="list-container">
+            <div v-if="activeTab === 'events' && filteredEvents.length === 0" class="empty-list">Событий пока нет.</div>
             <div v-if="activeTab === 'planned' && planned.length === 0" class="empty-list">Нет запланированных работ.</div>
-            <div v-else-if="activeTab === 'history' && history.length === 0" class="empty-list">История обслуживания пуста.</div>
+            <div v-if="activeTab === 'history' && history.length === 0" class="empty-list">Старая история обслуживания пуста.</div>
 
-            <!-- Планы -->
-            <template v-if="activeTab === 'planned'">
+            <!-- СОБЫТИЯ -->
+            <template v-if="activeTab === 'events'">
+              <div v-for="e in filteredEvents" :key="e.id" class="table-row" @click="selectedEvent = e">
+                <div class="row-moto">
+                  <span class="moto-badge">{{ getMotoName(e.motorcycle_id) }}</span>
+                </div>
+                <div class="row-title">
+                  <span class="work-title">{{ e.works.map(w => w.title).filter(Boolean).join(' · ') || 'Событие обслуживания' }}</span>
+                  <span v-if="e.comment" class="work-desc">{{ e.comment }}</span>
+                </div>
+                <div class="row-date">
+                  <span class="meta-item"><i class="fa-regular fa-calendar-check"></i> {{ formatDate(e.date) }}</span>
+                  <span v-if="e.mileage" class="meta-item"><i class="fa-solid fa-gauge-high"></i> {{ formatMileage(e.mileage) }}</span>
+                </div>
+                <div class="row-status">
+                  <span class="status-pill status-completed">Событие</span>
+                  <span v-if="e.total_cost" class="work-cost">{{ formatCost(e.total_cost) }}</span>
+                </div>
+                <div class="row-actions">
+                  <button class="action-btn" @click.stop="selectedEvent = e"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+              </div>
+            </template>
+
+            <!-- ПЛАНЫ -->
+            <template v-else-if="activeTab === 'planned'">
               <div v-for="m in planned" :key="`${m.motorcycle.id}-${m.id}`" class="table-row" @click="openDetails(m)">
                 <div class="row-moto">
                   <span class="moto-badge">{{ m.motorcycle.name }}</span>
@@ -339,8 +521,8 @@ const motoOptions = computed(() => [
               </div>
             </template>
 
-            <!-- История -->
-            <template v-else>
+            <!-- СТАРАЯ ИСТОРИЯ -->
+            <template v-else-if="activeTab === 'history'">
               <div v-for="m in history" :key="`${m.motorcycle.id}-${m.id}`" class="table-row" @click="openDetails(m)">
                 <div class="row-moto">
                   <span class="moto-badge">{{ m.motorcycle.name }}</span>
