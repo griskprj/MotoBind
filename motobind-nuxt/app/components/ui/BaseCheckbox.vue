@@ -44,7 +44,7 @@ function onChange(event: Event) {
         />
       </svg>
     </span>
-    <span v-if="label" class="checkbox__label">{{ label }}</span>
+    <slot class="checkbox__label">{{ label }}</slot>
   </label>
 </template>
 
