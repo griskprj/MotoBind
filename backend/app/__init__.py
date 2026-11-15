@@ -1,7 +1,7 @@
 import os
 
 from app.exceptions import register_error_handlers
-from app.extensions import cors, db, jwt, mail, migrate, swagger
+from app.extensions import cors, db, jwt, mail, migrate, swagger, limiter
 from app.scheduler import start_scheduler
 from config import settings
 from flask import Flask, jsonify, send_from_directory
@@ -47,6 +47,7 @@ def create_app(config_override=None):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    limiter.init_app(app)
     swagger.init_app(app)
     mail.init_app(app)
     register_error_handlers(app)
@@ -87,6 +88,10 @@ def create_app(config_override=None):
     @app.route("/api/version")
     def version():
         return jsonify({"version": __version__})
+
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify(error="Слишком много запросов. Попробуйте позже."), 429
 
     from app.api.admin import admin
     from app.api.auth import auth

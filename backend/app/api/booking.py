@@ -16,7 +16,7 @@ booking = Blueprint("booking", __name__)
 @jwt_required()
 def create_booking():
     """Создать заявку на обслуживание."""
-    data = CreateBookingSchema.model_validate(request.get_json() or {})
+    data = CreateBookingSchema.model_validate(request.get_json(silent=True) or {})
 
     record = BookingService.create(
         client_user_id=get_current_user_id(),
@@ -50,7 +50,7 @@ def get_booking(booking_id):
 @jwt_required()
 def cancel_booking(booking_id):
     """Отменить заявку (клиент)."""
-    data = CancelBookingSchema.model_validate(request.get_json() or {})
+    data = CancelBookingSchema.model_validate(request.get_json(silent=True) or {})
     record = BookingService.cancel_by_client(
         client_user_id=get_current_user_id(),
         booking_id=booking_id,

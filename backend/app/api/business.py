@@ -34,7 +34,7 @@ business = Blueprint("business", __name__)
 @jwt_required()
 def create_account():
     """Создать бизнес-аккаунт (master или station)."""
-    data = CreateBusinessAccountSchema.model_validate(request.get_json() or {})
+    data = CreateBusinessAccountSchema.model_validate(request.get_json(silent=True) or {})
 
     account = BusinessAccountService.create(
         user_id=get_current_user_id(),
@@ -78,7 +78,7 @@ def get_public_account(slug):
 @business_owner_required
 def update_my_account():
     """Обновить мой бизнес-аккаунт."""
-    data = UpdateBusinessAccountSchema.model_validate(request.get_json() or {})
+    data = UpdateBusinessAccountSchema.model_validate(request.get_json(silent=True) or {})
 
     account = BusinessAccountService.update(
         user_id=get_current_user_id(),
@@ -207,7 +207,7 @@ def list_clients():
 @jwt_required()
 @business_owner_required
 def create_client():
-    data = CreateBusinessClientSchema.model_validate(request.get_json() or {})
+    data = CreateBusinessClientSchema.model_validate(request.get_json(silent=True) or {})
 
     client = BusinessClientService.create(
         user_id=get_current_user_id(),
@@ -231,7 +231,7 @@ def get_client(client_id):
 @jwt_required()
 @business_owner_required
 def update_client(client_id):
-    data = UpdateBusinessClientSchema.model_validate(request.get_json() or {})
+    data = UpdateBusinessClientSchema.model_validate(request.get_json(silent=True) or {})
 
     client = BusinessClientService.update(
         user_id=get_current_user_id(),
@@ -269,7 +269,7 @@ def list_vehicles(client_id):
 @jwt_required()
 @business_owner_required
 def create_vehicle(client_id):
-    data = CreateVehicleSchema.model_validate(request.get_json() or {})
+    data = CreateVehicleSchema.model_validate(request.get_json(silent=True) or {})
 
     vehicle = BusinessClientVehicleService.create(
         user_id=get_current_user_id(),
@@ -290,7 +290,7 @@ def create_vehicle(client_id):
 @jwt_required()
 @business_owner_required
 def update_vehicle(client_id, vehicle_id):
-    data = UpdateVehicleSchema.model_validate(request.get_json() or {})
+    data = UpdateVehicleSchema.model_validate(request.get_json(silent=True) or {})
 
     vehicle = BusinessClientVehicleService.update(
         user_id=get_current_user_id(),
@@ -325,7 +325,7 @@ def delete_vehicle(client_id, vehicle_id):
 @business_owner_required
 def link_client(client_id):
     """Связать клиента с реальным пользователем по email."""
-    data = LinkClientToUserSchema.model_validate(request.get_json() or {})
+    data = LinkClientToUserSchema.model_validate(request.get_json(silent=True) or {})
 
     client = BusinessClientService.link_to_user(
         user_id=get_current_user_id(),
@@ -410,7 +410,7 @@ def confirm_booking(booking_id):
 @jwt_required()
 @business_owner_required
 def decline_booking(booking_id):
-    data = DeclineBookingSchema.model_validate(request.get_json() or {})
+    data = DeclineBookingSchema.model_validate(request.get_json(silent=True) or {})
     record = BookingService.decline(
         get_current_user_id(), booking_id, reason=data.reason
     )
@@ -421,7 +421,7 @@ def decline_booking(booking_id):
 @jwt_required()
 @business_owner_required
 def reschedule_booking(booking_id):
-    data = RescheduleBookingSchema.model_validate(request.get_json() or {})
+    data = RescheduleBookingSchema.model_validate(request.get_json(silent=True) or {})
     record = BookingService.reschedule(
         get_current_user_id(), booking_id, scheduled_at=data.scheduled_at
     )
@@ -440,7 +440,7 @@ def start_booking(booking_id):
 @jwt_required()
 @business_owner_required
 def complete_booking(booking_id):
-    data = CompleteBookingSchema.model_validate(request.get_json() or {})
+    data = CompleteBookingSchema.model_validate(request.get_json(silent=True) or {})
     record = BookingService.complete(
         master_user_id=get_current_user_id(),
         booking_id=booking_id,

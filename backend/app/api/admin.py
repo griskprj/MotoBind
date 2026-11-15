@@ -174,7 +174,7 @@ def reject_manual(manual_id):
     if manual.status != "moderate":
         raise ValidationError(f"Мануал уже обработан (статус: {manual.status})")
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         raise ValidationError("Нет данных")
 
@@ -265,7 +265,7 @@ def create_user():
     """
     Создание пользователя
     """
-    data = CreateUserSchema(**request.get_json())
+    data = CreateUserSchema(**request.get_json(silent=True))
     user = AdminService.create_user(
         email=data.email,
         username=data.username,
@@ -339,7 +339,7 @@ def update_user(user_id):
     """
     Обновление пользователя
     """
-    data = UpdateUserSchema(**request.get_json())
+    data = UpdateUserSchema(**request.get_json(silent=True))
     user = AdminService.update_user(user_id, data.get_updates())
     return jsonify(user.to_dict()), 200
 
@@ -468,7 +468,7 @@ def send_newsletter():
     """
     Отправка рассылки только подписанным пользователям
     """
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         raise ValidationError("Нет данных")
 
@@ -568,7 +568,7 @@ def resolve_report(report_id):
     Рассмотреть жалобу.
     body: { action: 'post_deleted' | 'user_banned' | 'both' | 'none', note?: str }
     """
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     action = data.get("action")
     note = data.get("note")
     admin_id = int(get_jwt_identity())

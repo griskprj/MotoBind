@@ -19,7 +19,7 @@ def _serialize(event) -> dict:
 @maintenance_events.route("/", methods=["POST"])
 @jwt_required()
 def create_event():
-    data = CreateEventSchema.model_validate(request.get_json() or {})
+    data = CreateEventSchema.model_validate(request.get_json(silent=True) or {})
     event = EventService.create(
         user_id=get_current_user_id(),
         moto_id=data.motorcycle_id,
@@ -72,7 +72,7 @@ def get_event(event_id):
 @maintenance_events.route("/<int:event_id>", methods=["PUT"])
 @jwt_required()
 def update_event(event_id):
-    data = UpdateEventSchema.model_validate(request.get_json() or {})
+    data = UpdateEventSchema.model_validate(request.get_json(silent=True) or {})
     moto_id = request.args.get("motorcycle_id", type=int)
     if not moto_id:
         from app.exceptions import ValidationError

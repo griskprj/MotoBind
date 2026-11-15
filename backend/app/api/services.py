@@ -31,7 +31,7 @@ def list_my_services():
 @business_owner_required
 def create_service():
     """Создать услугу. Уходит на модерацию."""
-    data = CreateServiceSchema.model_validate(request.get_json() or {})
+    data = CreateServiceSchema.model_validate(request.get_json(silent=True) or {})
 
     service = ServiceService.create(
         user_id=get_current_user_id(),
@@ -50,7 +50,7 @@ def create_service():
 @business_owner_required
 def update_service(service_id):
     """Обновить услугу. Сбрасывает в pending."""
-    data = UpdateServiceSchema.model_validate(request.get_json() or {})
+    data = UpdateServiceSchema.model_validate(request.get_json(silent=True) or {})
 
     service = ServiceService.update(
         user_id=get_current_user_id(),
