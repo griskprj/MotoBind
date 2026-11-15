@@ -295,10 +295,16 @@ onMounted(loadComponents)
             </div>
           </div>
         </div>
-        <BaseButton variant="primary" block class="add-tast-btn" @click="openEventCreate">
+        <div class="tasks-card-actions">
+          <BaseButton variant="primary" block class="add-tast-btn" @click="openEventCreate">
           <template #icon><i class="fa-solid fa-layer-group"></i></template>
-          Создать событие
-        </BaseButton>
+            Создать событие
+          </BaseButton>
+          <BaseButton variant="primary" block class="add-tast-btn" @click="openCreate">
+            <template #icon><i class="fa-solid fa-calendar"></i></template>
+            Запланировать ТО
+          </BaseButton>
+        </div>
       </BaseCard>
 
       <BaseCard padding="lg" class="useful-card">
@@ -590,6 +596,12 @@ onMounted(loadComponents)
 
 .plan-status {
   flex-shrink: 0;
+}
+
+.tasks-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .tasks-list {
