@@ -114,7 +114,7 @@ def toggle_like(post_id):
 def add_comment(post_id):
     """Добавить комментарий."""
     user_id = get_current_user_id()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     comment = PostService.add_comment(post_id, user_id, data.get("content"))
     return (
@@ -140,7 +140,7 @@ def delete_comment(comment_id):
 def report_post(post_id):
     """Отправить жалобу на пост."""
     user_id = get_current_user_id()
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     report = ReportService.create_report(
         post_id=post_id,

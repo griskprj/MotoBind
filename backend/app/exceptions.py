@@ -4,7 +4,7 @@
 
 import traceback
 from datetime import datetime, timezone
-
+from werkzeug.exceptions import HTTPException
 from flask import jsonify, request
 from pydantic import ValidationError as PydanticValidationError
 
@@ -74,6 +74,18 @@ def register_error_handlers(app):
             "path": request.path,
         }
         return jsonify(response), e.status_code
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        """Возвращает правильный статус-код для системных ошибок Flask"""
+        response = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": e.code,
+            "error": e.name,
+            "detail": e.description,
+            "path": request.path,
+        }
+        return jsonify(response), e.code
 
     @app.errorhandler(Exception)
     def handle_generic_exception(e):

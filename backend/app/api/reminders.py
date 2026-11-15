@@ -49,7 +49,7 @@ def dismiss_reminder(reminder_id):
 @jwt_required()
 def snooze_reminder(reminder_id):
     user_id = int(get_jwt_identity())
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     schema = SnoozeSchema(**data)
 
     reminder = ReminderService.snooze(reminder_id, user_id, days=schema.days)

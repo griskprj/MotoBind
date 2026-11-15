@@ -19,7 +19,9 @@ function getCookieOptions(token?: string) {
       if (typeof payload.exp === 'number') {
         options.expires = new Date(payload.exp * 1000)
       }
-    } catch {}
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') console.warn('Invalid JWT payload', e)
+    }
   }
   return options
 }

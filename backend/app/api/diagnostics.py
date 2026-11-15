@@ -20,7 +20,7 @@ diagnostics = Blueprint("diagnostics", __name__)
 def save_report():
     """Сохраняет отчёт диагностики."""
     user_id = get_current_user_id()
-    data = SaveDiagnosticReportSchema.model_validate(request.get_json() or {})
+    data = SaveDiagnosticReportSchema.model_validate(request.get_json(silent=True) or {})
 
     report = DiagnosticReport(
         user_id=user_id,

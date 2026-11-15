@@ -57,7 +57,7 @@ def list_components(moto_id):
 @jwt_required()
 def create_component(moto_id):
     user_id = get_current_user_id()
-    data = CreateComponentSchema.model_validate(request.get_json() or {})
+    data = CreateComponentSchema.model_validate(request.get_json(silent=True) or {})
 
     component = ComponentService.create(
         user_id=user_id,
@@ -85,7 +85,7 @@ def create_component(moto_id):
 @jwt_required()
 def apply_template(moto_id):
     user_id = get_current_user_id()
-    data = ApplyTemplateSchema.model_validate(request.get_json() or {})
+    data = ApplyTemplateSchema.model_validate(request.get_json(silent=True) or {})
 
     result = ComponentService.apply_template(
         user_id=user_id,
@@ -121,7 +121,7 @@ def get_component(moto_id, component_id):
 @jwt_required()
 def update_component(moto_id, component_id):
     user_id = get_current_user_id()
-    data = UpdateComponentSchema.model_validate(request.get_json() or {})
+    data = UpdateComponentSchema.model_validate(request.get_json(silent=True) or {})
 
     updates = data.get_updates()
     if "last_service_date" in updates:

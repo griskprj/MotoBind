@@ -6,6 +6,7 @@ from app.schemas.motorcycle import (
     UpdateMotorcycleSchema,
 )
 from app.services.motorcycle_service import MotorcycleService
+from app.services.health_service import HealthService
 from app.utils.helpers import get_current_user_id
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
@@ -50,7 +51,6 @@ def get_user_moto(moto_id):
 @moto_owner_required
 def get_motorcycle_health(moto_id):
     """Сводка состояния компонентов мотоцикла (ориентировочная)."""
-    from app.services.health_service import HealthService
 
     data = HealthService.get_motorcycle_health(
         user_id=get_current_user_id(), moto_id=moto_id
@@ -62,7 +62,7 @@ def get_motorcycle_health(moto_id):
 @jwt_required()
 def create_moto():
     """Создание мотоцикла."""
-    data = CreateMotorcycleSchema.model_validate(request.get_json() or {})
+    data = CreateMotorcycleSchema.model_validate(request.get_json(silent=True) or {})
 
     moto = MotorcycleService.create_motorcycle(
         owner_id=get_current_user_id(),
@@ -83,7 +83,7 @@ def create_moto():
 @moto_owner_required
 def update_moto(moto_id):
     """Обновление мотоцикла."""
-    data = UpdateMotorcycleSchema.model_validate(request.get_json() or {})
+    data = UpdateMotorcycleSchema.model_validate(request.get_json(silent=True) or {})
     updated = MotorcycleService.update_motorcycle(
         moto_id=moto_id,
         user_id=get_current_user_id(),
@@ -97,7 +97,7 @@ def update_moto(moto_id):
 @moto_owner_required
 def update_moto_mileage(moto_id):
     """Обновление пробега мотоцикла."""
-    data = UpdateMotorcycleSchema.model_validate(request.get_json() or {})
+    data = UpdateMotorcycleSchema.model_validate(request.get_json(silent=True) or {})
     updated = MotorcycleService.update_motorcycle_mileage(
         moto_id=moto_id,
         user_id=get_current_user_id(),
@@ -111,7 +111,7 @@ def update_moto_mileage(moto_id):
 @moto_owner_required
 def update_note(moto_id):
     """Обновление заметок мотоцикла."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     updated = MotorcycleService.update_note(
         moto_id=moto_id,
         user_id=get_current_user_id(),

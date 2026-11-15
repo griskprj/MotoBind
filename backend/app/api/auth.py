@@ -3,6 +3,7 @@ Auth API — тонкие контроллеры.
 
 Вся бизнес-логика — в app/services/auth_service.py.
 """
+from app.extensions import limiter
 from app.schemas.auth import (
     CheckResetTokenResponseSchema,
     LoginResponseSchema,
@@ -26,9 +27,10 @@ auth = Blueprint("auth", __name__)
 
 
 @auth.route("/register", methods=["POST"])
+@limiter.limit("3 per hour")
 def register():
     """Регистрация пользователя."""
-    data = RegisterSchema.model_validate(request.get_json() or {})
+    data = RegisterSchema.model_validate(request.get_json(silent=True) or {})
 
     result = AuthService.register(
         email=data.email,
@@ -41,9 +43,10 @@ def register():
 
 
 @auth.route("/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     """Логин пользователя."""
-    data = LoginSchema.model_validate(request.get_json() or {})
+    data = LoginSchema.model_validate(request.get_json(silent=True) or {})
 
     result = AuthService.login(
         email=data.email,
@@ -71,7 +74,7 @@ def get_me():
 @auth.route("/refresh", methods=["POST"])
 def refresh():
     """Обновление access-токена."""
-    data = RefreshSchema.model_validate(request.get_json() or {})
+    data = RefreshSchema.model_validate(request.get_json(silent=True) or {})
 
     result = AuthService.refresh(refresh_token=data.refresh_token)
     response = RefreshResponseSchema.model_validate(result).model_dump()
@@ -94,9 +97,10 @@ def logout():
 
 
 @auth.route("/forgot-password", methods=["POST"])
+@limiter.limit("3 per hour")
 def forgot_password():
     """Запрос на сброс пароля."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     AuthService.forgot_password(email=data.get("email"))
     return (
         jsonify(
@@ -111,7 +115,7 @@ def forgot_password():
 @auth.route("/reset-password", methods=["POST"])
 def reset_password():
     """Смена пароля по токену."""
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     AuthService.reset_password(
         token=data.get("token"),
         new_password=data.get("new_password"),

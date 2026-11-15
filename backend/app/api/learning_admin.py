@@ -76,7 +76,7 @@ def admin_get_course(course_id):
 @learning_admin.route("/courses", methods=["POST"])
 @admin_required
 def admin_create_course():
-    schema = CourseCreateSchema.model_validate(request.get_json() or {})
+    schema = CourseCreateSchema.model_validate(request.get_json(silent=True) or {})
     course = LearningService.create_course(
         author_id=get_current_user_id(),
         data=schema.model_dump(),
@@ -88,7 +88,7 @@ def admin_create_course():
 @learning_admin.route("/courses/<int:course_id>", methods=["PUT"])
 @admin_required
 def admin_update_course(course_id):
-    schema = CourseUpdateSchema.model_validate(request.get_json() or {})
+    schema = CourseUpdateSchema.model_validate(request.get_json(silent=True) or {})
     LearningService.update_course(course_id, schema.get_updates())
     data = LearningService.admin_get_course(course_id)
     return jsonify(data), 200
@@ -132,7 +132,7 @@ def admin_get_lesson(lesson_id):
 @learning_admin.route("/courses/<int:course_id>/lessons", methods=["POST"])
 @admin_required
 def admin_create_lesson(course_id):
-    schema = LessonCreateSchema.model_validate(request.get_json() or {})
+    schema = LessonCreateSchema.model_validate(request.get_json(silent=True) or {})
     lesson = LearningService.create_lesson(course_id, schema.model_dump())
     return (
         jsonify(
@@ -150,7 +150,7 @@ def admin_create_lesson(course_id):
 @learning_admin.route("/lessons/<int:lesson_id>", methods=["PUT"])
 @admin_required
 def admin_update_lesson(lesson_id):
-    schema = LessonUpdateSchema.model_validate(request.get_json() or {})
+    schema = LessonUpdateSchema.model_validate(request.get_json(silent=True) or {})
     lesson = LearningService.update_lesson(lesson_id, schema.get_updates())
     return (
         jsonify(
@@ -175,7 +175,7 @@ def admin_delete_lesson(lesson_id):
 @learning_admin.route("/courses/<int:course_id>/lessons/reorder", methods=["POST"])
 @admin_required
 def admin_reorder_lessons(course_id):
-    schema = LessonReorderSchema.model_validate(request.get_json() or {})
+    schema = LessonReorderSchema.model_validate(request.get_json(silent=True) or {})
     LearningService.reorder_lessons(course_id, [i.model_dump() for i in schema.items])
     data = LearningService.admin_get_course(course_id)
     return jsonify(data), 200
@@ -205,7 +205,7 @@ def admin_get_article(article_id):
 @learning_admin.route("/articles", methods=["POST"])
 @admin_required
 def admin_create_article():
-    schema = ArticleCreateSchema.model_validate(request.get_json() or {})
+    schema = ArticleCreateSchema.model_validate(request.get_json(silent=True) or {})
     article = LearningService.create_article(
         author_id=get_current_user_id(),
         data=schema.model_dump(),
@@ -217,7 +217,7 @@ def admin_create_article():
 @learning_admin.route("/articles/<int:article_id>", methods=["PUT"])
 @admin_required
 def admin_update_article(article_id):
-    schema = ArticleUpdateSchema.model_validate(request.get_json() or {})
+    schema = ArticleUpdateSchema.model_validate(request.get_json(silent=True) or {})
     LearningService.update_article(article_id, schema.get_updates())
     data = LearningService.admin_get_article(article_id)
     return jsonify(data), 200

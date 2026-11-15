@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from itsdangerous import URLSafeTimedSerializer
 
 from app.exceptions import ForbiddenError, ValidationError, NotFoundError
 from app.extensions import db
@@ -14,18 +15,13 @@ user = Blueprint("user", __name__)
 @jwt_required()
 def update_profile():
     """Обновление профиля"""
-    try:
-        user_id = int(get_jwt_identity())
-        data = request.get_json()
-        schema = UpdateProfileSchema(**data)
-        updates = schema.get_updates()
-        
-        user_obj = UserService.update_profile(user_id, **updates)
-        return jsonify(user_obj.to_dict()), 200
-    except ValidationError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    user_id = int(get_jwt_identity())
+    data = request.get_json(silent=True)
+    schema = UpdateProfileSchema(**data)
+    updates = schema.get_updates()
+    
+    user_obj = UserService.update_profile(user_id, **updates)
+    return jsonify(user_obj.to_dict()), 200
 
 
 @user.route('/profile/<int:user_id>', methods=['GET'])
@@ -81,7 +77,7 @@ def get_notification_settings():
 @jwt_required()
 def update_notification_settings():
     user = UserService.get_user_by_id(int(get_jwt_identity()))
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     bool_fields = (
         'email_notifications_enabled',
@@ -108,36 +104,27 @@ def update_notification_settings():
         }
     }), 200
 
-@user.route('/unsubscribe/<string:token>', methods=['GET'])
-def unsubscribe_from_newsletter(token):
-    """Отписка от рассылки по токену"""
+
+@user.route('/unsubscribe', methods=['POST'])
+def unsubscribe_from_newsletter():
+    """Отписка от рассылки по токену (POST-запрос из Nuxt)"""
+    data = request.get_json(silent=True) or {}
+    token = data.get('token')
+    if not token:
+        raise ValidationError("Токен обязателен")
+
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
-        from itsdangerous import URLSafeTimedSerializer
-        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-        email = serializer.loads(token, max_age=31536000) # 1 year
-    except:
-        return jsonify({'error': 'Недействительная ссылка'}), 400
+        email = serializer.loads(token, max_age=31536000)
+    except Exception:
+        raise ValidationError("Недействительная ссылка")
 
-    user = UserService.get_user_by_email(email=email)
-    user.email_newsletter_enabled = False
-    db.session.commit()
+    user_obj = UserService.get_user_by_email(email=email)
+    if user_obj:
+        user_obj.email_newsletter_enabled = False
+        db.session.commit()
 
-    return jsonify({
-        'message': 'Вы успешно отписались от рассылки',
-        'email': email
-    }), 200
-
-@user.route('/unsubscribe/<string:token>', methods=['POST'])
-def unscubcsribe_direct(email):
-    """Отписка от рассылки по email (без токена, для админов)"""
-    user = UserService.get_user_by_email(email=email)
-    user.email_newsletter_enabled = False
-    db.session.commit()
-
-    return jsonify({
-        'message': f'Пользователь {email} отписан от рассылки'
-    }), 200
-
+    return jsonify({'message': 'Вы успешно отписались от рассылки'}), 200
 
 @user.route("/avatar", methods=["POST"])
 @jwt_required()
@@ -177,7 +164,7 @@ def change_password():
     Изменить пароль
     """
 
-    data = ChangePasswordSchema(**request.get_json())
+    data = ChangePasswordSchema(**request.get_json(silent=True))
     user = UserService.change_password(
         user_id=int(get_jwt_identity()),
         current_password=data.currentPassword,
@@ -195,7 +182,7 @@ def delete_account():
 
     current_user_id = int(get_jwt_identity())
     user = UserService.get_user_by_id(current_user_id)
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
     if not (user.check_password(data.get("password"))):
         raise ForbiddenError("Неверный пароль")
