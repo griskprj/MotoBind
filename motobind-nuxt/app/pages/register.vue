@@ -22,6 +22,7 @@ const form = reactive({
   username: '',
   password: '',
   confirmPassword: '',
+  confirmPolicy: false,
 })
 
 const submitting = ref(false)
@@ -31,6 +32,11 @@ async function onSubmit() {
 
   if (form.password !== form.confirmPassword) {
     toast.error('Пароли не совпадают')
+    return
+  }
+
+  if(!form.confirmPolicy) {
+    toast.error('Согласие с политикой конфиденциальности и правилами нашего сервиса обязательно')
     return
   }
 
@@ -105,9 +111,9 @@ async function onSubmit() {
           required
         />
 
-        <p v-if="errors._form" class="auth-form-error" role="alert">
-          {{ errors._form }}
-        </p>
+        <BaseCheckbox v-model="form.confirmPolicy" :required="true">
+          <p>Я даю согласие на обработку моих персональных данных в соответствии с <NuxtLink to="/privacy" target="_blank" class="auth-link">Политикой конфиденциальности</NuxtLink></p>
+        </BaseCheckbox>
 
         <BaseButton
           type="submit"
