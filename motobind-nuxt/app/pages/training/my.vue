@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { MyLearningResponse, CourseWithProgress } from '~/types'
-
 definePageMeta({ middleware: 'auth' })
 
 useSeoMeta({
@@ -16,7 +14,6 @@ const { data, pending, error } = await useAsyncData(
   () => api.training.myLearning()
 )
 
-// Вычисление процента прогресса
 function getProgressPercent(progress: { completed: number; total: number }) {
   if (progress.total === 0) return 0
   return Math.round((progress.completed / progress.total) * 100)
@@ -159,7 +156,7 @@ function getProgressPercent(progress: { completed: number; total: number }) {
         </div>
       </section>
 
-      <!-- Если вообще ничего нет -->
+      <!-- Empty-state -->
       <div
         v-if="!data.in_progress.length && !data.completed.length && !data.not_started.length"
         class="empty-state"

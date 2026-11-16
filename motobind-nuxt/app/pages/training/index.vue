@@ -8,12 +8,14 @@ useSeoMeta({
 })
 
 const api = useApi()
-const activeTab = ref<'courses' | 'articles'>('courses')
+const activeTab = ref<'courses' | 'articles' | 'my' >('courses')
 const searchQuery = ref('')
 const debouncedSearch = useDebounce(searchQuery, 500)
+const router = useRouter()
 
 const coursesData = ref<{ courses: CourseShort[] } | null>(null)
 const articlesData = ref<{ articles: ArticleShort[] } | null>(null)
+const myLearning = ref<{} | null>(null)
 const pending = ref(false)
 
 async function loadData() {
@@ -21,8 +23,10 @@ async function loadData() {
   try {
     if (activeTab.value === 'courses') {
       coursesData.value = await api.training.listCourses({ search: debouncedSearch.value || undefined })
-    } else {
+    } else if (activeTab.value === 'articles') {
       articlesData.value = await api.training.listArticles({ search: debouncedSearch.value || undefined })
+    } else if (activeTab.value === 'my') {
+      myLearning.value = await api.training.myLearning()
     }
   } catch (e) {
     console.error(e)
@@ -56,21 +60,29 @@ const articles = computed(() => articlesData.value?.articles || [])
         />
       </div>
 
-      <div class="tabs">
-        <button
-          class="tab-btn"
-          :class="{ 'tab-btn--active': activeTab === 'courses' }"
-          @click="activeTab = 'courses'"
+      <div class="right-filters-wrap">
+        <div class="tabs">
+          <button
+            class="tab-btn"
+            :class="{ 'tab-btn--active': activeTab === 'courses' }"
+            @click="activeTab = 'courses'"
+          >
+            Курсы
+          </button>
+          <button
+            class="tab-btn"
+            :class="{ 'tab-btn--active': activeTab === 'articles' }"
+            @click="activeTab = 'articles'"
+          >
+            Статьи
+          </button>
+        </div>
+        <BaseButton
+          variant="secondary"
+          @click="router.push('/training/my')"
         >
-          Курсы
-        </button>
-        <button
-          class="tab-btn"
-          :class="{ 'tab-btn--active': activeTab === 'articles' }"
-          @click="activeTab = 'articles'"
-        >
-          Статьи
-        </button>
+          Мое обучение
+        </BaseButton>
       </div>
     </div>
 
@@ -149,6 +161,11 @@ const articles = computed(() => articlesData.value?.articles || [])
   &:focus { outline: none; border-color: var(--color-brand); box-shadow: var(--shadow-focus); }
 }
 
+.right-filters-wrap {
+  display: flex;
+  gap: var(--space-4);
+}
+
 .tabs { display: flex; gap: var(--space-2); background: var(--color-surface-secondary); padding: 4px; border-radius: var(--radius-md); }
 .tab-btn {
   padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm);
@@ -170,4 +187,14 @@ const articles = computed(() => articlesData.value?.articles || [])
 .badge { font-size: var(--text-xs); font-weight: var(--fw-semibold); color: var(--color-brand); text-transform: uppercase; margin-bottom: var(--space-2); }
 .free { color: var(--color-success); font-weight: var(--fw-semibold); }
 .loading { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-4); }
+
+
+@media (max-width: 420px) {
+  .right-filters-wrap {
+    flex-direction: column;
+  }
+  .tab-btn {
+    width: 100%;
+  }
+}
 </style>

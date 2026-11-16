@@ -416,7 +416,6 @@ export function useApi() {
     getArticle: (slug: string) =>
       request(() => baseFetch<ArticleDetail>(`/learning/articles/${slug}`)),
 
-    // Моё обучение
     myLearning: () =>
       request(() => baseFetch<MyLearningResponse>('/learning/my')),
   }
