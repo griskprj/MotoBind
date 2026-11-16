@@ -11,14 +11,12 @@ useSeoMeta({
 const api = useApi()
 const toast = useToast()
 
-// Загружаем мотоциклы
 const { data: motorcycles, pending, error, refresh } = await useAsyncData(
   'maintenance-center',
   () => api.motorcycle.list(),
   { default: () => [] }
 )
 
-// Загружаем компоненты всех мотоциклов (для формы событий)
 const allComponents = ref<MotorcycleComponent[]>([])
 const componentsLoading = ref(false)
 
@@ -39,12 +37,11 @@ async function loadAllComponents() {
 watch(motorcycles, loadAllComponents, { immediate: true })
 
 // --- СОСТОЯНИЕ UI ---
-const activeTab = ref<'planned' | 'history' | 'events'>('events') // По умолчанию открываем события
+const activeTab = ref<'planned' | 'history' | 'events'>('events')
 const isLegacyFormOpen = ref(false)
 const editingMaintenance = ref<Maintenance | null>(null)
 const selectedMaintenance = ref<(Maintenance & { motorcycle: Motorcycle }) | null>(null)
 
-// Состояние для Событий
 const events = ref<MaintenanceEvent[]>([])
 const eventsLoading = ref(false)
 const isEventFormOpen = ref(false)
@@ -58,7 +55,6 @@ async function loadEvents() {
   try {
     const promises = motorcycles.value.map(m => api.maintenance.events.list(m.id, { per_page: 100 }))
     const results = await Promise.all(promises)
-    // Собираем все события в один список и сортируем по дате (новые сверху)
     events.value = results
       .flatMap((res: any) => res.events)
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
@@ -203,7 +199,7 @@ const hasNoWorksForSelected = computed(() => {
   return !hasLegacy && !hasEvents
 })
 
-// --- ВИДЖЕТЫ СПРАВА ---
+// --- ВИДЖЕТЫ ---
 const upcomingMaintenances = computed(() => {
   return plannedList.value
     .sort((a, b) => {
@@ -265,7 +261,6 @@ function openQuickStart() {
   if (selectedMotorcycle.value) quickStartMotorcycle.value = selectedMotorcycle.value
 }
 
-// Обработчики событий
 function openEventCreate() {
   editingEvent.value = null
   isEventFormOpen.value = true
@@ -279,7 +274,7 @@ function onEventFormDone() {
   isEventFormOpen.value = false
   editingEvent.value = null
   loadEvents()
-  refresh() // Для обновления пробега и компонентов
+  refresh()
 }
 async function confirmDeleteEvent() {
   if (!deletingEvent.value) return
@@ -314,9 +309,13 @@ const motoOptions = computed(() => [
         <p class="page-subtitle">Планируйте работы и ведите историю обслуживания</p>
       </div>
       <div class="header-actions">
-        <BaseButton v-if="motorcycles?.length" variant="primary" @click="openEventCreate">
+        <BaseButton class="header-action-btn" v-if="motorcycles?.length" variant="primary" @click="openEventCreate">
           <template #icon><i class="fa-solid fa-layer-group"></i></template>
           Создать событие
+        </BaseButton>
+        <BaseButton class="header-action-btn" v-if="motorcycles?.length" variant="secondary" @click="openCreate">
+          <template #icon><i class="fa-solid fa-wrench"></i></template>
+          Создать ТО
         </BaseButton>
       </div>
     </header>
@@ -463,7 +462,7 @@ const motoOptions = computed(() => [
               План <span v-if="planned.length" class="badge">{{ planned.length }}</span>
             </button>
             <button class="tab-btn" :class="{ 'tab-btn--active': activeTab === 'history' }" @click="activeTab = 'history'">
-              Старая история <span v-if="history.length" class="badge">{{ history.length }}</span>
+              История <span v-if="history.length" class="badge">{{ history.length }}</span>
             </button>
           </div>
 
@@ -471,7 +470,7 @@ const motoOptions = computed(() => [
           <div class="list-container">
             <div v-if="activeTab === 'events' && filteredEvents.length === 0" class="empty-list">Событий пока нет.</div>
             <div v-if="activeTab === 'planned' && planned.length === 0" class="empty-list">Нет запланированных работ.</div>
-            <div v-if="activeTab === 'history' && history.length === 0" class="empty-list">Старая история обслуживания пуста.</div>
+            <div v-if="activeTab === 'history' && history.length === 0" class="empty-list">История обслуживания пуста.</div>
 
             <!-- СОБЫТИЯ -->
             <template v-if="activeTab === 'events'">
@@ -521,7 +520,7 @@ const motoOptions = computed(() => [
               </div>
             </template>
 
-            <!-- СТАРАЯ ИСТОРИЯ -->
+            <!-- ИСТОРИЯ -->
             <template v-else-if="activeTab === 'history'">
               <div v-for="m in history" :key="`${m.motorcycle.id}-${m.id}`" class="table-row" @click="openDetails(m)">
                 <div class="row-moto">
@@ -540,6 +539,7 @@ const motoOptions = computed(() => [
                   <span v-if="m.cost" class="work-cost">{{ formatCost(m.cost) }}</span>
                 </div>
                 <div class="row-actions">
+                  <button class="action-btn" @click.stop="openEdit(m)"><i class="fa-solid fa-pen"></i></button>
                   <button class="action-btn" @click.stop="openDetails(m)"><i class="fa-solid fa-ellipsis"></i></button>
                 </div>
               </div>
@@ -617,6 +617,15 @@ const motoOptions = computed(() => [
   font-size: var(--text-base);
   color: var(--color-text-secondary);
   margin-top: var(--space-1);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.header-action-btn {
+  width: 100%;
 }
 
 /* Сводка (4 карточки) */
