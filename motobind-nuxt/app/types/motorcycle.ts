@@ -31,6 +31,7 @@ export interface Motorcycle extends MotorcycleShort {
   maintenances: Maintenance[]
   note?: string | null
   mileage?: number | null
+  mileage_updated_at?: string | null
   updated_at?: string
 }
 

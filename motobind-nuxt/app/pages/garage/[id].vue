@@ -119,6 +119,7 @@ function onOpenComponentEvent(componentId: number) {
           :motorcycle="motorcycle"
           @updated="onUpdated"
           @open-components="activeTab = 'components'"
+          @open-history="activeTab = 'maintenance'"
         />
 
         <!-- Компоненты -->
