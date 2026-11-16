@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import type { Motorcycle, Maintenance, MotorcycleHealth } from '~/types'
+import type { Motorcycle, MotorcycleHealth } from '~/types'
 import MotorcycleHealthCard from './MotorcycleHealthCard.vue'
-import MileageWidget from './MileageWidget.vue' // <--- Импортируем новый виджет
 
 const props = defineProps<{
   motorcycle: Motorcycle
 }>()
 
-const emit = defineEmits<{ updated: []; 'open-components': [] }>()
+const emit = defineEmits<{ 
+  updated: []; 'open-components': []
+  'open-history': []
+}>()
 
 const api = useApi()
 const mediaUrl = useMediaUrl()
@@ -40,8 +42,6 @@ const plannedMaintenances = computed(() => {
       return 0
     })
 })
-
-// ... (остальные computed nextMaintenance, lastMaintenance, maintenanceStats и т.д. остаются без изменений) ...
 
 const nextMaintenance = computed(() => {
   const withMileage = plannedMaintenances.value.filter(m => m.planned_mileage != null)
@@ -159,22 +159,30 @@ const lastMaintenanceText = computed(() => {
       />
     </div>
 
-    <!-- Ближайшие работы (без изменений) -->
+    <!-- Ближайшие работы -->
     <BaseCard padding="lg">
       <div class="section-header">
         <h2 class="section-title">Ближайшие работы</h2>
-        <NuxtLink to="#history" class="link">Все задачи →</NuxtLink>
+        <BaseButton
+          variant="ghost"
+          @click="emit('open-history')"
+        >
+          Все задачи →
+        </BaseButton>
       </div>
       <div v-if="plannedMaintenances.length === 0" class="empty">Нет запланированных работ.</div>
       <ul v-else class="work-list">
         <li v-for="m in plannedMaintenances" :key="m.id" class="work-item">
           <span class="work-title">{{ m.title }}</span>
-          <span class="work-mileage">{{ m.planned_mileage ? `${formatNumber(m.planned_mileage)} км` : '' }}</span>
+          <div class="work-meta">
+            <p v-if="m.planned_date" class="work-date">{{ m.planned_date ? new Date(m.planned_date).toLocaleDateString('ru-RU') : '' }}</p>
+            <p v-if="m.planned_mileage" class="work-mileage">{{ m.planned_mileage ? `${formatNumber(m.planned_mileage)} км` : '' }}</p>
+          </div>
         </li>
       </ul>
     </BaseCard>
 
-    <!-- О мотоцикле (без изменений) -->
+    <!-- О мотоцикле -->
     <BaseCard padding="lg">
       <h2 class="section-title">О мотоцикле</h2>
       <div class="specs-list">
@@ -187,11 +195,16 @@ const lastMaintenanceText = computed(() => {
       </div>
     </BaseCard>
 
-    <!-- Последние работы (без изменений) -->
+    <!-- Последние работы -->
     <BaseCard padding="lg">
       <div class="section-header">
         <h2 class="section-title">Последние работы</h2>
-        <NuxtLink to="#history" class="link">Все работы →</NuxtLink>
+        <BaseButton
+          variant="ghost"
+          @click="emit('open-history')"
+        >
+          Все задачи →
+        </BaseButton>
       </div>
       <div v-if="!motorcycle.maintenances || motorcycle.maintenances.filter(m => m.status === 'completed').length === 0" class="empty">
         Нет выполненных работ.
@@ -326,9 +339,51 @@ const lastMaintenanceText = computed(() => {
   color: var(--color-text);
 }
 
+.work-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.work-date,
 .work-mileage {
-  color: var(--color-text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 var(--space-2);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
   font-family: var(--font-mono);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.work-mileage {
+  color: var(--color-brand);
+}
+
+@media (max-width: 420px) {
+  .work-item {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .work-meta {
+    width: 100%;
+  }
+
+  .work-mileage {
+    width: 100%;
+  }
+
+  .work-date {
+    width: 100%;
+  }
 }
 
 /* О мотоцикле */

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { CourseDetail } from '~/types'
-
 const route = useRoute()
 const api = useApi()
 const mediaUrl = useMediaUrl()
@@ -16,7 +14,7 @@ if (error.value || !course.value) {
 
 useSeoMeta({
   title: `${course.value.title} — Обучение`,
-  description: course.value.short_description || 'Курс по ремонту и обслуживанию мотоциклов.',
+  description: course.value.short_description || 'Курсы для мотоциклистов по вождению, ремонту, экипировке, первой помощи',
   ogType: 'article',
 })
 
@@ -26,6 +24,30 @@ const progressPercent = computed(() => {
   if (total === 0) return 0
   return Math.round((completed / total) * 100)
 })
+
+const targetLesson = computed(() => {
+  if (!course.value) return null
+
+  const lastId = course.value.last_viewed_lesson_id
+  const last = lastId
+    ? course.value.lessons.find(l => l.id === lastId && l.is_accessible)
+    : null
+
+  return last ?? course.value.lessons.find(l => l.is_accessible) ?? null
+})
+
+const isCourseStarted = computed(() => (course.value?.progress?.completed ?? 0) > 0)
+
+const actionLabel = computed(() =>
+  isCourseStarted.value ? 'Продолжить' : 'Начать курс'
+)
+
+const canStart = computed(() => targetLesson.value !== null)
+
+function startCourse() {
+  if (!targetLesson.value) return
+  navigateTo(lessonLink(targetLesson.value.slug))
+}
 
 function lessonLink(lessonSlug: string) {
   return `/training/courses/${course.value!.slug}/lessons/${lessonSlug}`
@@ -75,6 +97,22 @@ function lessonLink(lessonSlug: string) {
         </div>
       </div>
     </header>
+
+    <section class="course-actions-section">
+      <BaseButton
+        v-if="canStart"
+        variant="primary"
+        size="sm"
+        :disabled="!canStart"
+        @click="startCourse"c
+        class="start-course-btn"
+      >
+        {{ actionLabel }}
+      </BaseButton>
+      <div v-else class="course-actions-section__disabled">
+        <i class="fa fa-solid fa-lock" style="margin-right: var(--space-2);"></i> Курс пока недоступен
+      </div>
+    </section>
 
     <section v-if="course.description" class="course-description-section">
       <h2 class="section-title"><i class="fa-solid fa-align-left"></i> Описание</h2>
@@ -138,6 +176,20 @@ function lessonLink(lessonSlug: string) {
 .progress-label { font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text); margin-bottom: var(--space-2); }
 .progress-bar { height: 8px; background: var(--color-border); border-radius: var(--radius-full); overflow: hidden; }
 .progress-fill { height: 100%; background: var(--color-brand); border-radius: var(--radius-full); transition: width var(--transition-base); }
+.course-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.course-actions-section__disabled {
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.start-course-btn {
+  width: 100%;
+}
 .course-description-section { background: var(--color-surface); padding: var(--space-6); border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
 .course-description-section .prose { max-width: none; }
 .section-title { font-size: var(--text-xl); font-weight: var(--fw-semibold); display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); i { color: var(--color-brand); } }
