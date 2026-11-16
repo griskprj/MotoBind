@@ -64,64 +64,36 @@ function remainingText(item: ComponentHealthItem): string {
             <span class="hc-percent-label">недостаточно данных</span>
           </template>
         </div>
-        <div class="hc-counts">
-          <div class="hc-count hc-count--ok">
-            <span>{{ health.counts.ok }}</span>
-            <small>в норме</small>
-          </div>
-          <div class="hc-count hc-count--soon">
-            <span>{{ health.counts.due_soon }}</span>
-            <small>скоро</small>
-          </div>
-          <div class="hc-count hc-count--overdue">
-            <span>{{ health.counts.overdue }}</span>
-            <small>просрочено</small>
-          </div>
-          <div class="hc-count hc-count--unknown">
-            <span>{{ health.counts.unknown }}</span>
-            <small>нет данных</small>
-          </div>
-        </div>
       </div>
 
-      <!-- Безопасность — отдельно -->
+      <!-- Безопасность -->
       <div v-if="health.safety_attention.length > 0" class="hc-safety">
         <div class="hc-safety-title">
-          <i class="fa-solid fa-triangle-exclamation"></i>
+          <i class="fa-solid fa-stop-circle"></i>
           Требует внимания: безопасность
         </div>
         <ul class="hc-list">
           <li v-for="i in health.safety_attention" :key="i.id" class="hc-list-item">
             <span class="hc-item-name">{{ i.name }}</span>
-            <BaseBadge variant="danger" size="sm">
+            <BaseBadge :variant="i.status === 'overdue' ? 'danger' : 'warning'" size="sm">
               {{ statusLabel[i.status] }}
             </BaseBadge>
-            <span class="hc-item-remaining">{{ remainingText(i) }}</span>
           </li>
         </ul>
       </div>
 
       <!-- Прочее внимание -->
       <div v-if="health.attention.length > 0" class="hc-attention">
-        <div class="hc-section-title">Требует внимания</div>
+        <div class="hc-attention-title">
+          <i class="fa fa-solid fa-warning"></i>
+          Требует внимания
+        </div>
         <ul class="hc-list">
           <li v-for="i in health.attention.slice(0, 5)" :key="i.id" class="hc-list-item">
             <span class="hc-item-name">{{ i.name }}</span>
             <BaseBadge :variant="i.status === 'overdue' ? 'danger' : 'warning'" size="sm">
               {{ statusLabel[i.status] }}
             </BaseBadge>
-            <span class="hc-item-remaining">{{ remainingText(i) }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Предстоящее -->
-      <div v-if="health.upcoming.length > 0" class="hc-upcoming">
-        <div class="hc-section-title">Предстоящее обслуживание</div>
-        <ul class="hc-list">
-          <li v-for="i in health.upcoming.slice(0, 5)" :key="i.id" class="hc-list-item">
-            <span class="hc-item-name">{{ i.name }}</span>
-            <span class="hc-item-remaining">{{ remainingText(i) }}</span>
           </li>
         </ul>
       </div>
@@ -207,40 +179,26 @@ function remainingText(item: ComponentHealthItem): string {
   color: var(--color-text-secondary);
 }
 
-.hc-counts {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-2);
-}
-
-.hc-count {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-secondary);
-
-  span {
-    font-weight: var(--fw-bold);
-  }
-
-  small {
-    font-size: 10px;
-    color: var(--color-text-tertiary);
-  }
-}
-
-.hc-count--ok span { color: var(--color-success, #22c55e); }
-.hc-count--soon span { color: var(--color-warning, #f59e0b); }
-.hc-count--overdue span { color: var(--color-danger, #ef4444); }
-.hc-count--unknown span { color: var(--color-text-tertiary); }
-
 .hc-section-title,
-.hc-safety-title {
+.hc-safety-title,
+.hc-attention-title {
   font-size: var(--text-sm);
   font-weight: var(--fw-semibold);
   margin-bottom: var(--space-2);
+}
+
+.hc-attention {
+  padding: var(--space-3);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft, rgba(239, 68, 68, 0.08));
+}
+
+.hc-attention-title {
+  color: var(--color-warning);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .hc-safety {
@@ -279,12 +237,6 @@ function remainingText(item: ComponentHealthItem): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.hc-item-remaining {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
 }
 
 .hc-nodata {
