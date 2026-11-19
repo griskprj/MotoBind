@@ -104,7 +104,7 @@ function lessonLink(lessonSlug: string) {
         variant="primary"
         size="sm"
         :disabled="!canStart"
-        @click="startCourse"c
+        @click="startCourse"
         class="start-course-btn"
       >
         {{ actionLabel }}
