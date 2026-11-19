@@ -36,6 +36,7 @@ const baseFetch = $fetch.create({
 /**
  * Парсит ошибку $fetch/ofetch в нормализованный ApiError.
  */
+
 export function parseApiError(error: unknown): ApiError {
   const fallback: ApiError = {
     status: 0,
@@ -43,44 +44,84 @@ export function parseApiError(error: unknown): ApiError {
     raw: error,
   }
 
-  if (typeof error !== 'object' || error === null) return fallback
-
-  const err = error as {
-    status?: number
-    statusCode?: number
-    data?: {
-      error?: string
-      message?: string
-      detail?: string
-      errors?: Array<{ loc?: (string | number)[]; msg?: string }>
-    }
-    message?: string
+  if (typeof error !== 'object' || error === null) {
+    return fallback
   }
 
-  const status = err.status ?? err.statusCode ?? 0
-  const data = err.data
+  const err = error as Record<string, any>
 
-  const message =
-    data?.error ||
-    data?.message ||
-    data?.detail ||
-    err.message ||
-    fallback.message
+  const status =
+    err.statusCode ??
+    err.status ??
+    0
 
-    let fieldErrors: Record<string, string> | undefined
-    if (Array.isArray(data?.errors)) {
-      fieldErrors = {}
-      for (const e of data.errors) {
-        const key = e.loc?.filter((s) => typeof s === 'string').pop()
-        if (key && typeof e.msg === 'string' && e.msg.trim()) {
-          fieldErrors[key] = e.msg
-        }
+  const payloads = [
+    err.data,
+    err.data?.data,
+    err.response?._data,
+    err.cause?.data,
+  ]
+
+  const getString = (...values: unknown[]): string | undefined => {
+    return values.find(
+      (value): value is string =>
+        typeof value === 'string' && value.trim().length > 0
+    )
+  }
+
+  let message: string | undefined
+
+  for (const payload of payloads) {
+    if (!payload || typeof payload !== 'object') continue
+
+    message = getString(
+      payload.error,
+      payload.message,
+      payload.detail,
+    )
+
+    if (message) break
+  }
+
+  message ??= getString(err.message) ?? fallback.message
+
+  let fieldErrors: Record<string, string> | undefined
+
+  for (const payload of payloads) {
+    if (!payload || typeof payload !== 'object') continue
+
+    const validationErrors = payload.errors
+
+    if (!Array.isArray(validationErrors)) continue
+
+    fieldErrors = {}
+
+    for (const item of validationErrors) {
+      const key = item.loc
+        ?.filter((part: unknown) => typeof part === 'string')
+        .pop()
+
+      if (key && typeof item.msg === 'string' && item.msg.trim()) {
+        fieldErrors[key] = item.msg
       }
-      if (Object.keys(fieldErrors).length === 0) fieldErrors = undefined
     }
 
-  return { status, message, fieldErrors, raw: error }
+    if (Object.keys(fieldErrors).length === 0) {
+      fieldErrors = undefined
+    }
+
+    if (fieldErrors) break
+  }
+
+  return {
+    status,
+    message,
+    fieldErrors,
+    raw: error,
+  }
 }
+
+
 
 export async function request<T>(
   fn: () => Promise<T>,
@@ -92,7 +133,6 @@ export async function request<T>(
   }
 }
 
-/** Безопасно приводит значение к строке (числа -> строки, null/undefined -> '') */
 export function asString(val: string | number | null | undefined): string {
   if (val === null || val === undefined) return ''
   return String(val)

@@ -115,6 +115,10 @@ async function onSubmit() {
           <p>Я даю согласие на обработку моих персональных данных в соответствии с <NuxtLink to="/privacy" target="_blank" class="auth-link">Политикой конфиденциальности</NuxtLink></p>
         </BaseCheckbox>
 
+        <p v-if="errors._form" class="auth-form-error" role="alert">
+          {{ errors._form }}
+        </p>
+
         <BaseButton
           type="submit"
           variant="primary"
