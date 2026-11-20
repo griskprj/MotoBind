@@ -17,6 +17,11 @@ function toggleSymptom(id: string) {
   const set = new Set(selectedSymptoms.value)
   set.has(id) ? set.delete(id) : set.add(id)
   selectedSymptoms.value = set
+
+  const relevantQuestionIds = new Set(getRelevantQuestions(set).map(question => question.id))
+  answers.value = Object.fromEntries(
+    Object.entries(answers.value).filter(([questionId]) => relevantQuestionIds.has(questionId)),
+  )
 }
 
 const relevantQuestions = computed(() => getRelevantQuestions(selectedSymptoms.value))
