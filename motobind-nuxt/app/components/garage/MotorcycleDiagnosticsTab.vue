@@ -20,13 +20,15 @@ function toggleSymptom(id: string) {
   if (set.has(id)) set.delete(id)
   else set.add(id)
   selectedSymptoms.value = set
-  answers.value = {}
   results.value = []
   hasDiagnosed.value = false
   selectedRule.value = null
 }
 
 const relevantQuestions = computed(() => getRelevantQuestions(selectedSymptoms.value))
+const allQuestionsAnswered = computed(() =>
+  relevantQuestions.value.every(question => answers.value[question.id] !== undefined),
+)
 
 const activeZoneFilter = ref<string | null>(null)
 
@@ -187,7 +189,7 @@ const selectedSymptomLabels = computed(() =>
       <div class="block-actions">
         <BaseButton
           variant="primary"
-          :disabled="Object.keys(answers).length < relevantQuestions.length"
+          :disabled="!allQuestionsAnswered"
           @click="runDiagnostics"
         >
           <i class="fa-solid fa-bolt"></i> Диагностировать
@@ -210,6 +212,7 @@ const selectedSymptomLabels = computed(() =>
       </div>
 
       <div v-else class="results-list">
+        <p class="result-method-note">Это возможные причины по совпавшим признакам, а не подтверждённый диагноз. Противоречащие ответы исключают причину из списка.</p>
         <div
           v-for="r in results"
           :key="r.id"
@@ -224,8 +227,10 @@ const selectedSymptomLabels = computed(() =>
               <h4 class="result-title">{{ r.title }}</h4>
               <p class="result-cause">{{ r.cause }}</p>
               <p class="result-advice">{{ r.advice }}</p>
+              <p v-if="r.matchEvidence.length" class="result-evidence">
+                <strong>Совпали признаки:</strong> {{ r.matchEvidence.join(' · ') }}
+              </p>
             </div>
-            <div class="result-score">{{ Math.round(r.score * 100) }}%</div>
           </div>
           <div class="result-actions">
             <BaseButton variant="primary" size="sm" @click="startSteps(r)">
@@ -531,15 +536,16 @@ const selectedSymptomLabels = computed(() =>
   color: var(--color-text-primary);
 }
 
-.result-score {
+.result-method-note {
+  color: var(--color-text-secondary);
   font-size: var(--text-sm);
-  font-weight: var(--fw-bold);
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  flex-shrink: 0;
+}
+
+.result-evidence {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
 }
 
 .result-actions {

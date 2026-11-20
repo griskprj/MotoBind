@@ -262,6 +262,17 @@ export function getSafetyAlerts(selectedSymptoms: Set<string> | string[]): Diagn
   return DIAGNOSTIC_SAFETY_ALERTS.filter(alert => alert.symptoms.some(id => selected.has(id)))
 }
 
+const QUESTIONS_WITH_NOT_APPLICABLE = new Set([
+  'q_engine_when',
+  'q_smoke_color',
+  'q_overheat_when',
+  'q_engine_noise_type',
+  'q_brake_when',
+  'q_lights_when',
+  'q_suspension_when',
+  'q_tire_when',
+])
+
 // ============================================================
 // ПРАВИЛА
 // ============================================================
@@ -842,6 +853,16 @@ export function getRelevantQuestions(selectedSymptoms, { lockedGroup = null } = 
       return true
     }
     return q.showIf ? q.showIf(set) : false
+  }).map((question) => {
+    const neutralOptions = [
+      { id: 'unknown', label: 'Не знаю' },
+    ].filter((option) => !question.options.some((existing) => existing.id === option.id))
+
+    if (QUESTIONS_WITH_NOT_APPLICABLE.has(question.id) && !question.options.some((option) => option.id === 'not_applicable')) {
+      neutralOptions.push({ id: 'not_applicable', label: 'Не проявляется' })
+    }
+
+    return { ...question, options: [...question.options, ...neutralOptions] }
   })
 }
 
@@ -884,7 +905,7 @@ function scoreAnswers(rule, answers) {
 
   for (const [qId, allowed] of Object.entries(rule.answers)) {
     const userAnswer = answers[qId]
-    if (userAnswer === undefined) continue
+    if (userAnswer === undefined || userAnswer === 'unknown' || userAnswer === 'not_applicable') continue
     total += 1
     if (allowed.includes(userAnswer)) matched += 1
     else return 0
@@ -909,6 +930,25 @@ function scoreRule(rule, selectedSymptoms, answers) {
   return sScore * (0.5 + 0.5 * aScore)
 }
 
+function getMatchEvidence(rule, selectedSymptoms, answers) {
+  const symptomIds = [...new Set([...(rule.symptoms || []), ...(rule.symptomsAny || [])])]
+  const matchedSymptoms = symptomIds
+    .filter((id) => selectedSymptoms.has(id))
+    .map((id) => SYMPTOM_BY_ID[id]?.label)
+    .filter(Boolean)
+
+  const matchedAnswers = Object.entries(rule.answers || {}).flatMap(([questionId, allowed]) => {
+    const answerId = answers[questionId]
+    if (!answerId || answerId === 'unknown' || answerId === 'not_applicable' || !allowed.includes(answerId)) return []
+
+    const question = QUESTIONS.find((item) => item.id === questionId)
+    const option = question?.options.find((item) => item.id === answerId)
+    return question && option ? [`${question.text}: ${option.label}`] : []
+  })
+
+  return [...matchedSymptoms, ...matchedAnswers]
+}
+
 /**
  * Прогоняет все правила и возвращает подходящие, отсортированные по score.
  *
@@ -927,7 +967,11 @@ export function diagnose(selectedSymptoms, answers, { lockedGroup = null, thresh
 
     const score = scoreRule(rule, set, answers || {})
     if (score >= threshold) {
-      results.push({ ...rule, score })
+      results.push({
+        ...rule,
+        score,
+        matchEvidence: getMatchEvidence(rule, set, answers || {}),
+      })
     }
   }
 
