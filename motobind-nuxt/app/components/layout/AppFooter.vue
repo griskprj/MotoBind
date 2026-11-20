@@ -27,6 +27,7 @@ const currentYear = new Date().getFullYear()
             <h4>Документы</h4>
             <NuxtLink to="/privacy">Политика конфиденциальности</NuxtLink>
             <NuxtLink to="/terms">Пользовательское соглашение</NuxtLink>
+            <NuxtLink to="/oferta">Публичная оферта</NuxtLink>
             <NuxtLink to="/consent">Согласие на обработку ПД</NuxtLink>
             <NuxtLink to="/rules">Правила сервиса</NuxtLink>
             <NuxtLink to="/manual-rules">Правила мануалов</NuxtLink>
