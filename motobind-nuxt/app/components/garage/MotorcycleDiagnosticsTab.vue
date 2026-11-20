@@ -2,9 +2,10 @@
 import { ref, computed } from 'vue'
 import { SYMPTOM_GROUPS, SYMPTOMS, SYMPTOM_BY_ID, getRelevantQuestions, getSafetyAlerts, diagnose } from '~/utils/constants/diagnosticsRules'
 import DiagnosticSafetyNotices from '~/components/diagnostics/DiagnosticSafetyNotices.vue'
+import type { Motorcycle } from '~/types'
 
 const props = defineProps<{
-  motorcycle: any
+  motorcycle: Motorcycle
 }>()
 
 const selectedSymptoms = ref<Set<string>>(new Set())
@@ -14,6 +15,22 @@ const hasDiagnosed = ref(false)
 const selectedRule = ref<any>(null)
 
 const symptomsByGroup = (groupId: string) => SYMPTOMS.filter(s => s.group === groupId)
+
+const DRIVE_TYPE_LABELS: Record<string, string> = {
+  chain: 'Цепной привод',
+  belt: 'Ременной привод',
+  shaft: 'Карданный привод',
+}
+
+const CHAIN_SYMPTOM_IDS = ['chain_noise', 'chain_slack', 'chain_rust']
+const MAINTENANCE_CATEGORIES_BY_GROUP: Record<string, string[]> = {
+  engine: ['engine', 'cooling', 'fuel'],
+  drive: ['drive'],
+  brakes: ['brakes'],
+  electrics: ['electronics'],
+  suspension: ['suspension', 'steering'],
+  wheels: ['wheel', 'steering'],
+}
 
 function toggleSymptom(id: string) {
   const set = new Set(selectedSymptoms.value)
@@ -89,6 +106,42 @@ const ADDITIONAL_ZONES_BY_SYMPTOM: Record<string, string[]> = {
 }
 
 const safetyAlerts = computed(() => getSafetyAlerts(diagnosticSymptoms.value))
+const vehicleProfile = computed(() => {
+  const bike = props.motorcycle
+  return [
+    bike.name,
+    bike.years ? `${bike.years} г.` : null,
+    bike.volume ? `${bike.volume} см³` : null,
+    bike.drive_type ? DRIVE_TYPE_LABELS[bike.drive_type] : null,
+    bike.mileage != null ? `${bike.mileage.toLocaleString('ru-RU')} км` : null,
+  ].filter(Boolean).join(' · ')
+})
+const drivetrainMismatch = computed(() =>
+  Boolean(props.motorcycle.drive_type && props.motorcycle.drive_type !== 'chain'
+    && CHAIN_SYMPTOM_IDS.some(id => diagnosticSymptoms.value.has(id))),
+)
+const drivetrainLabel = computed(() => DRIVE_TYPE_LABELS[props.motorcycle.drive_type || ''] || '')
+const selectedMaintenanceCategories = computed(() => {
+  const categories = new Set<string>()
+  for (const symptomId of diagnosticSymptoms.value) {
+    const group = SYMPTOM_BY_ID[symptomId]?.group
+    for (const category of MAINTENANCE_CATEGORIES_BY_GROUP[group || ''] || []) {
+      categories.add(category)
+    }
+  }
+  return categories
+})
+const plannedMaintenanceAtMileage = computed(() => {
+  const mileage = props.motorcycle.mileage
+  if (mileage == null) return []
+
+  return (props.motorcycle.maintenances || [])
+    .filter(item => item.status === 'planned'
+      && item.planned_mileage != null
+      && item.planned_mileage <= mileage
+      && selectedMaintenanceCategories.value.has(item.category))
+    .sort((a, b) => (a.planned_mileage || 0) - (b.planned_mileage || 0))
+})
 
 const activeZones = computed(() => {
   const zones = new Set<string>()
@@ -169,6 +222,11 @@ const selectedSymptomLabels = computed(() =>
       </div>
     </div>
 
+    <div v-if="vehicleProfile" class="vehicle-profile">
+      <i class="fa-solid fa-motorcycle" aria-hidden="true"></i>
+      <span>{{ vehicleProfile }}</span>
+    </div>
+
     <!-- 2. Симптомы -->
     <section class="block">
       <div class="block-header">
@@ -204,6 +262,21 @@ const selectedSymptomLabels = computed(() =>
     </div>
 
     <DiagnosticSafetyNotices :alerts="safetyAlerts" />
+
+    <div v-if="drivetrainMismatch" class="diagnostic-context-warning" role="status">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <p>В профиле указан {{ drivetrainLabel }}, но выбраны симптомы цепи. Проверьте, что тип привода и симптомы указаны верно.</p>
+    </div>
+
+    <section v-if="plannedMaintenanceAtMileage.length" class="diagnostic-maintenance-context">
+      <h4>План обслуживания по выбранным узлам</h4>
+      <ul>
+        <li v-for="item in plannedMaintenanceAtMileage" :key="item.id">
+          {{ item.title }}: в плане указано {{ item.planned_mileage?.toLocaleString('ru-RU') }} км, текущий пробег — {{ motorcycle.mileage?.toLocaleString('ru-RU') }} км.
+        </li>
+      </ul>
+      <p>Это сведения из вашей записи обслуживания, а не подтверждение причины неисправности.</p>
+    </section>
 
     <!-- 3. Вопросы -->
     <section v-if="diagnosticSymptoms.size > 0 && !hasDiagnosed" class="block">
@@ -326,6 +399,63 @@ const selectedSymptomLabels = computed(() =>
 }
 
 /* Баннер */
+.vehicle-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+
+  i {
+    color: var(--color-brand);
+  }
+}
+
+.diagnostic-context-warning,
+.diagnostic-maintenance-context {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.diagnostic-context-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+
+  i {
+    margin-top: 2px;
+    color: #f59e0b;
+  }
+}
+
+.diagnostic-maintenance-context {
+  h4 {
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+    font-weight: var(--fw-semibold);
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-left: var(--space-5);
+  }
+
+  > p {
+    margin-top: var(--space-2);
+    color: var(--color-text-tertiary);
+    font-size: var(--text-xs);
+  }
+}
+
 .diag-banner {
   display: flex;
   align-items: center;
