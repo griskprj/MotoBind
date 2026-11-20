@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { SYMPTOM_GROUPS, SYMPTOMS, getRelevantQuestions, diagnose } from '~/utils/constants/diagnosticsRules'
+import { SYMPTOM_GROUPS, SYMPTOMS, getRelevantQuestions, getSafetyAlerts, diagnose } from '~/utils/constants/diagnosticsRules'
+import DiagnosticSafetyNotices from '~/components/diagnostics/DiagnosticSafetyNotices.vue'
 
 const props = defineProps<{
   motorcycle: any
@@ -9,6 +10,7 @@ const props = defineProps<{
 const selectedSymptoms = ref<Set<string>>(new Set())
 const answers = ref<Record<string, string>>({})
 const results = ref<any[]>([])
+const hasDiagnosed = ref(false)
 const selectedRule = ref<any>(null)
 
 const symptomsByGroup = (groupId: string) => SYMPTOMS.filter(s => s.group === groupId)
@@ -20,6 +22,7 @@ function toggleSymptom(id: string) {
   selectedSymptoms.value = set
   answers.value = {}
   results.value = []
+  hasDiagnosed.value = false
   selectedRule.value = null
 }
 
@@ -39,6 +42,8 @@ const ZONES_BY_SYMPTOM_GROUP: Record<string, string[]> = {
 const ADDITIONAL_ZONES_BY_SYMPTOM: Record<string, string[]> = {
   engine_wont_start: ['fuel', 'ignition'],
 }
+
+const safetyAlerts = computed(() => getSafetyAlerts(selectedSymptoms.value))
 
 const activeZones = computed(() => {
   const zones = new Set<string>()
@@ -68,12 +73,14 @@ function selectAnswer(qId: string, optId: string) {
 
 function runDiagnostics() {
   results.value = diagnose(selectedSymptoms.value, answers.value)
+  hasDiagnosed.value = true
 }
 
 function reset() {
   selectedSymptoms.value = new Set()
   answers.value = {}
   results.value = []
+  hasDiagnosed.value = false
   selectedRule.value = null
 }
 
@@ -134,8 +141,10 @@ const selectedSymptomLabels = computed(() =>
       </div>
     </section>
 
+    <DiagnosticSafetyNotices :alerts="safetyAlerts" />
+
     <!-- 3. Вопросы -->
-    <section v-if="selectedSymptoms.size > 0 && results.length === 0" class="block">
+    <section v-if="selectedSymptoms.size > 0 && !hasDiagnosed" class="block">
       <div class="block-header">
         <h3 class="block-title">Уточняющие вопросы</h3>
         <button class="reset-link" @click="reset">
@@ -187,9 +196,9 @@ const selectedSymptomLabels = computed(() =>
     </section>
 
     <!-- 4. Результаты -->
-    <section v-if="results.length > 0" class="block">
+    <section v-if="hasDiagnosed" class="block">
       <div class="block-header">
-        <h3 class="block-title">Возможные причины</h3>
+        <h3 class="block-title">{{ results.length ? 'Возможные причины' : 'Результат диагностики' }}</h3>
         <button class="reset-link" @click="reset">
           <i class="fa-solid fa-rotate-right"></i> Пройти заново
         </button>
