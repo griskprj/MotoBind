@@ -27,13 +27,35 @@ const relevantQuestions = computed(() => getRelevantQuestions(selectedSymptoms.v
 
 const activeZoneFilter = ref<string | null>(null)
 
+const ZONES_BY_SYMPTOM_GROUP: Record<string, string[]> = {
+  engine: ['engine'],
+  drive: ['chain'],
+  brakes: ['brakes_front', 'brakes_rear'],
+  electrics: ['electrics'],
+  suspension: ['fork'],
+  wheels: ['wheels'],
+}
+
+const ADDITIONAL_ZONES_BY_SYMPTOM: Record<string, string[]> = {
+  engine_wont_start: ['fuel', 'ignition'],
+}
+
 const activeZones = computed(() => {
-  const set = new Set<string>()
+  const zones = new Set<string>()
+
   for (const id of selectedSymptoms.value) {
     const symptom = SYMPTOMS.find(s => s.id === id)
-    if (symptom) set.add(symptom.group)
+    if (!symptom) continue
+
+    for (const zoneId of ZONES_BY_SYMPTOM_GROUP[symptom.group] || []) {
+      zones.add(zoneId)
+    }
+    for (const zoneId of ADDITIONAL_ZONES_BY_SYMPTOM[id] || []) {
+      zones.add(zoneId)
+    }
   }
-  return Array.from(set)
+
+  return Array.from(zones)
 })
 
 function onZoneClick(zoneId: string) {
