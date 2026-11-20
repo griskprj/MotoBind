@@ -17,10 +17,12 @@ function toggleSymptom(id: string) {
   const set = new Set(selectedSymptoms.value)
   set.has(id) ? set.delete(id) : set.add(id)
   selectedSymptoms.value = set
-  answers.value = {}
 }
 
 const relevantQuestions = computed(() => getRelevantQuestions(selectedSymptoms.value))
+const allQuestionsAnswered = computed(() =>
+  relevantQuestions.value.every(question => answers.value[question.id] !== undefined),
+)
 
 function selectAnswer(qId: string, optId: string) {
   answers.value = { ...answers.value, [qId]: optId }
@@ -94,14 +96,16 @@ function startSteps(rule: any) {
         <p>Рекомендуем обратиться к мастеру для очной диагностики.</p>
       </div>
       <div v-else class="result-list">
-        <p class="diag-intro">Найдено возможных причин: <strong>{{ results.length }}</strong>.</p>
+        <p class="diag-intro">Возможные причины по совпавшим признакам, а не подтверждённый диагноз. Противоречащие ответы исключают причину из списка. Вариантов: <strong>{{ results.length }}</strong>.</p>
         <div v-for="r in results" :key="r.id" class="result-card" :class="`result-${r.severity}`">
           <div class="result-header">
             <div class="result-title">{{ r.title }}</div>
-            <div class="result-score">{{ Math.round(r.score * 100) }}%</div>
           </div>
           <p class="result-cause">{{ r.cause }}</p>
           <p class="result-advice">{{ r.advice }}</p>
+          <p v-if="r.matchEvidence.length" class="result-evidence">
+            <strong>Совпали признаки:</strong> {{ r.matchEvidence.join(' · ') }}
+          </p>
           <BaseButton variant="primary" size="sm" @click="startSteps(r)">
             <i class="fa-solid fa-play"></i> Начать пошаговую диагностику
           </BaseButton>
@@ -114,9 +118,17 @@ function startSteps(rule: any) {
       <div class="diag-actions">
         <BaseButton v-if="step > 1" variant="secondary" @click="step--">Назад</BaseButton>
         <BaseButton v-if="step === 1" variant="primary" :disabled="selectedSymptoms.size === 0" @click="step = 2">Продолжить</BaseButton>
-        <BaseButton v-if="step === 2" variant="primary" :disabled="Object.keys(answers).length < relevantQuestions.length" @click="runDiagnostics">Диагностировать</BaseButton>
+        <BaseButton v-if="step === 2" variant="primary" :disabled="!allQuestionsAnswered" @click="runDiagnostics">Диагностировать</BaseButton>
         <BaseButton v-if="step === 3" variant="secondary" @click="reset">Пройти заново</BaseButton>
       </div>
     </template>
   </BaseModal>
 </template>
+
+<style scoped lang="scss">
+.result-evidence {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+</style>
