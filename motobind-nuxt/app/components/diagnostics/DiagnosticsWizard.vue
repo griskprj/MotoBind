@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { SYMPTOM_GROUPS, SYMPTOMS, getRelevantQuestions, diagnose } from '~/utils/constants/diagnosticsRules'
+import { SYMPTOM_GROUPS, SYMPTOMS, getRelevantQuestions, getSafetyAlerts, diagnose } from '~/utils/constants/diagnosticsRules'
+import DiagnosticSafetyNotices from '~/components/diagnostics/DiagnosticSafetyNotices.vue'
 
 const props = defineProps<{ motorcycleId?: number }>()
 const emit = defineEmits<{ close: []; startSteps: [rule: any] }>()
@@ -8,6 +9,7 @@ const step = ref(1)
 const selectedSymptoms = ref<Set<string>>(new Set())
 const answers = ref<Record<string, string>>({})
 const results = ref<any[]>([])
+const safetyAlerts = computed(() => getSafetyAlerts(selectedSymptoms.value))
 
 const symptomsByGroup = (groupId: string) => SYMPTOMS.filter(s => s.group === groupId)
 
@@ -44,6 +46,8 @@ function startSteps(rule: any) {
 
 <template>
   <BaseModal title="Онлайн-диагностика" size="lg" @close="emit('close')">
+    <DiagnosticSafetyNotices :alerts="safetyAlerts" />
+
     <!-- ШАГ 1: Симптомы -->
     <div v-if="step === 1" class="diag-step">
       <p class="diag-intro">Отметьте всё, что замечаете в работе мотоцикла.</p>

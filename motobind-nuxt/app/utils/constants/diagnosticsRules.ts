@@ -223,6 +223,45 @@ export const QUESTIONS = [
   },
 ]
 
+export interface DiagnosticSafetyAlert {
+  id: string
+  title: string
+  message: string
+  symptoms: string[]
+}
+
+export const DIAGNOSTIC_SAFETY_ALERTS: DiagnosticSafetyAlert[] = [
+  {
+    id: 'brakes',
+    title: 'Проверьте тормоза до следующей поездки',
+    message: 'Проваливающийся рычаг или металлический скрежет могут указывать на снижение эффективности торможения. Не продолжайте поездку; организуйте проверку мотоцикла в сервисе.',
+    symptoms: ['brake_soft', 'brake_pull', 'brake_grind'],
+  },
+  {
+    id: 'stability',
+    title: 'Обратите внимание на устойчивость мотоцикла',
+    message: 'Раскачивание или сильная вибрация могут быть опасны. Если симптом внезапный или выраженный, безопасно остановитесь и не продолжайте поездку до осмотра.',
+    symptoms: ['suspension_wobble', 'wheel_vibration'],
+  },
+  {
+    id: 'overheating',
+    title: 'Остановитесь при перегреве',
+    message: 'Безопасно остановитесь и заглушите двигатель. Если у мотоцикла жидкостное охлаждение, не открывайте крышку радиатора или бачка, пока двигатель горячий.',
+    symptoms: ['engine_overheats'],
+  },
+  {
+    id: 'oil-leak',
+    title: 'Проверьте утечку масла перед поездкой',
+    message: 'При активной течи или попадании масла на шину либо тормоз не выезжайте; обратитесь в сервис.',
+    symptoms: ['engine_oil_leak'],
+  },
+]
+
+export function getSafetyAlerts(selectedSymptoms: Set<string> | string[]): DiagnosticSafetyAlert[] {
+  const selected = selectedSymptoms instanceof Set ? selectedSymptoms : new Set(selectedSymptoms)
+  return DIAGNOSTIC_SAFETY_ALERTS.filter(alert => alert.symptoms.some(id => selected.has(id)))
+}
+
 // ============================================================
 // ПРАВИЛА
 // ============================================================
