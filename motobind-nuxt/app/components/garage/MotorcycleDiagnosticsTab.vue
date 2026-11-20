@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { SYMPTOM_GROUPS, SYMPTOMS, getRelevantQuestions, getSafetyAlerts, diagnose } from '~/utils/constants/diagnosticsRules'
+import { SYMPTOM_GROUPS, SYMPTOMS, SYMPTOM_BY_ID, getRelevantQuestions, getSafetyAlerts, diagnose } from '~/utils/constants/diagnosticsRules'
 import DiagnosticSafetyNotices from '~/components/diagnostics/DiagnosticSafetyNotices.vue'
 
 const props = defineProps<{
@@ -25,12 +25,55 @@ function toggleSymptom(id: string) {
   selectedRule.value = null
 }
 
-const relevantQuestions = computed(() => getRelevantQuestions(selectedSymptoms.value))
+const activeZoneFilter = ref<string | null>(null)
+
+const ZONE_LABELS: Record<string, string> = {
+  engine: 'Двигатель',
+  fuel: 'Топливо',
+  ignition: 'Зажигание',
+  shift: 'Коробка передач',
+  chain: 'Цепь',
+  brakes_front: 'Передний тормоз',
+  brakes_rear: 'Задний тормоз',
+  electrics: 'Электрика',
+  fork: 'Вилка',
+  wheels: 'Колёса',
+}
+
+const SYMPTOM_GROUP_BY_ZONE: Record<string, string> = {
+  engine: 'engine',
+  fuel: 'engine',
+  ignition: 'engine',
+  shift: 'drive',
+  chain: 'drive',
+  brakes_front: 'brakes',
+  brakes_rear: 'brakes',
+  electrics: 'electrics',
+  fork: 'suspension',
+  wheels: 'wheels',
+}
+
+const activeFilterGroupId = computed(() =>
+  activeZoneFilter.value ? SYMPTOM_GROUP_BY_ZONE[activeZoneFilter.value] || null : null,
+)
+const activeFilterGroupLabel = computed(() =>
+  SYMPTOM_GROUPS.find(group => group.id === activeFilterGroupId.value)?.label || '',
+)
+const activeZoneLabel = computed(() =>
+  activeZoneFilter.value ? ZONE_LABELS[activeZoneFilter.value] || '' : '',
+)
+const visibleSymptomGroups = computed(() =>
+  SYMPTOM_GROUPS.filter(group => !activeFilterGroupId.value || group.id === activeFilterGroupId.value),
+)
+const diagnosticSymptoms = computed(() => {
+  if (!activeFilterGroupId.value) return selectedSymptoms.value
+  return new Set(Array.from(selectedSymptoms.value).filter(id => SYMPTOM_BY_ID[id]?.group === activeFilterGroupId.value))
+})
+
+const relevantQuestions = computed(() => getRelevantQuestions(diagnosticSymptoms.value))
 const allQuestionsAnswered = computed(() =>
   relevantQuestions.value.every(question => answers.value[question.id] !== undefined),
 )
-
-const activeZoneFilter = ref<string | null>(null)
 
 const ZONES_BY_SYMPTOM_GROUP: Record<string, string[]> = {
   engine: ['engine'],
@@ -45,12 +88,12 @@ const ADDITIONAL_ZONES_BY_SYMPTOM: Record<string, string[]> = {
   engine_wont_start: ['fuel', 'ignition'],
 }
 
-const safetyAlerts = computed(() => getSafetyAlerts(selectedSymptoms.value))
+const safetyAlerts = computed(() => getSafetyAlerts(diagnosticSymptoms.value))
 
 const activeZones = computed(() => {
   const zones = new Set<string>()
 
-  for (const id of selectedSymptoms.value) {
+  for (const id of diagnosticSymptoms.value) {
     const symptom = SYMPTOMS.find(s => s.id === id)
     if (!symptom) continue
 
@@ -62,11 +105,22 @@ const activeZones = computed(() => {
     }
   }
 
+  if (activeZoneFilter.value) zones.add(activeZoneFilter.value)
   return Array.from(zones)
 })
 
 function onZoneClick(zoneId: string) {
   activeZoneFilter.value = activeZoneFilter.value === zoneId ? null : zoneId
+  results.value = []
+  hasDiagnosed.value = false
+  selectedRule.value = null
+}
+
+function clearZoneFilter() {
+  activeZoneFilter.value = null
+  results.value = []
+  hasDiagnosed.value = false
+  selectedRule.value = null
 }
 
 function selectAnswer(qId: string, optId: string) {
@@ -74,12 +128,13 @@ function selectAnswer(qId: string, optId: string) {
 }
 
 function runDiagnostics() {
-  results.value = diagnose(selectedSymptoms.value, answers.value)
+  results.value = diagnose(diagnosticSymptoms.value, answers.value)
   hasDiagnosed.value = true
 }
 
 function reset() {
   selectedSymptoms.value = new Set()
+  activeZoneFilter.value = null
   answers.value = {}
   results.value = []
   hasDiagnosed.value = false
@@ -95,7 +150,7 @@ function closeSteps() {
 }
 
 const selectedSymptomLabels = computed(() =>
-  Array.from(selectedSymptoms.value)
+  Array.from(diagnosticSymptoms.value)
     .map(id => SYMPTOMS.find(s => s.id === id)?.label)
     .filter(Boolean)
 )
@@ -118,13 +173,13 @@ const selectedSymptomLabels = computed(() =>
     <section class="block">
       <div class="block-header">
         <h3 class="block-title">Что происходит?</h3>
-        <span v-if="selectedSymptoms.size > 0" class="selected-count">
-          Выбрано: {{ selectedSymptoms.size }}
+        <span v-if="diagnosticSymptoms.size > 0" class="selected-count">
+          Выбрано: {{ diagnosticSymptoms.size }}
         </span>
       </div>
 
       <div class="symptom-groups">
-        <div v-for="group in SYMPTOM_GROUPS" :key="group.id" class="symptom-group">
+        <div v-for="group in visibleSymptomGroups" :key="group.id" class="symptom-group">
           <h4 class="group-title">
             <i :class="group.icon"></i> {{ group.label }}
           </h4>
@@ -143,10 +198,15 @@ const selectedSymptomLabels = computed(() =>
       </div>
     </section>
 
+    <div v-if="activeZoneFilter" class="zone-filter-notice">
+      <p>Узел схемы: {{ activeZoneLabel }} · группа: {{ activeFilterGroupLabel }}. Остальные выбранные симптомы сохранены и не участвуют в этом запуске.</p>
+      <button type="button" @click="clearZoneFilter">Показать все зоны</button>
+    </div>
+
     <DiagnosticSafetyNotices :alerts="safetyAlerts" />
 
     <!-- 3. Вопросы -->
-    <section v-if="selectedSymptoms.size > 0 && !hasDiagnosed" class="block">
+    <section v-if="diagnosticSymptoms.size > 0 && !hasDiagnosed" class="block">
       <div class="block-header">
         <h3 class="block-title">Уточняющие вопросы</h3>
         <button class="reset-link" @click="reset">
@@ -320,6 +380,28 @@ const selectedSymptomLabels = computed(() =>
 .block-title {
   font-size: var(--text-lg);
   font-weight: var(--fw-semibold);
+}
+
+.zone-filter-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-soft);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+
+  button {
+    flex-shrink: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-brand);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+  }
 }
 
 .selected-count {
