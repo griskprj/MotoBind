@@ -57,7 +57,7 @@ export function useApi() {
         }),
       ),
     me: () => request(() => baseFetch<User>('/auth/me')),
-    logout: () => request(() => baseFetch<{ message: string }>('/auth/logout', { method: 'POST' })),
+    logout: () => request(() => $fetch<{ message: string }>('/api/auth/logout', { method: 'POST', credentials: 'include' })),
   }
 
   // ---------- MOTORCYCLE ----------
