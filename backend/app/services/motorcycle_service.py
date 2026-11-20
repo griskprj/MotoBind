@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from app.exceptions import ValidationError
+from app.exceptions import ConflictError, ValidationError
 from app.extensions import db
+from app.models.maintenance import Maintenance, MaintenanceStatus
+from app.models.maintenance_event import MaintenanceEvent, MaintenanceWork, WorkKind
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 from app.utils.files import delete_file, save_moto_photo
@@ -37,6 +39,9 @@ class MotorcycleService:
     def update_motorcycle(moto_id: int, user_id: int, **kwargs) -> Motorcycle:
         """Обновляет данные мотоцикла."""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
+        confirm_maintenance_deletion = kwargs.pop(
+            "confirm_maintenance_deletion", False
+        )
 
         updates = {
             k: v
@@ -50,22 +55,87 @@ class MotorcycleService:
             setattr(moto, key, value)
 
         if new_mileage is not None:
-            MotorcycleService.set_mileage(moto, new_mileage)
+            MotorcycleService._apply_mileage_update(
+                moto, new_mileage, confirm_maintenance_deletion
+            )
 
         db.session.commit()
         return moto
 
     @staticmethod
     def update_motorcycle_mileage(
-        moto_id: int, user_id: int, mileage: int
+        moto_id: int,
+        user_id: int,
+        mileage: int,
+        confirm_maintenance_deletion: bool = False,
     ) -> Motorcycle:
         """Обновляет пробег мотоцикла."""
         moto = MotorcycleService.get_motorcycle_by_id(moto_id, user_id)
 
-        MotorcycleService.set_mileage(moto, mileage)
+        MotorcycleService._apply_mileage_update(
+            moto, mileage, confirm_maintenance_deletion
+        )
 
         db.session.commit()
         return moto
+
+    @staticmethod
+    def _apply_mileage_update(
+        moto: Motorcycle, new_mileage: int, confirm_maintenance_deletion: bool
+    ) -> int:
+        """Удаляет завершённую историю выше откатываемого пробега после подтверждения."""
+        should_check_history = (
+            new_mileage < (moto.mileage or 0) or confirm_maintenance_deletion
+        )
+        if not should_check_history:
+            MotorcycleService.set_mileage(moto, new_mileage)
+            return 0
+
+        legacy_records = Maintenance.query.filter(
+            Maintenance.moto_id == moto.id,
+            Maintenance.status == MaintenanceStatus.COMPLETED.value,
+            Maintenance.completed_mileage > new_mileage,
+        ).all()
+        events = MaintenanceEvent.query.filter(
+            MaintenanceEvent.motorcycle_id == moto.id,
+            MaintenanceEvent.mileage.isnot(None),
+            MaintenanceEvent.mileage > new_mileage,
+        ).all()
+        records_to_delete = len(legacy_records) + len(events)
+
+        if records_to_delete and not confirm_maintenance_deletion:
+            raise ConflictError(
+                f"При уменьшении пробега до {new_mileage} км будут удалены "
+                f"все выполненные ТО с пробегом выше этого значения ({records_to_delete})."
+            )
+
+        affected_component_ids = set()
+        if events:
+            event_ids = [event.id for event in events]
+            affected_component_ids = {
+                component_id
+                for (component_id,) in db.session.query(MaintenanceWork.component_id)
+                .filter(
+                    MaintenanceWork.event_id.in_(event_ids),
+                    MaintenanceWork.kind == WorkKind.REPLACE,
+                    MaintenanceWork.component_id.isnot(None),
+                )
+                .all()
+            }
+
+        for record in legacy_records:
+            db.session.delete(record)
+        for event in events:
+            db.session.delete(event)
+        db.session.flush()
+
+        if affected_component_ids:
+            from app.services.event_service import EventService
+
+            EventService._recalc_components_by_ids(affected_component_ids)
+
+        MotorcycleService.set_mileage(moto, new_mileage)
+        return records_to_delete
 
     @staticmethod
     def _on_mileage_change(moto: Motorcycle) -> None:
@@ -82,7 +152,6 @@ class MotorcycleService:
             type=Reminder.TYPE_MILEAGE_UPDATE,
             status=Reminder.STATUS_PENDING,
         ).delete(synchronize_session=False)
-        db.session.commit()
 
     @staticmethod
     def set_mileage(moto: Motorcycle, new_mileage: int) -> bool:

@@ -17,6 +17,8 @@ const toast = useToast()
 const isEditing = ref(false)
 const inputValue = ref<number | string>(props.currentMileage)
 const submitting = ref(false)
+const rollbackConfirm = ref(false)
+const pendingRollbackMileage = ref<number | null>(null)
 
 const quickSteps = [50, 100, 500, 1000]
 
@@ -24,7 +26,7 @@ watch(() => props.currentMileage, (val) => {
   inputValue.value = val
 })
 
-async function updateMileage(newVal: number) {
+async function updateMileage(newVal: number, confirmDeletion = false) {
   if (newVal === props.currentMileage) {
     isEditing.value = false
     return
@@ -32,15 +34,36 @@ async function updateMileage(newVal: number) {
 
   submitting.value = true
   try {
-    await api.motorcycle.update(props.motorcycleId, { mileage: newVal })
-    toast.success('Пробег обновлён')
+    await api.motorcycle.update(props.motorcycleId, {
+      mileage: newVal,
+      ...(confirmDeletion ? { confirm_maintenance_deletion: true } : {}),
+    })
+    toast.success(confirmDeletion ? 'Пробег обновлён, выполненные ТО удалены' : 'Пробег обновлён')
     emit('updated')
     isEditing.value = false
+    rollbackConfirm.value = false
+    pendingRollbackMileage.value = null
   } catch (e) {
-    toast.error((e as ApiError).message || 'Ошибка обновления')
+    const error = e as ApiError
+    if (error.status === 409 && newVal < props.currentMileage && !confirmDeletion) {
+      pendingRollbackMileage.value = newVal
+      rollbackConfirm.value = true
+      return
+    }
+    toast.error(error.message || 'Ошибка обновления')
   } finally {
     submitting.value = false
   }
+}
+
+function confirmMileageRollback() {
+  const mileage = pendingRollbackMileage.value
+  if (mileage !== null) updateMileage(mileage, true)
+}
+
+function cancelMileageRollback() {
+  rollbackConfirm.value = false
+  pendingRollbackMileage.value = null
 }
 
 function addToMileage(amount: number) {
@@ -144,6 +167,15 @@ const formattedDate = computed(() => {
       </BaseButton>
     </div>
   </BaseCard>
+  <BaseConfirm
+    v-if="rollbackConfirm"
+    title="Уменьшить пробег?"
+    :message="`Все выполненные ТО с пробегом выше ${pendingRollbackMileage?.toLocaleString('ru-RU')} км будут удалены. Запланированные ТО останутся.`"
+    confirm-text="Удалить ТО и сохранить"
+    :loading="submitting"
+    @confirm="confirmMileageRollback"
+    @cancel="cancelMileageRollback"
+  />
 </template>
 
 <style scoped lang="scss">

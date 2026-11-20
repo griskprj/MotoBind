@@ -102,6 +102,7 @@ def update_moto_mileage(moto_id):
         moto_id=moto_id,
         user_id=get_current_user_id(),
         mileage=data.mileage,
+        confirm_maintenance_deletion=data.confirm_maintenance_deletion,
     )
     return jsonify(_serialize_detail(updated)), 200
 

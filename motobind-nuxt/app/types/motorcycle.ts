@@ -56,6 +56,8 @@ export interface UpdateMotorcyclePayload {
   name?: string
   years?: string | null
   volume?: number | null
+  mileage?: number | null
+  confirm_maintenance_deletion?: boolean
   drive_type?: DriveType
   color?: string | null
   licensePlate?: string | null

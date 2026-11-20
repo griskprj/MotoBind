@@ -14,8 +14,10 @@ const emit = defineEmits<{
 const api = useApi()
 const toast = useToast()
 const submitting = ref(false)
+const rollbackWarning = ref(false)
 
 const inputValue = ref(props.currentMileage || 0)
+watch(inputValue, () => { rollbackWarning.value = false })
 
 const quickSteps = [50, 100, 500, 1000]
 
@@ -23,7 +25,7 @@ function addToMileage(amount: number) {
   inputValue.value = Number(inputValue.value || 0) + amount
 }
 
-async function onSave() {
+async function onSave(confirmDeletion = false) {
   const newMileage = Number(inputValue.value)
   if (isNaN(newMileage) || newMileage < 0) {
     toast.error('Некорректный пробег')
@@ -37,12 +39,20 @@ async function onSave() {
 
   submitting.value = true
   try {
-    await api.motorcycle.update(props.motorcycleId, { mileage: newMileage })
-    toast.success('Пробег обновлён')
+    await api.motorcycle.update(props.motorcycleId, {
+      mileage: newMileage,
+      ...(confirmDeletion ? { confirm_maintenance_deletion: true } : {}),
+    })
+    toast.success(confirmDeletion ? 'Пробег обновлён, выполненные ТО удалены' : 'Пробег обновлён')
     emit('updated')
     emit('close')
   } catch (e) {
-    toast.error((e as ApiError).message || 'Ошибка обновления')
+    const error = e as ApiError
+    if (error.status === 409 && newMileage < props.currentMileage && !confirmDeletion) {
+      rollbackWarning.value = true
+      return
+    }
+    toast.error(error.message || 'Ошибка обновления')
   } finally {
     submitting.value = false
   }
@@ -54,6 +64,11 @@ async function onSave() {
     <div class="mileage-form">
       <p class="info-text">
         Текущий пробег: <strong>{{ currentMileage }} км</strong>
+      </p>
+
+      <p v-if="rollbackWarning" class="rollback-warning" role="alert">
+        Все выполненные ТО, отмеченные пробегом выше {{ Number(inputValue).toLocaleString('ru-RU') }} км,
+        будут удалены. Запланированные ТО останутся. Подтвердить изменение пробега?
       </p>
 
       <!-- Ввод точного значения -->
@@ -82,8 +97,12 @@ async function onSave() {
     </div>
 
     <template #footer>
-      <BaseButton variant="ghost" size="sm" @click="emit('close')">Отмена</BaseButton>
-      <BaseButton variant="primary" size="sm" :loading="submitting" @click="onSave">
+      <BaseButton v-if="rollbackWarning" variant="ghost" size="sm" :disabled="submitting" @click="rollbackWarning = false">Назад</BaseButton>
+      <BaseButton v-else variant="ghost" size="sm" @click="emit('close')">Отмена</BaseButton>
+      <BaseButton v-if="rollbackWarning" variant="danger" size="sm" :loading="submitting" @click="onSave(true)">
+        Удалить ТО и сохранить
+      </BaseButton>
+      <BaseButton v-else variant="primary" size="sm" :loading="submitting" @click="onSave()">
         <template #icon><i class="fa-solid fa-check"></i></template>
         Сохранить
       </BaseButton>
@@ -102,6 +121,15 @@ async function onSave() {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   strong { color: var(--color-text); }
+}
+
+.rollback-warning {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
 }
 
 .quick-add {
