@@ -60,6 +60,36 @@ export function useApi() {
     logout: () => request(() => $fetch<{ message: string }>('/api/auth/logout', { method: 'POST', credentials: 'include' })),
   }
 
+  // ---------- PAYMENTS ----------
+  const payments = {
+    motorcycleSlots: () =>
+      request(() => baseFetch<{
+        motorcycles_count: number
+        free_slots: number
+        purchased_slots: number
+        legacy_slots: number
+        slots_total: number
+        slots_available: number
+        price: number
+      }>('/payments/slots')),
+
+    purchaseMotorcycleSlot: () =>
+      request(() => baseFetch<{
+        order_id: number
+        status: string
+        amount: number
+        payment_url: string
+      }>('/payments/slots/purchase', { method: 'POST' })),
+
+    motorcycleSlotPurchaseStatus: (orderId: number | string) =>
+      request(() => baseFetch<{
+        order_id: number
+        status: 'pending' | 'paid'
+        amount: number
+        paid_at: string | null
+      }>(`/payments/slots/purchases/${orderId}`)),
+  }
+
   // ---------- MOTORCYCLE ----------
   const motorcycle = {
     /** GET /motorcycle/ — отдаёт Detail[] (с maintenances) */
@@ -645,6 +675,7 @@ export function useApi() {
 
   return {
     auth,
+    payments,
     motorcycle,
     maintenance,
     components,

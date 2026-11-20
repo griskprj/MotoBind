@@ -34,6 +34,16 @@ def create_app(config_override=None):
         CRON_SECRET=settings.CRON_SECRET,
         ENABLE_DEV_SCHEDULER=settings.ENABLE_DEV_SCHEDULER,
         DISABLE_SCHEDULER=settings.DISABLE_SCHEDULER,
+        ROBOKASSA_MERCHANT_LOGIN=settings.ROBOKASSA_MERCHANT_LOGIN,
+        ROBOKASSA_PASSWORD_1=settings.ROBOKASSA_PASSWORD_1,
+        ROBOKASSA_PASSWORD_2=settings.ROBOKASSA_PASSWORD_2,
+        ROBOKASSA_TEST_PASSWORD_1=settings.ROBOKASSA_TEST_PASSWORD_1,
+        ROBOKASSA_TEST_PASSWORD_2=settings.ROBOKASSA_TEST_PASSWORD_2,
+        ROBOKASSA_HASH_ALGORITHM=settings.ROBOKASSA_HASH_ALGORITHM,
+        ROBOKASSA_TEST_MODE=settings.ROBOKASSA_TEST_MODE,
+        ROBOKASSA_PAYMENT_OBJECT=settings.ROBOKASSA_PAYMENT_OBJECT,
+        ROBOKASSA_TAX=settings.ROBOKASSA_TAX,
+        ROBOKASSA_PAYMENT_METHOD=settings.ROBOKASSA_PAYMENT_METHOD,
     )
 
     if config_override:
@@ -105,6 +115,7 @@ def create_app(config_override=None):
     from app.api.maintenance_event import maintenance_events
     from app.api.manuals import manual
     from app.api.motorcycle import motorcycle
+    from app.api.payments import payments
     from app.api.notifications import notifications_bp
     from app.api.reminders import reminders_bp
     from app.api.services import services
@@ -114,6 +125,7 @@ def create_app(config_override=None):
 
     app.register_blueprint(auth, url_prefix="/api/auth")
     app.register_blueprint(motorcycle, url_prefix="/api/motorcycle")
+    app.register_blueprint(payments, url_prefix="/api/payments")
     app.register_blueprint(statistic, url_prefix="/api/statistic")
     app.register_blueprint(maintenance, url_prefix="/api/maintenance")
     app.register_blueprint(manual, url_prefix="/api/manual")

@@ -35,6 +35,7 @@ class User(db.Model):
 
     refresh_token = db.Column(db.String(512))
     is_premium = db.Column(db.Boolean, default=False)
+    extra_motorcycle_slots = db.Column(db.Integer, default=0, nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
 
     verification_code = db.Column(db.String(6), nullable=True)
@@ -55,6 +56,14 @@ class User(db.Model):
         back_populates="owner",
         lazy=True,
         cascade="all, delete-orphan",
+    )
+
+    slot_purchases = db.relationship(
+        "SlotPurchase",
+        back_populates="user",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     reminders = db.relationship(
