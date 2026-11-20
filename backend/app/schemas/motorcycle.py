@@ -52,6 +52,7 @@ class UpdateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    confirm_maintenance_deletion: bool = False
     drive_type: Optional[Literal["chain", "belt", "shaft"]] = None
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
