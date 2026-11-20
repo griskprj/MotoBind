@@ -9,6 +9,10 @@ export function getUploadUrl(path) {
   return `${API_URL}/uploads/${path}`
 }
 
+export function resolveMedia(path) {
+  return getUploadUrl(path)
+}
+
 export function getMotoPhotoUrl(path) {
   return getUploadUrl(path)
 }
@@ -18,5 +22,9 @@ export function getAvatarUrl(path) {
 }
 
 export function getManualImageUrl(path) {
+  return getUploadUrl(path) || '/ManualImgDefault.webp'
+}
+
+export function getBusinessLogoUrl(path) {
   return getUploadUrl(path) || '/ManualImgDefault.webp'
 }

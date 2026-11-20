@@ -26,12 +26,19 @@ export const useAuthStore = defineStore('auth', () => {
     const isAdmin = computed(() => user.value?.role === 'admin')
     const isPremium = computed(() => user.value?.is_premium === true)
 
+    const hasBusinessAccount = computed(() => user.value?.has_business_account === true)
+    const businessAccountType = computed(() => user.value?.business_account_type ?? null)
+    const isMaster = computed(() => businessAccountType.value === 'master')
+    const isStation = computed(() => businessAccountType.value === 'station')
+
     // ---- actions ----
     function setTokens(newAccess, newRefresh) {
         accessToken.value = newAccess
-        refreshToken.value = newRefresh
+        refreshToken.value = newRefresh ?? null
         localStorage.setItem(TOKEN_KEY, newAccess)
-        localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        if (newRefresh) {
+            localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        }
     }
 
     /**
@@ -40,7 +47,10 @@ export const useAuthStore = defineStore('auth', () => {
      */
     function setTokensFromRefresh(newAccess, newRefresh) {
         accessToken.value = newAccess
-        refreshToken.value = newRefresh
+        if (newRefresh) {
+            refreshToken.value = newRefresh
+            localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
+        }
     }
 
     function setUser(newUser) {
@@ -50,6 +60,16 @@ export const useAuthStore = defineStore('auth', () => {
         } else {
             localStorage.removeItem(USER_KEY)
         }
+    }
+
+    function setBusinessAccount(type) {
+        if (!user.value) return
+        user.value = {
+            ...user.value,
+            has_business_account: !!type,
+            business_account_type: type ?? null,
+        }
+        localStorage.setItem(USER_KEY, JSON.stringify(user.value))
     }
 
     function logout() {
@@ -68,9 +88,14 @@ export const useAuthStore = defineStore('auth', () => {
         isAuthenticated,
         isPremium,
         isAdmin,
+        hasBusinessAccount,
+        businessAccountType,
+        isMaster,
+        isStation,
         setTokens,
         setTokensFromRefresh,
         setUser,
+        setBusinessAccount,
         logout,
     }
 })

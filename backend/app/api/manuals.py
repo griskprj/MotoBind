@@ -10,6 +10,8 @@ from app.services.manual_service import ManualService
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
+from app.extensions import db
+from app.models.manual import Manual
 
 manual = Blueprint("manual", __name__)
 
@@ -106,9 +108,6 @@ def get_manual_by_id(manual_id):
     user_id = _optional_user_id()
 
     if user_id is None:
-        from app.extensions import db
-        from app.models.manual import Manual
-
         manual_record = db.session.get(Manual, manual_id)
         if not manual_record or manual_record.status != "approved":
             from app.exceptions import NotFoundError
@@ -151,7 +150,7 @@ def create_manual():
 @jwt_required()
 def update_manual(manual_id):
     """Обновление мануала."""
-    data = UpdateManualSchema.model_validate(request.get_json() or {})
+    data = UpdateManualSchema.model_validate(request.get_json(silent=True) or {})
 
     updated = ManualService.update_manual(
         manual_id=manual_id,

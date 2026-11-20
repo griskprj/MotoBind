@@ -6,20 +6,18 @@ API-слой (app/api/auth.py) — тонкие контроллеры, вся �
 from datetime import datetime, timezone
 from typing import Optional
 
-from flask_jwt_extended import create_access_token, create_refresh_token
-
-from app.exceptions import ForbiddenError, NotFoundError, UnauthorizedError, ValidationError
+from app.exceptions import NotFoundError, UnauthorizedError, ValidationError
 from app.extensions import db
 from app.models.user import User
 from app.services.user_service import UserService
 from app.utils import email as email_utils
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 
 class AuthService:
     """Сервис аутентификации"""
 
     # ---- Registration / Login ----
-
     @staticmethod
     def register(
         email: str,
@@ -34,23 +32,21 @@ class AuthService:
         Возвращает dict для ответа API (без response-схемы).
         """
         user = UserService.create_user(
-            email=email,
-            password=password,
-            username=username,
-            role=role,
+            email=email, password=password, username=username, role=role
         )
 
-        email_utils.send_verification_email(user)
+        user.is_verified = True
+        db.session.commit()
 
         access_token, refresh_token = AuthService._issue_tokens(user, remember_me=True)
         AuthService._save_refresh_token(user, refresh_token)
 
         return {
-            "message": "Регистрация успешна! Подтвердите email.",
+            "message": "Регистрация успешна!",
             "access_token": access_token,
             "refresh_token": refresh_token,
             "user": user.to_dict(),
-            "requires_verification": True,
+            "requires_verification": False,
         }
 
     @staticmethod
@@ -61,10 +57,9 @@ class AuthService:
         """
         user = UserService.authenticate_user(email=email, password=password)
 
-        if not user.is_verified:
-            raise ForbiddenError("Email не подтвержден. Проверьте почту")
-
-        access_token, refresh_token = AuthService._issue_tokens(user, remember_me=remember_me)
+        access_token, refresh_token = AuthService._issue_tokens(
+            user, remember_me=remember_me
+        )
 
         if remember_me:
             AuthService._save_refresh_token(user, refresh_token)
@@ -83,7 +78,6 @@ class AuthService:
         }
 
     # ---- Token refresh / logout ----
-
     @staticmethod
     def refresh(refresh_token: str) -> dict:
         """
@@ -121,53 +115,7 @@ class AuthService:
         user.refresh_token = None
         db.session.commit()
 
-    # ---- Email verification ----
-
-    @staticmethod
-    def send_verification(user: User) -> str:
-        """
-        Отправляет письмо для подтверждения email.
-
-        Возвращает сообщение для ответа API.
-        Если email уже подтверждён — вернёт соответствующее сообщение (без отправки).
-        """
-        if user.is_verified:
-            return "Email уже подтвержден"
-
-        email_utils.send_verification_email(user)
-        return "Письмо отправлено"
-
-    @staticmethod
-    def verify_email(token: str) -> dict:
-        """
-        Подтверждает email по токену из письма.
-        Генерирует токены для автоматического входа.
-        """
-        email = email_utils.verify_token(token)
-        if not email:
-            raise ValidationError("Ссылка недействительна или истекла")
-
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            raise NotFoundError("Пользователь не найден")
-
-        if user.is_verified:
-            return {"message": "Email уже подтвержден"}
-
-        user.is_verified = True
-        db.session.commit()
-
-        access_token, refresh_token = AuthService._issue_tokens(user, remember_me=True)
-
-        return {
-            "message": "Email подтвержден!",
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user": user.to_dict(),
-        }
-
     # ---- Password reset ----
-
     @staticmethod
     def forgot_password(email: Optional[str]) -> None:
         """
@@ -213,7 +161,6 @@ class AuthService:
         return email
 
     # ---- Private helpers ----
-
     @staticmethod
     def _issue_tokens(user: User, remember_me: bool) -> tuple[str, Optional[str]]:
         """

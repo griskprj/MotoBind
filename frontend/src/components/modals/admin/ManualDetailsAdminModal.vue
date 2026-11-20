@@ -235,7 +235,11 @@
                             <span class="step-title">{{ step.title }}</span>
                         </div>
 
-                        <p v-if="step.text" class="step-text">{{ step.text }}</p>
+                        <MarkdownRenderer
+                            v-if="step.text"
+                            :content="step.text"
+                            class="step-text-md"
+                        />
 
                         <div v-if="step.image" class="step-image">
                             <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
@@ -375,6 +379,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { BaseModal, BaseButton, BaseTextarea } from '@/components/ui'
+import MarkdownRenderer from '@/components/learning/MarkdownRenderer.vue'
 
 const props = defineProps({
   isOpen: {
@@ -1006,7 +1011,7 @@ function confirmDelete() {
     color: var(--text-primary);
 }
 
-.step-text {
+.step-text-md {
     font-size: 14px;
     color: var(--text-secondary);
     margin: 4px 0 8px 0;

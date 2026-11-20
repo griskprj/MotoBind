@@ -23,7 +23,7 @@ def _serialize(record) -> dict:
 @jwt_required()
 def create_maintenance():
     """Создание записи обслуживания."""
-    data = CreateMaintenanceSchema.model_validate(request.get_json() or {})
+    data = CreateMaintenanceSchema.model_validate(request.get_json(silent=True) or {})
 
     record = MaintenanceService.create_maintenance(
         author_id=get_current_user_id(),
@@ -43,7 +43,7 @@ def create_maintenance():
 @jwt_required()
 def update_maintenance(maintenance_id):
     """Обновляет записи обслуживания."""
-    payload = request.get_json() or {}
+    payload = request.get_json(silent=True) or {}
     payload["maintenanceId"] = maintenance_id
     data = UpdateMaintenanceSchema.model_validate(payload)
 
@@ -69,7 +69,7 @@ def delete_maintenance(maintenance_id):
 def mark_maintenance_as_completed(maintenance_id):
     """Отметить обслуживание как выполненное."""
     data = MarkMaintenanceAsCompletedSchema.model_validate(
-        request.get_json() or {}
+        request.get_json(silent=True) or {}
     )
 
     result = MaintenanceService.mark_planned_as_done(
@@ -112,7 +112,7 @@ def get_maintenance(maintenance_id):
 @jwt_required()
 def quick_start():
     """Быстрое создание базовых обслуживаний для мотоцикла."""
-    data = QuickStartSchema.model_validate(request.get_json() or {})
+    data = QuickStartSchema.model_validate(request.get_json(silent=True) or {})
 
     result = MaintenanceService.quick_start(
         user_id=get_current_user_id(),

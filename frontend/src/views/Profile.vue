@@ -1,337 +1,321 @@
 <template>
-    <div class="container">
-        <LoadingOverlay :isLoading="loading || uploadingAvatar" text="Загрузка профиля"/>
+  <div class="container">
+    <Header title="Мой профиль" subtitle="Управляйте личными данными и настройками" />
 
-        <!-- === HEADER === -->
-        <Header
-            title="Мой профиль"
-            subtitle="Управляйте личными данными и настройками"
-        />
-
-        <!-- === PROFILE CONTENT === -->
-        <div class="profile-grid">
-            <!-- LEFT COLUMN: Avatar & Info -->
-            <aside class="profile-sidebar">
-                <div class="profile-card">
-                    <div class="profile-avatar-wrapper">
-                        <img
-                            :src="getAvatarUrl(user?.avatar)"
-                            alt="avatar"
-                            class="profile-avatar"
-                            @error="handleAvatarError"
-                        >
-                        <button class="avatar-edit-btn" @click="triggerAvatarInput" title="Изменить аватар">
-                            <i class="fa fa-camera"></i>
-                        </button>
-                        <input
-                            :ref="(el) => (avatarInputRef = el)"
-                            type="file"
-                            accept="image/*"
-                            @change="handleAvatarUpload"
-                            style="display: none"
-                        />
-                    </div>
-
-                    <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
-                    <p class="profile-email">{{ user?.email || '—' }}</p>
-
-                    <div class="profile-badge">
-                        <span :class="getUserStatusClass(user?.status)">
-                            {{ getUserStatusLabel(user?.status) }}
-                        </span>
-                        <span class="role-badge">{{ getUserRoleLabel(user?.role) }}</span>
-                    </div>
-
-                    <div v-if="user?.avatar" class="avatar-actions">
-                        <button class="btn btn-danger btn-sm" @click="deleteAvatar">
-                            <i class="fa fa-trash"></i> Удалить аватар
-                        </button>
-                    </div>
-
-                    <!-- Информация о пользователе -->
-                    <div class="profile-info-items">
-                        <div v-if="user?.location" class="info-item">
-                            <i class="fa fa-map-marker"></i>
-                            <span>{{ user.location }}</span>
-                        </div>
-                        <div v-if="user?.motorcycle" class="info-item">
-                            <i class="fa fa-motorcycle"></i>
-                            <span>{{ user.motorcycle }}</span>
-                        </div>
-                        <div v-if="user?.experience" class="info-item">
-                            <i class="fa fa-signal"></i>
-                            <span>{{ getUserExperienceLabel(user.experience) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fa fa-calendar"></i>
-                            <span>С нами с {{ formatDate(user?.created_at) }}</span>
-                        </div>
-                    </div>
-
-                    <div v-if="user?.bio" class="profile-bio">
-                        <i class="fa fa-quote-left"></i>
-                        {{ user.bio }}
-                    </div>
-
-                    <!-- Социальные сети -->
-                    <div v-if="hasSocialLinks" class="profile-social">
-                        <a
-                            v-for="(url, platform) in user.social_links"
-                            :key="platform"
-                            :href="url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="social-link"
-                            :title="platform"
-                        >
-                            <i :class="getSocialIcon(platform)"></i>
-                        </a>
-                    </div>
-
-                    <div class="profile-actions">
-                        <button class="outline-btn" style="width: 100%;" @click="showEditProfile = true">
-                            <i class="fa fa-pen"></i> Редактировать профиль
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Статистика -->
-                <div class="stats-card">
-                    <div class="stat-item">
-                        <span class="stat-value">{{ stats.posts || 0 }}</span>
-                        <span class="stat-label">Постов</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value">{{ stats.likes || 0 }}</span>
-                        <span class="stat-label">Лайков</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value">{{ stats.comments || 0 }}</span>
-                        <span class="stat-label">Комментариев</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value">{{ stats.motorcycles || 0 }}</span>
-                        <span class="stat-label">Мотоциклов</span>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- RIGHT COLUMN: Settings -->
-            <main class="profile-settings">
-                <!-- Основная информация -->
-                <div class="settings-card">
-                    <div class="settings-card-header">
-                        <i class="fa fa-user"></i>
-                        <h3>Основная информация</h3>
-                    </div>
-                    <div class="settings-card-body">
-                        <div class="info-row">
-                            <span class="info-label">Имя пользователя</span>
-                            <span class="info-value">{{ user?.username || '—' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">{{ user?.email || '—' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Город/Регион</span>
-                            <span class="info-value">{{ user?.location || 'Не указан' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Мой мотоцикл</span>
-                            <span class="info-value">{{ user?.motorcycle || 'Не указан' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Опыт вождения</span>
-                            <span class="info-value">{{ getUserExperienceLabel(user?.experience) || 'Не указан' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Роль</span>
-                            <span class="info-value">{{ getUserRoleLabel(user?.role) }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Статус</span>
-                            <span class="info-value">
-                                <span :class="getUserStatusClass(user?.status)">
-                                    {{ getUserStatusLabel(user?.status) }}
-                                </span>
-                            </span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Дата регистрации</span>
-                            <span class="info-value">{{ formatDate(user?.created_at) }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">ID пользователя</span>
-                            <span class="info-value">#{{ user?.id || '—' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Безопасность -->
-                <div class="settings-card">
-                    <div class="settings-card-header">
-                        <i class="fa fa-lock"></i>
-                        <h3>Безопасность</h3>
-                    </div>
-                    <div class="settings-card-body">
-                        <button class="outline-btn" style="width: 100%;" @click="showChangePassword = true">
-                            <i class="fa fa-key"></i> Сменить пароль
-                        </button>
-                        <button class="btn-danger" @click="showDeleteAccount = true">
-                            <i class="fa fa-trash"></i> Удалить аккаунт
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="settings-card-header">
-                        <i class="fa fa-envelope"></i>
-                        <h3>Уведомления и рассылки</h3>
-                    </div>
-                    <div class="settings-card-body">
-                        <!-- Группа: Email -->
-                        <div class="settings-group-title">Почта</div>
-
-                        <div class="toggle-row">
-                            <div class="toggle-info">
-                                <span class="toggle-label">Уведомления на почту</span>
-                                <span class="toggle-desc">Главный переключатель. Отключение отключает все письма от сервиса</span>
-                            </div>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    v-model="notificationSettings.email_notifications_enabled"
-                                    @change="updateNotificationSettings"
-                                >
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
-                            <div class="toggle-info">
-                                <span class="toggle-label">Новостная рассылка</span>
-                                <span class="toggle-desc">Новости, статьи и полезные советы для мотоциклистов</span>
-                            </div>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    v-model="notificationSettings.email_newsletter_enabled"
-                                    :disabled="!notificationSettings.email_notifications_enabled"
-                                    @change="updateNotificationSettings"
-                                >
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
-                            <div class="toggle-info">
-                                <span class="toggle-label">Подтверждение email</span>
-                                <span class="toggle-desc">Письма для верификации адреса</span>
-                            </div>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    v-model="notificationSettings.email_verification_enabled"
-                                    :disabled="!notificationSettings.email_notifications_enabled"
-                                    @change="updateNotificationSettings"
-                                >
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <!-- Группа: Напоминания -->
-                        <div class="settings-group-title">Напоминания</div>
-
-                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
-                            <div class="toggle-info">
-                                <span class="toggle-label">Напоминать о пробеге</span>
-                                <span class="toggle-desc">Если пробег не обновлялся 30 дней — пришлём письмо</span>
-                            </div>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    v-model="notificationSettings.reminders_mileage_enabled"
-                                    :disabled="!notificationSettings.email_notifications_enabled"
-                                    @change="updateNotificationSettings"
-                                >
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="toggle-row" :class="{ disabled: !notificationSettings.email_notifications_enabled }">
-                            <div class="toggle-info">
-                                <span class="toggle-label">Напоминать о ТО</span>
-                                <span class="toggle-desc">Предупредим, когда приблизится плановое обслуживание или оно просрочено</span>
-                            </div>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    v-model="notificationSettings.reminders_maintenance_enabled"
-                                    :disabled="!notificationSettings.email_notifications_enabled"
-                                    @change="updateNotificationSettings"
-                                >
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="info-box info">
-                            <i class="fa fa-info-circle"></i>
-                            <span>
-                                Вы можете отписаться от рассылки в один клик из любого письма
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Публичный профиль -->
-                <div class="settings-card">
-                    <div class="settings-card-header">
-                        <i class="fa fa-globe"></i>
-                        <h3>Публичный профиль</h3>
-                    </div>
-                    <div class="settings-card-body">
-                        <p class="hint-text">
-                            <i class="fa fa-info-circle"></i>
-                            Ваш публичный профиль доступен по ссылке:
-                        </p>
-                        <div class="profile-link">
-                            <input
-                                :value="profileUrl"
-                                readonly
-                                @click="copyProfileLink"
-                            >
-                            <button class="btn btn-secondary btn-sm" @click="copyProfileLink">
-                                <i class="fa fa-copy"></i> Копировать
-                            </button>
-                        </div>
-                        <button class="outline-btn" style="width: 100%;" @click="viewPublicProfile">
-                            <i class="fa fa-eye"></i> Посмотреть публичный профиль
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner" />
     </div>
 
-    <!-- === MODALS === -->
+    <div v-else class="profile-grid">
+      <!-- ==================== LEFT: CARD ==================== -->
+      <aside class="profile-sidebar">
+        <BaseCard class="profile-card">
+          <!-- Аватар -->
+          <div class="profile-avatar-wrapper">
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              hidden
+              @change="onAvatarChange"
+            >
+
+            <AppAvatar
+              :src="getAvatarUrl(user?.avatar)"
+              :size="120"
+              round
+              class="profile-avatar"
+            />
+
+            <button
+              class="avatar-btn avatar-edit-btn"
+              title="Загрузить аватар"
+              @click="avatarInput?.click()"
+            >
+              <i class="fa fa-camera" />
+            </button>
+
+            <button
+              v-if="user?.avatar"
+              class="avatar-btn avatar-delete-btn"
+              title="Удалить аватар"
+              @click="deleteAvatar"
+            >
+              <i class="fa fa-trash" />
+            </button>
+          </div>
+
+          <h3 class="profile-username">{{ user?.username || 'Пользователь' }}</h3>
+          <p class="profile-email">{{ user?.email || '—' }}</p>
+
+          <div class="profile-badge">
+            <span :class="`badge badge--${statusVariant(user?.status)}`">
+              {{ getUserStatusLabel(user?.status) }}
+            </span>
+            <span class="badge badge--accent">
+              {{ getUserRoleLabel(user?.role) }}
+            </span>
+          </div>
+
+          <!-- Инфо -->
+          <div class="profile-info-items">
+            <div v-if="user?.location" class="info-item">
+              <i class="fa fa-map-marker" />
+              <span>{{ user.location }}</span>
+            </div>
+            <div v-if="user?.motorcycle" class="info-item">
+              <i class="fa fa-motorcycle" />
+              <span>{{ user.motorcycle }}</span>
+            </div>
+            <div v-if="user?.experience" class="info-item">
+              <i class="fa fa-signal" />
+              <span>{{ getUserExperienceLabel(user.experience) }}</span>
+            </div>
+            <div class="info-item">
+              <i class="fa fa-calendar" />
+              <span>С нами с {{ formatDate(user?.created_at) }}</span>
+            </div>
+          </div>
+
+          <!-- Bio -->
+          <div v-if="user?.bio" class="profile-bio">
+            <i class="fa fa-quote-left" />
+            {{ user.bio }}
+          </div>
+
+          <BaseButton
+            variant="outline"
+            block
+            icon="fa fa-pen"
+            @click="showEditProfile = true"
+          >
+            Редактировать профиль
+          </BaseButton>
+        </BaseCard>
+      </aside>
+
+      <!-- ==================== RIGHT: SETTINGS ==================== -->
+      <main class="profile-settings">
+        <!-- Основная информация -->
+        <BaseCard title="Основная информация" icon="fa fa-user card-header-icon" class="settings-card">
+          <dl class="info-dl">
+            <div class="info-dl__row">
+              <dt>Имя пользователя</dt>
+              <dd>{{ user?.username || '—' }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Email</dt>
+              <dd>{{ user?.email || '—' }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Город/Регион</dt>
+              <dd>{{ user?.location || 'Не указан' }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Мой мотоцикл</dt>
+              <dd>{{ user?.motorcycle || 'Не указан' }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Опыт вождения</dt>
+              <dd>{{ getUserExperienceLabel(user?.experience) || 'Не указан' }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Роль</dt>
+              <dd>{{ getUserRoleLabel(user?.role) }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Статус</dt>
+              <dd>
+                <span :class="`badge badge--${statusVariant(user?.status)}`">
+                  {{ getUserStatusLabel(user?.status) }}
+                </span>
+              </dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>Дата регистрации</dt>
+              <dd>{{ formatDate(user?.created_at) }}</dd>
+            </div>
+            <div class="info-dl__row">
+              <dt>ID пользователя</dt>
+              <dd>#{{ user?.id || '—' }}</dd>
+            </div>
+          </dl>
+        </BaseCard>
+
+        <!-- Безопасность -->
+        <BaseCard title="Безопасность" icon="fa fa-lock card-header-icon" class="settings-card">
+          <div class="action-stack">
+            <BaseButton
+              variant="outline"
+              block
+              icon="fa fa-key"
+              @click="showChangePassword = true"
+            >
+              Сменить пароль
+            </BaseButton>
+            <BaseButton
+              variant="danger"
+              block
+              icon="fa fa-trash"
+              @click="showDeleteAccount = true"
+            >
+              Удалить аккаунт
+            </BaseButton>
+          </div>
+        </BaseCard>
+
+        <!-- Бизнес -->
+        <BaseCard title="Бизнес" icon="fa fa-briefcase card-header-icon" class="settings-card">
+          <div class="hint-block hint-block--info">
+            <i class="fa fa-info-circle" />
+            <p>Ведёте обслуживание мотоциклов как мастер или СТО? Создайте бизнес-аккаунт.</p>
+          </div>
+
+          <BaseButton
+            variant="outline"
+            block
+            icon="fa fa-briefcase"
+            @click="goToBusiness"
+          >
+            Открыть кабинет бизнеса
+          </BaseButton>
+        </BaseCard>
+
+        <!-- Уведомления -->
+        <BaseCard
+          title="Уведомления и рассылки"
+          icon="fa fa-envelope card-header-icon"
+          class="settings-card"
+        >
+          <div class="settings-group-title">Почта</div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">Уведомления на почту</span>
+              <span class="toggle-desc">Главный переключатель. Отключение отключает все письма</span>
+            </div>
+            <AppSwitch
+              v-model="notificationSettings.email_notifications_enabled"
+              @change="updateNotificationSettings"
+            />
+          </div>
+
+          <div
+            class="toggle-row"
+            :class="{ disabled: !notificationSettings.email_notifications_enabled }"
+          >
+            <div class="toggle-info">
+              <span class="toggle-label">Новостная рассылка</span>
+              <span class="toggle-desc">Новости, статьи и полезные советы</span>
+            </div>
+            <AppSwitch
+              v-model="notificationSettings.email_newsletter_enabled"
+              :disabled="!notificationSettings.email_notifications_enabled"
+              @change="updateNotificationSettings"
+            />
+          </div>
+
+          <div
+            class="toggle-row"
+            :class="{ disabled: !notificationSettings.email_notifications_enabled }"
+          >
+            <div class="toggle-info">
+              <span class="toggle-label">Подтверждение email</span>
+              <span class="toggle-desc">Письма для верификации адреса</span>
+            </div>
+            <AppSwitch
+              v-model="notificationSettings.email_verification_enabled"
+              :disabled="!notificationSettings.email_notifications_enabled"
+              @change="updateNotificationSettings"
+            />
+          </div>
+
+          <div class="settings-group-title">Напоминания</div>
+
+          <div
+            class="toggle-row"
+            :class="{ disabled: !notificationSettings.email_notifications_enabled }"
+          >
+            <div class="toggle-info">
+              <span class="toggle-label">Напоминать о пробеге</span>
+              <span class="toggle-desc">Если пробег не обновлялся 30 дней — пришлём письмо</span>
+            </div>
+            <AppSwitch
+              v-model="notificationSettings.reminders_mileage_enabled"
+              :disabled="!notificationSettings.email_notifications_enabled"
+              @change="updateNotificationSettings"
+            />
+          </div>
+
+          <div
+            class="toggle-row"
+            :class="{ disabled: !notificationSettings.email_notifications_enabled }"
+          >
+            <div class="toggle-info">
+              <span class="toggle-label">Напоминать о ТО</span>
+              <span class="toggle-desc">Предупредим о приближении или просрочке планового ТО</span>
+            </div>
+            <AppSwitch
+              v-model="notificationSettings.reminders_maintenance_enabled"
+              :disabled="!notificationSettings.email_notifications_enabled"
+              @change="updateNotificationSettings"
+            />
+          </div>
+
+          <div class="hint-block hint-block--info">
+            <i class="fa fa-info-circle" />
+            <p>Вы можете отписаться от рассылки в один клик из любого письма</p>
+          </div>
+        </BaseCard>
+
+        <!-- Публичный профиль -->
+        <BaseCard title="Публичный профиль" icon="fa fa-globe card-header-icon" class="settings-card">
+          <p class="hint-text">Ваш публичный профиль доступен по ссылке:</p>
+
+          <div class="profile-link">
+            <input
+              :value="profileUrl"
+              readonly
+              class="profile-link__input"
+              @click="copyProfileLink"
+            >
+            <BaseButton variant="secondary" icon="fa fa-copy" @click="copyProfileLink">
+              Копировать
+            </BaseButton>
+          </div>
+
+          <BaseButton
+            variant="outline"
+            block
+            icon="fa fa-eye"
+            class="mt-3"
+            @click="viewPublicProfile"
+          >
+            Посмотреть публичный профиль
+          </BaseButton>
+        </BaseCard>
+      </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
     <EditProfileModal
-    v-if="showEditProfile"
-    :isOpen="showEditProfile"
-    :user="user"
-    @close="showEditProfile = false"
+      v-if="showEditProfile"
+      :is-open="showEditProfile"
+      :user="user"
+      @close="showEditProfile = false"
     />
 
     <ChangePasswordModal
-    v-if="showChangePassword"
-    :isOpen="showChangePassword"
-    @close="showChangePassword = false"
+      v-if="showChangePassword"
+      :is-open="showChangePassword"
+      @close="showChangePassword = false"
     />
 
     <DeleteAccountModal
-    :isOpen="showDeleteAccount"
-    @close="showDeleteAccount = false"
+      :is-open="showDeleteAccount"
+      @close="showDeleteAccount = false"
     />
+  </div>
 </template>
 
 <script setup>
@@ -342,46 +326,32 @@ import { useUserStore } from '@/stores'
 import { useToast } from '@/composables/useToast'
 import {
   getUserStatusLabel,
-  getUserStatusClass,
   getUserRoleLabel,
   getUserExperienceLabel,
-  getSocialIcon,
 } from '@/utils/formatters'
 import { getAvatarUrl } from '@/utils/mediaUrl'
 import formatDate from '@/utils/DateFormatter.js'
-
-import EditProfileModal from '../components/modals/user/EditProfileModal.vue'
-import ChangePasswordModal from '../components/modals/user/ChangePasswordModal.vue'
-import DeleteAccountModal from '../components/modals/user/DeleteAccountModal.vue'
-import Header from '../components/Header.vue'
-import LoadingOverlay from '../components/LoadingOverlay.vue'
+import Header from '@/components/Header.vue'
+import { BaseButton, BaseCard, AppSwitch, AppAvatar } from '@/components/ui'
+import EditProfileModal from '@/components/modals/user/EditProfileModal.vue'
+import ChangePasswordModal from '@/components/modals/user/ChangePasswordModal.vue'
+import DeleteAccountModal from '@/components/modals/user/DeleteAccountModal.vue'
 
 const router = useRouter()
 const toast = useToast()
-
 const userStore = useUserStore()
 
-const {
-  profile: user,
-  notificationSettings,
-  loading,
-  uploadingAvatar,
-  stats,
-  hasSocialLinks,
-} = storeToRefs(userStore)
+const { profile: user, notificationSettings, loading } = storeToRefs(userStore)
 
-// ===== Local UI state =====
 const showEditProfile = ref(false)
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
-const avatarInputRef = ref(null)
+const avatarInput = ref(null)
 
-// ===== Computed =====
-const profileUrl = computed(() => {
-  return `${window.location.origin}/profile/${user.value?.id || ''}`
-})
+const profileUrl = computed(
+  () => `${window.location.origin}/profile/${user.value?.id || ''}`
+)
 
-// ===== Lifecycle =====
 onMounted(async () => {
   try {
     await Promise.all([
@@ -398,31 +368,28 @@ onMounted(async () => {
   }
 })
 
-// ===== Avatar =====
-function triggerAvatarInput() {
-  avatarInputRef.value?.click()
+function statusVariant(status) {
+  return {
+    active: 'success',
+    banned: 'danger',
+    pending: 'warning',
+  }[status] || 'gray'
 }
 
-async function handleAvatarUpload(event) {
-  const file = event.target.files[0]
+// ===== Avatar =====
+async function onAvatarChange(event) {
+  const file = event.target.files?.[0]
   if (!file) return
 
   if (file.size > 5 * 1024 * 1024) {
-    toast.error('Файл слишком большой. Максимальный размер 5 МБ.')
-    event.target.value = ''
-    return
-  }
-
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
-  if (!allowedTypes.includes(file.type)) {
-    toast.error('Неподдерживаемый формат. Разрешены: JPG, PNG, GIF, BMP, WEBP')
+    toast.error('Файл слишком большой. Максимум 5 МБ.')
     event.target.value = ''
     return
   }
 
   try {
     await userStore.uploadAvatar(file)
-    toast.success('Аватар успешно обновлён!')
+    toast.success('Аватар обновлён!')
   } catch (err) {
     toast.error(err.response?.data?.error || 'Ошибка загрузки аватара')
   } finally {
@@ -436,20 +403,16 @@ async function deleteAvatar() {
     await userStore.deleteAvatar()
     toast.success('Аватар удалён')
   } catch (err) {
-    toast.error(err.response?.data?.error || 'Ошибка удаления аватара')
+    toast.error(err.response?.data?.error || 'Ошибка удаления')
   }
-}
-
-function handleAvatarError(event) {
-  event.target.src = '/BaseAvatar.webp'
 }
 
 // ===== Notifications =====
 async function updateNotificationSettings() {
   try {
     await userStore.updateNotificationSettings(notificationSettings.value)
-    toast.success('Настройки уведомлений обновлены')
-  } catch (err) {
+    toast.success('Настройки обновлены')
+  } catch {
     toast.error('Ошибка обновления настроек')
   }
 }
@@ -463,599 +426,361 @@ function viewPublicProfile() {
 async function copyProfileLink() {
   try {
     await navigator.clipboard.writeText(profileUrl.value)
-    toast.success('Ссылка на профиль скопирована!')
+    toast.success('Ссылка скопирована')
   } catch {
-    const input = document.querySelector('.profile-link input')
-    if (input) {
-      input.select()
-      document.execCommand('copy')
-      toast.success('Ссылка на профиль скопирована!')
-    }
+    toast.error('Не удалось скопировать')
   }
+}
+
+function goToBusiness() {
+  router.push('/business')
 }
 </script>
 
 <style scoped>
-/* ============================================
-   PROFILE GRID
-   ============================================ */
 .profile-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 24px;
-    align-items: start;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
-/* ============================================
-   SIDEBAR
-   ============================================ */
-.profile-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-}
-
-.profile-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    text-align: center;
-    min-width: 0;
+/* ===== Profile card ===== */
+.profile-card :deep(.base-card__body) {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
 
 .profile-avatar-wrapper {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 16px;
-    overflow: hidden;
+  position: relative;
+  display: inline-block;
 }
 
 .profile-avatar {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--accent);
+  border: 3px solid var(--accent);
+}
+
+.avatar-btn {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-btn:hover {
+  background: var(--accent-hover);
+  transform: scale(1.05);
 }
 
 .avatar-edit-btn {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 38px;
-    height: 38px;
-    min-height: 38px; /* перебиваем reset.scss */
-    padding: 0;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
+  bottom: 4px;
+  right: 4px;
 }
-.avatar-edit-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+.avatar-delete-btn {
+  top: 4px;
+  right: 4px;
+  background: var(--danger);
+}
+
+.avatar-delete-btn:hover {
+  background: var(--danger-hover);
+}
 
 .profile-username {
-    font-size: 20px;
-    font-weight: var(--fw-semibold);
-    margin: 0 0 4px 0;
-    color: var(--text-primary);
-    word-break: break-word;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  word-break: break-word;
 }
+
 .profile-email {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0 0 12px 0;
-    word-break: break-word;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  word-break: break-word;
 }
 
 .profile-badge {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* Статусы — общий паттерн */
-.status-active,
-.status-banned,
-.status-pending,
-.role-badge {
-    display: inline-block;
-    padding: 2px 14px;
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: var(--fw-medium);
-    white-space: nowrap;
+.badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
 }
-.status-active  { background: var(--success-trans); color: var(--success-text); }
-.status-banned  { background: var(--danger-trans);  color: var(--danger-text); }
-.status-pending { background: var(--warning-trans); color: var(--warning-text); }
-.role-badge     { background: var(--accent-trans);  color: var(--accent-text); }
 
-.avatar-actions { margin-bottom: 12px; }
+.badge--success { background: var(--success-trans); color: var(--success-text); }
+.badge--danger { background: var(--danger-trans); color: var(--danger-text); }
+.badge--warning { background: var(--warning-trans); color: var(--warning-text); }
+.badge--gray { background: var(--border-light); color: var(--text-muted); }
+.badge--accent { background: var(--accent-trans); color: var(--accent-text); }
 
 .profile-info-items {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
-    text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
 }
 
 .info-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--text-secondary);
-    min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
-.info-item i { width: 18px; min-width: 18px; color: var(--accent-text); flex-shrink: 0; }
-.info-item span { overflow: hidden; text-overflow: ellipsis; }
+
+.info-item i {
+  width: 18px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.info-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .profile-bio {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 14px;
-    padding: 12px 16px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    border-left: 3px solid var(--accent);
-    text-align: left;
-    line-height: var(--leading-relaxed);
-    word-break: break-word;
-}
-.profile-bio i { color: var(--accent-text); margin-right: 6px; opacity: 0.7; }
-
-.profile-social {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--text-secondary);
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+  text-align: left;
+  line-height: 1.6;
 }
 
-.social-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    min-height: 38px; /* перебиваем reset.scss */
-    border-radius: 50%;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    transition: all var(--transition-base);
-}
-.social-link:hover {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-    transform: translateY(-2px);
+.profile-bio i {
+  color: var(--accent);
+  margin-right: 6px;
+  opacity: 0.7;
 }
 
-.profile-actions { display: flex; gap: 8px; }
-.profile-actions .btn { flex: 1; }
-
-/* ============================================
-   STATS CARD
-   ============================================ */
-.stats-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-}
-
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 0;
-}
-.stat-value { font-size: 20px; font-weight: var(--fw-bold); color: var(--accent); }
-.stat-label {
-    font-size: 12px;
-    color: var(--text-secondary);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-
-/* ============================================
-   SETTINGS CARDS
-   ============================================ */
+/* ===== Settings cards ===== */
 .settings-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    margin-bottom: 16px;
-    min-width: 0;
-}
-.settings-card:last-child { margin-bottom: 0; }
-
-.settings-card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-light);
-    background: var(--bg-secondary);
-}
-.settings-card-header i { font-size: 18px; color: var(--accent); flex-shrink: 0; }
-.settings-card-header h3 {
-    font-size: 16px;
-    font-weight: var(--fw-semibold);
-    margin: 0;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
+  margin-bottom: 16px;
 }
 
-.settings-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 20px;
-    min-width: 0;
+.settings-card:last-child {
+  margin-bottom: 0;
 }
 
-/* ============================================
-   INFO ROWS
-   ============================================ */
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-light);
-    min-width: 0;
-}
-.info-row:last-child { border-bottom: none; }
-
-.info-label {
-    font-size: 14px;
-    color: var(--text-secondary);
-    flex-shrink: 0;
-}
-.info-value {
-    font-size: 14px;
-    font-weight: var(--fw-medium);
-    color: var(--text-primary);
-    text-align: right;
-    word-break: break-word;
-    min-width: 0;
+.card-header-icon {
+  color: var(--accent);
+  font-size: 18px;
 }
 
-/* ============================================
-   TOGGLE ROWS
-   ============================================ */
-.toggle-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-light);
-    min-width: 0;
+/* ===== Info list (замена n-descriptions) ===== */
+.info-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
 }
-.toggle-row:last-child { border-bottom: none; }
 
-.toggle-row.disabled { opacity: 0.5; pointer-events: none; }
+.info-dl__row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  align-items: center;
+}
 
+.info-dl__row:last-child {
+  border-bottom: none;
+}
+
+.info-dl__row dt {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.info-dl__row dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== Toggles ===== */
 .settings-group-title {
-    font-size: 12px;
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin: 12px 0 4px 0;
-    padding-left: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 12px 0 4px;
 }
-.settings-group-title:first-child { margin-top: 0; }
+
+.settings-group-title:first-child {
+  margin-top: 0;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+}
+
+.toggle-row.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 .toggle-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
 }
+
 .toggle-label {
-    font-size: 14px;
-    font-weight: var(--fw-medium);
-    color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
 }
+
 .toggle-desc {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: var(--leading-base);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
-/* ============================================
-   SWITCH
-   ============================================ */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 48px;
-    height: 26px;
-    min-height: 26px; /* перебиваем reset.scss */
-    flex-shrink: 0;
-}
-.switch input { opacity: 0; width: 0; height: 0; }
-
-.switch .slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 26px;
-    transition: all var(--transition-base);
-}
-.switch .slider::before {
-    content: '';
-    position: absolute;
-    height: 18px;
-    width: 18px;
-    left: 2px;
-    bottom: 2px;
-    background: var(--text-muted);
-    border-radius: 50%;
-    transition: all var(--transition-base);
-}
-.switch input:checked + .slider {
-    background: var(--accent);
-    border-color: var(--accent);
-}
-.switch input:checked + .slider::before {
-    transform: translateX(22px);
-    background: #fff;
-}
-.switch input:disabled + .slider {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* ===== Hint blocks ===== */
+.hint-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  font-size: 13px;
 }
 
-/* ============================================
-   INFO BOX
-   ============================================ */
-.info-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    margin-top: 12px;
+.hint-block p {
+  margin: 0;
+  line-height: 1.5;
 }
-.info-box.info { background: var(--accent-trans); color: var(--text-secondary); }
-.info-box i { color: var(--accent-text); font-size: 18px; flex-shrink: 0; }
-.info-box span { min-width: 0; }
 
-/* ============================================
-   PUBLIC PROFILE LINK
-   ============================================ */
+.hint-block i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.hint-block--info {
+  background: var(--accent-trans);
+  color: var(--text-secondary);
+}
+
+.hint-block--info i {
+  color: var(--accent-text);
+}
+
 .hint-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0 0 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
 }
-.hint-text i { color: var(--accent-text); flex-shrink: 0; }
 
+/* ===== Profile link ===== */
 .profile-link {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    min-width: 0;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.profile-link input {
-    flex: 1;
-    min-width: 0;
-    min-height: 44px;
-    padding: 8px 12px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-input);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-family: var(--font-mono);
-    cursor: pointer;
-    text-overflow: ellipsis;
-}
-.profile-link input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: var(--shadow-focus);
+.profile-link__input {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-height: 40px;
 }
 
-/* ============================================
-   LOCAL BUTTONS
-   (минимум переопределений, опираемся на components.scss)
-   ============================================ */
-.btn-sm {
-    padding: 6px 14px;
-    font-size: 13px;
-    min-height: 36px;
+.profile-link__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
 }
 
-.outline-btn {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 10px 16px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    font-weight: var(--fw-medium);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+.mt-3 { margin-top: 12px; }
+
+/* ===== Loading ===== */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
 }
-.outline-btn:hover { background: var(--accent); color: #fff; }
 
-.btn-danger {
-    background: var(--danger-trans);
-    color: var(--danger-text);
-    border: 1px solid transparent;
-    padding: 10px 16px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    font-weight: var(--fw-medium);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-.btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
 
-/* ============================================
-   АДАПТИВ
-   Шкала: 1024 → 820 → 640 → 480 → 400
-   ============================================ */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-/* --- Планшет: одна колонка --- */
+/* ===== Adaptive ===== */
 @media (max-width: 1024px) {
-    .profile-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
+  .profile-grid { grid-template-columns: 1fr; }
 }
 
-/* --- Планшет/мобильный: центрирование и переносы --- */
-@media (max-width: 820px) {
-    .profile-card {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .profile-info-items,
-    .profile-bio,
-    .profile-social,
-    .profile-actions {
-        width: 100%;
-    }
-    .profile-actions { flex-direction: column; }
-    .profile-actions .btn { width: 100%; }
-
-    .profile-link { flex-direction: column; }
-    .profile-link input { width: 100%; }
-    .profile-link .btn { width: 100%; }
-}
-
-/* --- Мобильные --- */
 @media (max-width: 640px) {
-    .settings-card-body { padding: 16px; }
-    .settings-card-header { padding: 14px 16px; }
+  .info-dl__row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 
-    /* Info-row: переносим значение под лейбл */
-    .info-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    .info-value { text-align: left; width: 100%; }
+  .toggle-row { flex-wrap: wrap; }
+  .toggle-info { flex-basis: 100%; }
 
-    /* Toggle-row: switch переносится вправо-снизу при нехватке места */
-    .toggle-row {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    .toggle-info { flex-basis: 100%; }
-    .switch { align-self: flex-end; }
-
-    /* Кнопки безопасности — на всю ширину */
-    .settings-card-body > .outline-btn,
-    .settings-card-body > .btn-danger {
-        width: 100%;
-    }
-
-    /* Статистика: 4 → 2 в ряд */
-    .stats-card {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 16px;
-    }
-
-    .profile-card { padding: 18px; }
-    .profile-avatar-wrapper { width: 104px; height: 104px; }
-}
-
-/* --- Узкие мобильные --- */
-@media (max-width: 480px) {
-    .profile-username { font-size: 18px; }
-    .stat-value { font-size: 18px; }
-
-    .settings-card-body { padding: 14px; }
-    .settings-card-header { padding: 12px 14px; gap: 10px; }
-    .settings-card-header h3 { font-size: 15px; }
-
-    .profile-link input {
-        font-size: 12px;
-        padding: 6px 10px;
-    }
-
-    /* Info-box: иконка сверху, текст по центру */
-    .info-box {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 6px;
-    }
-
-    .hint-text {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        font-size: 13px;
-    }
-}
-
-/* --- Очень узкие --- */
-@media (max-width: 400px) {
-    .profile-card { padding: 14px; }
-    .profile-avatar-wrapper { width: 92px; height: 92px; }
-    .profile-bio { padding: 10px 12px; font-size: 13px; }
-
-    .social-link {
-        width: 34px;
-        height: 34px;
-        min-height: 34px;
-    }
-
-    .stats-card { gap: 8px; padding: 12px; }
-    .stat-value { font-size: 16px; }
-    .stat-label { font-size: 11px; }
-
-    .settings-card-body { padding: 12px; }
-
-    /* Switch чуть компактнее */
-    .switch { width: 44px; height: 24px; min-height: 24px; }
-    .switch .slider::before { height: 16px; width: 16px; }
-    .switch input:checked + .slider::before { transform: translateX(20px); }
+  .profile-link { flex-direction: column; }
 }
 </style>

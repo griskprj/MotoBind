@@ -1,90 +1,132 @@
 <template>
-  <div class="auth-container">
-    <div class="auth-card">
-      <div v-if="valid" class="auth-header">
-        <h1>Новый пароль</h1>
-        <p>Введите новый пароль для {{ email }}</p>
+  <div class="auth-page">
+    <BaseCard class="auth-card">
+      <!-- Проверка токена -->
+      <div v-if="checking" class="auth-header">
+        <div class="spinner" />
+        <h1>Проверка ссылки...</h1>
       </div>
 
-      <div v-else-if="checking" class="auth-header">
-        <h1>Проверка...</h1>
-        <p>Пожалуйста, подождите</p>
-      </div>
-
-      <div v-else class="auth-header">
-        <h1>Ошибка</h1>
+      <!-- Токен невалиден -->
+      <div v-else-if="!valid" class="auth-header">
+        <i class="fa fa-exclamation-triangle" style="color: var(--danger)" />
+        <h1>Ссылка недействительна</h1>
         <p>{{ errorMessage }}</p>
         <router-link to="/forgot-password" class="reset-link">
-          Запросить сброс
+          Запросить новую ссылку
         </router-link>
       </div>
 
-      <form v-if="valid" @submit.prevent="submit">
-        <BaseInput
-          v-model="newPassword"
-          type="password"
-          label="Новый пароль"
-          placeholder="Минимум 6 символов"
-          required
-        />
-
-        <BaseInput
-          v-model="confirmPassword"
-          type="password"
-          label="Подтвердите пароль"
-          placeholder="Повторите пароль"
-          required
-        />
-
-        <div v-if="error" class="message message-error">
-          <i class="fa fa-exclamation-circle"></i> {{ error }}
+      <!-- Форма смены пароля -->
+      <template v-else>
+        <div class="auth-header">
+          <i class="fa fa-key" />
+          <h1>Новый пароль</h1>
+          <p>Для аккаунта <strong>{{ email }}</strong></p>
         </div>
 
-        <div v-if="success" class="message message-success">
-          <i class="fa fa-check-circle"></i> {{ success }}
-        </div>
+        <form @submit.prevent="submit">
+          <BaseInput
+            v-model="values.newPassword"
+            label="Новый пароль"
+            type="password"
+            placeholder="Минимум 6 символов"
+            autocomplete="new-password"
+            required
+            :error="errors.newPassword"
+            @blur="validateNow"
+          />
 
-        <BaseButton
-          type="submit"
-          variant="primary"
-          block
-          :loading="loading"
-        >
-          Сохранить пароль
-        </BaseButton>
-      </form>
-    </div>
+          <BaseInput
+            v-model="values.confirmPassword"
+            label="Подтвердите пароль"
+            type="password"
+            placeholder="Повторите пароль"
+            autocomplete="new-password"
+            required
+            :error="errors.confirmPassword"
+            @blur="validateNow"
+            class="field-gap"
+          />
+
+          <BaseButton
+            variant="primary"
+            type="submit"
+            block
+            :loading="loading"
+            class="submit-btn"
+          >
+            Сохранить пароль
+          </BaseButton>
+        </form>
+      </template>
+    </BaseCard>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BaseButton, BaseInput } from '@/components/ui'
 import { useAuthStore } from '@/stores'
+import { useToast } from '@/composables/useToast'
+import { useForm } from '@/composables/useForm'
+import { BaseButton, BaseCard, BaseInput } from '@/components/ui'
 import api from '@/api/api'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 
 const token = ref(null)
 const email = ref('')
 const valid = ref(false)
 const checking = ref(true)
 const errorMessage = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const loading = ref(false)
-const error = ref(null)
-const success = ref(null)
 
-onMounted(() => {
-  checkToken()
+const { values, errors, loading, validateNow, submit: submitForm } = useForm({
+  initial: { newPassword: '', confirmPassword: '' },
+  validate: (v) => {
+    const errs = {}
+    if (!v.newPassword) errs.newPassword = 'Введите пароль'
+    else if (v.newPassword.length < 6) {
+      errs.newPassword = 'Минимум 6 символов'
+    }
+
+    if (!v.confirmPassword) {
+      errs.confirmPassword = 'Повторите пароль'
+    } else if (v.confirmPassword !== v.newPassword) {
+      errs.confirmPassword = 'Пароли не совпадают'
+    }
+
+    return errs
+  },
+  onSubmit: async (v) => {
+    const { data } = await api.post('/auth/reset-password', {
+      token: token.value,
+      new_password: v.newPassword,
+    })
+    return data
+  },
+  onSuccess: (data) => {
+    if (data.access_token) {
+      auth.setTokens(data.access_token, data.refresh_token)
+      auth.setUser(data.user)
+      router.push('/garage')
+    } else {
+      toast.success('Пароль изменён! Войдите с новым паролем.')
+      router.push('/login')
+    }
+  },
+  onError: (err) => {
+    toast.error(err.response?.data?.error || 'Ошибка смены пароля')
+  },
 })
 
+onMounted(checkToken)
+
 async function checkToken() {
-  token.value = route.params.token
+  token.value = route.params.token || null
 
   if (!token.value) {
     valid.value = false
@@ -94,94 +136,82 @@ async function checkToken() {
   }
 
   try {
-    const response = await api.get(`/auth/check-reset-token/${token.value}`)
-    email.value = response.data.email
+    const { data } = await api.get(`/auth/check-reset-token/${token.value}`)
+    email.value = data.email
     valid.value = true
   } catch (err) {
     valid.value = false
-    errorMessage.value = err.response?.data?.error || 'Ссылка недействительна или истекла.'
+    errorMessage.value =
+      err.response?.data?.error || 'Ссылка недействительна или истекла.'
   } finally {
     checking.value = false
   }
 }
 
 async function submit() {
-  error.value = null
-  success.value = null
-
-  if (newPassword.value.length < 6) {
-    error.value = 'Пароль должен быть минимум 6 символов'
-    return
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    error.value = 'Пароли не совпадают'
-    return
-  }
-
-  loading.value = true
-
-  try {
-    const response = await api.post('/auth/reset-password', {
-      token: token.value,
-      new_password: newPassword.value,
-    })
-
-    if (response.data.access_token) {
-      auth.setTokens(response.data.access_token, response.data.refresh_token)
-      auth.setUser(response.data.user)
-      router.push('/garage')
-    } else {
-      success.value = 'Пароль успешно изменён!'
-      setTimeout(() => {
-        router.push('/login')
-      }, 3000)
-    }
-  } catch (err) {
-    error.value = err.response?.data?.error || 'Ошибка смены пароля'
-  } finally {
-    loading.value = false
-  }
+  await submitForm()
 }
 </script>
 
 <style scoped>
-.auth-container {
+.auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
-  padding: 20px;
+  padding: 16px;
 }
 
 .auth-card {
-  max-width: 400px;
+  max-width: 440px;
   width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 16px;
-  padding: 40px 32px;
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+}
+
+.auth-header i {
+  font-size: 42px;
+  line-height: 1;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
 .auth-header h1 {
-  font-size: 28px;
+  font-size: 1.6rem;
+  font-weight: 700;
   margin: 0 0 8px 0;
-  color: var(--text-primary);
 }
 
 .auth-header p {
   color: var(--text-muted);
   margin: 0;
+  font-size: 0.95rem;
+}
+
+.auth-header strong {
+  color: var(--text-primary);
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .reset-link {
-  display: block;
+  display: inline-block;
   margin-top: 16px;
   color: var(--accent);
   text-decoration: none;
@@ -189,29 +219,14 @@ async function submit() {
 }
 
 .reset-link:hover {
-  color: var(--accent-hover);
   text-decoration: underline;
 }
 
-.message {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  margin: 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.field-gap {
+  margin-top: 14px;
 }
 
-.message-error {
-  background: var(--danger-trans);
-  border: 1px solid var(--danger);
-  color: var(--danger-text);
-}
-
-.message-success {
-  background: var(--success-trans);
-  border: 1px solid var(--success);
-  color: var(--success-text);
+.submit-btn {
+  margin-top: 16px;
 }
 </style>

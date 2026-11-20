@@ -15,7 +15,7 @@ export default {
     computed: {
         progressPercent() {
             if (!this.maintenance.planned_mileage) return 0;
-            const current = this.maintenance.moto_mileage; 
+            const current = this.maintenance.moto_mileage;
             const planned = this.maintenance.planned_mileage;
             return Math.min((current / planned) * 100, 100);
         }
@@ -39,7 +39,7 @@ export default {
                 <span v-else style="color: var(--warning)"><i class="fa fa-exclamation-triangle" style="margin-right: 10px;"></i> Пора обслужить</span>
             </div>
             <div class="info-desc">{{ maintenance.title || 'Обслуживание' }}</div>
-            
+
             <div class="info-progress">
                 <div class="progress-track">
                     <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -100,13 +100,13 @@ export default {
 .moto-name {
     font-size: 14px;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .distance-badge {
     font-size: 11px;
     font-weight: 500;
-    color: #fbbf24; /* Желтый цвет, как на скриншоте */
+    color: var(--warning);
     background: rgba(251, 191, 36, 0.1);
     padding: 2px 8px;
     border-radius: 6px;
@@ -114,7 +114,7 @@ export default {
 
 .info-desc {
     font-size: 13px;
-    color: #8b8b9e; /* Серый цвет описания */
+    color: var(--text-muted);
     margin-bottom: 2px;
 }
 
@@ -128,14 +128,14 @@ export default {
 .progress-track {
     flex: 1;
     height: 4px;
-    background: #2d2d3d; /* Цвет фона трека */
+    background: var(--bg-card);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background: #7c3aed; /* Фиолетовый цвет заполнения */
+    background: #7c3aed;
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -154,16 +154,16 @@ export default {
         flex-wrap: wrap;
         padding: 12px;
     }
-    
+
     .card-info {
         width: 100%;
         order: 2;
     }
-    
+
     .card-icon {
         order: 1;
     }
-    
+
     .card-action {
         order: 3;
         margin-left: auto;

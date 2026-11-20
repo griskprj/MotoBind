@@ -259,8 +259,11 @@
                                 <div class="step-header-inner">
                                     <span class="step-title">{{ step.title }}</span>
                                 </div>
-
-                                <p v-if="step.text" class="step-text">{{ step.text }}</p>
+                                <MarkdownRenderer
+                                    v-if="step.text"
+                                    :content="step.text"
+                                    class="step-text-md"
+                                />
 
                                 <div v-if="step.image" class="step-image">
                                     <img :src="getImageUrl(step.image)" :alt="step.title" loading="lazy" />
@@ -363,6 +366,7 @@ import formatDate from '@/utils/DateFormatter.js'
 import Header from '../components/Header.vue'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 import { BaseButton } from '@/components/ui'
+import MarkdownRenderer from '@/components/learning/MarkdownRenderer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -1048,11 +1052,11 @@ function addFooter(pdf, manualData) {
     color: var(--text-primary);
 }
 
-.step-text {
-    font-size: 15px;
-    color: var(--text-secondary);
-    margin: 0 0 10px 0;
-    line-height: 1.7;
+.step-text-md {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 4px 0 10px 0;
+  line-height: 1.7;
 }
 
 .step-image {

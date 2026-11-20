@@ -96,6 +96,13 @@
           <p class="fast-action-text">Модерация мануалов</p>
         </router-link>
 
+        <router-link class="fast-action-card link" to="/admin/services">
+          <div class="action-card-icon">
+            <i class="fa fa-wrench"></i>
+          </div>
+          <p class="fast-action-text">Модерация услуг</p>
+        </router-link>
+
         <div @click="showNewsletterModal = true" class="fast-action-card">
           <div class="action-card-icon">
             <i class="fa fa-file-text"></i>

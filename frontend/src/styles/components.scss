@@ -676,3 +676,103 @@ button,
     padding: 0.5rem 0.7rem;
   }
 }
+
+
+/* ===== DIAGNOSTIC RESULT CARDS ===== */
+.diag-card {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--border-color);
+}
+
+.diag-card--info    { border-left-color: var(--info); }
+.diag-card--warning { border-left-color: var(--warning); }
+.diag-card--danger  { border-left-color: var(--danger); }
+
+.diag-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.diag-card__icon {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.diag-card--info    .diag-card__icon { background: var(--info-trans);    color: var(--info-text); }
+.diag-card--warning .diag-card__icon { background: var(--warning-trans); color: var(--warning-text); }
+.diag-card--danger  .diag-card__icon { background: var(--danger-trans);  color: var(--danger-text); }
+
+.diag-card__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.diag-card__title {
+  font-size: 14px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+}
+
+.diag-card__category {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.diag-card__score {
+  font-size: 14px;
+  font-weight: var(--fw-bold);
+  color: var(--accent-text);
+  padding: 4px 10px;
+  background: var(--accent-trans);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.diag-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 44px;
+}
+
+.diag-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.diag-card__label {
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+.diag-card__value {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--leading-base);
+}
+
+@media (max-width: 640px) {
+  .diag-card__body { padding-left: 0; }
+  .diag-card__score { font-size: 12px; padding: 3px 8px; }
+}

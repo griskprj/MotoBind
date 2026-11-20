@@ -1,0 +1,60 @@
+// ============================================================
+// Utilities — минимальный набор
+// ============================================================
+
+@use './breakpoints' as *;
+
+// ---------- A11y ----------
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+// ---------- Layout ----------
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+
+  @include md-up {
+    padding-inline: var(--space-6);
+  }
+}
+
+// Вертикальный стек с настраиваемым gap.
+// Использование: <div class="stack" style="--stack-gap: var(--space-4)">
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-4));
+}
+
+// Горизонтальный кластер с wrap.
+// Использование: <div class="cluster" style="--cluster-gap: var(--space-3)">
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster-gap, var(--space-3));
+}
+
+// Адаптивная сетка.
+// Использование: <div class="grid-auto" style="--grid-min: 280px">
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--grid-min, 280px)), 1fr)
+  );
+  gap: var(--grid-gap, var(--space-4));
+}

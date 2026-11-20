@@ -309,13 +309,16 @@
                 required
               />
 
-              <BaseTextarea
-                v-model="step.text"
-                label="Описание шага"
-                :placeholder="`Подробное описание шага ${index + 1}`"
-                :maxlength="5000"
-                :rows="3"
-              />
+              <div class="form-group">
+                <label class="section-label">Описание шага (markdown)</label>
+                <MdEditor
+                  v-model="step.text"
+                  :toolbars="stepEditorToolbars"
+                  language="ru-RU"
+                  preview-theme="github"
+                  style="height: 220px"
+                />
+              </div>
 
               <div class="form-row">
                 <BaseInput
@@ -435,6 +438,9 @@ import {
   BaseCard,
 } from '@/components/ui'
 
+import { MdEditor } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -471,6 +477,13 @@ const form = reactive({
 })
 
 const torqueItems = ref([])
+
+const stepEditorToolbars = [
+  'bold', 'italic', '-', 'title', 'quote',
+  'unorderedList', 'orderedList',
+  '-', 'code', 'link',
+  '=', 'preview', 'fullscreen',
+]
 
 // ===== Computed =====
 const availableTemplates = computed(() => {

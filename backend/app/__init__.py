@@ -1,7 +1,7 @@
 import os
 
 from app.exceptions import register_error_handlers
-from app.extensions import cors, db, jwt, mail, migrate, swagger
+from app.extensions import cors, db, jwt, mail, migrate, swagger, limiter
 from app.scheduler import start_scheduler
 from config import settings
 from flask import Flask, jsonify, send_from_directory
@@ -47,6 +47,7 @@ def create_app(config_override=None):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    limiter.init_app(app)
     swagger.init_app(app)
     mail.init_app(app)
     register_error_handlers(app)
@@ -88,13 +89,25 @@ def create_app(config_override=None):
     def version():
         return jsonify({"version": __version__})
 
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify(error="Слишком много запросов. Попробуйте позже."), 429
+
     from app.api.admin import admin
     from app.api.auth import auth
+    from app.api.booking import booking
+    from app.api.business import business
+    from app.api.components import components
+    from app.api.diagnostics import diagnostics
+    from app.api.learning import learning
+    from app.api.learning_admin import learning_admin
     from app.api.maintenance import maintenance
+    from app.api.maintenance_event import maintenance_events
     from app.api.manuals import manual
     from app.api.motorcycle import motorcycle
     from app.api.notifications import notifications_bp
     from app.api.reminders import reminders_bp
+    from app.api.services import services
     from app.api.social import social_bp
     from app.api.statistic import statistic
     from app.api.user import user
@@ -109,5 +122,15 @@ def create_app(config_override=None):
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(social_bp, url_prefix="/api/social")
     app.register_blueprint(reminders_bp, url_prefix="/api/reminders")
+    app.register_blueprint(business, url_prefix="/api/business")
+    app.register_blueprint(services, url_prefix="/api/services")
+    app.register_blueprint(booking, url_prefix="/api/bookings")
+    app.register_blueprint(diagnostics, url_prefix="/api/diagnostics")
+    app.register_blueprint(learning, url_prefix="/api/learning")
+    app.register_blueprint(learning_admin, url_prefix="/api/learning/admin")
+    app.register_blueprint(
+        components, url_prefix="/api/motorcycle/<int:moto_id>/components"
+    )
+    app.register_blueprint(maintenance_events, url_prefix="/api/maintenance/events")
 
     return app

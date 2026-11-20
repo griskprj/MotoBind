@@ -1,14 +1,14 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Dict
 
-from sqlalchemy.orm import selectinload
-
-from app.extensions import db
 from app.exceptions import ForbiddenError, NotFoundError
+from app.extensions import db
 from app.models.maintenance import MaintenanceStatus
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
 from app.models.user import User
+from app.services.health_service import HealthService
+from sqlalchemy.orm import selectinload
 
 
 class StatisticService:
@@ -44,7 +44,7 @@ class StatisticService:
 
         for m in motorcycles:
             moto_data.append({"id": m.id, "name": m.name})
-            
+
             for maintenance in m.maintenances:
                 if maintenance.status == MaintenanceStatus.PLANNED.value:
                     plan_count += 1
@@ -64,9 +64,7 @@ class StatisticService:
     def get_moto_garage_stats(moto_id: int, user_id: int) -> Dict[str, Any]:
         """Получить детальную статистику по мотоциклу для гаража"""
         moto = db.session.get(
-            Motorcycle,
-            moto_id,
-            options=[selectinload(Motorcycle.maintenances)]
+            Motorcycle, moto_id, options=[selectinload(Motorcycle.maintenances)]
         )
         user = db.session.get(User, user_id)
 
@@ -77,8 +75,14 @@ class StatisticService:
         if int(moto.owner_id) != int(user.id):
             raise ForbiddenError("Вы не являетесь владельцем этого мотоцикла")
 
-        planned = [m for m in moto.maintenances if m.status == MaintenanceStatus.PLANNED.value]
-        completed = [m for m in moto.maintenances if m.status == MaintenanceStatus.COMPLETED.value]
+        planned = [
+            m for m in moto.maintenances if m.status == MaintenanceStatus.PLANNED.value
+        ]
+        completed = [
+            m
+            for m in moto.maintenances
+            if m.status == MaintenanceStatus.COMPLETED.value
+        ]
 
         planned_maintenances = sorted(
             planned,
@@ -92,18 +96,22 @@ class StatisticService:
             reverse=True,
         )[:5]
 
-        nodes = []  # TODO: реализовать узлы здоровья
+        health = HealthService.get_motorcycle_health(user_id=user_id, moto_id=moto_id)
+        nodes = health["items"]
 
         completed_with_cost = [m for m in completed if m.cost]
         total_cost = sum(m.cost for m in completed_with_cost)
-        avg_cost = round(total_cost / len(completed_with_cost)) if completed_with_cost else 0
+        avg_cost = (
+            round(total_cost / len(completed_with_cost)) if completed_with_cost else 0
+        )
         max_cost = max((m.cost for m in completed_with_cost), default=0)
 
         today = date.today()
         month_start_date = today.replace(day=1)
 
         month_cost = sum(
-            m.cost for m in completed_with_cost
+            m.cost
+            for m in completed_with_cost
             if m.completed_date and m.completed_date >= month_start_date
         )
 
@@ -118,30 +126,42 @@ class StatisticService:
                 month_end = date(month_date.year, month_date.month + 1, 1)
 
             month_cost_total = sum(
-                m.cost for m in completed_with_cost
+                m.cost
+                for m in completed_with_cost
                 if m.completed_date and month_start_dt <= m.completed_date < month_end
             )
 
-            money_chart_data.append({
-                "month": f"{month_date.strftime('%b')} {month_date.year}",
-                "value": month_cost_total
-            })
+            money_chart_data.append(
+                {
+                    "month": f"{month_date.strftime('%b')} {month_date.year}",
+                    "value": month_cost_total,
+                }
+            )
 
         return {
             "motorcycle": moto.to_dict(),
             "planned_maintenances": [m.to_dict() for m in planned_maintenances],
             "recent_maintenances": [m.to_dict() for m in recent_maintenances],
             "nodes": nodes,
+            "health": {
+                "overall": health["overall"],
+                "counts": health["counts"],
+                "safety_attention": health["safety_attention"],
+                "is_estimate": True,
+            },
             "total_cost": total_cost,
             "max_cost": max_cost,
             "average_cost": avg_cost,
             "month_cost": month_cost,
             "money_chart_data": money_chart_data,
             "total_maintenances": len(completed),
-            "month_maintenances": len([
-                m for m in completed
-                if m.completed_date and m.completed_date >= month_start_date
-            ]),
+            "month_maintenances": len(
+                [
+                    m
+                    for m in completed
+                    if m.completed_date and m.completed_date >= month_start_date
+                ]
+            ),
             "freq_chart_data": [],
         }
 
@@ -170,7 +190,7 @@ class StatisticService:
                     overdue += 1
                 elif maint.status == MaintenanceStatus.PLANNED.value:
                     planned += 1
-                
+
                 maint_dict = maint.to_dict()
                 maint_dict["moto_name"] = moto.name
                 maintenances.append(maint_dict)
@@ -203,20 +223,29 @@ class StatisticService:
             for maintenance in motorcycle.maintenances:
                 maint_dict = maintenance.to_dict()
                 maint_dict["moto_name"] = motorcycle.name
-                
+
                 if maintenance.status == MaintenanceStatus.PLANNED.value:
                     planned_count += 1
                 elif maintenance.status == MaintenanceStatus.OVERDUE.value:
                     overdue_count += 1
                 elif maintenance.status == MaintenanceStatus.COMPLETED.value:
                     completed_count += 1
-                
+
                 all_maintenances.append(maint_dict)
 
         return {
             "motorcycles": [m.to_dict() for m in motorcycles],
-            "history_maintenances": [m for m in all_maintenances if m["status"] == MaintenanceStatus.COMPLETED.value],
-            "planned_maintenances": [m for m in all_maintenances if m["status"] in (MaintenanceStatus.PLANNED.value, MaintenanceStatus.OVERDUE.value)],
+            "history_maintenances": [
+                m
+                for m in all_maintenances
+                if m["status"] == MaintenanceStatus.COMPLETED.value
+            ],
+            "planned_maintenances": [
+                m
+                for m in all_maintenances
+                if m["status"]
+                in (MaintenanceStatus.PLANNED.value, MaintenanceStatus.OVERDUE.value)
+            ],
             "all_maintenances_count": len(all_maintenances),
             "planned_maintenances_count": planned_count,
             "overdue_maintenances_count": overdue_count,
@@ -231,12 +260,25 @@ class StatisticService:
 
         now = datetime.now()
         registrations_data = []
-        month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+        month_names = [
+            "Янв",
+            "Фев",
+            "Мар",
+            "Апр",
+            "Май",
+            "Июн",
+            "Июл",
+            "Авг",
+            "Сен",
+            "Окт",
+            "Ноя",
+            "Дек",
+        ]
 
         for i in range(11, -1, -1):
             month_date = now.replace(day=1) - timedelta(days=i * 30)
             month_start_dt = datetime(month_date.year, month_date.month, 1)
-            
+
             if month_date.month == 12:
                 month_end = datetime(month_date.year + 1, 1, 1)
             else:

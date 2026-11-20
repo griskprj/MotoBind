@@ -1,11 +1,12 @@
 import re
-from datetime import datetime, date
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from datetime import date, datetime
+from typing import List, Literal, Optional
 
 from app.schemas.mixins import ISO8601Mixin
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 # --------- Request-схемы ---------
+
 
 class MotorcycleValidatorMixin:
     """Общие валидаторы для схем мотоцикла"""
@@ -37,10 +38,11 @@ class CreateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    drive_type: Literal["chain", "belt", "shaft"] = "chain"
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
-    note: Optional[str] = Field(None, max_length=128)
+    note: Optional[str] = Field(None)
 
     model_config = {"populate_by_name": True}
 
@@ -50,10 +52,11 @@ class UpdateMotorcycleSchema(MotorcycleValidatorMixin, BaseModel):
     years: Optional[int] = Field(None, ge=1900, le=datetime.now().year)
     volume: Optional[int] = Field(None, ge=49, le=4000)
     mileage: Optional[int] = Field(None, ge=0, le=1_000_000)
+    drive_type: Optional[Literal["chain", "belt", "shaft"]] = None
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     vin: Optional[str] = None
-    note: Optional[str] = Field(None, max_length=128)
+    note: Optional[str] = Field(None)
 
     model_config = {"populate_by_name": True}
 
@@ -87,6 +90,7 @@ class MaintenanceShortSchema(ISO8601Mixin, BaseModel):
     status: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    mileage_updated_at: Optional[datetime] = None
 
 
 class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
@@ -100,6 +104,7 @@ class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
     years: Optional[int] = None
     volume: Optional[int] = None
     mileage: Optional[int] = None
+    drive_type: Optional[str] = None
     color: Optional[str] = None
     license_plate: Optional[str] = None
     note: Optional[str] = None
@@ -107,6 +112,7 @@ class MotorcycleShortSchema(ISO8601Mixin, BaseModel):
     photo_url: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    mileage_updated_at: Optional[datetime] = None
 
 
 class MotorcycleDetailSchema(MotorcycleShortSchema):

@@ -1,87 +1,112 @@
 <template>
   <div class="container">
-    <LoadingOverlay :is-loading="loading" text="Загрузка профиля..."/>
+    <!-- Загрузка -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner" />
+    </div>
 
-    <div v-if="profile" class="profile-page">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <img
+    <!-- Профиль -->
+    <div v-else-if="profile" class="profile-layout">
+      <!-- Header -->
+      <BaseCard class="profile-header-card">
+        <div class="profile-header">
+          <AppAvatar
             :src="getAvatarUrl(profile.user.avatar)"
-            :alt="profile.user.username"
-          >
-        </div>
+            :size="120"
+            round
+            class="profile-avatar"
+          />
 
-        <div class="profile-info">
-          <h1 class="profile-username">{{ profile.user.username }}</h1>
+          <div class="profile-info">
+            <h1 class="profile-username">{{ profile.user.username }}</h1>
 
-          <div class="profile-meta">
-            <span v-if="profile.user.location" class="meta-item">
-              <i class="fa fa-map-marker"></i> {{ profile.user.location }}
-            </span>
-            <span v-if="profile.user.motorcycle" class="meta-item">
-              <i class="fa fa-motorcycle"></i> {{ profile.user.motorcycle }}
-            </span>
-            <span v-if="profile.user.experience" class="meta-item">
-              <i class="fa fa-signal"></i> {{ getExperienceLabel(profile.user.experience) }}
-            </span>
-            <span class="meta-item">
-              <i class="fa fa-calendar"></i> С нами с {{ formatDate(profile.user.created_at) }}
-            </span>
+            <div class="profile-meta">
+              <span v-if="profile.user.location" class="meta-item">
+                <i class="fa fa-map-marker" />
+                {{ profile.user.location }}
+              </span>
+              <span v-if="profile.user.motorcycle" class="meta-item">
+                <i class="fa fa-motorcycle" />
+                {{ profile.user.motorcycle }}
+              </span>
+              <span v-if="profile.user.experience" class="meta-item">
+                <i class="fa fa-signal" />
+                {{ getExperienceLabel(profile.user.experience) }}
+              </span>
+              <span class="meta-item">
+                <i class="fa fa-calendar" />
+                С нами с {{ formatDate(profile.user.created_at) }}
+              </span>
+            </div>
+
+            <div v-if="profile.user.bio" class="profile-bio">
+              <i class="fa fa-quote-left" />
+              {{ profile.user.bio }}
+            </div>
           </div>
+        </div>
 
-          <div v-if="profile.user.bio" class="profile-bio">
-            {{ profile.user.bio }}
+        <!-- Статистика -->
+        <div class="profile-stats">
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.posts_count || 0 }}</span>
+            <span class="stat__label">Постов</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.likes_received || 0 }}</span>
+            <span class="stat__label">Лайков</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">{{ profile.user.stats?.comments_received || 0 }}</span>
+            <span class="stat__label">Комментариев</span>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="profile-stats">
-        <div class="stat-item">
-          <span class="stat-value">{{ profile.user.stats?.posts_count || 0 }}</span>
-          <span class="stat-label">Постов</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ profile.user.stats?.likes_received || 0 }}</span>
-          <span class="stat-label">Лайков</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ profile.user.stats?.comments_received || 0 }}</span>
-          <span class="stat-label">Комментариев</span>
-        </div>
-      </div>
+      <!-- Посты -->
+      <BaseCard class="posts-card">
+        <template #header>
+          <div class="section-title">
+            <i class="fa fa-newspaper-o" />
+            Посты {{ profile.user.username }}
+          </div>
+        </template>
 
-      <div class="profile-posts">
-        <h2 class="section-title">
-          <i class="fa fa-newspaper-o"></i> Посты {{ profile.user.username }}
-        </h2>
-
-        <div v-if="profile.recent_posts && profile.recent_posts.length > 0" class="posts-grid">
-          <div
+        <div v-if="profile.recent_posts?.length" class="posts-grid">
+          <article
             v-for="post in profile.recent_posts"
             :key="post.id"
             class="post-preview"
             @click="goToPost(post.id)"
           >
-            <div v-if="post.image" class="post-preview-image">
-              <img :src="getUploadUrl(post.image)" :alt="post.content">
-            </div>
-            <div class="post-preview-content">
-              <p>{{ post.content }}</p>
-              <div class="post-preview-meta">
-                <span><i class="fa fa-heart"></i> {{ post.likes_count || 0 }}</span>
-                <span><i class="fa fa-comment"></i> {{ post.comments_count || 0 }}</span>
+            <img
+              v-if="post.image"
+              :src="getUploadUrl(post.image)"
+              :alt="post.content"
+              class="post-image"
+            >
+
+            <div class="post-preview__body">
+              <p class="post-content">{{ post.content }}</p>
+
+              <div class="post-meta">
+                <span><i class="fa fa-heart" /> {{ post.likes_count || 0 }}</span>
+                <span><i class="fa fa-comment" /> {{ post.comments_count || 0 }}</span>
                 <span>{{ formatDate(post.created_at) }}</span>
               </div>
             </div>
-          </div>
+          </article>
         </div>
 
-        <div v-else class="empty-state">
-          <i class="fa fa-newspaper-o"></i>
-          <p>У {{ profile.user.username }} пока нет постов</p>
-        </div>
-      </div>
+        <BaseEmptyState
+          v-else
+          icon="fa fa-newspaper"
+          title="Пока нет постов"
+          description="Пользователь ещё не публиковал посты"
+        />
+      </BaseCard>
 
+      <!-- Назад -->
       <div class="back-wrapper">
         <BaseButton variant="secondary" icon="fa fa-arrow-left" @click="goBack">
           Назад
@@ -89,22 +114,26 @@
       </div>
     </div>
 
-    <div v-else-if="!loading && error" class="error-state">
-      <i class="fa fa-exclamation-triangle"></i>
-      <h3>Профиль не найден</h3>
-      <p>{{ error }}</p>
-      <BaseButton variant="primary" @click="goBack">Вернуться</BaseButton>
-    </div>
+    <!-- Ошибка -->
+    <BaseCard v-else-if="!loading && error" class="error-card">
+      <BaseEmptyState
+        icon="fa fa-user-slash"
+        variant="danger"
+        title="Профиль не найден"
+        :description="error"
+      >
+        <BaseButton variant="primary" @click="goBack">Вернуться</BaseButton>
+      </BaseEmptyState>
+    </BaseCard>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import LoadingOverlay from '@/components/LoadingOverlay.vue'
-import { BaseButton } from '@/components/ui'
 import { getAvatarUrl, getUploadUrl } from '@/utils/mediaUrl'
 import { getUserExperienceLabel, formatDate } from '@/utils/formatters'
+import { BaseButton, BaseCard, BaseEmptyState, AppAvatar } from '@/components/ui'
 import api from '@/api/api'
 
 const route = useRoute()
@@ -113,6 +142,8 @@ const router = useRouter()
 const loading = ref(true)
 const profile = ref(null)
 const error = ref(null)
+
+const getExperienceLabel = getUserExperienceLabel
 
 onMounted(() => {
   const userId = route.params.id
@@ -127,8 +158,8 @@ onMounted(() => {
 async function loadProfile(userId) {
   loading.value = true
   try {
-    const response = await api.get(`/user/profile/${userId}`)
-    profile.value = response.data
+    const { data } = await api.get(`/user/profile/${userId}`)
+    profile.value = data
   } catch (err) {
     console.error('Ошибка загрузки профиля:', err)
     error.value = err.response?.data?.error || 'Пользователь не найден'
@@ -144,61 +175,56 @@ function goToPost(postId) {
 function goBack() {
   router.back()
 }
-
-// Псевдоним для использования в шаблоне
-const getExperienceLabel = getUserExperienceLabel
 </script>
 
 <style scoped>
 .container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-.profile-page {
-  background: var(--bg-card);
-  border-radius: 20px;
-  padding: 30px;
-  border: 1px solid var(--border-color);
+.profile-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Header ===== */
+.profile-header-card :deep(.base-card__body) {
+  padding: 24px;
 }
 
 .profile-header {
   display: flex;
-  gap: 30px;
-  margin-bottom: 30px;
-  padding-bottom: 30px;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--border-light);
 }
 
 .profile-avatar {
   flex-shrink: 0;
-}
-
-.profile-avatar img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--accent);
+  border: 3px solid var(--accent);
 }
 
 .profile-info {
   flex: 1;
+  min-width: 0;
 }
 
 .profile-username {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 12px 0;
+  margin: 0 0 12px;
+  word-break: break-word;
 }
 
 .profile-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
 .meta-item {
@@ -210,64 +236,68 @@ const getExperienceLabel = getUserExperienceLabel
 }
 
 .meta-item i {
-  color: var(--accent-text);
+  color: var(--accent);
 }
 
 .profile-bio {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: 16px;
   padding: 12px 16px;
   background: var(--bg-secondary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border-left: 3px solid var(--accent);
 }
 
-.profile-stats {
-  display: flex;
-  justify-content: space-evenly;
-  gap: 40px;
-  margin-bottom: 30px;
-  padding: 20px;
-  background: var(--bg-secondary);
-  border-radius: 12px;
+.profile-bio i {
+  color: var(--accent);
+  margin-right: 6px;
+  opacity: 0.7;
 }
 
-.stat-item {
+/* ===== Stats ===== */
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.stat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
 }
 
-.stat-value {
+.stat__value {
   font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
+  line-height: 1.1;
 }
 
-.stat-label {
-  font-size: 13px;
+.stat__label {
+  font-size: 12px;
   color: var(--text-muted);
-  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: var(--fw-semibold);
 }
 
-.profile-posts {
-  margin-bottom: 24px;
-}
-
+/* ===== Posts ===== */
 .section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 20px 0;
   display: flex;
   align-items: center;
   gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .section-title i {
-  color: var(--accent-text);
+  color: var(--accent);
 }
 
 .posts-grid {
@@ -277,111 +307,95 @@ const getExperienceLabel = getUserExperienceLabel
 }
 
 .post-preview {
+  display: flex;
+  flex-direction: column;
   background: var(--bg-secondary);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
 }
 
 .post-preview:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: var(--shadow-md);
 }
 
-.post-preview-image {
+.post-image {
   width: 100%;
   height: 180px;
-  overflow: hidden;
-}
-
-.post-preview-image img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.post-preview-content {
-  padding: 14px;
+.post-preview__body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
 }
 
-.post-preview-content p {
+.post-content {
   font-size: 14px;
   color: var(--text-primary);
-  margin: 0 0 10px 0;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.5;
 }
 
-.post-preview-meta {
+.post-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   font-size: 13px;
   color: var(--text-muted);
+  margin-top: auto;
 }
 
-.post-preview-meta span {
+.post-meta span {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.post-preview-meta i {
-  font-size: 13px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  border: 2px dashed var(--border-color);
-}
-
-.empty-state i {
-  font-size: 32px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  margin: 0;
-}
-
+/* ===== Back ===== */
 .back-wrapper {
-  margin-top: 16px;
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
 }
 
-.error-state {
-  text-align: center;
-  padding: 60px 20px;
-  background: var(--bg-card);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
+/* ===== Loading ===== */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
 }
 
-.error-state i {
-  font-size: 48px;
-  color: var(--danger);
-  margin-bottom: 16px;
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.error-state h3 {
-  font-size: 22px;
-  color: var(--text-primary);
-  margin: 0 0 8px 0;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.error-state p {
-  color: var(--text-secondary);
-  margin-bottom: 20px;
+/* ===== Error ===== */
+.error-card :deep(.base-card__body) {
+  padding: 0;
 }
 
+/* ===== Adaptive ===== */
 @media (max-width: 768px) {
   .profile-header {
     flex-direction: column;
@@ -389,45 +403,51 @@ const getExperienceLabel = getUserExperienceLabel
     text-align: center;
   }
 
-  .profile-avatar img {
-    width: 100px;
-    height: 100px;
-  }
-
   .profile-meta {
     justify-content: center;
   }
 
   .profile-stats {
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .stat__value {
+    font-size: 20px;
   }
 
   .posts-grid {
     grid-template-columns: 1fr;
   }
 
-  .profile-page {
-    padding: 20px;
+  .back-wrapper {
+    width: 100%;
+  }
+
+  .back-wrapper :deep(.base-btn) {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .profile-page {
+  .profile-header-card :deep(.base-card__body) {
     padding: 16px;
   }
 
   .profile-username {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .profile-stats {
-    gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
-  .stat-value {
-    font-size: 20px;
+  .stat__value {
+    font-size: 18px;
+  }
+
+  .stat__label {
+    font-size: 10px;
   }
 }
 </style>

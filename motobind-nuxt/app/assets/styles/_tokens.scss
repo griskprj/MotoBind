@@ -1,0 +1,338 @@
+// ============================================================
+// Design tokens — CSS-переменные
+// ============================================================
+
+:root {
+  color-scheme: light;
+
+  // ==========================================================
+  // Brand
+  // ==========================================================
+  --color-brand: #6D4AFF;
+  --color-brand-hover: #5A3AE0;
+  --color-brand-active: #4A2FC2;
+  --color-brand-soft: #EFEBFF;
+  --color-brand-soft-hover: #E4DDFF;
+
+  --color-primary: var(--color-brand);
+  --color-primary-hover: var(--color-brand-hover);
+  --color-primary-active: var(--color-brand-active);
+  --color-primary-light: var(--color-brand-soft);
+
+  // ==========================================================
+  // Backgrounds
+  // ==========================================================
+  --color-bg: #F7F7FA;
+  --color-bg-secondary: #EEF0F4;
+
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F8F9FB;
+  --color-surface-hover: #F0F2F5;
+  --color-surface-active: #E9EBF0;
+
+  // ==========================================================
+  // Sidebar / Header (в светлой теме — светлые)
+  // ==========================================================
+  --color-sidebar: #FFFFFF;
+  --color-sidebar-secondary: #F8F9FB;
+  --color-sidebar-hover: #F0F2F5;
+  --color-sidebar-active: #E9EBF0;
+
+  --color-header: #FFFFFF;
+
+  // ==========================================================
+  // Text
+  // ==========================================================
+  --color-text: #171B21;
+  --color-text-secondary: #66707D;
+  --color-text-tertiary: #929BA7;
+  --color-text-disabled: #B5BCC5;
+
+  --color-text-inverse: #FFFFFF;
+  --color-text-inverse-secondary: #C8D0D9;
+
+  // ==========================================================
+  // Borders
+  // ==========================================================
+  --color-border: #DDE1E7;
+  --color-border-light: #E9ECF0;
+  --color-border-dark: #C9CED6;
+
+  // ==========================================================
+  // Status
+  // ==========================================================
+  --color-success: #18A66A;
+  --color-success-soft: #E7F7F0;
+  --color-success-strong: #128455;
+
+  --color-warning: #D88919;
+  --color-warning-soft: #FFF4DF;
+  --color-warning-strong: #B56F0F;
+
+  --color-danger: #D94A4A;
+  --color-danger-soft: #FCEAEA;
+  --color-danger-strong: #B93636;
+
+  --color-info: #3E82D7;
+  --color-info-soft: #EAF3FD;
+  --color-info-strong: #2E68B3;
+
+  // ==========================================================
+  // Focus
+  // ==========================================================
+  --color-focus: rgb(109 74 255 / 35%);
+  --shadow-focus: 0 0 0 3px var(--color-focus);
+
+  // ==========================================================
+  // Shadows
+  // ==========================================================
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 4%);
+  --shadow-md: 0 4px 12px rgb(16 24 40 / 6%);
+  --shadow-lg: 0 10px 30px rgb(16 24 40 / 8%);
+  --shadow-modal: 0 8px 24px rgb(16 24 40 / 12%);
+
+  // ==========================================================
+  // Spacing
+  // ==========================================================
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --space-12: 96px;
+
+  // ==========================================================
+  // Typography
+  // ==========================================================
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Courier New',
+    monospace;
+
+  --text-xs: 0.75rem;    // 12
+  --text-sm: 0.875rem;   // 14
+  --text-base: 1rem;     // 16
+  --text-lg: 1.125rem;   // 18
+  --text-xl: 1.25rem;    // 20
+  --text-2xl: 1.5rem;    // 24
+  --text-3xl: 2rem;      // 32
+  --text-4xl: 2.5rem;    // 40
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-base: 1.5;
+  --leading-relaxed: 1.6;
+
+  // ==========================================================
+  // Radius
+  // ==========================================================
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  // ==========================================================
+  // Transitions
+  // ==========================================================
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  // ==========================================================
+  // Z-index
+  // ==========================================================
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 1000;
+  --z-modal: 1100;
+  --z-popover: 1200;
+  --z-toast: 1300;
+
+  // ==========================================================
+  // Bridge (LEGACY — использовать только в старом коде)
+  // ==========================================================
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-card: var(--color-surface);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-input: var(--color-surface);
+  --bg-dropdown: var(--color-surface);
+
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --text-inverse: var(--color-text-inverse);
+
+  --border-color: var(--color-border);
+  --border-light: var(--color-border-light);
+  --border-input: var(--color-border);
+
+  --accent: var(--color-brand);
+  --accent-hover: var(--color-brand-hover);
+  --accent-light: var(--color-brand-soft);
+  --accent-trans: color-mix(in srgb, var(--color-brand) 15%, transparent);
+  --accent-text: var(--color-brand);
+
+  --danger: var(--color-danger);
+  --danger-hover: var(--color-danger-strong);
+  --danger-trans: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  --danger-text: var(--color-danger);
+
+  --success: var(--color-success);
+  --success-hover: var(--color-success-strong);
+  --success-trans: color-mix(in srgb, var(--color-success) 15%, transparent);
+  --success-text: var(--color-success);
+
+  --warning: var(--color-warning);
+  --warning-hover: var(--color-warning-strong);
+  --warning-trans: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  --warning-text: var(--color-warning);
+
+  --info: var(--color-info);
+  --info-hover: var(--color-info-strong);
+  --info-trans: color-mix(in srgb, var(--color-info) 15%, transparent);
+  --info-text: var(--color-info);
+}
+
+// ============================================================
+// Dark theme
+//
+// Включается через [data-theme="dark"] на <html>.
+// CSS-переменные переопределяются на том же уровне.
+// ============================================================
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  // Backgrounds
+  --color-bg: #0D1117;
+  --color-bg-secondary: #111820;
+
+  --color-surface: #151B23;
+  --color-surface-secondary: #1A212A;
+  --color-surface-hover: #202832;
+  --color-surface-active: #26313D;
+
+  // Sidebar / Header
+  --color-sidebar: #090E14;
+  --color-sidebar-secondary: #0F161F;
+  --color-sidebar-hover: #16212C;
+  --color-sidebar-active: #1D2B39;
+
+  --color-header: #0B1118;
+
+  // Text
+  --color-text: #F1F3F5;
+  --color-text-secondary: #9AA5B1;
+  --color-text-tertiary: #6F7A87;
+  --color-text-disabled: #4E5966;
+
+  --color-text-inverse: #161A20;
+  --color-text-inverse-secondary: #66707D;
+
+  // Borders
+  --color-border: #2A333F;
+  --color-border-light: #222B35;
+  --color-border-dark: #394452;
+
+  // Brand
+  --color-brand: #8B7CFF;
+  --color-brand-hover: #9A8DFF;
+  --color-brand-active: #7869EA;
+  --color-brand-soft: #27223F;
+  --color-brand-soft-hover: #2F2A4D;
+
+  --color-primary: var(--color-brand);
+  --color-primary-hover: var(--color-brand-hover);
+  --color-primary-active: var(--color-brand-active);
+  --color-primary-light: var(--color-brand-soft);
+
+  // Status
+  --color-success: #35C98A;
+  --color-success-soft: #18382D;
+  --color-success-strong: #4ADE9C;
+
+  --color-warning: #F2A93B;
+  --color-warning-soft: #3A2C18;
+  --color-warning-strong: #FFC15C;
+
+  --color-danger: #F06A6A;
+  --color-danger-soft: #3D2023;
+  --color-danger-strong: #FF8585;
+
+  --color-info: #62A4F2;
+  --color-info-soft: #1C2E45;
+  --color-info-strong: #82B7F5;
+
+  // Focus
+  --color-focus: rgb(139 124 255 / 40%);
+
+  // Shadows
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 25%);
+  --shadow-lg: 0 10px 30px rgb(0 0 0 / 35%);
+  --shadow-modal: 0 8px 24px rgb(0 0 0 / 50%);
+
+  // Bridge (legacy)
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-card: var(--color-surface);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-input: var(--color-surface-secondary);
+  --bg-dropdown: var(--color-surface-secondary);
+
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --text-inverse: var(--color-text-inverse);
+
+  --border-color: var(--color-border);
+  --border-light: var(--color-border-light);
+  --border-input: var(--color-border);
+
+  --accent: var(--color-brand);
+  --accent-hover: var(--color-brand-hover);
+  --accent-light: var(--color-brand-soft);
+  --accent-trans: color-mix(in srgb, var(--color-brand) 20%, transparent);
+  --accent-text: var(--color-brand);
+
+  --danger: var(--color-danger);
+  --danger-hover: var(--color-danger-strong);
+  --danger-trans: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --danger-text: var(--color-danger);
+
+  --success: var(--color-success);
+  --success-hover: var(--color-success-strong);
+  --success-trans: color-mix(in srgb, var(--color-success) 20%, transparent);
+  --success-text: var(--color-success);
+
+  --warning: var(--color-warning);
+  --warning-hover: var(--color-warning-strong);
+  --warning-trans: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  --warning-text: var(--color-warning);
+
+  --info: var(--color-info);
+  --info-hover: var(--color-info-strong);
+  --info-trans: color-mix(in srgb, var(--color-info) 20%, transparent);
+  --info-text: var(--color-info);
+}
+
+// ============================================================
+// System preferences
+// ============================================================
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
+  }
+}

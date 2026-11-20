@@ -38,6 +38,19 @@ export const useMaintenancesStore = defineStore('maintenances', () => {
       tab.value !== 'all'
   )
 
+  const attention = computed(() => {
+    const list = all.value.filter(
+      (m) => m.status === 'overdue' || m.status === 'planned'
+    )
+    return list.sort((a, b) => {
+      // сначала overdue, потом planned
+      if (a.status !== b.status) {
+        return a.status === 'overdue' ? -1 : 1
+      }
+      return (a.planned_mileage || 0) - (b.planned_mileage || 0)
+    })
+  })
+
   const filtered = computed(() => {
     let list = [...all.value]
 
@@ -163,6 +176,7 @@ export const useMaintenancesStore = defineStore('maintenances', () => {
     filters,
     tab,
     sortBy,
+    attention,
 
     completed,
     planned,
