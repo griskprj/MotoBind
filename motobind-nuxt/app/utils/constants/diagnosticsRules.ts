@@ -977,3 +977,176 @@ export function diagnose(selectedSymptoms, answers, { lockedGroup = null, thresh
 
   return results.sort((a, b) => b.score - a.score)
 }
+
+
+export interface DiagnosticRuleValidationIssue {
+  severity: 'error' | 'warning'
+  code: string
+  message: string
+}
+
+/** Checks rule references and coverage before Nuxt starts or builds. */
+export function validateDiagnosticRuleData(): DiagnosticRuleValidationIssue[] {
+  const issues: DiagnosticRuleValidationIssue[] = []
+  const addIssue = (severity: DiagnosticRuleValidationIssue['severity'], code: string, message: string) => {
+    issues.push({ severity, code, message })
+  }
+  const groups = new Set(SYMPTOM_GROUPS.map(group => group.id))
+  const symptomById = new Map(SYMPTOMS.map(symptom => [symptom.id, symptom]))
+  const questionById = new Map(QUESTIONS.map(question => [question.id, question]))
+  const usedSymptomIds = new Set<string>()
+  const usedQuestionIds = new Set<string>()
+
+  const checkUniqueIds = (items: Array<{ id: string }>, kind: string) => {
+    const seen = new Set<string>()
+    for (const item of items) {
+      if (seen.has(item.id)) addIssue('error', 'duplicate-id', `Повторяется ID ${kind}: ${item.id}`)
+      seen.add(item.id)
+    }
+  }
+
+  checkUniqueIds(SYMPTOM_GROUPS, 'группы')
+  checkUniqueIds(SYMPTOMS, 'симптома')
+  checkUniqueIds(QUESTIONS, 'вопроса')
+  checkUniqueIds(RULES, 'правила')
+
+  for (const symptom of SYMPTOMS) {
+    if (!groups.has(symptom.group)) {
+      addIssue('error', 'unknown-symptom-group', `Симптом «${symptom.id}» ссылается на неизвестную группу «${symptom.group}».`)
+    }
+  }
+
+  let questionStructureIsValid = true
+  for (const question of QUESTIONS) {
+    if (question.group && !groups.has(question.group)) {
+      addIssue('error', 'unknown-question-group', `Вопрос «${question.id}» ссылается на неизвестную группу «${question.group}».`)
+      questionStructureIsValid = false
+    }
+    if (!Array.isArray(question.options) || question.options.length === 0) {
+      addIssue('error', 'question-without-options', `У вопроса «${question.id}» нет вариантов ответа.`)
+      questionStructureIsValid = false
+    } else {
+      checkUniqueIds(question.options, `варианта ответа в вопросе «${question.id}»`)
+    }
+    if (question.showIf && typeof question.showIf !== 'function') {
+      addIssue('error', 'invalid-question-condition', `У вопроса «${question.id}» условие показа должно быть функцией.`)
+      questionStructureIsValid = false
+    }
+  }
+
+  for (const rule of RULES) {
+    const requiredSymptoms = Array.isArray(rule.symptoms) ? rule.symptoms : []
+    const anySymptoms = Array.isArray(rule.symptomsAny) ? rule.symptomsAny : []
+    const symptomRefs = [...requiredSymptoms, ...anySymptoms]
+    let ruleReferencesValid = true
+
+    if (rule.symptoms !== undefined && !Array.isArray(rule.symptoms)) {
+      addIssue('error', 'invalid-rule-symptoms', `Симптомы правила «${rule.id}» должны быть списком.`)
+      ruleReferencesValid = false
+    }
+    if (rule.symptomsAny !== undefined && !Array.isArray(rule.symptomsAny)) {
+      addIssue('error', 'invalid-rule-symptoms-any', `Дополнительные симптомы правила «${rule.id}» должны быть списком.`)
+      ruleReferencesValid = false
+    }
+    if (new Set(symptomRefs).size !== symptomRefs.length) {
+      addIssue('error', 'duplicate-rule-symptom', `В правиле «${rule.id}» повторяется ссылка на симптом.`)
+      ruleReferencesValid = false
+    }
+
+    if (symptomRefs.length === 0) {
+      addIssue('error', 'rule-without-symptoms', `Правило «${rule.id}» не привязано ни к одному симптому.`)
+      ruleReferencesValid = false
+    }
+
+    for (const symptomId of symptomRefs) {
+      usedSymptomIds.add(symptomId)
+      if (!symptomById.has(symptomId)) {
+        addIssue('error', 'unknown-rule-symptom', `Правило «${rule.id}» ссылается на неизвестный симптом «${symptomId}».`)
+        ruleReferencesValid = false
+      }
+    }
+
+    if (rule.category && !groups.has(rule.category)) {
+      addIssue('error', 'unknown-rule-category', `Правило «${rule.id}» использует неизвестную категорию «${rule.category}».`)
+      ruleReferencesValid = false
+    }
+    if (!['info', 'warning', 'danger'].includes(rule.severity)) {
+      addIssue('error', 'invalid-rule-severity', `У правила «${rule.id}» неизвестный уровень серьёзности «${rule.severity}».`)
+    }
+    if (![rule.title, rule.cause, rule.advice].every(value => typeof value === 'string' && value.trim())) {
+      addIssue('error', 'incomplete-rule-copy', `У правила «${rule.id}» должны быть заполнены название, причина и рекомендация.`)
+    }
+
+    const answerEntries = rule.answers && typeof rule.answers === 'object' && !Array.isArray(rule.answers)
+      ? Object.entries(rule.answers)
+      : []
+    const answersForCoverage: Record<string, string> = {}
+    let answersAreValid = true
+    if (rule.answers !== undefined && (!rule.answers || typeof rule.answers !== 'object' || Array.isArray(rule.answers))) {
+      addIssue('error', 'invalid-rule-answers', `Ответы правила «${rule.id}» должны быть объектом.`)
+      answersAreValid = false
+    }
+    for (const [questionId, allowed] of answerEntries) {
+      usedQuestionIds.add(questionId)
+      const question = questionById.get(questionId)
+      if (!question) {
+        addIssue('error', 'unknown-rule-question', `Правило «${rule.id}» ссылается на неизвестный вопрос «${questionId}».`)
+        answersAreValid = false
+        continue
+      }
+      if (!Array.isArray(question.options) || !Array.isArray(allowed) || allowed.length === 0) {
+        addIssue('error', 'empty-rule-answers', `У правила «${rule.id}» нет допустимых ответов для вопроса «${questionId}».`)
+        answersAreValid = false
+        continue
+      }
+      if (new Set(allowed).size !== allowed.length) {
+        addIssue('error', 'duplicate-rule-answer', `В правиле «${rule.id}» повторяется допустимый ответ для вопроса «${questionId}».`)
+        answersAreValid = false
+      }
+      for (const optionId of allowed) {
+        if (!question.options.some(option => option.id === optionId)) {
+          addIssue('error', 'unknown-rule-answer', `Ответ «${optionId}» из правила «${rule.id}» отсутствует в вопросе «${questionId}».`)
+          answersAreValid = false
+        }
+      }
+      answersForCoverage[questionId] = allowed[0]
+    }
+
+    if (ruleReferencesValid && answersAreValid && questionStructureIsValid) {
+      const sampleSymptoms = new Set([...requiredSymptoms, ...anySymptoms.slice(0, 1)])
+      const reachable = diagnose(sampleSymptoms, answersForCoverage, { threshold: 0.5 })
+        .some(candidate => candidate.id === rule.id)
+      if (!reachable) {
+        addIssue('error', 'unreachable-rule', `Правило «${rule.id}» не срабатывает даже при совпадении заданных симптомов и ответов.`)
+      }
+      const relevantQuestionIds = new Set(getRelevantQuestions(sampleSymptoms).map(question => question.id))
+      for (const questionId of answerEntries.map(([id]) => id)) {
+        if (!relevantQuestionIds.has(questionId)) {
+          addIssue('error', 'unreachable-rule-question', `Вопрос «${questionId}» не показывается для симптомов правила «${rule.id}».`)
+        }
+      }
+    }
+  }
+
+  for (const symptom of SYMPTOMS) {
+    if (!usedSymptomIds.has(symptom.id)) {
+      addIssue('warning', 'uncovered-symptom', `Симптом «${symptom.id}» не участвует ни в одном правиле диагностики.`)
+    }
+  }
+
+  for (const question of QUESTIONS) {
+    if (!usedQuestionIds.has(question.id) && typeof question.showIf !== 'function') {
+      addIssue('warning', 'unreachable-question', `Вопрос «${question.id}» не используется правилами и не имеет условия показа.`)
+    }
+  }
+
+  for (const alert of DIAGNOSTIC_SAFETY_ALERTS) {
+    for (const symptomId of alert.symptoms) {
+      if (!symptomById.has(symptomId)) {
+        addIssue('error', 'unknown-alert-symptom', `Предупреждение «${alert.id}» ссылается на неизвестный симптом «${symptomId}».`)
+      }
+    }
+  }
+
+  return issues
+}

@@ -1,3 +1,16 @@
+import { validateDiagnosticRuleData } from './app/utils/constants/diagnosticsRules'
+
+const diagnosticRuleIssues = validateDiagnosticRuleData()
+const diagnosticRuleErrors = diagnosticRuleIssues.filter(issue => issue.severity === 'error')
+const diagnosticRuleWarnings = diagnosticRuleIssues.filter(issue => issue.severity === 'warning')
+
+if (diagnosticRuleErrors.length) {
+  throw new Error(`Некорректная база диагностики:\n${diagnosticRuleErrors.map(issue => `- [${issue.code}] ${issue.message}`).join('\n')}`)
+}
+if (diagnosticRuleWarnings.length) {
+  console.warn(`Покрытие базы диагностики:\n${diagnosticRuleWarnings.map(issue => `- [${issue.code}] ${issue.message}`).join('\n')}`)
+}
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
