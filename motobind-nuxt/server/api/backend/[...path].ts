@@ -11,11 +11,12 @@ export default defineEventHandler(async (event) => {
   const apiPrefix = String(config.flaskApiPrefix || '/api').replace(/^\/+|\/+$/g, '')
   const path = `/${apiPrefix}/${routePath}`
   const method = getMethod(event)
+  const isRobokassaCallback = routePath === 'payments/robokassa/result'
 
   let body: unknown
   if (!['GET', 'HEAD'].includes(method)) {
     const contentType = getHeader(event, 'content-type') || ''
-    if (contentType.includes('multipart/form-data')) {
+    if (isRobokassaCallback || contentType.includes('multipart/form-data')) {
       body = await readRawBody(event, false)
     } else {
       body = await readBody(event)
@@ -26,6 +27,7 @@ export default defineEventHandler(async (event) => {
     method,
     query: getQuery(event),
     body,
+    ...(isRobokassaCallback ? { skipAuth: true } : {}),
     headers: {
       ...(getHeader(event, 'content-type')
         ? { 'Content-Type': getHeader(event, 'content-type')! }

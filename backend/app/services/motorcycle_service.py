@@ -7,6 +7,8 @@ from app.models.maintenance import Maintenance, MaintenanceStatus
 from app.models.maintenance_event import MaintenanceEvent, MaintenanceWork, WorkKind
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
+from app.models.slot_purchase import SlotPurchase
+from app.models.user import User
 from app.utils.files import delete_file, save_moto_photo
 from app.utils.helpers import get_motorcycle_or_404
 from sqlalchemy.orm import selectinload
@@ -30,6 +32,19 @@ class MotorcycleService:
     @staticmethod
     def create_motorcycle(owner_id: int, **kwargs) -> Motorcycle:
         """Создает мотоцикл."""
+        # Lock the owner's row so simultaneous requests cannot exceed their slot limit.
+        owner = User.query.filter_by(id=owner_id).with_for_update().first()
+        if owner is None:
+            raise ConflictError("Пользователь не найден")
+        purchased_slots = SlotPurchase.query.filter_by(
+            user_id=owner_id, status="paid"
+        ).count()
+        motorcycle_count = Motorcycle.query.filter_by(owner_id=owner_id).count()
+        allowed_slots = 1 + (owner.extra_motorcycle_slots or 0) + purchased_slots
+        if motorcycle_count >= allowed_slots:
+            raise ConflictError(
+                "Свободных мест в гараже нет. Купите дополнительное место за 49 ₽."
+            )
         motorcycle = Motorcycle(owner_id=owner_id, **kwargs)
         db.session.add(motorcycle)
         db.session.commit()

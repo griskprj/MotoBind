@@ -8,12 +8,75 @@ useSeoMeta({
 })
 
 const api = useApi()
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
 
 const { data: motorcycles, pending, error, refresh } = await useAsyncData(
   'garage-list',
   () => api.motorcycle.list(),
   { default: () => [] }
 )
+
+const { data: slotBalance, refresh: refreshSlots } = await useAsyncData(
+  'garage-slot-balance',
+  async () => {
+    try {
+      return await api.payments.motorcycleSlots()
+    } catch {
+      return { motorcycles_count: 0, free_slots: 1, purchased_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }
+    }
+  },
+  { default: () => ({ motorcycles_count: 0, free_slots: 1, purchased_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }) },
+)
+const purchasePending = ref(false)
+const paymentError = ref('')
+
+async function buyMotorcycleSlot() {
+  purchasePending.value = true
+  paymentError.value = ''
+  try {
+    const order = await api.payments.purchaseMotorcycleSlot()
+    window.location.assign(order.payment_url)
+  } catch (e: any) {
+    paymentError.value = e?.message || 'Не удалось перейти к оплате. Попробуйте позже.'
+  } finally {
+    purchasePending.value = false
+  }
+}
+
+onMounted(async () => {
+  if (route.query.payment === 'fail') {
+    toast.error('Платёж не завершён. Место в гараже не добавлено.')
+    await router.replace('/garage')
+    return
+  }
+
+  const invoiceId = route.query.InvId || route.query.InvID
+  if (typeof invoiceId !== 'string' || !/^\d+$/.test(invoiceId)) return
+
+  let paid = false
+  try {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const order = await api.payments.motorcycleSlotPurchaseStatus(invoiceId)
+      if (order.status === 'paid') {
+        paid = true
+        await refreshSlots()
+        break
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    if (paid) {
+      toast.success('Оплата подтверждена. Дополнительное место добавлено.')
+    } else {
+      toast.info('Платёж обрабатывается. Обновите гараж чуть позже.')
+    }
+  } catch {
+    toast.info('Не удалось проверить статус платежа. Обновите гараж чуть позже.')
+  } finally {
+    await router.replace('/garage')
+  }
+})
 </script>
 
 <template>
@@ -32,6 +95,18 @@ const { data: motorcycles, pending, error, refresh } = await useAsyncData(
         Добавить
       </BaseButton>
     </header>
+
+    <section class="slot-offer" aria-live="polite">
+      <div>
+        <strong>Места в гараже: {{ slotBalance.slots_total - slotBalance.motorcycles_count }} свободно</strong>
+        <p v-if="slotBalance.slots_total <= slotBalance.motorcycles_count">Добавьте место для следующего мотоцикла за {{ slotBalance.price }} ₽ — разовый платёж.</p>
+        <p v-else>Первое место бесплатно. Дополнительное место — {{ slotBalance.price }} ₽ разово.</p>
+        <p v-if="paymentError" class="slot-offer__error" role="alert">{{ paymentError }}</p>
+      </div>
+      <BaseButton variant="secondary" :disabled="purchasePending" @click="buyMotorcycleSlot">
+        {{ purchasePending ? 'Переходим к оплате…' : `Купить место · ${slotBalance.price} ₽` }}
+      </BaseButton>
+    </section>
 
     <!-- Загрузка (скелетоны) -->
     <div v-if="pending" class="garage-grid">
@@ -115,6 +190,33 @@ const { data: motorcycles, pending, error, refresh } = await useAsyncData(
   margin-top: var(--space-1);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+}
+
+.slot-offer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface, var(--color-bg-secondary));
+
+  @include sm-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  p {
+    margin-top: var(--space-1);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+  }
+}
+
+.slot-offer__error {
+  color: var(--color-danger) !important;
 }
 
 .garage-grid {

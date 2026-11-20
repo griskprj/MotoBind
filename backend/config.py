@@ -26,6 +26,18 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'motobind@yandex.ru')
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
+    # Robokassa. Payment mode deliberately defaults to test mode.
+    ROBOKASSA_MERCHANT_LOGIN = os.environ.get('ROBOKASSA_MERCHANT_LOGIN', '')
+    ROBOKASSA_PASSWORD_1 = os.environ.get('ROBOKASSA_PASSWORD_1', '')
+    ROBOKASSA_PASSWORD_2 = os.environ.get('ROBOKASSA_PASSWORD_2', '')
+    ROBOKASSA_TEST_PASSWORD_1 = os.environ.get('ROBOKASSA_TEST_PASSWORD_1', '')
+    ROBOKASSA_TEST_PASSWORD_2 = os.environ.get('ROBOKASSA_TEST_PASSWORD_2', '')
+    ROBOKASSA_HASH_ALGORITHM = os.environ.get('ROBOKASSA_HASH_ALGORITHM', 'MD5').upper()
+    ROBOKASSA_TEST_MODE = os.environ.get('ROBOKASSA_TEST_MODE', 'true').lower() == 'true'
+    ROBOKASSA_PAYMENT_OBJECT = os.environ.get('ROBOKASSA_PAYMENT_OBJECT', 'service')
+    ROBOKASSA_TAX = os.environ.get('ROBOKASSA_TAX', 'none')
+    ROBOKASSA_PAYMENT_METHOD = os.environ.get('ROBOKASSA_PAYMENT_METHOD', 'full_payment')
+
     # Cron
     CRON_SECRET = os.getenv("CRON_SECRET", "")
     ENABLE_DEV_SCHEDULER = os.getenv("ENABLE_DEV_SCHEDULER", "true").lower() == "true"

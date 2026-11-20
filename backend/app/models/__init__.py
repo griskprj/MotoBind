@@ -23,6 +23,7 @@ from app.models.reminder import Reminder
 from app.models.reports import Report
 from app.models.service import Service
 from app.models.service_booking import ServiceBooking
+from app.models.slot_purchase import SlotPurchase
 from app.models.user import User
 from app.models.user_course_progress import UserCourseProgress
 from app.models.user_course_state import UserCourseState
@@ -45,6 +46,7 @@ __all__ = [
     "BusinessClientVehicle",
     "Service",
     "ServiceBooking",
+    "SlotPurchase",
     "DiagnosticReport",
     "Lesson",
     "Course",

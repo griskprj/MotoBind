@@ -6,6 +6,7 @@ interface BackendOptions {
   query?: Record<string, any>
   body?: unknown
   headers?: Record<string, string>
+  skipAuth?: boolean
 }
 
 export async function backendRequest<T>(
@@ -15,6 +16,7 @@ export async function backendRequest<T>(
 ): Promise<T> {
   const config = useRuntimeConfig(event)
   const baseURL = config.flaskApiBase
+  const { skipAuth = false, ...fetchOptions } = options
 
 
   let token = getAccessToken(event)
@@ -22,15 +24,15 @@ export async function backendRequest<T>(
   async function execute(token: string) {
     return await $fetch<T>(path, {
       baseURL,
-      ...options,
+      ...fetchOptions,
       headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`
+        ...fetchOptions.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       }
     })
   }
 
-  if (!token) {
+  if (!token && !skipAuth) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
@@ -39,7 +41,7 @@ export async function backendRequest<T>(
   } catch (error: any) {
     const status = error.statusCode ?? error.response?.status
 
-    if (status === 401) {
+    if (!skipAuth && status === 401) {
       const refreshToken = getRefreshToken(event)
       if (refreshToken) {
         try {
