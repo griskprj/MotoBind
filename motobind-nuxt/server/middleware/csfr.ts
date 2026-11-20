@@ -12,6 +12,14 @@ export default defineEventHandler((event) => {
 
     if (['GET', 'HEAD', 'OPTIONS'].includes(method)) return
 
+    // Robokassa calls this server-to-server endpoint without browser Origin/Referer.
+    // Keep the exception limited to this exact POST path.
+    const path = getRequestURL(event).pathname
+    if (
+        method === 'POST' &&
+        path === '/api/backend/payments/robokassa/result'
+    ) return
+
     const origin = getHeader(event, 'origin')
     const referer = getHeader(event, 'referer')
 
