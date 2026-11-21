@@ -6,10 +6,9 @@ type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'guest'
 export const useAuthStore = defineStore('auth', () => {
   const api = useApi()
 
-  const user = ref<User | null>(null)
-  const status = ref<AuthStatus>('idle')
-
-  let fetchPromise: Promise<User | null> | null = null
+  const user = useState<User | null>('auth:user', () => null)
+  const status = useState<AuthStatus>('auth:status', () => 'idle')
+  const pending = useState<Promise<User | null> | null>('auth:pending', () => null)
 
   const isAuthenticated = computed(() => status.value === 'authenticated' && !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
@@ -18,27 +17,35 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser(force = false): Promise<User | null> {
     if (!force && status.value === 'authenticated') return user.value
     if (!force && status.value === 'guest') return null
-
-    if (fetchPromise) return fetchPromise
+    if (pending.value) return pending.value
 
     status.value = 'loading'
 
-    fetchPromise = (async () => {
+    let resolve!: (v: User | null) => void
+    const p = new Promise<User | null>((r) => { resolve = r })
+    pending.value = p
+
+    ;(async () => {
       try {
         const me = await api.auth.me()
         user.value = me
         status.value = 'authenticated'
-        return me
-      } catch (e) {
-        user.value = null
-        status.value = 'guest'
-        return null
+        resolve(me)
+      } catch (e: any) {
+        if (e?.status === 429) {
+          status.value = user.value ? 'authenticated' : 'idle'
+          resolve(user.value)
+        } else {
+          user.value = null
+          status.value = 'guest'
+          resolve(null)
+        }
       } finally {
-        fetchPromise = null
+        pending.value = null
       }
     })()
 
-    return fetchPromise
+    return p
   }
 
   async function login(payload: LoginPayload): Promise<User> {

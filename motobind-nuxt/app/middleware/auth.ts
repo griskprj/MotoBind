@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
 
-  if (auth.status === 'idle') {
+  if (auth.status === 'idle' || auth.status === 'loading') {
     await auth.fetchUser()
   }
 
