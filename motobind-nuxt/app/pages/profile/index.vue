@@ -108,6 +108,7 @@ const pushBusy = ref(false)
 const pushRegistration = ref<ServiceWorkerRegistration | null>(null)
 const pushIsIosHomeScreenOnly = ref(false)
 const pushAvailabilityMessage = ref('')
+const pushConfigLoading = ref(false)
 
 function decodeApplicationServerKey(value: string): Uint8Array {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
@@ -152,6 +153,7 @@ async function loadPushSettings() {
     return
   }
 
+  pushConfigLoading.value = true
   try {
     pushConfig.value = await api.notifications.pushConfig()
     if (!pushConfig.value.configured) return
@@ -159,6 +161,8 @@ async function loadPushSettings() {
   } catch (error) {
     console.error('Push configuration request failed:', error)
     pushAvailabilityMessage.value = 'Не удалось получить настройки push с сервера. Проверьте подключение и войдите в аккаунт заново.'
+  } finally {
+    pushConfigLoading.value = false
   }
 }
 
@@ -357,7 +361,9 @@ const formatDate = (iso?: string) => {
         <p v-if="pushIsIosHomeScreenOnly">На iPhone сначала добавьте MotoBind на экран «Домой», открыв сайт в Safari. Затем включите push здесь.</p>
         <p v-else-if="!pushSupported">{{ pushAvailabilityMessage || 'Push не поддерживается этим браузером.' }}</p>
         <p v-else-if="pushAvailabilityMessage">{{ pushAvailabilityMessage }}</p>
+        <p v-else-if="pushConfigLoading">Проверяем настройки push на сервере…</p>
         <p v-else-if="pushConfig && !pushConfig.configured">Push пока не настроен на сервере.</p>
+        <p v-else-if="!pushConfig">Не удалось загрузить настройки push.</p>
         <p v-else>Получайте уведомления MotoBind, даже когда сайт закрыт.</p>
         <BaseButton
           v-if="pushSupported && !pushIsIosHomeScreenOnly && pushConfig?.configured"
