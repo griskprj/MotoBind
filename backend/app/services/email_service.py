@@ -348,73 +348,128 @@ class EmailService:
 
     @staticmethod
     def _render_maintenance_soon(user, reminder, moto) -> tuple[str, str]:
-        """Письмо: 'скоро ТО'."""
+        """Письмо о скором ТО по пробегу и/или календарной дате."""
+        from datetime import datetime, timezone
+        from html import escape
+
         maint = reminder.maintenance
         if not maint:
             return EmailService._render_mileage_update(user, reminder, moto)
 
         current = moto.mileage or 0
-        km_left = max(0, (maint.planned_mileage or 0) - current)
+        schedule = []
+        triggers = []
 
-        subject = f"🔧 Через {km_left} км — {maint.title}"
+        if maint.planned_mileage is not None:
+            km_left = maint.planned_mileage - current
+            schedule.append(
+                f"<div>Плановый пробег: <strong>{maint.planned_mileage} км</strong></div>"
+            )
+            if 0 < km_left <= 500:
+                triggers.append(f"примерно через {km_left} км")
 
+        if maint.planned_date is not None:
+            days_left = (maint.planned_date - datetime.now(timezone.utc).date()).days
+            date_text = maint.planned_date.strftime("%d.%m.%Y")
+            schedule.append(f"<div>Плановая дата: <strong>{date_text}</strong></div>")
+            if 0 < days_left <= 14:
+                triggers.append(f"примерно через {days_left} дн.")
+
+        subject = f"🔧 Скоро ТО: {maint.title}"
+        if triggers:
+            subject += " — " + " / ".join(triggers)
+
+        schedule_html = "".join(schedule) or "<div>Проверьте план обслуживания.</div>"
+        trigger_text = (
+            "Ориентир: <strong>" + escape(", ".join(triggers)) + ".</strong>"
+            if triggers
+            else "Скоро наступит один из запланированных сроков обслуживания."
+        )
         content = f"""
-        <h2 style="color: #0F172A; margin: 0 0 12px;">Привет, {user.username}!</h2>
+        <h2 style="color: #0F172A; margin: 0 0 12px;">Привет, {escape(user.username)}!</h2>
         <p style="color: #334155; font-size: 15px; line-height: 1.6;">
-            Для вашего <strong>{moto.name}</strong> приближается обслуживание:
+            Для вашего <strong>{escape(moto.name)}</strong> приближается обслуживание:
         </p>
         <div style="background: #FFF7E6; border-left: 4px solid #F59E0B; padding: 14px 18px; border-radius: 8px; margin: 16px 0;">
-            <div style="color: #0F172A; font-weight: 600; font-size: 16px;">{maint.title}</div>
-            <div style="color: #64748B; font-size: 13px; margin-top: 6px;">
-                Запланировано на <strong>{maint.planned_mileage} км</strong>
+            <div style="color: #0F172A; font-weight: 600; font-size: 16px;">{escape(maint.title)}</div>
+            <div style="color: #64748B; font-size: 13px; margin-top: 6px; line-height: 1.7;">
+                {schedule_html}
             </div>
         </div>
+        <p style="color: #334155; font-size: 15px; line-height: 1.6;">{trigger_text}</p>
+        """
+
+        cta_text = "Перейти к обслуживанию"
+        cta_url = f"{EmailService._frontend_url()}/maintenance"
+        return subject, EmailService._wrap_email(content, cta_text, cta_url)
+
+    @staticmethod
+    def _render_maintenance_overdue(user, reminder, moto) -> tuple[str, str]:
+        """Письмо о просроченном ТО по пробегу и/или календарной дате."""
+        from datetime import datetime, timezone
+        from html import escape
+
+        maint = reminder.maintenance
+        if not maint:
+            return EmailService._render_mileage_update(user, reminder, moto)
+
+        current = moto.mileage or 0
+        schedule = []
+        overdue_details = []
+
+        if maint.planned_mileage is not None:
+            km_delta = maint.planned_mileage - current
+            schedule.append(
+                f"<div>Плановый пробег: <strong>{maint.planned_mileage} км</strong></div>"
+            )
+            if km_delta <= 0:
+                overdue_details.append(
+                    f"по пробегу просрочено на {abs(km_delta)} км"
+                )
+            else:
+                overdue_details.append(
+                    f"до планового пробега осталось {km_delta} км"
+                )
+
+        if maint.planned_date is not None:
+            days_delta = (maint.planned_date - datetime.now(timezone.utc).date()).days
+            date_text = maint.planned_date.strftime("%d.%m.%Y")
+            schedule.append(f"<div>Плановая дата: <strong>{date_text}</strong></div>")
+            if days_delta <= 0:
+                overdue_details.append(
+                    f"срок по дате прошёл {abs(days_delta)} дн. назад"
+                )
+            else:
+                overdue_details.append(
+                    f"до плановой даты осталось {days_delta} дн."
+                )
+
+        subject = f"⚠️ Просрочено ТО: {maint.title}"
+        schedule_html = "".join(schedule) or "<div>Проверьте план обслуживания.</div>"
+        details_text = (
+            "Условия: <strong>" + escape("; ".join(overdue_details)) + ".</strong>"
+            if overdue_details
+            else "Плановый срок обслуживания наступил."
+        )
+        content = f"""
+        <h2 style="color: #0F172A; margin: 0 0 12px;">Привет, {escape(user.username)}!</h2>
         <p style="color: #334155; font-size: 15px; line-height: 1.6;">
-            Осталось проехать примерно <strong style="color: #F59E0B;">{km_left} км</strong>.
-            Самое время записаться в сервис или подготовить запчасти.
+            Для вашего <strong>{escape(moto.name)}</strong> наступил срок обслуживания:
+        </p>
+        <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 14px 18px; border-radius: 8px; margin: 16px 0;">
+            <div style="color: #0F172A; font-weight: 600; font-size: 16px;">{escape(maint.title)}</div>
+            <div style="color: #64748B; font-size: 13px; margin-top: 6px; line-height: 1.7;">
+                {schedule_html}
+            </div>
+        </div>
+        <p style="color: #EF4444; font-weight: 600; font-size: 14px;">{details_text}</p>
+        <p style="color: #334155; font-size: 15px; line-height: 1.6;">
+            Рекомендуем проверить состояние мотоцикла и выполнить обслуживание.
         </p>
         """
 
         cta_text = "Перейти к обслуживанию"
         cta_url = f"{EmailService._frontend_url()}/maintenance"
-
-        return subject, EmailService._wrap_email(content, cta_text, cta_url)
-
-    @staticmethod
-    def _render_maintenance_overdue(user, reminder, moto) -> tuple[str, str]:
-        """Письмо: 'ТО просрочено'."""
-        maint = reminder.maintenance
-        if not maint:
-            return EmailService._render_mileage_update(user, reminder, moto)
-
-        current = moto.mileage or 0
-        km_overdue = max(0, current - (maint.planned_mileage or 0))
-
-        subject = f"⚠️ Просрочено ТО: {maint.title}"
-
-        content = f"""
-        <h2 style="color: #0F172A; margin: 0 0 12px;">Привет, {user.username}!</h2>
-        <p style="color: #334155; font-size: 15px; line-height: 1.6;">
-            Для вашего <strong>{moto.name}</strong> просрочено обслуживание:
-        </p>
-        <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 14px 18px; border-radius: 8px; margin: 16px 0;">
-            <div style="color: #0F172A; font-weight: 600; font-size: 16px;">{maint.title}</div>
-            <div style="color: #64748B; font-size: 13px; margin-top: 6px;">
-                Планировалось на <strong>{maint.planned_mileage} км</strong>
-            </div>
-            <div style="color: #EF4444; font-weight: 600; font-size: 14px; margin-top: 8px;">
-                Просрочено на ~{km_overdue} км
-            </div>
-        </div>
-        <p style="color: #334155; font-size: 15px; line-height: 1.6;">
-            Рекомендуем не откладывать — регулярное обслуживание продлевает
-            жизнь мотоциклу и бережёт ваш бюджет в долгосрочной перспективе.
-        </p>
-        """
-
-        cta_text = "Отметить как выполнено"
-        cta_url = f"{EmailService._frontend_url()}/maintenance"
-
         return subject, EmailService._wrap_email(content, cta_text, cta_url)
 
     # ========================================================
