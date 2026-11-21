@@ -168,7 +168,6 @@ class MotorcycleService:
         Reminder.query.filter_by(
             motorcycle_id=moto.id,
             type=Reminder.TYPE_MILEAGE_UPDATE,
-            status=Reminder.STATUS_PENDING,
         ).delete(synchronize_session=False)
 
     @staticmethod
