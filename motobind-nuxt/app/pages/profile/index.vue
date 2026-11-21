@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserProfile, NotificationSettings } from '~/types'
+import type { UserProfile, NotificationSettings, PushConfig, BrowserPushSubscription } from '~/types'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -101,6 +101,85 @@ async function changePassword() {
 
 const settings = ref<NotificationSettings | null>(null)
 const savingSettings = ref(false)
+const pushConfig = ref<PushConfig | null>(null)
+const pushSupported = ref(false)
+const pushEnabled = ref(false)
+const pushBusy = ref(false)
+const pushRegistration = ref<ServiceWorkerRegistration | null>(null)
+const pushIsIosHomeScreenOnly = ref(false)
+
+function decodeApplicationServerKey(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
+  const binary = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4))
+  return Uint8Array.from(binary, character => character.charCodeAt(0))
+}
+
+async function loadPushSettings() {
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
+  pushIsIosHomeScreenOnly.value = ios && !standalone
+  pushSupported.value = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+  if (!pushSupported.value || pushIsIosHomeScreenOnly.value) return
+
+  try {
+    pushConfig.value = await api.notifications.pushConfig()
+    if (!pushConfig.value.configured) return
+    pushRegistration.value = await navigator.serviceWorker.getRegistration() || null
+    if (!pushRegistration.value) {
+      pushSupported.value = false
+      return
+    }
+    pushEnabled.value = Boolean(await pushRegistration.value.pushManager.getSubscription())
+  } catch {
+    pushSupported.value = false
+  }
+}
+
+async function enablePush() {
+  if (!pushConfig.value?.public_key || !pushRegistration.value) return
+  pushBusy.value = true
+  try {
+    const permission = Notification.permission === 'granted'
+      ? 'granted'
+      : await Notification.requestPermission()
+    if (permission !== 'granted') {
+      toast.info('Разрешите уведомления в настройках браузера, чтобы включить push')
+      return
+    }
+
+    let subscription = await pushRegistration.value.pushManager.getSubscription()
+    if (!subscription) {
+      subscription = await pushRegistration.value.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: decodeApplicationServerKey(pushConfig.value.public_key) as BufferSource,
+      })
+    }
+    await api.notifications.savePushSubscription(subscription.toJSON() as BrowserPushSubscription)
+    pushEnabled.value = true
+    toast.success('Push-уведомления включены на этом устройстве')
+  } catch {
+    toast.error('Не удалось включить push-уведомления')
+  } finally {
+    pushBusy.value = false
+  }
+}
+
+async function disablePush() {
+  pushBusy.value = true
+  try {
+    const subscription = await pushRegistration.value?.pushManager.getSubscription()
+    if (subscription) {
+      await api.notifications.removePushSubscription(subscription.endpoint)
+      await subscription.unsubscribe()
+    }
+    pushEnabled.value = false
+    toast.success('Push-уведомления отключены на этом устройстве')
+  } catch {
+    toast.error('Не удалось отключить push-уведомления')
+  } finally {
+    pushBusy.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -108,6 +187,7 @@ onMounted(async () => {
   } catch (e) {
     console.error(e)
   }
+  await loadPushSettings()
 })
 
 async function saveSettings() {
@@ -244,6 +324,19 @@ const formatDate = (iso?: string) => {
         <BaseCheckbox v-model="settings.email_newsletter_enabled" label="Рассылка новостей" />
         <BaseCheckbox v-model="settings.reminders_mileage_enabled" label="Напоминания о пробеге" />
         <BaseCheckbox v-model="settings.reminders_maintenance_enabled" label="Напоминания об обслуживании" />
+      </div>
+      <div class="push-settings">
+        <h3>Push на этом устройстве</h3>
+        <p v-if="pushIsIosHomeScreenOnly">На iPhone сначала добавьте MotoBind на экран «Домой», открыв сайт в Safari. Затем включите push здесь.</p>
+        <p v-else-if="!pushSupported">Push не поддерживается этим браузером или service worker ещё не установлен.</p>
+        <p v-else-if="pushConfig && !pushConfig.configured">Push пока не настроен на сервере.</p>
+        <p v-else>Получайте уведомления MotoBind, даже когда сайт закрыт.</p>
+        <BaseButton
+          v-if="pushSupported && !pushIsIosHomeScreenOnly && pushConfig?.configured"
+          variant="secondary"
+          :loading="pushBusy"
+          @click="pushEnabled ? disablePush() : enablePush()"
+        >{{ pushEnabled ? 'Отключить push на этом устройстве' : 'Включить push на этом устройстве' }}</BaseButton>
       </div>
       <div class="form-actions">
         <BaseButton variant="primary" :loading="savingSettings" @click="saveSettings">Сохранить настройки</BaseButton>
@@ -386,6 +479,9 @@ const formatDate = (iso?: string) => {
 .form-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-3); }
 
 .settings-list { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.push-settings { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-4); }
+.push-settings h3 { font-size: var(--text-md); font-weight: var(--fw-semibold); }
+.push-settings p { color: var(--color-text-secondary); }
 
 .danger-zone { border-color: var(--color-danger-soft); background: color-mix(in srgb, var(--color-danger-soft) 30%, var(--color-surface)); }
 .text-danger { color: var(--color-danger); }

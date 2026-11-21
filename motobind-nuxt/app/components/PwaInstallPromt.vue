@@ -3,8 +3,14 @@ import { ref, onMounted } from 'vue'
 
 const deferredPrompt = ref<any>(null)
 const showPrompt = ref(false)
+const showIosInstructions = ref(false)
+const isIos = ref(false)
 
 onMounted(() => {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
+  isIos.value = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  if (standalone) return
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault()
     deferredPrompt.value = e
@@ -13,12 +19,18 @@ onMounted(() => {
 
   window.addEventListener('appinstalled', () => {
     showPrompt.value = false
+    showIosInstructions.value = false
     deferredPrompt.value = null
   })
+
+  if (isIos.value) showPrompt.value = true
 })
 
 async function install() {
-  if (!deferredPrompt.value) return
+  if (!deferredPrompt.value) {
+    showIosInstructions.value = isIos.value
+    return
+  }
   deferredPrompt.value.prompt()
   const { outcome } = await deferredPrompt.value.userChoice
   if (outcome === 'accepted') {
@@ -37,9 +49,13 @@ async function install() {
       <strong>Установить MotoBind</strong>
       <span>Быстрый доступ с рабочего стола</span>
     </div>
-    <BaseButton size="sm" variant="primary" @click="install">Установить</BaseButton>
+    <BaseButton size="sm" variant="primary" @click="install">{{ isIos ? 'Как установить' : 'Установить' }}</BaseButton>
     <button class="pwa-close" @click="showPrompt = false">×</button>
   </div>
+  <BaseModal v-if="showIosInstructions" title="Установить MotoBind" @close="showIosInstructions = false">
+    <p>Откройте сайт в Safari, нажмите «Поделиться», затем выберите «На экран Домой».</p>
+    <p class="ios-note">После добавления MotoBind будет открываться отдельно, как приложение.</p>
+  </BaseModal>
 </template>
 
 <style scoped lang="scss">
@@ -85,4 +101,5 @@ async function install() {
   cursor: pointer;
   padding: 0 4px;
 }
+.ios-note { margin-top: var(--space-3); color: var(--color-text-secondary); }
 </style>

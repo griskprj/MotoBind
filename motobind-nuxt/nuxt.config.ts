@@ -88,7 +88,7 @@ export default defineNuxtConfig({
         { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
         { src: '/icons/icon-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        { src: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+        { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }
       ],
       shortcuts: [
         { name: 'Мой гараж', url: '/garage', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }] },
@@ -96,28 +96,11 @@ export default defineNuxtConfig({
         { name: 'Диагностика', url: '/maintenance', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }] }
       ]
     },
-    workbox: {
-      navigateFallback: '/offline.html',
+    strategies: 'injectManifest',
+    srcDir: 'service-worker',
+    filename: 'sw.js',
+    injectManifest: {
       globPatterns: ['**/*.{js,css,html,png,svg,ico,webp,woff2}'],
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/api\.motobind\.ru\/.*/i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
-            cacheableResponse: { statuses: [0, 200] }
-          }
-        },
-        {
-          urlPattern: /\.(?:png|jpg|jpeg|svg|webp)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'images',
-            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }
-          }
-        }
-      ]
     },
     devOptions: {
       enabled: false
@@ -128,6 +111,12 @@ export default defineNuxtConfig({
     disallow: ['/admin', '/login', '/register', '/api']
   },
   sitemap: {
+    sources: ['/api/__sitemap__/urls'],
+    exclude: [
+      '/login', '/register', '/garage/**', '/maintenance/**', '/profile/**',
+      '/notifications/**', '/admin/**', '/business/**', '/social/**',
+      '/training/my', '/training/courses/**/lessons/**',
+    ],
   },
 
   app: {
@@ -145,7 +134,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
+        { rel: 'apple-touch-icon', href: '/icons/icon-192x192.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         {
           rel: 'stylesheet',

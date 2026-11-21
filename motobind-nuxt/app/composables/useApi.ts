@@ -27,7 +27,9 @@ import type {
   Manual,
   ManualsListResponse,
   CreateManualPayload,
-  UpdateManualPayload
+  UpdateManualPayload,
+  PushConfig,
+  BrowserPushSubscription
 } from '~/types'
 
 import { baseFetch, request } from '~/utils/api'
@@ -667,6 +669,19 @@ export function useApi() {
 
   // ---------- NOTIFICATIONS ----------
   const notifications = {
+    pushConfig: () =>
+      request(() => baseFetch<PushConfig>('/notifications/push/config')),
+
+    savePushSubscription: (subscription: BrowserPushSubscription) =>
+      request(() => baseFetch<{ message: string; id: number }>('/notifications/push/subscriptions', {
+        method: 'POST', body: subscription,
+      })),
+
+    removePushSubscription: (endpoint?: string) =>
+      request(() => baseFetch<{ message: string; removed: number }>('/notifications/push/subscriptions', {
+        method: 'DELETE', body: endpoint ? { endpoint } : {},
+      })),
+
     list: (params?: { page?: number; per_page?: number; unread_only?: boolean }) =>
       request(() => baseFetch<NotificationsResponse>('/notifications/', { query: params })),
 

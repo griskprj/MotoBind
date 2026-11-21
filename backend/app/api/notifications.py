@@ -3,8 +3,34 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.notification_service import NotificationService
 from app.exceptions import NotFoundError
+from app.services.push_service import PushService
 
 notifications_bp = Blueprint('notifications', __name__)
+
+
+@notifications_bp.route('/push/config', methods=['GET'])
+@jwt_required()
+def get_push_config():
+    return jsonify(PushService.public_config(int(get_jwt_identity()))), 200
+
+
+@notifications_bp.route('/push/subscriptions', methods=['POST'])
+@jwt_required()
+def save_push_subscription():
+    data = request.get_json(silent=True) or {}
+    subscription = PushService.save_subscription(int(get_jwt_identity()), data)
+    return jsonify({'message': 'Push-уведомления включены', 'id': subscription.id}), 201
+
+
+@notifications_bp.route('/push/subscriptions', methods=['DELETE'])
+@jwt_required()
+def remove_push_subscription():
+    data = request.get_json(silent=True) or {}
+    endpoint = data.get('endpoint')
+    removed = PushService.remove_subscription(
+        int(get_jwt_identity()), str(endpoint) if endpoint else None
+    )
+    return jsonify({'message': 'Push-уведомления отключены', 'removed': removed}), 200
 
 
 @notifications_bp.route('/', methods=['GET'])
