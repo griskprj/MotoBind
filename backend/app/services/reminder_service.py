@@ -162,11 +162,13 @@ class ReminderService:
         if (_now() - last_touch).days < MILEAGE_STALE_DAYS:
             return 0
 
-        existing = Reminder.query.filter_by(
-            user_id=user.id,
-            motorcycle_id=moto.id,
-            type=Reminder.TYPE_MILEAGE_UPDATE,
-            status.in_([Reminder.STATUS_PENDING, Reminder.STATUS_DISMISSED]),
+        existing = Reminder.query.filter(
+            Reminder.user_id == user.id,
+            Reminder.motorcycle_id == moto.id,
+            Reminder.type == Reminder.TYPE_MILEAGE_UPDATE,
+            Reminder.status.in_(
+                [Reminder.STATUS_PENDING, Reminder.STATUS_DISMISSED]
+            ),
         ).first()
         if existing:
             return 0
@@ -419,7 +421,7 @@ class ReminderService:
                 else f"🔧 Скоро ТО: {title_text}"
             )
             details = []
-            current_mileage = moto.mileage or 0 if moto else 0
+            current_mileage = (moto.mileage or 0) if moto else 0
 
             if maintenance and maintenance.planned_mileage is not None:
                 km_delta = maintenance.planned_mileage - current_mileage
