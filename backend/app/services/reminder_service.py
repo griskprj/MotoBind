@@ -147,9 +147,7 @@ class ReminderService:
             Reminder.type.in_(reminder_types),
         ).all()
         for reminder in reminders:
-            reminder.status = Reminder.STATUS_DISMISSED
-            reminder.dismissed_at = _now()
-            reminder.snoozed_until = None
+            db.session.delete(reminder)
         return len(reminders)
 
     @staticmethod
@@ -168,7 +166,7 @@ class ReminderService:
             user_id=user.id,
             motorcycle_id=moto.id,
             type=Reminder.TYPE_MILEAGE_UPDATE,
-            status=Reminder.STATUS_PENDING,
+            status.in_([Reminder.STATUS_PENDING, Reminder.STATUS_DISMISSED]),
         ).first()
         if existing:
             return 0
@@ -207,14 +205,23 @@ class ReminderService:
             Reminder.TYPE_MAINTENANCE_SOON,
             Reminder.TYPE_MAINTENANCE_OVERDUE,
         )
-        existing = {
+        reminders = Reminder.query.filter(
+            Reminder.motorcycle_id == moto.id,
+            Reminder.user_id == user.id,
+            Reminder.status.in_(
+                [Reminder.STATUS_PENDING, Reminder.STATUS_DISMISSED]
+            ),
+            Reminder.type.in_(reminder_types),
+        ).all()
+        pending = {
             (reminder.maintenance_id, reminder.type): reminder
-            for reminder in Reminder.query.filter(
-                Reminder.motorcycle_id == moto.id,
-                Reminder.user_id == user.id,
-                Reminder.status == Reminder.STATUS_PENDING,
-                Reminder.type.in_(reminder_types),
-            ).all()
+            for reminder in reminders
+            if reminder.status == Reminder.STATUS_PENDING
+        }
+        dismissed = {
+            (reminder.maintenance_id, reminder.type): reminder
+            for reminder in reminders
+            if reminder.status == Reminder.STATUS_DISMISSED
         }
         active_keys = set()
 
@@ -229,8 +236,7 @@ class ReminderService:
                 if maintenance.planned_date is not None
                 else None
             )
-            has_schedule = km_left is not None or days_left is not None
-            if not has_schedule:
+            if km_left is None and days_left is None:
                 continue
 
             is_overdue = (
@@ -264,14 +270,15 @@ class ReminderService:
                 if is_overdue
                 else Reminder.TYPE_MAINTENANCE_OVERDUE
             )
-            opposite = existing.pop((maintenance.id, opposite_type), None)
+            opposite_key = (maintenance.id, opposite_type)
+            opposite = pending.pop(opposite_key, None)
             if opposite:
                 opposite.status = Reminder.STATUS_DISMISSED
                 opposite.dismissed_at = _now()
                 opposite.snoozed_until = None
                 dismissed_auto += 1
 
-            if key not in existing:
+            if key not in pending and key not in dismissed:
                 db.session.add(
                     Reminder(
                         user_id=user.id,
@@ -283,12 +290,16 @@ class ReminderService:
                 )
                 created += 1
 
-        for key, reminder in existing.items():
+        for key, reminder in pending.items():
             if key not in active_keys:
                 reminder.status = Reminder.STATUS_DISMISSED
                 reminder.dismissed_at = _now()
                 reminder.snoozed_until = None
                 dismissed_auto += 1
+
+        for key, reminder in dismissed.items():
+            if key not in active_keys:
+                db.session.delete(reminder)
 
         return created, dismissed_auto
 
@@ -338,9 +349,7 @@ class ReminderService:
                 continue
 
             if not ReminderService._reminder_enabled(user, reminder.type):
-                reminder.status = Reminder.STATUS_DISMISSED
-                reminder.dismissed_at = now
-                reminder.snoozed_until = None
+                db.session.delete(reminder)
                 stats["skipped"] += 1
                 continue
 
