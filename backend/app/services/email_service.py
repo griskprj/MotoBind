@@ -351,6 +351,7 @@ class EmailService:
         """Письмо о скором ТО по пробегу и/или календарной дате."""
         from datetime import datetime, timezone
         from html import escape
+        from zoneinfo import ZoneInfo
 
         maint = reminder.maintenance
         if not maint:
@@ -369,7 +370,7 @@ class EmailService:
                 triggers.append(f"примерно через {km_left} км")
 
         if maint.planned_date is not None:
-            days_left = (maint.planned_date - datetime.now(timezone.utc).date()).days
+            days_left = (maint.planned_date - datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Moscow")).date()).days
             date_text = maint.planned_date.strftime("%d.%m.%Y")
             schedule.append(f"<div>Плановая дата: <strong>{date_text}</strong></div>")
             if 0 < days_left <= 14:
@@ -408,6 +409,7 @@ class EmailService:
         """Письмо о просроченном ТО по пробегу и/или календарной дате."""
         from datetime import datetime, timezone
         from html import escape
+        from zoneinfo import ZoneInfo
 
         maint = reminder.maintenance
         if not maint:
@@ -432,7 +434,7 @@ class EmailService:
                 )
 
         if maint.planned_date is not None:
-            days_delta = (maint.planned_date - datetime.now(timezone.utc).date()).days
+            days_delta = (maint.planned_date - datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Moscow")).date()).days
             date_text = maint.planned_date.strftime("%d.%m.%Y")
             schedule.append(f"<div>Плановая дата: <strong>{date_text}</strong></div>")
             if days_delta <= 0:
