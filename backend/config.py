@@ -38,6 +38,10 @@ class Config:
     ROBOKASSA_TAX = os.environ.get('ROBOKASSA_TAX', 'none')
     ROBOKASSA_PAYMENT_METHOD = os.environ.get('ROBOKASSA_PAYMENT_METHOD', 'full_payment')
 
+    WEBPUSH_VAPID_PUBLIC_KEY = os.environ.get('WEBPUSH_VAPID_PUBLIC_KEY', '')
+    WEBPUSH_VAPID_PRIVATE_KEY = os.environ.get('WEBPUSH_VAPID_PRIVATE_KEY', '')
+    WEBPUSH_VAPID_SUBJECT = os.environ.get('WEBPUSH_VAPID_SUBJECT', 'mailto:motobind@yandex.ru')
+
     # Cron
     CRON_SECRET = os.getenv("CRON_SECRET", "")
     ENABLE_DEV_SCHEDULER = os.getenv("ENABLE_DEV_SCHEDULER", "true").lower() == "true"

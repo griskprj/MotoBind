@@ -1,6 +1,6 @@
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)
-  const baseUrl = config.public.siteUrl || 'https://motobind.ru'
+  const baseUrl = config.siteUrl || 'https://motobind.ru'
 
   const content = `
 User-agent: *

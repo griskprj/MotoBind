@@ -12,6 +12,11 @@ export default defineEventHandler(async (event) => {
   const path = `/${apiPrefix}/${routePath}`
   const method = getMethod(event)
   const isRobokassaCallback = routePath === 'payments/robokassa/result'
+  const isPublicSeoContent = [
+    'manual/list',
+    'learning/courses',
+    'learning/articles',
+  ].includes(routePath) || /^manual\/\d+$/.test(routePath) || /^learning\/courses\/[^/]+$/.test(routePath) || /^learning\/articles\/[^/]+$/.test(routePath)
 
   let body: unknown
   if (!['GET', 'HEAD'].includes(method)) {
@@ -27,7 +32,7 @@ export default defineEventHandler(async (event) => {
     method,
     query: getQuery(event),
     body,
-    ...(isRobokassaCallback ? { skipAuth: true } : {}),
+    ...((isRobokassaCallback || isPublicSeoContent) ? { skipAuth: true } : {}),
     headers: {
       ...(getHeader(event, 'content-type')
         ? { 'Content-Type': getHeader(event, 'content-type')! }

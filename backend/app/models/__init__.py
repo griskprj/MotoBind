@@ -19,6 +19,7 @@ from app.models.post import Post
 from app.models.post_comment import PostComment
 from app.models.post_like import PostLike
 from app.models.post_report import PostReport
+from app.models.push_subscription import PushSubscription
 from app.models.reminder import Reminder
 from app.models.reports import Report
 from app.models.service import Service
@@ -40,6 +41,7 @@ __all__ = [
     "PostComment",
     "PostLike",
     "PostReport",
+    "PushSubscription",
     "Notification",
     "Reminder",
     "BusinessAccount",

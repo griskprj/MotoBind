@@ -22,3 +22,14 @@ export interface NotificationsResponse {
 export interface UnreadCountResponse {
   unread_count: number
 }
+
+export interface PushConfig {
+  configured: boolean
+  public_key: string | null
+  enabled: boolean
+}
+
+export interface BrowserPushSubscription {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+}

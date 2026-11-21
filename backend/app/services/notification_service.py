@@ -15,6 +15,15 @@ class NotificationService:
         )
         db.session.add(notif)
         db.session.commit()
+        try:
+            from app.services.push_service import PushService
+
+            PushService.send_to_user(user_id, title, content, link)
+        except Exception:
+            # Push delivery must not break the in-app notification or its caller.
+            from flask import current_app
+
+            current_app.logger.exception("Failed to dispatch Web Push notification")
         return notif
 
     @staticmethod

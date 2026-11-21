@@ -81,6 +81,12 @@ class User(db.Model):
     notifications = db.relationship(
         "Notification", back_populates="user", cascade="all, delete-orphan"
     )
+    push_subscriptions = db.relationship(
+        "PushSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     posts = db.relationship(
         "Post", back_populates="author", cascade="all, delete-orphan"
