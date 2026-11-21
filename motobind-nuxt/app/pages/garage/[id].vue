@@ -90,6 +90,9 @@ function onOpenComponentEvent(componentId: number) {
               </p>
             </div>
             <div class="hero-actions">
+              <NuxtLink :to="`/garage/${id}/export`" class="export-button">
+                <i class="fa-solid fa-file-arrow-down"></i> Экспорт PDF
+              </NuxtLink>
               <BaseButton variant="secondary" size="sm" @click="isEditModalOpen = true">
                 <i class="fa-solid fa-pen"></i> Редактировать
               </BaseButton>
@@ -254,6 +257,21 @@ function onOpenComponentEvent(componentId: number) {
 .hero-actions {
   display: flex;
   gap: var(--space-2);
+}
+
+.export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.18);
+
+  &:hover { background: rgba(0, 0, 0, 0.32); }
 }
 
 /* ============================================================
