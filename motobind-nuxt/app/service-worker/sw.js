@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     try {
       return await fetch(event.request)
     } catch {
-      return (await matchPrecache('/offline.html')) || Response.error()
+      return (await matchPrecache('/offline')) || Response.error()
     }
   })())
 })
