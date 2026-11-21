@@ -53,6 +53,10 @@ const { data, pending } = await useAsyncData('admin-dashboard', () => api.admin.
             <i class="fa-solid fa-users-gear"></i>
             <span>Пользователи</span>
           </NuxtLink>
+          <NuxtLink to="/admin/slots" class="link-card">
+            <i class="fa-solid fa-credit-card"></i>
+            <span>Платежи и места в гараже</span>
+          </NuxtLink>
           <NuxtLink to="/admin/manuals" class="link-card">
             <i class="fa-solid fa-book-open"></i>
             <span>Модерация мануалов</span>

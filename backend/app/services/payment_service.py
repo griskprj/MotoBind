@@ -3,6 +3,7 @@ import json
 import secrets
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote, urlencode
+from sqlalchemy import func
 
 from flask import current_app
 
@@ -10,6 +11,7 @@ from app.exceptions import APIException, ConflictError, NotFoundError
 from app.extensions import db
 from app.models.motorcycle import Motorcycle
 from app.models.slot_purchase import SlotPurchase
+from app.models.slot_adjustment import SlotAdjustment
 from app.models.user import User
 
 
@@ -47,12 +49,14 @@ class PaymentService:
         user = User.query.get_or_404(user_id)
         owned = Motorcycle.query.filter_by(owner_id=user_id).count()
         purchased = SlotPurchase.query.filter_by(user_id=user_id, status="paid").count()
+        gifted = db.session.query(func.coalesce(func.sum(SlotAdjustment.quantity), 0)).filter_by(user_id=user_id).scalar()
         legacy_extra = user.extra_motorcycle_slots or 0
-        extra = legacy_extra + purchased
+        extra = legacy_extra + purchased + gifted
         return {
             "motorcycles_count": owned,
             "free_slots": cls.FREE_SLOTS,
             "purchased_slots": purchased,
+            "gifted_slots": gifted,
             "legacy_slots": legacy_extra,
             "slots_total": cls.FREE_SLOTS + extra,
             "slots_available": max(0, cls.FREE_SLOTS + extra - owned),
@@ -148,7 +152,8 @@ class PaymentService:
             raise NotFoundError("Платёжный заказ не найден")
         if purchase.amount != amount:
             raise APIException("Сумма или магазин не совпадают с заказом", status_code=400)
-        if purchase.status != "paid":
+        # A retried Robokassa callback must never reactivate a manually refunded order.
+        if purchase.status == "pending":
             from datetime import datetime, timezone
             purchase.status = "paid"
             purchase.paid_at = datetime.now(timezone.utc)

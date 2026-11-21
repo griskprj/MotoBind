@@ -67,6 +67,7 @@ export function useApi() {
         motorcycles_count: number
         free_slots: number
         purchased_slots: number
+        gifted_slots: number
         legacy_slots: number
         slots_total: number
         slots_available: number
@@ -84,7 +85,7 @@ export function useApi() {
     motorcycleSlotPurchaseStatus: (orderId: number | string) =>
       request(() => baseFetch<{
         order_id: number
-        status: 'pending' | 'paid'
+        status: 'pending' | 'paid' | 'refunded'
         amount: number
         paid_at: string | null
       }>(`/payments/slots/purchases/${orderId}`)),
@@ -518,6 +519,15 @@ export function useApi() {
 
     getUsers: (params?: { page?: number; per_page?: number; search?: string; role?: string; status?: string }) =>
       request(() => baseFetch<AdminUsersResponse>('/admin/users', { query: params })),
+
+    getSlotPurchases: (params?: { page?: number; per_page?: number; search?: string; status?: string }) =>
+      request(() => baseFetch<any>('/admin/slot-purchases', { query: params })),
+
+    giftMotorcycleSlots: (payload: { email: string; quantity: number; reason: string }) =>
+      request(() => baseFetch<any>('/admin/slot-purchases/gift', { method: 'POST', body: payload })),
+
+    recordSlotRefund: (id: number, payload: { reason: string; reference?: string }) =>
+      request(() => baseFetch<any>(`/admin/slot-purchases/${id}/refund`, { method: 'POST', body: payload })),
 
     banUser: (id: number | string) =>
       request(() => baseFetch<{ message: string; user: AdminUser }>(`/admin/user/${id}/ban`, { method: 'POST' })),

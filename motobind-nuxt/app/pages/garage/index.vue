@@ -24,10 +24,10 @@ const { data: slotBalance, refresh: refreshSlots } = await useAsyncData(
     try {
       return await api.payments.motorcycleSlots()
     } catch {
-      return { motorcycles_count: 0, free_slots: 1, purchased_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }
+      return { motorcycles_count: 0, free_slots: 1, purchased_slots: 0, gifted_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }
     }
   },
-  { default: () => ({ motorcycles_count: 0, free_slots: 1, purchased_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }) },
+  { default: () => ({ motorcycles_count: 0, free_slots: 1, purchased_slots: 0, gifted_slots: 0, legacy_slots: 0, slots_total: 1, slots_available: 1, price: 49 }) },
 )
 const purchasePending = ref(false)
 const paymentError = ref('')
@@ -98,7 +98,7 @@ onMounted(async () => {
 
     <section class="slot-offer" aria-live="polite">
       <div>
-        <strong>Места в гараже: {{ slotBalance.slots_total - slotBalance.motorcycles_count }} свободно</strong>
+        <strong>Места в гараже: {{ slotBalance.slots_available }} свободно</strong>
         <p v-if="slotBalance.slots_total <= slotBalance.motorcycles_count">Добавьте место для следующего мотоцикла за {{ slotBalance.price }} ₽ — разовый платёж.</p>
         <p v-else>Первое место бесплатно. Дополнительное место — {{ slotBalance.price }} ₽ разово.</p>
         <p v-if="paymentError" class="slot-offer__error" role="alert">{{ paymentError }}</p>
