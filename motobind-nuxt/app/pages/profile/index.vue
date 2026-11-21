@@ -107,6 +107,7 @@ const pushEnabled = ref(false)
 const pushBusy = ref(false)
 const pushRegistration = ref<ServiceWorkerRegistration | null>(null)
 const pushIsIosHomeScreenOnly = ref(false)
+const pushAvailabilityMessage = ref('')
 
 function decodeApplicationServerKey(value: string): Uint8Array {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
@@ -118,20 +119,46 @@ async function loadPushSettings() {
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true
   pushIsIosHomeScreenOnly.value = ios && !standalone
-  pushSupported.value = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
-  if (!pushSupported.value || pushIsIosHomeScreenOnly.value) return
+  if (pushIsIosHomeScreenOnly.value) return
+
+  if (!('serviceWorker' in navigator)) {
+    pushSupported.value = false
+    pushAvailabilityMessage.value = 'Этот браузер не поддерживает service worker.'
+    return
+  }
+  if (!('PushManager' in window) || !('Notification' in window)) {
+    pushSupported.value = false
+    pushAvailabilityMessage.value = 'В этой версии iOS не доступны Web Push API. Обновите iOS до 16.4 или новее.'
+    return
+  }
+
+  pushSupported.value = true
+  try {
+    let registration = await navigator.serviceWorker.getRegistration('/')
+    if (!registration?.active) {
+      registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    }
+    pushRegistration.value = await navigator.serviceWorker.ready
+
+    if (!pushRegistration.value.pushManager) {
+      pushSupported.value = false
+      pushAvailabilityMessage.value = 'Service worker запущен, но Push API в этом приложении недоступен.'
+      return
+    }
+  } catch (error) {
+    console.error('Push service worker initialization failed:', error)
+    pushSupported.value = false
+    pushAvailabilityMessage.value = 'Не удалось запустить service worker. Закройте приложение, откройте его снова и повторите попытку.'
+    return
+  }
 
   try {
     pushConfig.value = await api.notifications.pushConfig()
     if (!pushConfig.value.configured) return
-    pushRegistration.value = await navigator.serviceWorker.getRegistration() || null
-    if (!pushRegistration.value) {
-      pushSupported.value = false
-      return
-    }
     pushEnabled.value = Boolean(await pushRegistration.value.pushManager.getSubscription())
-  } catch {
-    pushSupported.value = false
+  } catch (error) {
+    console.error('Push configuration request failed:', error)
+    pushAvailabilityMessage.value = 'Не удалось получить настройки push с сервера. Проверьте подключение и войдите в аккаунт заново.'
   }
 }
 
@@ -328,7 +355,8 @@ const formatDate = (iso?: string) => {
       <div class="push-settings">
         <h3>Push на этом устройстве</h3>
         <p v-if="pushIsIosHomeScreenOnly">На iPhone сначала добавьте MotoBind на экран «Домой», открыв сайт в Safari. Затем включите push здесь.</p>
-        <p v-else-if="!pushSupported">Push не поддерживается этим браузером или service worker ещё не установлен.</p>
+        <p v-else-if="!pushSupported">{{ pushAvailabilityMessage || 'Push не поддерживается этим браузером.' }}</p>
+        <p v-else-if="pushAvailabilityMessage">{{ pushAvailabilityMessage }}</p>
         <p v-else-if="pushConfig && !pushConfig.configured">Push пока не настроен на сервере.</p>
         <p v-else>Получайте уведомления MotoBind, даже когда сайт закрыт.</p>
         <BaseButton
