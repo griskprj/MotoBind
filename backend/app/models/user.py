@@ -61,6 +61,7 @@ class User(db.Model):
     slot_purchases = db.relationship(
         "SlotPurchase",
         back_populates="user",
+        foreign_keys="SlotPurchase.user_id",
         lazy="dynamic",
         cascade="all, delete-orphan",
         passive_deletes=True,

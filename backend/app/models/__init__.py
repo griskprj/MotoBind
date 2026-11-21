@@ -24,6 +24,7 @@ from app.models.reports import Report
 from app.models.service import Service
 from app.models.service_booking import ServiceBooking
 from app.models.slot_purchase import SlotPurchase
+from app.models.slot_adjustment import SlotAdjustment
 from app.models.user import User
 from app.models.user_course_progress import UserCourseProgress
 from app.models.user_course_state import UserCourseState
@@ -47,6 +48,7 @@ __all__ = [
     "Service",
     "ServiceBooking",
     "SlotPurchase",
+    "SlotAdjustment",
     "DiagnosticReport",
     "Lesson",
     "Course",

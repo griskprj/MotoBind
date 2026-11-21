@@ -1,9 +1,13 @@
+from datetime import datetime, timezone
+
 from app.decorators import admin_required
-from app.exceptions import NotFoundError, ValidationError
+from app.exceptions import ConflictError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models.manual import Manual
 from app.models.motorcycle import Motorcycle
 from app.models.post_report import PostReport
+from app.models.slot_adjustment import SlotAdjustment
+from app.models.slot_purchase import SlotPurchase
 from app.models.user import User
 from app.schemas.admin import CreateUserSchema, UpdateUserSchema
 from app.schemas.service import RejectServiceSchema
@@ -15,9 +19,96 @@ from app.services.report_service import ReportService
 from app.services.service_service import ServiceService
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import desc, or_
+from sqlalchemy import String, cast, desc, func, or_
 
 admin = Blueprint("admin", __name__)
+
+
+@admin.route("/slot-purchases", methods=["GET"])
+@jwt_required()
+@admin_required
+def list_slot_purchases():
+    page = max(1, request.args.get("page", 1, type=int))
+    per_page = min(100, max(1, request.args.get("per_page", 20, type=int)))
+    status = request.args.get("status") or None
+    search = (request.args.get("search") or "").strip()
+    query = SlotPurchase.query.join(User, SlotPurchase.user_id == User.id)
+    if status in {"pending", "paid", "refunded"}:
+        query = query.filter(SlotPurchase.status == status)
+    if search:
+        query = query.filter(or_(
+            User.email.ilike(f"%{search}%"),
+            User.username.ilike(f"%{search}%"),
+            cast(SlotPurchase.id, String).ilike(f"%{search}%"),
+        ))
+    purchases = query.order_by(SlotPurchase.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    adjustments = SlotAdjustment.query.order_by(SlotAdjustment.created_at.desc()).limit(100).all()
+    return jsonify({
+        "purchases": [purchase.to_admin_dict() for purchase in purchases.items],
+        "adjustments": [item.to_dict() for item in adjustments],
+        "total": purchases.total,
+        "pages": purchases.pages,
+        "current_page": purchases.page,
+        "per_page": purchases.per_page,
+    }), 200
+
+
+@admin.route("/slot-purchases/gift", methods=["POST"])
+@jwt_required()
+@admin_required
+def gift_motorcycle_slots():
+    data = request.get_json(silent=True) or {}
+    email = str(data.get("email", "")).strip().lower()
+    reason = str(data.get("reason", "")).strip()
+    quantity = data.get("quantity", 1)
+    if not email or not reason:
+        raise ValidationError("Email пользователя и причина обязательны")
+    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1 or quantity > 20:
+        raise ValidationError("Количество мест должно быть от 1 до 20")
+    if len(reason) > 500:
+        raise ValidationError("Причина не должна превышать 500 символов")
+    user = User.query.filter(func.lower(User.email) == email).first()
+    if user is None:
+        raise NotFoundError("Пользователь с таким email не найден")
+    admin_user = db.session.get(User, int(get_jwt_identity()))
+    adjustment = SlotAdjustment(
+        user_id=user.id,
+        user_email=user.email,
+        admin_id=admin_user.id,
+        admin_email=admin_user.email,
+        quantity=quantity,
+        reason=reason,
+    )
+    db.session.add(adjustment)
+    db.session.commit()
+    return jsonify({"message": "Подарочные места выданы", "adjustment": adjustment.to_dict()}), 201
+
+
+@admin.route("/slot-purchases/<int:purchase_id>/refund", methods=["POST"])
+@jwt_required()
+@admin_required
+def record_slot_refund(purchase_id):
+    data = request.get_json(silent=True) or {}
+    reason = str(data.get("reason", "")).strip()
+    reference = str(data.get("reference", "")).strip() or None
+    if not reason:
+        raise ValidationError("Укажите причину возврата")
+    if len(reason) > 500 or (reference and len(reference) > 128):
+        raise ValidationError("Слишком длинная причина или номер операции")
+    purchase = SlotPurchase.query.filter_by(id=purchase_id).with_for_update().first()
+    if purchase is None:
+        raise NotFoundError("Покупка не найдена")
+    if purchase.status != "paid":
+        raise ConflictError("Возврат можно отметить только для оплаченной покупки")
+    purchase.status = "refunded"
+    purchase.refunded_at = datetime.now(timezone.utc)
+    purchase.refund_reason = reason
+    purchase.refund_reference = reference
+    purchase.refunded_by = int(get_jwt_identity())
+    admin_user = db.session.get(User, purchase.refunded_by)
+    purchase.refunded_by_email = admin_user.email if admin_user else ""
+    db.session.commit()
+    return jsonify({"message": "Возврат отмечен", "purchase": purchase.to_admin_dict()}), 200
 
 
 @admin.route("/get", methods=["GET"])

@@ -8,10 +8,12 @@ from app.models.maintenance_event import MaintenanceEvent, MaintenanceWork, Work
 from app.models.motorcycle import Motorcycle
 from app.models.reminder import Reminder
 from app.models.slot_purchase import SlotPurchase
+from app.models.slot_adjustment import SlotAdjustment
 from app.models.user import User
 from app.utils.files import delete_file, save_moto_photo
 from app.utils.helpers import get_motorcycle_or_404
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 
 
 class MotorcycleService:
@@ -39,8 +41,9 @@ class MotorcycleService:
         purchased_slots = SlotPurchase.query.filter_by(
             user_id=owner_id, status="paid"
         ).count()
+        gifted_slots = db.session.query(func.coalesce(func.sum(SlotAdjustment.quantity), 0)).filter_by(user_id=owner_id).scalar()
         motorcycle_count = Motorcycle.query.filter_by(owner_id=owner_id).count()
-        allowed_slots = 1 + (owner.extra_motorcycle_slots or 0) + purchased_slots
+        allowed_slots = 1 + (owner.extra_motorcycle_slots or 0) + purchased_slots + gifted_slots
         if motorcycle_count >= allowed_slots:
             raise ConflictError(
                 "Свободных мест в гараже нет. Купите дополнительное место за 49 ₽."

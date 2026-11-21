@@ -47,6 +47,7 @@ const adminNavItems = computed(() => {
       links: [
         { name: 'Дашборд', to: '/admin', icon: 'fa-solid fa-gauge' },
         { name: 'Пользователи', to: '/admin/users', icon: 'fa-solid fa-users' },
+        { name: 'Платежи и места', to: '/admin/slots', icon: 'fa-solid fa-credit-card' },
         { name: 'Модерация мануалов', to: '/admin/manuals', icon: 'fa-solid fa-book-open' },
         { name: 'Жалобы', to: '/admin/reports', icon: 'fa-solid fa-flag' },
         { name: 'Управление курсами', to: '/admin/learning/courses', icon: 'fa-solid fa-graduation-cap' },
