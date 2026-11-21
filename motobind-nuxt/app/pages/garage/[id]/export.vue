@@ -5,7 +5,6 @@ definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
 const api = useApi()
-const mediaUrl = useMediaUrl()
 const motoId = computed(() => String(route.params.id))
 const includeCosts = ref(false)
 const includeIdentifiers = ref(false)
@@ -54,7 +53,7 @@ const history = computed(() => {
     key: `event-${event.id}`,
     date: event.date,
     mileage: event.mileage,
-    title: event.comment || 'Обслуживание',
+    title: 'Обслуживание',
     category: '',
     cost: event.total_cost || event.works.reduce((sum, work) => sum + (work.cost || 0), 0),
     works: event.works.map((work) => work.title || 'Работа без названия'),
