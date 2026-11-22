@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { Motorcycle, MotorcycleHealth } from '~/types'
-import MotorcycleHealthCard from './MotorcycleHealthCard.vue'
 
 const props = defineProps<{
   motorcycle: Motorcycle
@@ -219,6 +218,9 @@ const lastMaintenanceText = computed(() => {
         </li>
       </ul>
     </BaseCard>
+
+    <!-- Удаленеи модалка -->
+    <MotorcycleDelete :motorcycle="motorcycle" />
   </div>
 </template>
 
