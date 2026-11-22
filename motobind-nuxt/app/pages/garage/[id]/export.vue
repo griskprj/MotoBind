@@ -133,7 +133,9 @@ function printReport() {
         <div class="toolbar-options">
           <label><input v-model="includeCosts" type="checkbox"> Показать стоимость работ</label>
           <label><input v-model="includeIdentifiers" type="checkbox"> Включить VIN и госномер</label>
-          <button type="button" class="print-button" @click="printReport">Сохранить как PDF</button>
+          <BaseButton variant="primary" size="sm" @click="printReport">
+            Сохранить как PDF
+          </BaseButton>
         </div>
         <p>Откроется окно печати — выберите «Сохранить как PDF».</p>
       </div>
@@ -215,43 +217,293 @@ function printReport() {
 </template>
 
 <style scoped lang="scss">
-.report-page { max-width: 960px; margin: 0 auto; color: #20242a; }
-.report-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 20px; }
-.report-toolbar p { width: 100%; margin: 0; color: #667085; font-size: 13px; }
-.toolbar-options { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.toolbar-options label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.back-link { color: #4855a6; text-decoration: none; }
-.print-button { border: 0; border-radius: 8px; padding: 10px 16px; color: #fff; background: #4654aa; font: inherit; font-weight: 600; cursor: pointer; }
-.report { background: #fff; padding: 40px 48px; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 28px #10182812; }
-.report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4654aa; padding-bottom: 16px; }
-.brand { color: #4654aa; font-size: 22px; font-weight: 800; }
-.brand span { display: block; color: #667085; font-size: 10px; letter-spacing: .12em; margin-top: 4px; }
-.generated { color: #667085; font-size: 12px; margin: 0; }
-.vehicle { padding: 20px 0 16px; border-bottom: 1px solid #e5e7eb; }
-.vehicle h1 { font-size: 28px; margin: 0 0 16px; }
-.vehicle-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
-.vehicle-facts div { display: flex; flex-direction: column; gap: 3px; }
-.vehicle-facts span, .history-meta, .muted { color: #667085; font-size: 12px; }
-.vehicle-facts strong { overflow-wrap: anywhere; }
-.report-section { margin-top: 22px; }
-.report-section h2 { margin: 0 0 10px; font-size: 17px; }
-.history-item { padding: 11px 0; border-top: 1px solid #eaecf0; break-inside: avoid; }
-.history-heading { display: flex; justify-content: space-between; gap: 16px; }
-.history-heading span { color: #667085; text-align: right; }
-.history-meta { display: flex; gap: 5px 16px; flex-wrap: wrap; margin-top: 5px; }
-.work-list { margin: 8px 0 0; padding-left: 20px; font-size: 13px; }
-.report-disclaimer { border-top: 1px solid #eaecf0; margin-top: 24px; padding-top: 12px; color: #667085; font-size: 11px; line-height: 1.5; }
-.screen-message { padding: 32px; }
+.report-page {
+  max-width: 960px;
+  margin: 0 auto;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---------- Тулбар (не печатается) ---------- */
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  p {
+    width: 100%;
+    margin: 0;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-xs);
+  }
+}
+
+.back-link {
+  color: var(--color-brand);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+
+  &:hover { color: var(--color-brand-hover); }
+}
+
+.toolbar-options {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    user-select: none;
+
+    input[type='checkbox'] {
+      accent-color: var(--color-brand);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+  }
+}
+
+/* ---------- Сам отчёт ---------- */
+.report {
+  background: var(--color-surface);
+  padding: var(--space-8) var(--space-10);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--color-brand);
+  padding-bottom: var(--space-4);
+}
+
+.brand {
+  color: var(--color-brand);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+
+  span {
+    display: block;
+    color: var(--color-text-tertiary);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    margin-top: var(--space-1);
+    font-weight: var(--fw-semibold);
+  }
+}
+
+.generated {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.vehicle {
+  padding: var(--space-5) 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border-light);
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-text);
+    margin: 0 0 var(--space-4);
+  }
+}
+
+.vehicle-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-6);
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  span {
+    color: var(--color-text-tertiary);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  strong {
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    overflow-wrap: anywhere;
+  }
+}
+
+.report-section {
+  margin-top: var(--space-5);
+
+  h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lg);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text);
+  }
+}
+
+.muted {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.history-item {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border-light);
+  break-inside: avoid;
+}
+
+.history-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: baseline;
+
+  strong {
+    color: var(--color-text);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm);
+  }
+
+  span {
+    color: var(--color-text-tertiary);
+    font-size: var(--text-xs);
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.history-meta {
+  display: flex;
+  gap: var(--space-1) var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.work-list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+
+  li + li { margin-top: 2px; }
+}
+
+.component-item .history-heading span {
+  color: var(--color-brand);
+  font-weight: var(--fw-medium);
+}
+
+.report-disclaimer {
+  border-top: 1px solid var(--color-border-light);
+  margin-top: var(--space-5);
+  padding-top: var(--space-3);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.screen-message {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-secondary);
+
+  a {
+    display: inline-block;
+    margin-top: var(--space-3);
+    color: var(--color-brand);
+    text-decoration: none;
+    font-weight: var(--fw-medium);
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+/* ---------- Печать ---------- */
 @media print {
-  :global(body), :global(.dashboard-layout), :global(.dashboard-content), :global(.main-content) { background: #fff !important; }
+  :global(body),
+  :global(.dashboard-layout),
+  :global(.layout-body),
+  :global(.layout-main),
+  :global(.main-content),
+  :global(.default-layout) {
+    background: #fff !important;
+  }
+
   :global(body) { margin: 0 !important; }
-  :global(.app-header), :global(.app-sidebar), .no-print { display: none !important; }
-  :global(.dashboard-content) { display: block !important; min-height: 0 !important; }
-  :global(.main-content) { padding: 0 !important; }
-  .report-page { max-width: none; margin: 0; }
-  .report { padding: 12mm 14mm; border: 0; border-radius: 0; box-shadow: none; }
-  .report-section, .vehicle { break-inside: avoid; }
-  .history-item { break-inside: avoid; }
+
+  :global(.app-header),
+  :global(.app-sidebar),
+  :global(.desktop-sidebar),
+  :global(.public-header),
+  :global(.app-footer),
+  .no-print {
+    display: none !important;
+  }
+
+  :global(.layout-body),
+  :global(.dashboard-content) {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  :global(.layout-main),
+  :global(.main-content) {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .report-page {
+    max-width: none;
+    margin: 0;
+  }
+
+  .report {
+    padding: 12mm 14mm;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .report-section,
+  .vehicle,
+  .history-item {
+    break-inside: avoid;
+  }
+
   @page { size: A4; margin: 10mm; }
 }
 </style>
