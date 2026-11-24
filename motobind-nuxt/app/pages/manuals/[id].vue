@@ -102,7 +102,6 @@ const currentStep = computed(() => {
 // --- ДЕЙСТВИЯ ---
 function startExecution() {
   isExecuting.value = true
-  currentStepIndex.value = 0
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -294,160 +293,284 @@ const formatDate = (iso?: string) => {
     <!-- РЕЖИМ ЧТЕНИЯ (Просмотр)                    -->
     <!-- ========================================== -->
     <template v-else>
-      <header class="manual-header">
-        <div class="header-actions">
-          <NuxtLink to="/manuals" class="back-link">
-            <i class="fa-solid fa-arrow-left"></i> Все мануалы
-          </NuxtLink>
-          <BaseButton
-            v-if="manual.author_id === auth.user?.id || auth.isAdmin"
-            :to="`/manuals/edit/${manual.id}`"
-            variant="secondary"
-            size="sm"
-          >
-            <i class="fa-solid fa-pen"></i> Редактировать
-          </BaseButton>
-        </div>
+      <div class="manual-topline">
+        <NuxtLink to="/manuals" class="back-link">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true" />
+          Все мануалы
+        </NuxtLink>
+        <BaseButton
+          v-if="manual.author_id === auth.user?.id || auth.isAdmin"
+          :to="`/manuals/edit/${manual.id}`"
+          variant="secondary"
+          size="sm"
+        >
+          <template #icon><i class="fa-solid fa-pen" aria-hidden="true" /></template>
+          Редактировать
+        </BaseButton>
+      </div>
 
-        <div class="meta">
-          <span class="category">{{ manual.category }}</span>
-          <span v-if="manual.difficult" class="difficulty">
-            <i class="fa-solid fa-signal"></i> {{ manual.difficult === 'easy' ? 'Легко' : manual.difficult === 'medium' ? 'Средне' : 'Сложно' }}
-          </span>
-          <span v-if="manual.time_estimate"><i class="fa-regular fa-clock"></i> {{ manual.time_estimate }}</span>
-          <span v-if="manual.motorcycle"><i class="fa-solid fa-motorcycle"></i> {{ manual.motorcycle }}</span>
-        </div>
+      <header class="manual-hero">
+        <div class="manual-hero__content">
+          <div class="manual-meta">
+            <BaseBadge variant="brand" size="sm">{{ manual.category }}</BaseBadge>
+            <BaseBadge
+              v-if="manual.difficult"
+              :variant="manual.difficult === 'easy' ? 'success' : manual.difficult === 'medium' ? 'warning' : 'danger'"
+              size="sm"
+            >
+              <i class="fa-solid fa-signal" aria-hidden="true" />
+              {{ manual.difficult === 'easy' ? 'Лёгкая' : manual.difficult === 'medium' ? 'Средняя' : 'Высокая' }} сложность
+            </BaseBadge>
+            <span v-if="manual.time_estimate" class="hero-meta-item">
+              <i class="fa-regular fa-clock" aria-hidden="true" /> {{ manual.time_estimate }}
+            </span>
+            <span v-if="manual.motorcycle" class="hero-meta-item">
+              <i class="fa-solid fa-motorcycle" aria-hidden="true" /> {{ manual.motorcycle }}
+            </span>
+          </div>
 
-        <h1 class="manual-title">{{ manual.title }}</h1>
-        <p class="manual-desc markdown-body" v-html="render(manual.description)" />
-
-        <!-- Кнопка запуска прохождения -->
-        <div class="start-execution-btn">
-          <BaseButton variant="primary" size="lg" @click="startExecution">
-            <i class="fa-solid fa-play"></i> Начать выполнение
-          </BaseButton>
+          <h1 class="manual-title">{{ manual.title }}</h1>
+          <div v-if="manual.description" class="manual-desc markdown-body" v-html="render(manual.description)" />
         </div>
       </header>
 
       <div class="read-layout">
-        <div class="read-main">
-          <!-- Блок безопасности -->
-          <section v-if="manual.safety_tip || manual.warnings || manual.conditions" class="safety-section">
-            <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> Безопасность и подготовка</h2>
+        <main class="read-main">
+          <section
+            v-if="manual.safety_tip || manual.warnings || manual.conditions"
+            id="preparation"
+            class="content-section"
+          >
+            <div class="section-heading">
+              <span class="section-heading__icon section-heading__icon--warning">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">Безопасность и подготовка</h2>
+                <p class="section-caption">Перед началом работы проверь условия и предупреждения</p>
+              </div>
+            </div>
 
-            <div class="safety-block">
-              <!-- Полоса слева (выноска) -->
-              <div class="safety-accent"></div>
-
-              <div class="safety-content">
-                <div v-if="manual.safety_tip" class="safety-row">
-                  <i class="fa-solid fa-lightbulb text-info"></i>
-                  <div>
-                    <span class="safety-label">Совет по безопасности</span>
-                    <p class="safety-text">{{ manual.safety_tip }}</p>
-                  </div>
+            <div class="safety-list">
+              <div v-if="manual.safety_tip" class="safety-item safety-item--info">
+                <i class="fa-solid fa-lightbulb" aria-hidden="true" />
+                <div>
+                  <span class="safety-label">Совет по безопасности</span>
+                  <p>{{ manual.safety_tip }}</p>
                 </div>
-                <div v-if="manual.warnings" class="safety-row">
-                  <i class="fa-solid fa-triangle-exclamation text-danger"></i>
-                  <div>
-                    <span class="safety-label">Предупреждения</span>
-                    <p class="safety-text">{{ manual.warnings }}</p>
-                  </div>
+              </div>
+              <div v-if="manual.warnings" class="safety-item safety-item--danger">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+                <div>
+                  <span class="safety-label">Важные предупреждения</span>
+                  <p>{{ manual.warnings }}</p>
                 </div>
-                <div v-if="manual.conditions" class="safety-row">
-                  <i class="fa-solid fa-circle-check text-success"></i>
-                  <div>
-                    <span class="safety-label">Условия выполнения</span>
-                    <p class="safety-text">{{ manual.conditions }}</p>
-                  </div>
+              </div>
+              <div v-if="manual.conditions" class="safety-item safety-item--success">
+                <i class="fa-solid fa-circle-check" aria-hidden="true" />
+                <div>
+                  <span class="safety-label">Условия выполнения</span>
+                  <p>{{ manual.conditions }}</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Инструменты и материалы -->
-          <section v-if="manual.instruments || manual.parts" class="tools-section">
-            <h2 class="section-title"><i class="fa-solid fa-screwdriver-wrench"></i> Инструменты и материалы</h2>
+          <section v-if="manual.instruments || manual.parts" id="equipment" class="content-section">
+            <div class="section-heading">
+              <span class="section-heading__icon">
+                <i class="fa-solid fa-toolbox" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">Что понадобится</h2>
+                <p class="section-caption">Подготовь инструменты и необходимые материалы заранее</p>
+              </div>
+            </div>
             <div class="tools-grid">
-              <div v-if="manual.instruments" class="tool-block">
-                <h3><i class="fa-solid fa-screwdriver"></i> Инструменты</h3>
+              <article v-if="manual.instruments" class="resource-card">
+                <div class="resource-card__title">
+                  <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true" />
+                  Инструменты
+                </div>
                 <p>{{ manual.instruments }}</p>
-              </div>
-              <div v-if="manual.parts" class="tool-block">
-                <h3><i class="fa-solid fa-box"></i> Материалы и запчасти</h3>
+              </article>
+              <article v-if="manual.parts" class="resource-card">
+                <div class="resource-card__title">
+                  <i class="fa-solid fa-box-open" aria-hidden="true" />
+                  Материалы и запчасти
+                </div>
                 <p>{{ manual.parts }}</p>
+              </article>
+            </div>
+          </section>
+
+          <section v-if="manual.interval || manual.tip" class="content-section">
+            <div class="section-heading">
+              <span class="section-heading__icon">
+                <i class="fa-solid fa-circle-info" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">Дополнительная информация</h2>
+                <p class="section-caption">Полезные сведения перед выполнением процедуры</p>
+              </div>
+            </div>
+            <div class="details-grid">
+              <div v-if="manual.interval" class="detail-tile">
+                <span class="detail-tile__label">Периодичность</span>
+                <strong>{{ manual.interval }}</strong>
+              </div>
+              <div v-if="manual.tip" class="detail-tile detail-tile--tip">
+                <i class="fa-solid fa-lightbulb" aria-hidden="true" />
+                <p>{{ manual.tip }}</p>
               </div>
             </div>
           </section>
 
-          <!-- Шаги -->
-          <section class="steps-section">
-            <h2 class="section-title"><i class="fa-solid fa-list-ol"></i> Пошаговое выполнение</h2>
+          <section id="steps" class="content-section">
+            <div class="section-heading section-heading--between">
+              <div class="section-heading__main">
+                <span class="section-heading__icon">
+                  <i class="fa-solid fa-list-ol" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 class="section-title">Пошаговое выполнение</h2>
+                  <p class="section-caption">Следуй этапам последовательно и не пропускай предупреждения</p>
+                </div>
+              </div>
+              <BaseBadge variant="neutral">{{ manual.steps.length }} шагов</BaseBadge>
+            </div>
+
             <div class="steps-list">
-              <div v-for="step in manual.steps" :key="step.id" class="step-card">
-                <div class="step-number">{{ step.order }}</div>
+              <article v-for="step in manual.steps" :key="step.id" class="step-card">
+                <div class="step-card__rail">
+                  <span class="step-number">{{ step.order }}</span>
+                  <span class="step-rail-line" />
+                </div>
                 <div class="step-content">
                   <h3 class="step-title">{{ step.title }}</h3>
-                  <p v-if="step.text" class="step-text markdown-body" v-html="render(step.text)" />
-
-                  <img v-if="step.image" :src="useMediaUrl()(step.image)!" class="step-image" loading="lazy" />
-
+                  <div v-if="step.text" class="step-text markdown-body" v-html="render(step.text)" />
+                  <img
+                    v-if="step.image"
+                    :src="useMediaUrl()(step.image)!"
+                    :alt="`Иллюстрация: ${step.title}`"
+                    class="step-image"
+                    loading="lazy"
+                  />
+                  <div v-if="step.result" class="step-result">
+                    <i class="fa-solid fa-check-circle" aria-hidden="true" />
+                    <div><strong>Результат этапа</strong><p>{{ step.result }}</p></div>
+                  </div>
                   <div v-if="step.tip" class="step-alert tip">
-                    <i class="fa-solid fa-lightbulb"></i> {{ step.tip }}
+                    <i class="fa-solid fa-lightbulb" aria-hidden="true" />
+                    <span>{{ step.tip }}</span>
                   </div>
                   <div v-if="step.warning" class="step-alert warning">
-                    <i class="fa-solid fa-triangle-exclamation"></i> {{ step.warning }}
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+                    <span>{{ step.warning }}</span>
                   </div>
                 </div>
+              </article>
+            </div>
+          </section>
+
+          <section v-if="manual.specs && Object.keys(manual.specs).length" id="specs" class="content-section">
+            <div class="section-heading">
+              <span class="section-heading__icon">
+                <i class="fa-solid fa-gauge-high" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">Технические параметры</h2>
+                <p class="section-caption">Значения и спецификации, указанные в руководстве</p>
+              </div>
+            </div>
+            <div class="specs-table">
+              <div v-for="([key, value], index) in Object.entries(manual.specs)" :key="key" class="spec-row">
+                <span>{{ key }}</span>
+                <strong>{{ typeof value === 'object' ? JSON.stringify(value) : value }}</strong>
               </div>
             </div>
           </section>
-        </div>
 
-        <!-- Правая колонка (Сайдбар) -->
-        <div class="read-sidebar">
-          <div class="sidebar-card">
-            <h3 class="sidebar-title">Содержание</h3>
-
-            <div class="timeline-list">
-              <div
-                v-for="(step, idx) in manual.steps"
-                :key="step.id"
-                class="timeline-item"
-                :class="{ 'is-current': idx === 0 }"
-              >
-                <div class="timeline-marker"></div>
-                <span class="timeline-text">{{ idx + 1 }}. {{ step.title }}</span>
+          <section v-if="manual.aftercare" id="aftercare" class="content-section">
+            <div class="section-heading">
+              <span class="section-heading__icon section-heading__icon--success">
+                <i class="fa-solid fa-flag-checkered" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">После завершения</h2>
+                <p class="section-caption">Что проверить и сделать после выполнения работ</p>
               </div>
             </div>
-          </div>
+            <div class="aftercare-card markdown-body" v-html="render(manual.aftercare)" />
+          </section>
 
-          <div class="sidebar-card">
+          <section v-if="manual.docs_links?.length" id="sources" class="content-section">
+            <div class="section-heading">
+              <span class="section-heading__icon">
+                <i class="fa-solid fa-book-bookmark" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 class="section-title">Источники и документация</h2>
+                <p class="section-caption">Материалы, использованные при подготовке мануала</p>
+              </div>
+            </div>
+            <ul class="source-list">
+              <li v-for="(url, index) in manual.docs_links" :key="url">
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true" />
+                <a :href="url" target="_blank" rel="noopener noreferrer">Источник {{ index + 1 }}</a>
+              </li>
+            </ul>
+          </section>
+        </main>
+
+        <aside class="read-sidebar">
+          <div class="sidebar-card sidebar-card--sticky">
             <h3 class="sidebar-title">О мануале</h3>
             <div class="info-list">
               <div class="info-row">
-                <span class="info-label"><i class="fa-solid fa-motorcycle"></i> Мотоцикл</span>
-                <span class="info-val">{{ manual.motorcycle || 'Любой' }}</span>
+                <span class="info-label"><i class="fa-solid fa-motorcycle" aria-hidden="true" /> Мотоцикл</span>
+                <span class="info-val">{{ manual.motorcycle || 'Не указан' }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label"><i class="fa-solid fa-signal"></i> Сложность</span>
-                <span class="info-val">{{ manual.difficult === 'easy' ? 'Легко' : manual.difficult === 'medium' ? 'Средне' : 'Сложно' }}</span>
+                <span class="info-label"><i class="fa-solid fa-signal" aria-hidden="true" /> Сложность</span>
+                <span class="info-val">{{ manual.difficult === 'easy' ? 'Лёгкая' : manual.difficult === 'medium' ? 'Средняя' : manual.difficult === 'hard' ? 'Высокая' : '—' }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label"><i class="fa-regular fa-clock"></i> Время</span>
+                <span class="info-label"><i class="fa-regular fa-clock" aria-hidden="true" /> Время</span>
                 <span class="info-val">{{ manual.time_estimate || '—' }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label"><i class="fa-solid fa-list-ol"></i> Шагов</span>
+                <span class="info-label"><i class="fa-solid fa-list-ol" aria-hidden="true" /> Этапы</span>
                 <span class="info-val">{{ manual.steps.length }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label"><i class="fa-regular fa-calendar"></i> Обновлён</span>
-                <span class="info-val">{{ formatDate(manual.updated_at) }}</span>
+                <span class="info-label"><i class="fa-regular fa-calendar" aria-hidden="true" /> Добавлен</span>
+                <span class="info-val">{{ formatDate(manual.created_at) || '—' }}</span>
               </div>
             </div>
+            <div class="sidebar-divider" />
+            <h3 class="sidebar-title">В этом руководстве</h3>
+            <nav class="toc-list" aria-label="Содержание мануала">
+              <a v-if="manual.safety_tip || manual.warnings || manual.conditions" href="#preparation">
+                <span>01</span> Безопасность и подготовка
+              </a>
+              <a v-if="manual.instruments || manual.parts" href="#equipment">
+                <span>02</span> Инструменты и материалы
+              </a>
+              <a href="#steps"><span>03</span> Пошаговое выполнение</a>
+              <a v-if="manual.specs && Object.keys(manual.specs).length" href="#specs">
+                <span>04</span> Технические параметры
+              </a>
+              <a v-if="manual.aftercare" href="#aftercare"><span>05</span> После завершения</a>
+              <a v-if="manual.docs_links?.length" href="#sources"><span>06</span> Источники
+              </a>
+            </nav>
+            <BaseButton block size="lg" @click="startExecution">
+              <template #icon><i class="fa-solid fa-play" aria-hidden="true" /></template>
+              Начать выполнение
+            </BaseButton>
           </div>
-        </div>
+        </aside>
       </div>
     </template>
   </div>
@@ -1121,4 +1244,133 @@ const formatDate = (iso?: string) => {
   :deep(code) { padding: 2px 6px; border-radius: var(--radius-sm); background: var(--color-surface-secondary); font-family: var(--font-mono); font-size: 0.9em; }
   :deep(pre) { padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-secondary); overflow-x: auto; margin-bottom: var(--space-3); code { padding: 0; background: none; } }
 }
+
+/* Обновлённый режим чтения */
+.manual-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.manual-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 290px;
+  padding: clamp(24px, 4vw, 48px);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 28%, var(--color-border));
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+.manual-hero__content { position: relative; z-index: 2; width: min(760px, 72%); }
+.manual-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.hero-meta-item { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-secondary); font-size: var(--text-sm); }
+.manual-title { max-width: 780px; margin: 0; color: var(--color-text); font-size: clamp(28px, 4vw, 42px); font-weight: var(--fw-bold); line-height: 1.12; letter-spacing: -.025em; }
+.manual-desc { max-width: 700px; margin-top: var(--space-4); color: var(--color-text-secondary); font-size: var(--text-base); line-height: var(--leading-relaxed); }
+.hero-hint { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-tertiary); font-size: var(--text-sm); }
+.read-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: var(--space-5); }
+.read-main { display: flex; min-width: 0; flex-direction: column; gap: var(--space-6); }
+.content-section { scroll-margin-top: 24px; }
+.section-heading { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.section-heading--between { justify-content: space-between; }
+.section-heading__main { display: flex; align-items: center; gap: var(--space-3); }
+.section-heading__icon { display: grid; flex: 0 0 40px; width: 40px; height: 40px; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-brand); }
+.section-heading__icon--warning { color: var(--color-warning-strong); background: var(--color-warning-soft); border-color: transparent; }
+.section-heading__icon--success { color: var(--color-success-strong); background: var(--color-success-soft); border-color: transparent; }
+.section-title { margin: 0; color: var(--color-text); font-size: var(--text-lg); font-weight: var(--fw-bold); }
+.section-caption { margin: 3px 0 0; color: var(--color-text-tertiary); font-size: var(--text-xs); line-height: var(--leading-base); }
+.safety-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.safety-item { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.safety-item > i { margin-top: 2px; }
+.safety-item--info > i { color: var(--color-info); }
+.safety-item--danger > i { color: var(--color-danger); }
+.safety-item--success > i { color: var(--color-success); }
+.safety-label { display: block; margin-bottom: 4px; color: var(--color-text); font-size: var(--text-sm); font-weight: var(--fw-semibold); }
+.safety-item p, .resource-card p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.tools-grid, .details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.resource-card, .detail-tile { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.resource-card__title { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); color: var(--color-text); font-size: var(--text-sm); font-weight: var(--fw-semibold); }
+.resource-card__title i { color: var(--color-brand); }
+.detail-tile { display: flex; flex-direction: column; gap: var(--space-2); }
+.detail-tile__label { color: var(--color-text-tertiary); font-size: var(--text-xs); }
+.detail-tile strong { color: var(--color-text); font-size: var(--text-base); }
+.detail-tile--tip { flex-direction: row; align-items: flex-start; grid-column: 1 / -1; background: var(--color-info-soft); border-color: transparent; }
+.detail-tile--tip i { color: var(--color-info-strong); margin-top: 3px; }
+.detail-tile--tip p { margin: 0; color: var(--color-info-strong); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.steps-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.step-card { display: flex; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.step-card__rail { display: flex; flex: 0 0 34px; flex-direction: column; align-items: center; }
+.step-number { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid color-mix(in srgb, var(--color-brand) 25%, var(--color-border)); border-radius: 50%; background: var(--color-brand-soft); color: var(--color-brand); font-size: var(--text-sm); font-weight: var(--fw-bold); }
+.step-rail-line { width: 1px; flex: 1; min-height: 18px; margin-top: 8px; background: var(--color-border); }
+.step-card:last-child .step-rail-line { display: none; }
+.step-content { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: var(--space-2); padding-top: 5px; }
+.step-title { margin: 0; color: var(--color-text); font-size: var(--text-base); font-weight: var(--fw-semibold); }
+.step-text { color: var(--color-text-secondary); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.step-image { display: block; max-width: min(100%, 680px); max-height: 440px; object-fit: contain; border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-top: var(--space-2); }
+.step-alert, .step-result { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.step-alert.tip { background: var(--color-info-soft); color: var(--color-info-strong); }
+.step-alert.warning { background: var(--color-danger-soft); color: var(--color-danger-strong); }
+.step-result { background: var(--color-success-soft); color: var(--color-success-strong); }
+.step-result > i { margin-top: 3px; }
+.step-result p { margin: 3px 0 0; }
+.specs-table { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.spec-row { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border-light); font-size: var(--text-sm); }
+.spec-row:last-child { border-bottom: 0; }
+.spec-row span { color: var(--color-text-secondary); }
+.spec-row strong { color: var(--color-text); text-align: right; overflow-wrap: anywhere; }
+.aftercare-card { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text-secondary); }
+.source-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.source-list li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); font-size: var(--text-sm); }
+.source-list i { color: var(--color-brand); }
+.source-list a { color: var(--color-text); text-decoration: none; }
+.source-list a:hover { color: var(--color-brand); }
+.read-sidebar { min-width: 0; }
+.sidebar-card { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.sidebar-card--sticky { position: sticky; top: 24px; }
+.sidebar-title { margin: 0 0 var(--space-3); color: var(--color-text); font-size: var(--text-base); font-weight: var(--fw-bold); }
+.info-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.info-row { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--text-xs); }
+.info-label { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-secondary); }
+.info-label i { width: 14px; color: var(--color-text-tertiary); text-align: center; }
+.info-val { max-width: 55%; color: var(--color-text); font-weight: var(--fw-semibold); text-align: right; overflow-wrap: anywhere; }
+.sidebar-divider { height: 1px; margin: var(--space-4) 0; background: var(--color-border); }
+.toc-list { display: flex; flex-direction: column; gap: 3px; margin-bottom: var(--space-4); }
+.toc-list a { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-sm); color: var(--color-text-secondary); font-size: var(--text-xs); line-height: 1.4; text-decoration: none; }
+.toc-list a:hover { background: var(--color-surface-secondary); color: var(--color-brand); }
+.toc-list a span { color: var(--color-brand); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.markdown-body { color: inherit; }
+.markdown-body :deep(p) { margin: 0 0 var(--space-2); }
+.markdown-body :deep(p:last-child) { margin-bottom: 0; }
+.markdown-body :deep(ul), .markdown-body :deep(ol) { padding-left: var(--space-5); margin: var(--space-2) 0; }
+.markdown-body :deep(h2), .markdown-body :deep(h3) { margin: var(--space-3) 0 var(--space-2); color: var(--color-text); }
+.markdown-body :deep(a) { color: var(--color-brand); }
+@media (max-width: 1100px) {
+  .read-layout { grid-template-columns: minmax(0, 1fr) 270px; }
+  .manual-hero__visual { right: 2%; opacity: .7; }
+}
+@media (max-width: 900px) {
+  .read-layout { grid-template-columns: 1fr; }
+  .read-sidebar { order: -1; }
+  .sidebar-card--sticky { position: static; }
+  .toc-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .manual-topline { align-items: flex-start; }
+  .manual-hero { min-height: 0; padding: var(--space-4); }
+  .manual-hero__content { width: 100%; }
+  .manual-hero__visual { display: none; }
+  .manual-title { font-size: var(--text-2xl); }
+  .manual-desc { font-size: var(--text-sm); }
+  .hero-actions { align-items: flex-start; flex-direction: column; gap: var(--space-2); }
+  .tools-grid, .details-grid { grid-template-columns: 1fr; }
+  .step-card { gap: var(--space-2); padding: var(--space-3); }
+  .step-card__rail { flex-basis: 28px; }
+  .step-number { width: 28px; height: 28px; }
+  .toc-list { grid-template-columns: 1fr; }
+  .spec-row { flex-direction: column; gap: 4px; }
+  .spec-row strong { text-align: left; }
+}
+
 </style>
