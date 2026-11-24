@@ -213,6 +213,41 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <!-- ПЛАТНЫЕ ВОЗМОЖНОСТИ -->
+    <section class="section section-alt">
+      <div class="container">
+        <div class="pricing-layout reveal">
+          <div class="pricing-left">
+            <h2 class="section-title left-align">Бесплатно для всех.<br><span class="accent">Больше мест — по желанию.</span></h2>
+            <p class="section-desc left-align">
+              Основной функционал MotoBind доступен бесплатно: создавайте гараж, ведите историю обслуживания и пользуйтесь мануалами. 
+              Если вам нужно больше места для мотоциклов, вы можете приобрести дополнительные слоты.
+            </p>
+          </div>
+          <div class="pricing-right">
+            <div class="pricing-card">
+              <div class="pricing-card__header">
+                <span class="pricing-badge">Дополнительное место</span>
+                <div class="pricing-price">49 <span>₽</span></div>
+                <p class="pricing-note">Разовый платёж. Без подписок и скрытых списаний.</p>
+              </div>
+              <ul class="pricing-features">
+                <li><i class="fa-solid fa-check"></i> +1 мотоцикл в гараже</li>
+                <li><i class="fa-solid fa-check"></i> Место закрепляется за аккаунтом</li>
+                <li><i class="fa-solid fa-check"></i> Действует бессрочно</li>
+              </ul>
+              <BaseButton :to="ctaLink" variant="primary" size="lg" class="pricing-button">
+                Купить место
+              </BaseButton>
+              <p class="pricing-legal">
+                Оплата через Robokassa. <NuxtLink to="/payment-info">Условия оплаты и возврата</NuxtLink>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- МОТОЦИКЛИСТЫ -->
     <section class="section">
       <div class="container riders-layout reveal">
@@ -268,27 +303,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
-
-    <!-- ФУТЕР -->
-    <footer class="landing-footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-brand">
-            <span class="logo"><span class="logo-m">Moto</span><span class="accent">Bind</span></span>
-            <p class="footer-desc">Сервис для тех, кто любит мотоциклы.</p>
-          </div>
-          <div class="footer-links">
-            <NuxtLink to="/manuals">Мануалы</NuxtLink>
-            <NuxtLink to="/training">Обучение</NuxtLink>
-            <NuxtLink to="/social">MotoSocial</NuxtLink>
-            <NuxtLink to="/contacts">Контакты</NuxtLink>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <p>© {{ new Date().getFullYear() }} MotoBind. Все права защищены.</p>
-        </div>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -825,6 +839,95 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+}
+
+/* PRICING */
+.pricing-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  align-items: center;
+
+  @include lg-down {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.pricing-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-brand-soft);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  text-align: center;
+  box-shadow: 0 20px 40px -20px var(--color-brand-soft);
+}
+
+.pricing-badge {
+  display: inline-block;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  margin-bottom: var(--space-3);
+}
+
+.pricing-price {
+  font-size: 48px;
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+  line-height: 1;
+  
+  span {
+    font-size: 24px;
+    color: var(--color-text-secondary);
+  }
+}
+
+.pricing-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-5) 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+
+    i {
+      color: var(--color-brand);
+      font-size: 14px;
+    }
+  }
+}
+
+.pricing-button {
+  width: 100%;
+}
+
+.pricing-legal {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-3);
+
+  a {
+    color: var(--color-brand);
+    text-decoration: underline;
+  }
 }
 
 /* АНИМАЦИИ */
