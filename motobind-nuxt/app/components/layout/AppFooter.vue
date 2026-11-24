@@ -36,9 +36,24 @@ const currentYear = new Date().getFullYear()
           <div class="footer-col">
             <h4>Информация</h4>
             <NuxtLink to="/contacts">Контакты</NuxtLink>
+            <NuxtLink to="/payment-info">Оплата и возврат</NuxtLink>
             <a href="mailto:motobind@yandex.ru">motobind@yandex.ru</a>
           </div>
         </div>
+      </div>
+
+      <!-- Блок для Robokassa: реквизиты и условия -->
+      <div class="footer-legal">
+        <p><strong>Исполнитель:</strong> Апольский Григорий Михайлович (самозанятый, НПД), ИНН 236704798600, г. Сочи.</p>
+        <p>
+          <strong>Услуга:</strong> Дополнительное место в гараже MotoBind — <strong>49 ₽</strong> (разовый платёж). 
+          Основной функционал сервиса бесплатен.
+        </p>
+        <p>
+          <strong>Оплата:</strong> через Robokassa. 
+          <strong>Возврат:</strong> напишите на <a href="mailto:griskyy@yandex.ru">griskyy@yandex.ru</a> с указанием email аккаунта и номера заказа. 
+          Срок рассмотрения — до 10 дней. Возврат производится тем же способом, которым была произведена оплата.
+        </p>
       </div>
 
       <div class="footer-bottom">
@@ -133,6 +148,24 @@ const currentYear = new Date().getFullYear()
     &:hover {
       color: var(--color-brand);
     }
+  }
+}
+
+/* Новый блок для юридической информации */
+.footer-legal {
+  border-top: 1px solid var(--color-border-light);
+  padding-top: var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--leading-relaxed);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  a {
+    color: var(--color-brand);
+    text-decoration: underline;
   }
 }
 
