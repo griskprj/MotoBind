@@ -24,7 +24,14 @@ watch(() => props.initialData, (data) => {
 }, { immediate: true })
 
 // Загрузка обложки
+const fileInput = ref<HTMLInputElement | null>(null)
+
 const uploading = ref(false)
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
 async function onFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -89,8 +96,18 @@ async function onSubmit() {
     <div class="cover-upload">
       <label class="field-label">Обложка</label>
       <div class="cover-actions">
-        <input type="file" accept="image/*" class="visually-hidden" @change="onFileChange" />
-        <BaseButton variant="secondary" :loading="uploading" @click="($event.target as HTMLInputElement).click()">
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          class="visually-hidden"
+          @change="onFileChange"
+        />
+        <BaseButton
+          variant="secondary"
+          :loading="uploading"
+          @click="triggerFileInput"
+        >
           Загрузить обложку
         </BaseButton>
         <div v-if="form.cover_url" class="cover-preview">
