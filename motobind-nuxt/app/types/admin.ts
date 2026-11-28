@@ -12,6 +12,7 @@ export interface AdminUser {
   role: 'motorcyclist' | 'motoclub' | 'admin'
   status: 'active' | 'banned'
   created_at?: string
+  last_login?: string | null
   avatar?: string | null
 }
 
