@@ -166,13 +166,13 @@ const statusLabels = { active: 'Активен', banned: 'Забанен' }
               <td class="text-sm">{{ formatDate(user.last_login, true) }}</td>
               <td>
                 <div class="actions">
-                  <BaseButton variant="secondary" size="sm" @click="openEdit(user)"><i class="fa-solid fa-pen"></i> Изменить</BaseButton>
                   <BaseButton :variant="user.status === 'banned' ? 'secondary' : 'danger'" size="sm" @click="toggleBan(user)">
                     <i :class="user.status === 'banned' ? 'fa-solid fa-unlock' : 'fa-solid fa-ban'"></i>
                     {{ user.status === 'banned' ? 'Разбанить' : 'Забанить' }}
                   </BaseButton>
+                  <BaseButton variant="secondary" size="sm" @click="openEdit(user)"><i class="fa-solid fa-pen"></i></BaseButton>
                   <BaseButton variant="danger" size="sm" :disabled="user.id === Number(auth.user?.id) || deletingUserId === user.id" @click="deleteUser(user)">
-                    <i class="fa-solid fa-trash"></i> Удалить
+                    <i class="fa-solid fa-trash"></i>
                   </BaseButton>
                 </div>
               </td>
