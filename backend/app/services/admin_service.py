@@ -31,8 +31,22 @@ class AdminService:
         user = db.session.get(User, user_id)
         if not user:
             raise NotFoundError("Пользователь не найден")
+
+        email = updates.get("email")
+        if email and User.query.filter(
+            User.email == email, User.id != user_id
+        ).first():
+            raise ValidationError("Пользователь с таким email уже существует")
+
+        username = updates.get("username")
+        if username and User.query.filter(
+            User.username == username, User.id != user_id
+        ).first():
+            raise ValidationError("Имя пользователя занято")
+
         for key, value in updates.items():
             if hasattr(user, key) and value is not None:
                 setattr(user, key, value)
+
         db.session.commit()
         return user
